@@ -1,39 +1,45 @@
 
-# clojure-getting-started
-
-A barebones Clojure app, which can easily be deployed to Heroku.  
-
-This application support the [Getting Started with Clojure](https://devcenter.heroku.com/articles/getting-started-with-clojure) article - check it out.
+# coronavirus
 
 ## Running Locally
 
-Make sure you have Clojure installed.  Also, install the [Heroku Toolbelt](https://toolbelt.heroku.com/).
-
 ```sh
-$ git clone https://github.com/heroku/clojure-getting-started.git
-$ cd clojure-getting-started
-$ lein repl
-user=> (require 'clojure-getting-started.web)
-user=>(def server (clojure-getting-started.web/-main))
+(require 'coronavirus.web)
+(def server (coronavirus.web/-main))
+
+(require '[coronavirus.telegram])
+(coronavirus.telegram/-main)
 ```
 
 Your app should now be running on [localhost:5000](http://localhost:5000/).
 
 ## Deploying to Heroku
 
-```sh
-$ heroku create
-$ git push heroku master
-$ heroku open
+```fish
+# set up remotes - prod environment
+set --local REMOTE heroku-corona-cases-bot
+set --local APP corona-cases-bot
 ```
 
-or
+```fish
+# set up remotes - test environment
+set --local REMOTE heroku-hokuspokus-bot
+set --local APP hokuspokus-bot
+```
 
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+```fish
+heroku create
 
-## Documentation
+# heroku ps:scale web=0 --app $APP; and \
+# git push $REMOTE master; and \
+# heroku config:set BOT_VER=(git rev-parse --short master) --app $APP; \
+# heroku ps:scale web=1 --app $APP
 
-For more information about using Clojure on Heroku, see these Dev Center articles:
+# heroku ps:scale web=0 --app $APP; and \
+# heroku ps:scale web=1 --app $APP
 
-- [Clojure on Heroku](https://devcenter.heroku.com/categories/clojure)
+git push $REMOTE master; and \
+heroku config:set BOT_VER=(git rev-parse --short master) --app $APP
 
+heroku open --app $APP
+```
