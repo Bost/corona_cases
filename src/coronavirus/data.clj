@@ -4,7 +4,10 @@
             [environ.core :refer [env]]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
-            ))
+            [clj-time.core :as t]
+            )
+  (:import java.util.GregorianCalendar
+           java.util.TimeZone))
 
 (def env-prms [
                :type
@@ -84,8 +87,8 @@
            Exception.
            throw))
      ;; time
-     (.substring time-am-pm 0 (- length 2))])
-)
+     (.substring time-am-pm 0 (- length 2))]))
+
 (defn normal-time
   "Remember: Always code as if the person who ends up maintaining your code is a
   violent psychopath who knows where you live"
@@ -247,14 +250,31 @@
   "Calculate the data"
   []
   (mapv (fn [day-sheets-hm]
-          (conj day-sheets-hm
-                {:count
-                 (let [{day :day sheets :sheets} day-sheets-hm]
+          (let [{day :day sheets :sheets} day-sheets-hm]
+            (conj day-sheets-hm
+                  {:count
                    (let [last-sheet-of (last-sheet-of sheets)]
                      (->> sheets
                           (filter (fn [name-count-hm]
                                     (= last-sheet-of (:name name-count-hm))))
                           (map :count)
-                          (into {}))))}))
+                          (into {})))}
+                  {:date
+                   (let [n-day (read-string (.substring day 3))
+                         month (->> (.substring day 0 3)
+                                    (clojure.string/lower-case)
+                                    (normal-month)
+                                    (read-string)
+                                    )
+                         year 2020
+                         time-zone
+                         #_(TimeZone/getTimeZone "Europe/Berlin")
+                         (TimeZone/getTimeZone "Europe/London")
+                         c (GregorianCalendar.)
+                         ]
+                     (.clear c)
+                     (.setTimeZone c time-zone)
+                     (.set c year (dec month) n-day 0 0 0)
+                     (.getTime c))})))
         data
         #_(graph)))

@@ -9,7 +9,8 @@
             [google-apps-clj.credentials]
             [google-apps-clj.google-sheets-v4 :as v4]
             [clojure.java.io :as io]
-            [clj-time-ext.core :as t]
+            [clj-time-ext.core :as te]
+            [clj-time.core :as t]
             [com.hypirion.clj-xchart :as c]
             [coronavirus.data :as d]
             [clojure.tools.logging :as log]
@@ -113,41 +114,80 @@
 
 (defn link [name url] (str "[" name "]""(" url ")"))
 
-
-(defn pic2 []
-  (c/view
-   (c/xy-chart
-    {"Error bars" {:x (range 0 100 10)
-                   :y [20 30 45 40 60 65 80 75 95 90]
-                   ;; :error-bars [5 8 2 9 3 3 8 3 9 3]
-                   }}
-    #_{:error-bars-color :match-series})))
+(defn data []
+  (->> (d/graph-sums)
+       (map (fn [hm]
+              (select-keys hm [:date :count])))
+       (sort-by :date)))
 
 (defn pic []
-  (def r (java.util.Random. 42))
-  (-> {"Maxime" {:x (range 10)
-                 :y (mapv #(+ % (* 3 (.nextDouble r)))
-                          (range 10))}
-       "Tyrone" {:x (range 10)
-                 :y (mapv #(+ 2 % (* 4 (.nextDouble r)))
-                          (range 0 5 0.5))}}
-      (c/xy-chart
-       {:title "Longest running distance"
-        :x-axis {:title "Months (since start)"}
-        :y-axis {:title "Distance"
-                 :decimal-pattern "##.## km"}
-        :theme :matlab})
-      #_(c/to-bytes :png)
-      (c/view)))
+  #_(let [r (java.util.Random. 42)]
+    (-> {"Maxime" {:x (range 10)
+                   :y (mapv #(+ % (* 3 (.nextDouble r)))
+                            (range 10))}
+         "Tyrone" {:x (range 10)
+                   :y (mapv #(+ 2 % (* 4 (.nextDouble r)))
+                            (range 0 5 0.5))}}
+        (c/xy-chart
+         {:title "Longest running distance"
+          :x-axis {:title "Months (since start)"}
+          :y-axis {:title "Distance"
+                   :decimal-pattern "##.## km"}
+          :theme :matlab})
+        (c/to-bytes :png)
+        #_(c/view)))
+
+  (-> (c/xy-chart
+       (conj {}
+             {"Confirmed"
+              (conj {}
+                    {:x (map :date (data))
+                     :y (map (fn [hm] (->> hm :count :c)) (data))
+                     :style
+                     (conj {}
+                           {:marker-type :none}
+                           #_{:render-style :line}
+                           #_{:line-color :orange}
+                           #_{:fill-color :orange}
+                           )})}
+             {"Deaths"
+              (conj {}
+                    {:x (map :date (data))
+                     :y (map (fn [hm] (->> hm :count :d)) (data))}
+                    {:style
+                     (conj {}
+                           {:marker-type :none}
+                           {:render-style :line}
+                           #_{:line-color :red})
+                     })}
+             {"Recovered"
+              (conj {}
+                    {:x (map :date (data))
+                     :y (map (fn [hm] (->> hm :count :r)) (data))}
+                    {:style
+                     (conj {}
+                           {:marker-type :none}
+                           {:render-style :line}
+                           #_{:line-color :green})})})
+       (conj {}
+             {:title "Coronavirus (2019-nCoV)"
+              :render-style :area
+              :legend {:position :inside-nw}
+              :x-axis {:title "Day"}
+              :y-axis {:title "Cases"}}
+             #_{:theme :matlab}
+             {:date-pattern "MMM-DD"}))
+      #_(c/view)
+      (c/to-bytes :png)))
 
 (defn register-cmd [cmd cmd-fn]
   (h/command-fn
    cmd
    (fn [{{id :id :as chat} :chat}]
-     (let [tbeg (t/tnow)]
+     (let [tbeg (te/tnow)]
        (println (str "[" tbeg "           "" " bot-ver " /" cmd "]") chat)
        (cmd-fn id)
-       (println (str "[" tbeg ":" (t/tnow) " " bot-ver " /" cmd "]") chat)))))
+       (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd "]") chat)))))
 
 ;; long polling
 (h/defhandler handler
@@ -155,7 +195,7 @@
   (register-cmd "refresh" (fn [id] (a/send-text token id (info-msg))))
   (register-cmd
    "about" (fn [id]
-             #_(a/send-photo token id (pic))
+             (a/send-photo token id (pic))
              #_(a/send-photo token id
                              (io/input-stream -stream "/path/to/photo.png"))
              (a/send-text
@@ -197,7 +237,7 @@
 
 (defn -main
   [& args]
-  (log/info (str "[" (t/tnow) " " bot-ver "]") "Starting Telegram Chatbot...")
+  (log/info (str "[" (te/tnow) " " bot-ver "]") "Starting Telegram Chatbot...")
   (let [blank-prms (->> (conj d/env-prms :telegram-token)
                         (filter (fn [prm] (str/blank? (env prm)))))]
     (when (not-empty blank-prms)
