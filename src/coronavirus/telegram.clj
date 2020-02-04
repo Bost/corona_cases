@@ -140,58 +140,42 @@
       #_(c/to-bytes :png)
       (c/view)))
 
-(defn exec-with-log [cmd chat cmd-fn]
-  (let [tbeg (t/tnow)]
-    (println (str "[" tbeg "           "" " bot-ver " /" cmd "]") chat)
-    (cmd-fn)
-    (println (str "[" tbeg ":" (t/tnow) " " bot-ver " /" cmd "]") chat)))
+(defn register-cmd [cmd cmd-fn]
+  (h/command-fn
+   cmd
+   (fn [{{id :id :as chat} :chat}]
+     (let [tbeg (t/tnow)]
+       (println (str "[" tbeg "           "" " bot-ver " /" cmd "]") chat)
+       (cmd-fn id)
+       (println (str "[" tbeg ":" (t/tnow) " " bot-ver " /" cmd "]") chat)))))
 
 ;; long polling
 (h/defhandler handler
-  (let [cmd "start"]
-    (h/command-fn
-     cmd
-     (fn [{{id :id :as chat} :chat}]
-       (exec-with-log
-        cmd chat
-        (fn []
-          (a/send-text token id (info-msg)))))))
-
-  (let [cmd "refresh"]
-    (h/command-fn
-     cmd
-     (fn [{{id :id :as chat} :chat}]
-       (exec-with-log
-        cmd chat (fn []
-                   (a/send-text token id (info-msg)))))))
-
-  (let [cmd "about"]
-    (h/command-fn
-     cmd
-     (fn [{{id :id :as chat} :chat}]
-       (exec-with-log
-        cmd chat
-        (fn []
-          #_(a/send-photo token id (pic))
-          #_(a/send-photo token id (io/input-stream "/path/to/photo.png"))
-          (a/send-text
-           token id
-           {:parse_mode "Markdown"}
-           (str
-            "Bot version: " bot-ver "\n"
-            "Percentage calculation: <cases> / confirmed\n"
-            "See "
-            (link "data source"
-                  (str "https://docs.google.com/spreadsheets/d/"
-                       d/spreadsheet-id "/edit?usp=sharing"))
-            " and "
-            (link "dashboard & geo map"
-                  (str "https://gisanddata.maps.arcgis.com/apps/"
-                       "opsdashboard/index.html#/"
-                       "bda7594740fd40299423467b48e9ecf6"))
-            "\n"
-            msg-footer))
-          (a/send-text token id (info-msg)))))))
+  (register-cmd "start"   (fn [id] (a/send-text token id (info-msg))))
+  (register-cmd "refresh" (fn [id] (a/send-text token id (info-msg))))
+  (register-cmd
+   "about" (fn [id]
+             #_(a/send-photo token id (pic))
+             #_(a/send-photo token id
+                             (io/input-stream -stream "/path/to/photo.png"))
+             (a/send-text
+              token id
+              {:parse_mode "Markdown"}
+              (str
+               "Bot version: " bot-ver "\n"
+               "Percentage calculation: <cases> / confirmed\n"
+               "See "
+               (link "data source"
+                     (str "https://docs.google.com/spreadsheets/d/"
+                          d/spreadsheet-id "/edit?usp=sharing"))
+               " and "
+               (link "dashboard & geo map"
+                     (str "https://gisanddata.maps.arcgis.com/apps/"
+                          "opsdashboard/index.html#/"
+                          "bda7594740fd40299423467b48e9ecf6"))
+               "\n"
+               msg-footer))
+             (a/send-text token id (info-msg))))
 
   #_(h/message-fn
      (fn [{{id :id} :chat :as message}]
