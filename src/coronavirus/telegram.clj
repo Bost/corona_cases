@@ -176,7 +176,9 @@
               :x-axis {:title "Day"}
               :y-axis {:title "Cases"}}
              #_{:theme :matlab}
-             {:date-pattern "MMM-DD"}))
+             #_{:width 640 :height 500}
+             {:width 800 :height 600}
+             {:date-pattern "MMMd"}))
       #_(c/view)
       (c/to-bytes :png)))
 
