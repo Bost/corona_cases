@@ -40,14 +40,16 @@
   #_"1yZv9w9zRKwrGTaR-YzmAqMefw4wMlaXocejdxZaTs6w" ;; old
   "1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM")
 
-(defn sum-up [sheet range]
-  (Thread/sleep 1000)
-  (->> [(str sheet "!" range)]
-       (v4/get-cell-values service spreadsheet-id)
-       (flatten)
-       (remove nil?)
-       (apply +)
-       (int)))
+(defn sum-up
+  [sheet range]
+  (let [ms 1000]
+    (Thread/sleep ms)
+    (->> [(str sheet "!" range)]
+         (v4/get-cell-values service spreadsheet-id)
+         (flatten)
+         (remove nil?)
+         (apply +)
+         (int))))
 
 (defn confirmed-sum [sheet range] (sum-up sheet (str "D2:D" range)))
 (defn deaths-sum    [sheet range] (sum-up sheet (str "E2:E" range)))
@@ -172,8 +174,169 @@
                            sheets)}))
         (document)))
 
-(def data
- [{:day "Feb01",
+(def data-new
+  [
+   {:day "Feb04",
+    :sheets
+    [{:name "Feb04_1150AM", :count {:d 427, :c 20704, :r 727}}
+     {:name "Feb04_8AM", :count {:d 427, :c 20680, :r 723}}],
+    :count {:d 427, :c 20704, :r 727},
+    :date #inst "2020-02-04T00:00:00.000-00:00"}
+   {:day "Feb03",
+    :sheets
+    [{:name "Feb03_1230pm", :count {:d 362, :c 17491, :r 536}}
+     {:name "Feb03_940pm", :count {:d 426, :c 20588, :r 644}}],
+    :count {:d 426, :c 20588, :r 644},
+    :date #inst "2020-02-03T00:00:00.000-00:00"}
+   {:day "Feb02",
+    :sheets
+    [{:name "Feb02_5am", :count {:d 362, :c 16823, :r 472}}
+     {:name "Feb02_745pm", :count {:d 362, :c 16823, :r 472}}
+     {:name "Feb02_9PM", :count {:d 362, :c 17295, :r 487}}],
+    :count {:d 362, :c 17295, :r 487},
+    :date #inst "2020-02-02T00:00:00.000-00:00"}
+   ;;;; ;;;; ;;;; ;;;;
+   {:day "Feb01",
+    :sheets
+    [{:name "Feb01_10am", :count {:d 259, :c 12024, :r 287}}
+     {:name "Feb01_11pm", :count {:d 305, :c 14549, :r 340}}
+     {:name "Feb01_6pm", :count {:d 259, :c 12038, :r 284}}],
+    :count {:d 305, :c 14549, :r 340},
+    :date #inst "2020-02-01T00:00:00.000-00:00"}
+   {:day "Jan22",
+    :sheets
+    [{:name "Jan22_12am", :count {:d 169, :c 332, :r 0}}
+     {:name "Jan22_12pm", :count {:d 137, :c 555, :r 0}}],
+    :count {:d 137, :c 555, :r 0},
+    :date #inst "2020-01-22T00:00:00.000-00:00"}
+   {:day "Jan23",
+    :sheets [{:name "Jan23_12pm", :count {:d 144, :c 653, :r 30}}],
+    :count {:d 144, :c 653, :r 30},
+    :date #inst "2020-01-23T00:00:00.000-00:00"}
+   {:day "Jan24",
+    :sheets
+    [{:name "Jan24_12am", :count {:d 115, :c 881, :r 34}}
+     {:name "Jan24_12pm", :count {:d 159, :c 941, :r 36}}],
+    :count {:d 159, :c 941, :r 36},
+    :date #inst "2020-01-24T00:00:00.000-00:00"}
+   {:day "Jan25",
+    :sheets
+    [{:name "Jan25_10pm", :count {:d 406, :c 2019, :r 49}}
+     {:name "Jan25_12am", :count {:d 73, :c 1354, :r 38}}
+     {:name "Jan25_12pm", :count {:d 404, :c 1438, :r 39}}],
+    :count {:d 406, :c 2019, :r 49},
+    :date #inst "2020-01-25T00:00:00.000-00:00"}
+   {:day "Jan26",
+    :sheets
+    [{:name "Jan26_11am", :count {:d 56, :c 2116, :r 52}}
+     {:name "Jan26_11pm", :count {:d 80, :c 2794, :r 54}}],
+    :count {:d 80, :c 2794, :r 54},
+    :date #inst "2020-01-26T00:00:00.000-00:00"}
+   {:day "Jan27",
+    :sheets
+    [{:name "Jan27_7pm", :count {:d 82, :c 2927, :r 61}}
+     {:name "Jan27_830pm", :count {:d 107, :c 4473, :r 63}}
+     {:name "Jan27_9am", :count {:d 81, :c 2886, :r 59}}],
+    :count {:d 107, :c 4473, :r 63},
+    :date #inst "2020-01-27T00:00:00.000-00:00"}
+   {:day "Jan28",
+    :sheets
+    [{:name "Jan28_11pm", :count {:d 132, :c 6057, :r 110}}
+     {:name "Jan28_1pm", :count {:d 106, :c 4690, :r 79}}
+     {:name "Jan28_6pm", :count {:d 131, :c 5578, :r 107}}],
+    :count {:d 132, :c 6057, :r 110},
+    :date #inst "2020-01-28T00:00:00.000-00:00"}
+   {:day "Jan29",
+    :sheets
+    [{:name "Jan29_130pm", :count {:d 132, :c 6164, :r 112}}
+     {:name "Jan29_230pm", :count {:d 133, :c 6165, :r 126}}
+     {:name "Jan29_9pm", :count {:d 170, :c 7783, :r 133}}],
+    :count {:d 170, :c 7783, :r 133},
+    :date #inst "2020-01-29T00:00:00.000-00:00"}
+   {:day "Jan30",
+    :sheets
+    [{:name "Jan30_11am", :count {:d 171, :c 8235, :r 143}}
+     {:name "Jan30_930pm", :count {:d 213, :c 9776, :r 187}}],
+    :count {:d 213, :c 9776, :r 187},
+    :date #inst "2020-01-30T00:00:00.000-00:00"}
+   {:day "Jan31",
+    :sheets
+    [{:name "Jan31_2pm", :count {:d 213, :c 9926, :r 222}}
+     {:name "Jan31_7pm", :count {:d 259, :c 11374, :r 252}}],
+    :count {:d 259, :c 11374, :r 252},
+    :date #inst "2020-01-31T00:00:00.000-00:00"}])
+
+(def data-old
+  [
+   {:day "Feb01",
+    :sheets
+    [{:name "Feb01_10am", :count {:d 259, :c 12024, :r 287}}
+     {:name "Feb01_6pm", :count {:d 259, :c 12037, :r 284}}],
+    :count {:d 259, :c 12037, :r 284},
+    :date #inst "2020-02-01T00:00:00.000-00:00"}
+   {:day "Jan22",
+    :sheets
+    [{:name "Jan22_12am", :count {:d 169, :c 332, :r 0}}
+     {:name "Jan22_12pm", :count {:d 137, :c 555, :r 0}}],
+    :count {:d 137, :c 555, :r 0},
+    :date #inst "2020-01-22T00:00:00.000-00:00"}
+   {:day "Jan23",
+    :sheets [{:name "Jan23_12pm", :count {:d 144, :c 653, :r 30}}],
+    :count {:d 144, :c 653, :r 30},
+    :date #inst "2020-01-23T00:00:00.000-00:00"}
+   {:day "Jan24",
+    :sheets
+    [{:name "Jan24_12am", :count {:d 115, :c 881, :r 34}}
+     {:name "Jan24_12pm", :count {:d 159, :c 941, :r 36}}],
+    :count {:d 159, :c 941, :r 36},
+    :date #inst "2020-01-24T00:00:00.000-00:00"}
+   {:day "Jan25",
+    :sheets
+    [{:name "Jan25_10pm", :count {:d 406, :c 2019, :r 49}}
+     {:name "Jan25_12am", :count {:d 73, :c 1354, :r 38}}
+     {:name "Jan25_12pm", :count {:d 404, :c 1438, :r 39}}],
+    :count {:d 406, :c 2019, :r 49},
+    :date #inst "2020-01-25T00:00:00.000-00:00"}
+   {:day "Jan26",
+    :sheets
+    [{:name "Jan26_11am", :count {:d 56, :c 2116, :r 52}}
+     {:name "Jan26_11pm", :count {:d 80, :c 2794, :r 54}}],
+    :count {:d 80, :c 2794, :r 54},
+    :date #inst "2020-01-26T00:00:00.000-00:00"}
+   {:day "Jan27",
+    :sheets
+    [{:name "Jan27_7pm", :count {:d 82, :c 2927, :r 61}}
+     {:name "Jan27_830pm", :count {:d 107, :c 4473, :r 63}}
+     {:name "Jan27_9am", :count {:d 81, :c 2886, :r 59}}],
+    :count {:d 107, :c 4473, :r 63},
+    :date #inst "2020-01-27T00:00:00.000-00:00"}
+   {:day "Jan28",
+    :sheets
+    [{:name "Jan28_11pm", :count {:d 132, :c 6057, :r 110}}
+     {:name "Jan28_1pm", :count {:d 106, :c 4690, :r 79}}
+     {:name "Jan28_6pm", :count {:d 131, :c 5578, :r 107}}],
+    :count {:d 132, :c 6057, :r 110},
+    :date #inst "2020-01-28T00:00:00.000-00:00"}
+   {:day "Jan29",
+    :sheets
+    [{:name "Jan29_130pm", :count {:d 132, :c 6164, :r 112}}
+     {:name "Jan29_230pm", :count {:d 133, :c 6165, :r 126}}
+     {:name "Jan29_9pm", :count {:d 170, :c 7783, :r 133}}],
+    :count {:d 170, :c 7783, :r 133},
+    :date #inst "2020-01-29T00:00:00.000-00:00"}
+   {:day "Jan30",
+    :sheets
+    [{:name "Jan30_11am", :count {:d 171, :c 8235, :r 143}}
+     {:name "Jan30_930pm", :count {:d 213, :c 9776, :r 187}}],
+    :count {:d 213, :c 9776, :r 187},
+    :date #inst "2020-01-30T00:00:00.000-00:00"}
+   {:day "Jan31",
+    :sheets
+    [{:name "Jan31_2pm", :count {:d 213, :c 9926, :r 222}}
+     {:name "Jan31_7pm", :count {:d 259, :c 11374, :r 252}}],
+    :count {:d 259, :c 11374, :r 252},
+    :date #inst "2020-01-31T00:00:00.000-00:00"}]
+ #_[{:day "Feb01",
    :sheets
    [{:name "Feb01_10am", :count {:d 259, :c 12024, :r 287}}
     {:name "Feb01_6pm", :count {:d 259, :c 12037, :r 284}}]}
@@ -276,5 +439,5 @@
                      (.setTimeZone c time-zone)
                      (.set c year (dec month) n-day 0 0 0)
                      (.getTime c))})))
-        data
+        data-new
         #_(graph)))
