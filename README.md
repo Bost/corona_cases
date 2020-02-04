@@ -28,6 +28,22 @@ set --local APP hokuspokus-bot
 ```
 
 ```fish
+heroku ps:scale web=0 --app $APP; and \
+heroku config:set type="..." --app $APP; and \
+heroku config:set private_key_id="..." --app $APP; and \
+heroku config:set private_key="..." --app $APP; and \
+heroku config:set client_email="..." --app $APP; and \
+heroku config:set client_id="..." --app $APP; and \
+heroku ps:scale web=1 --app $APP; and \
+heroku config --app $APP; and \
+notify-send "heroku config:set ... done"; or \
+notify-send "heroku config:set ... failed"
+```
+```fish
+# heroku config:unset <env-param-name> --app $APP
+```
+
+```fish
 heroku create
 
 # heroku ps:scale web=0 --app $APP; and \

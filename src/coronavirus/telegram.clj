@@ -12,33 +12,47 @@
             [clj-time-ext.core :as t]
             [com.hypirion.clj-xchart :as c]
             [coronavirus.data :as d]
+            [clojure.tools.logging :as log]
+            [clojure.core.async :as async]
             )
   (:gen-class))
 
 (def token (env :telegram-token))
-(defn env-var [env-var]
-  (if (str/blank? env-var) "undefined" "defined"))
-
-(println "Environment var TELEGRAM_TOKEN"
-         (env-var token))
 
 (def bot-ver
   (str
-   (let [pom-props (with-open [pom-props-reader
-                               (->> "META-INF/maven/coronavirus/coronavirus/pom.properties"
-                                    io/resource
-                                    io/reader)]
-                     (doto (java.util.Properties.)
-                       (.load pom-props-reader)))]
-       (get pom-props "version"))
+   (let [pom-props
+         (with-open
+           [pom-props-reader
+            (->> "META-INF/maven/coronavirus/coronavirus/pom.properties"
+                 io/resource
+                 io/reader)]
+           (doto (java.util.Properties.)
+             (.load pom-props-reader)))]
+     (get pom-props "version"))
    "-"
    (env :bot-ver)))
-(def bot
-  (str bot-ver
-       (cond (.endsWith token "Fq8") "@corona_cases_bot"
-             (.endsWith token "MR8") "@hokuspokus_bot")))
 
-(println "Telegram Chatbot:" bot)
+(defn telegram-token-suffix []
+  (let [suffix (.substring token (- (count token) 3))]
+    (if (or (= suffix "Fq8") (= suffix "MR8"))
+      suffix
+      (throw (Exception.
+              (format "Unrecognized TELEGRAM_TOKEN suffix: %s" suffix))))))
+
+(def bot-type
+  (let [suffix (telegram-token-suffix)]
+    (case suffix
+      "Fq8" "PROD"
+      "MR8" "TEST")))
+
+(def bot
+  (let [suffix (telegram-token-suffix)]
+    (format "%s:%s"
+            bot-ver
+            bot-type)))
+
+(log/info "Telegram Chatbot:" bot)
 
 (defn confirmed-header [sheet]
   (let [column "D"]
@@ -133,25 +147,25 @@
      cmd
      (fn [{{id :id :as chat} :chat}]
        (let [tbeg (t/tnow)]
-         (println (str "[" tbeg "           "   " " bot " /" cmd "]")      chat)
+         (log/info (str "[" tbeg "           "   " " bot-ver " /" cmd "]")      chat)
          (a/send-text token id (info-msg))
-         (println (str "[" tbeg ":" (t/tnow) " " bot " /" cmd "]") chat)))))
+         (log/info (str "[" tbeg ":" (t/tnow) " " bot-ver " /" cmd "]") chat)))))
 
   (let [cmd "refresh"]
     (h/command-fn
      cmd
      (fn [{{id :id :as chat} :chat}]
        (let [tbeg (t/tnow)]
-         (println (str "[" tbeg "           "   " " bot " /" cmd "]")      chat)
+         (log/info (str "[" tbeg "           "   " " bot-ver " /" cmd "]")      chat)
          (a/send-text token id (info-msg))
-         (println (str "[" tbeg ":" (t/tnow) " " bot " /" cmd "]") chat)))))
+         (log/info (str "[" tbeg ":" (t/tnow) " " bot-ver " /" cmd "]") chat)))))
 
   (let [cmd "about"]
     (h/command-fn
      cmd
      (fn [{{id :id :as chat} :chat}]
        (let [tbeg (t/tnow)]
-         (println (str "[" tbeg "           "   " " bot " /" cmd "]")      chat)
+         (log/info (str "[" tbeg "           "   " " bot-ver " /" cmd "]")      chat)
          #_(a/send-photo token id (pic))
          #_(a/send-photo token id (io/input-stream "/path/to/photo.png"))
          (a/send-text
@@ -171,25 +185,39 @@
                       "bda7594740fd40299423467b48e9ecf6"))
            "\n"
            msg-footer))
-         (println (str "[" tbeg ":" (t/tnow) " " bot " /" cmd "]") chat)))))
+         (log/info (str "[" tbeg ":" (t/tnow) " " bot-ver " /" cmd "]") chat)))))
 
   #_(h/message-fn
      (fn [{{id :id} :chat :as message}]
        (a/send-text token id (str "Echoing message: " message)))))
 
+(defn start-polling
+  "Starts long-polling process.
+  Handler is supposed to process immediately, as it will
+  be called in a blocking manner."
+  ([token handler] (start-polling token handler {}))
+  ([token handler opts]
+   (let [running (async/chan)
+         updates (p-patch/create-producer-with-handle
+                  running token opts (fn []
+                                       (when (= bot-type "PROD")
+                                         (System/exit 2))))]
+     (p/create-consumer updates handler)
+     running)))
+
 (defn -main
   [& args]
-  (println (str "[" (t/tnow) " " bot "]") "Starting Telegram Chatbot...")
-  (when (str/blank? token)
-    (println "Undef environment var TELEGRAM_TOKEN")
-    (System/exit 1))
+  (log/info (str "[" (t/tnow) " " bot-ver "]") "Starting Telegram Chatbot...")
+  (let [blank-prms (->> (conj d/env-prms :telegram-token)
+                        (filter (fn [prm] (str/blank? (env prm)))))]
+    (when (not-empty blank-prms)
+      (log/fatal (str "Undef environment var(s): " blank-prms))
+      (System/exit 1)))
 
-  (<!! (p-patch/start token handler)))
+  (<!! (start-polling token handler)))
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start [] (swap! test-obj (fn [_] (p-patch/start token handler))))
-(defn stop []  (p/stop @test-obj))
-(defn restart []
-  (if @test-obj (stop))
-  (start))
+(defn start   [] (swap! test-obj (fn [_] (start-polling token handler))))
+(defn stop    [] (p/stop @test-obj))
+(defn restart [] (if @test-obj (stop)) (start))

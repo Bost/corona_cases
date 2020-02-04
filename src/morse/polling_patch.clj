@@ -7,11 +7,11 @@
             [morse.api :as api]
             ))
 
-(defn create-producer
+(defn create-producer-with-handle
   "Passed channel should be always empty.
    Close it to stop long-polling.
    Returns channel with updates from Telegram"
-  [running token opts]
+  [running token opts api-error-handle-fn]
   (let [updates (a/chan)
         ;; timeout for Telegram API in seconds
         timeout (or (:timeout opts) 1)]
@@ -25,39 +25,26 @@
         (case data
           ;; running got closed by the user
           nil
-          (do #_(log/debug (str "response: " response))
-              (log/info "Stopping Telegram polling...")
+          (do (log/info "Stopping Telegram polling...")
               (close! wait-timeout)
               (close! updates))
 
           ::wait-timeout
-          (do #_(log/debug (str "response: " response))
-              (log/error "HTTP request timed out, stopping polling")
+          (do (log/error "HTTP request timed out, stopping polling")
               (close! running)
               (close! updates)
               (log/fatal "ABORT on ::wait-timeout")
               (System/exit 1))
 
           ::api/error
-          (do #_(log/debug (str "response: " response))
-              (log/warn "Got error from Telegram API, stopping polling")
+          (do (log/warn "Got error from Telegram API, stopping polling")
               (close! running)
               (close! updates)
               (log/fatal "ABORT on ::api/error")
-              (System/exit 2))
+              (api-error-handle-fn))
 
           (do (close! wait-timeout)
               (doseq [upd data] (>! updates upd))
               (recur (p/new-offset data offset))))))
     updates))
 
-(defn start
-  "Starts long-polling process.
-  Handler is supposed to process immediately, as it will
-  be called in a blocking manner."
-  ([token handler] (start token handler {}))
-  ([token handler opts]
-   (let [running (chan)
-         updates (create-producer running token opts)]
-     (p/create-consumer updates handler)
-     running)))

@@ -3,21 +3,24 @@
             [google-apps-clj.credentials :as c]
             [environ.core :refer [env]]
             [clojure.data.json :as json]
+            [clojure.tools.logging :as log]
             ))
 
+(def env-prms [
+               :type
+               #_:project-id
+               :private-key-id
+               :private-key
+               :client-email
+               :client-id
+               #_:auth-uri
+               #_:token-uri
+               #_:auth-provider-x509-cert-url
+               #_:client-x509-cert-url
+               ])
+
 (defn json-env-prms []
-  (as-> [
-         :type
-         #_:project-id
-         :private-key-id
-         :private-key
-         :client-email
-         :client-id
-         #_:auth-uri
-         #_:token-uri
-         #_:auth-provider-x509-cert-url
-         #_:client-x509-cert-url
-         ] $
+  (as-> env-prms $
        (mapv (fn [prm] {(.replaceAll (name prm) "-" "_")
                        (env prm)})
              $)

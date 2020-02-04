@@ -7,6 +7,7 @@
             [environ.core :refer [env]]
             [coronavirus.telegram :as corona]
             [clojure.data.json :as json]
+            [clojure.tools.logging :as log]
             ))
 
 (def chat-id "112885364")
@@ -55,7 +56,6 @@
            :headers {"Content-Type" "text/plain"}
            :body
            (do
-             #_(println hook "req:" (str req))
              (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
                                    {:text (str "Hello from " hook " webhook")})))}))
 
@@ -65,7 +65,6 @@
            :headers {"Content-Type" "text/plain"}
            :body
            (do
-             #_(println hook "req:" (str req))
              (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
                                    {:text (str "Hello from " hook " webhook")})))}))
   (GET "/camel" {{input :input} :params}
@@ -78,7 +77,7 @@
        (route/not-found (slurp (io/resource "404.html")))))
 
 (defn webapp [& [port]]
-  (println "Starting webapp...")
+  (log/info "Starting webapp...")
   (let [port (Integer. (or port (env :port) 5000))]
     (jetty/run-jetty (site #'app) {:port port :join? false})))
 
