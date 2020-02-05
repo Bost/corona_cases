@@ -5,6 +5,8 @@
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
+            [camel-snake-kebab.core :as csk]
+            [coronavirus.raw-data :as r]
             )
   (:import java.util.GregorianCalendar
            java.util.TimeZone))
@@ -40,41 +42,170 @@
   #_"1yZv9w9zRKwrGTaR-YzmAqMefw4wMlaXocejdxZaTs6w" ;; old
   "1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM")
 
-(defn sum-up
-  [sheet range]
-  (let [ms 1000]
-    (Thread/sleep ms)
-    (->> [(str sheet "!" range)]
-         (v4/get-cell-values service spreadsheet-id)
-         (flatten)
-         (remove nil?)
-         (apply +)
-         (int))))
+;; :d stands for Demised or Deaths
+(def sheet-structure
+  [
+   {:sheet "Feb04_10PM"   :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb04_1150AM" :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb04_8AM"    :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb03_940pm"  :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb03_1230pm" :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb02_9PM"    :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb02_745pm"  :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb02_5am"    :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb01_11pm"   :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb01_6pm"    :range "D2:F" :kws [:c :d :r] :at-once true} ;; Starting from this tab, map is updating (almost) in real time (China data - at least once per hour; non China data - several times per day). This table is planning to be updated twice a day. The discrepancy between the map and this sheet is expected. Sorry for any confusion and inconvenience.
+   {:sheet "Feb01_10am"   :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Jan31_7pm"    :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan31_2pm"    :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan30_930pm"  :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan30_11am"   :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan29_9pm"    :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan29_230pm"  :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan29_130pm"  :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan28_11pm"   :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan28_6pm"    :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan28_1pm"    :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan27_830pm"  :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan27_7pm"    :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan27_9am"    :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan26_11pm"   :range "D2:F" :kws [:c :d :r]}
+   {:sheet "Jan26_11am"   :range "D2:G" :kws [:c :d :r :s]}
+   {:sheet "Jan25_10pm"   :range "D2:G" :kws [:c :s :r :d]}
+   {:sheet "Jan25_12pm"   :range "D2:G" :kws [:c :s :r :d]}
+   {:sheet "Jan25_12am"   :range "D2:G" :kws [:c :s :r :d]}
+   {:sheet "Jan24_12pm"   :range "D2:G" :kws [:c :s :r :d]}
+   {:sheet "Jan24_12am"   :range "D2:G" :kws [:c :s :r :d]}
+   {:sheet "Jan23_12pm"   :range "D2:G" :kws [:c :s :r :d]}
+   {:sheet "Jan22_12pm"   :range "D2:E" :kws [:c :s]}
+   {:sheet "Jan22_12am"   :range "D2:E" :kws [:c :s] :at-once true}
+   ])
 
-(defn confirmed-sum [sheet range] (sum-up sheet (str "D2:D" range)))
-(defn deaths-sum    [sheet range] (sum-up sheet (str "E2:E" range)))
-(defn recovered-sum [sheet range] (sum-up sheet (str "F2:F" range)))
+(defn get-from-sheet-structure [sheet kw]
+  (->> sheet-structure
+       (filter (fn [range] (= sheet (:sheet range))))
+       (first)
+       kw))
+
+(defn transpose [coll] (apply mapv vector coll))
+
+#_Jan22_12pm
+#_Jan22_12am
+;; (set! *print-level* 3) (set! *print-length* 3)
+(set! *print-level* nil) (set! *print-length* nil)
+
+(defn sum-up-at-once
+  ([sheet]
+   (sum-up-at-once sheet 800))
+  ([sheet delay]
+   (let [range (get-from-sheet-structure sheet :range)
+         kws (get-from-sheet-structure sheet :kws)]
+     (Thread/sleep delay)
+     (let [full-range (str range (row-count sheet))
+           sheet-range (str sheet "!" full-range)]
+       (let [sheet-vals (->> [sheet-range]
+                             (v4/get-cell-values service spreadsheet-id))]
+         (println "sum-up-at-once" "sheet-range" sheet-range "kws" kws
+                  ;; "sheet-vals" sheet-vals
+                  )
+         #_sheet-vals
+         (->>
+          sheet-vals
+          (first)
+          #_(take 30)
+          (filter (fn [row] (some some? row)))  ;; keep only rows containing at least one value
+          (vec)
+          (mapv (fn [col] (vec (map (fn [v] (if (nil? v) 0
+                                              (int v)))
+                                   col))))
+          (transpose)
+          (mapv (fn [v] (apply + v)))
+          (zipmap kws)))))))
+
+(defn get-ranges [range]
+  (case range
+    "D2:E" ["D2:D" "E2:E"]
+    "D2:F" ["D2:D" "E2:E" "F2:F"]
+    "D2:G" ["D2:D" "E2:E" "F2:F" "G2:G"]
+    (throw (Exception. (format "Unrecognized range: %s" range)))))
+
+(defn sum-up-col
+  [sheet range row-count kw]
+  (let [full-range (str range row-count)
+        sheet-range (str sheet "!" full-range)]
+    (let [sheet-vals
+          (->> [sheet-range]
+               (v4/get-cell-values service spreadsheet-id))]
+      (println "sum-up-col" "sheet-range" sheet-range "kw" kw
+               ;; "sheet-vals" sheet-vals
+               )
+      #_sheet-vals
+      (->>
+       sheet-vals
+       (first)
+       #_(take 30)
+       (filter (fn [row] (some some? row)))  ;; keep only rows containing at least one value
+       (vec)
+       (mapv (fn [col] (vec (map (fn [v] (if (nil? v) 0
+                                           (int v)))
+                                col))))
+       (transpose)
+       (mapv (fn [v] (apply + v)))
+       (zipmap [kw])))))
+
+(defn sum-up-one-by-one
+  ([sheet]
+   (sum-up-one-by-one sheet 800))
+  ([sheet delay]
+   (let [range (get-from-sheet-structure sheet :range)
+         ranges (get-ranges range)
+         kws (get-from-sheet-structure sheet :kws)
+         row-count (row-count sheet)
+         ]
+     #_ranges
+     (->> ranges
+          (map-indexed (fn [idx r]
+                         (sum-up-col sheet r row-count (nth kws idx))))
+          (into {})))))
+
+(defn sum-up
+  ([sheet]
+   (sum-up sheet 1000))
+  ([sheet delay]
+   (if-let [at-once (get-from-sheet-structure sheet :at-once)]
+     (sum-up-at-once    sheet delay)
+     (sum-up-one-by-one sheet delay))))
 
 (defn sheet-titles []
   (->> (v4/get-sheet-titles service spreadsheet-id)
        (map first)
        (sort)))
 
-(defn normal-month [month]
-  (case month
-    "jan" "01"
-    "feb" "02"
-    "mar" "03"
-    "apr" "04"
-    "may" "05"
-    "jun" "06"
-    "jul" "07"
-    "aug" "08"
-    "sep" "09"
-    "oct" "10"
-    "nov" "11"
-    "dec" "12"
-    (throw (Exception. (format "Unrecognized month: %s" month)))))
+(def month-nr-hm
+  {
+  "jan" "01"
+  "feb" "02"
+  "mar" "03"
+  "apr" "04"
+  "may" "05"
+  "jun" "06"
+  "jul" "07"
+  "aug" "08"
+  "sep" "09"
+  "oct" "10"
+  "nov" "11"
+  "dec" "12"
+   })
+
+(defn normal-month [messy-month]
+  (if-let [normal-m (get month-nr-hm messy-month)]
+    normal-m
+    (throw (Exception. (format "Unrecognized month: %s" messy-month)))))
+
+(defn messy-month [normal-month]
+  (if-let [messy-m (get (clojure.set/map-invert month-nr-hm) normal-month)]
+    messy-m
+    (throw (Exception. (format "Unrecognized month: %s" normal-month)))))
 
 (defn time-am-pm [date-time]
   (let [time-am-pm (.substring date-time 6)
@@ -93,10 +224,12 @@
 
 (defn normal-time
   "Remember: Always code as if the person who ends up maintaining your code is a
-  violent psychopath who knows where you live"
-  [messy-formatted-date-time]
+  violent psychopath who knows where you live
+
+  e.g. (normal-time \"Jan28_11pm\")"
+  [messy-date-time]
   (let [
-        date-time    (clojure.string/lower-case messy-formatted-date-time)
+        date-time    (clojure.string/lower-case messy-date-time)
         month        (.substring date-time 0 3)
         month-normal (normal-month month)
         [am-pm time] (time-am-pm date-time)
@@ -125,263 +258,42 @@
      (.substring date-time 3 6)
      normal)))
 
-(defn last-sheet []
-  (->> (sheet-titles)
-       (map (fn [name] {:name name}))
-       (map (fn [hm] (conj hm {:normal-time (normal-time (:name hm))})))
-       (sort-by :normal-time)
+(defn last-sheet-of [sheets]
+  #_"Jan26_11pm"
+  (->> sheets
+       (map (fn [hm] (conj hm {:normal (normal-time (:name hm))})))
+       (sort-by :normal)
        (last)
        :name))
 
-(defonce sheet-id (v4/find-sheet-id service
-                                    spreadsheet-id
-                                    (last-sheet)))
-(defn row-count []
-  (->> (v4/get-sheet-info service spreadsheet-id sheet-id)
+(defn last-sheet []
+  (->> (sheet-titles)
+       (map (fn [name] {:name name}))
+       (last-sheet-of)))
+
+(defn sheet-id [sheet]
+  (v4/find-sheet-id service spreadsheet-id sheet))
+
+(defn row-count [sheet]
+  (->> sheet
+       (sheet-id)
+       (v4/get-sheet-info service spreadsheet-id)
        (.getGridProperties)
        (.getRowCount)))
 
-(defn calc-per-sheet [sheet]
-  (let [range (row-count)]
-    {:d (deaths-sum    sheet range)
-     :c (confirmed-sum sheet range)
-     :r (recovered-sum sheet range)}))
-
-(defn day [sheet-title]
+(defn get-messy-day [sheet-title]
   (.substring sheet-title 0 5))
 
-(defn sheet-names-of-day [di]
-  (filterv (fn [st] (= (day st) di)) (sheet-titles)))
-
-(defn days [] (distinct (map day (sheet-titles))))
-
-(defn document []
-  (mapv (fn [day]
-          (println "day" day)
-          {:day day
-           :sheets (mapv (fn [sheet-name] {:name sheet-name})
-                         (sheet-names-of-day day))})
-        (days)))
-
-(defn graph []
-  (mapv (fn [day-sheets-hm]
-          (let [{day :day sheets :sheets} day-sheets-hm]
-            {:day day
-             :sheets (mapv (fn [name-hm]
-                             (let [{sheet-name :name} name-hm]
-                               (conj name-hm
-                                     {:count (calc-per-sheet sheet-name)})))
-                           sheets)}))
-        (document)))
-
-(def data-new
-  [
-   {:day "Feb04",
-    :sheets
-    [{:name "Feb04_1150AM", :count {:d 427, :c 20704, :r 727}}
-     {:name "Feb04_8AM", :count {:d 427, :c 20680, :r 723}}],
-    :count {:d 427, :c 20704, :r 727},
-    :date #inst "2020-02-04T00:00:00.000-00:00"}
-   {:day "Feb03",
-    :sheets
-    [{:name "Feb03_1230pm", :count {:d 362, :c 17491, :r 536}}
-     {:name "Feb03_940pm", :count {:d 426, :c 20588, :r 644}}],
-    :count {:d 426, :c 20588, :r 644},
-    :date #inst "2020-02-03T00:00:00.000-00:00"}
-   {:day "Feb02",
-    :sheets
-    [{:name "Feb02_5am", :count {:d 362, :c 16823, :r 472}}
-     {:name "Feb02_745pm", :count {:d 362, :c 16823, :r 472}}
-     {:name "Feb02_9PM", :count {:d 362, :c 17295, :r 487}}],
-    :count {:d 362, :c 17295, :r 487},
-    :date #inst "2020-02-02T00:00:00.000-00:00"}
-   ;;;; ;;;; ;;;; ;;;;
-   {:day "Feb01",
-    :sheets
-    [{:name "Feb01_10am", :count {:d 259, :c 12024, :r 287}}
-     {:name "Feb01_11pm", :count {:d 305, :c 14549, :r 340}}
-     {:name "Feb01_6pm", :count {:d 259, :c 12038, :r 284}}],
-    :count {:d 305, :c 14549, :r 340},
-    :date #inst "2020-02-01T00:00:00.000-00:00"}
-   {:day "Jan22",
-    :sheets
-    [{:name "Jan22_12am", :count {:d 169, :c 332, :r 0}}
-     {:name "Jan22_12pm", :count {:d 137, :c 555, :r 0}}],
-    :count {:d 137, :c 555, :r 0},
-    :date #inst "2020-01-22T00:00:00.000-00:00"}
-   {:day "Jan23",
-    :sheets [{:name "Jan23_12pm", :count {:d 144, :c 653, :r 30}}],
-    :count {:d 144, :c 653, :r 30},
-    :date #inst "2020-01-23T00:00:00.000-00:00"}
-   {:day "Jan24",
-    :sheets
-    [{:name "Jan24_12am", :count {:d 115, :c 881, :r 34}}
-     {:name "Jan24_12pm", :count {:d 159, :c 941, :r 36}}],
-    :count {:d 159, :c 941, :r 36},
-    :date #inst "2020-01-24T00:00:00.000-00:00"}
-   {:day "Jan25",
-    :sheets
-    [{:name "Jan25_10pm", :count {:d 406, :c 2019, :r 49}}
-     {:name "Jan25_12am", :count {:d 73, :c 1354, :r 38}}
-     {:name "Jan25_12pm", :count {:d 404, :c 1438, :r 39}}],
-    :count {:d 406, :c 2019, :r 49},
-    :date #inst "2020-01-25T00:00:00.000-00:00"}
-   {:day "Jan26",
-    :sheets
-    [{:name "Jan26_11am", :count {:d 56, :c 2116, :r 52}}
-     {:name "Jan26_11pm", :count {:d 80, :c 2794, :r 54}}],
-    :count {:d 80, :c 2794, :r 54},
-    :date #inst "2020-01-26T00:00:00.000-00:00"}
-   {:day "Jan27",
-    :sheets
-    [{:name "Jan27_7pm", :count {:d 82, :c 2927, :r 61}}
-     {:name "Jan27_830pm", :count {:d 107, :c 4473, :r 63}}
-     {:name "Jan27_9am", :count {:d 81, :c 2886, :r 59}}],
-    :count {:d 107, :c 4473, :r 63},
-    :date #inst "2020-01-27T00:00:00.000-00:00"}
-   {:day "Jan28",
-    :sheets
-    [{:name "Jan28_11pm", :count {:d 132, :c 6057, :r 110}}
-     {:name "Jan28_1pm", :count {:d 106, :c 4690, :r 79}}
-     {:name "Jan28_6pm", :count {:d 131, :c 5578, :r 107}}],
-    :count {:d 132, :c 6057, :r 110},
-    :date #inst "2020-01-28T00:00:00.000-00:00"}
-   {:day "Jan29",
-    :sheets
-    [{:name "Jan29_130pm", :count {:d 132, :c 6164, :r 112}}
-     {:name "Jan29_230pm", :count {:d 133, :c 6165, :r 126}}
-     {:name "Jan29_9pm", :count {:d 170, :c 7783, :r 133}}],
-    :count {:d 170, :c 7783, :r 133},
-    :date #inst "2020-01-29T00:00:00.000-00:00"}
-   {:day "Jan30",
-    :sheets
-    [{:name "Jan30_11am", :count {:d 171, :c 8235, :r 143}}
-     {:name "Jan30_930pm", :count {:d 213, :c 9776, :r 187}}],
-    :count {:d 213, :c 9776, :r 187},
-    :date #inst "2020-01-30T00:00:00.000-00:00"}
-   {:day "Jan31",
-    :sheets
-    [{:name "Jan31_2pm", :count {:d 213, :c 9926, :r 222}}
-     {:name "Jan31_7pm", :count {:d 259, :c 11374, :r 252}}],
-    :count {:d 259, :c 11374, :r 252},
-    :date #inst "2020-01-31T00:00:00.000-00:00"}])
-
-(def data-old
-  [
-   {:day "Feb01",
-    :sheets
-    [{:name "Feb01_10am", :count {:d 259, :c 12024, :r 287}}
-     {:name "Feb01_6pm", :count {:d 259, :c 12037, :r 284}}],
-    :count {:d 259, :c 12037, :r 284},
-    :date #inst "2020-02-01T00:00:00.000-00:00"}
-   {:day "Jan22",
-    :sheets
-    [{:name "Jan22_12am", :count {:d 169, :c 332, :r 0}}
-     {:name "Jan22_12pm", :count {:d 137, :c 555, :r 0}}],
-    :count {:d 137, :c 555, :r 0},
-    :date #inst "2020-01-22T00:00:00.000-00:00"}
-   {:day "Jan23",
-    :sheets [{:name "Jan23_12pm", :count {:d 144, :c 653, :r 30}}],
-    :count {:d 144, :c 653, :r 30},
-    :date #inst "2020-01-23T00:00:00.000-00:00"}
-   {:day "Jan24",
-    :sheets
-    [{:name "Jan24_12am", :count {:d 115, :c 881, :r 34}}
-     {:name "Jan24_12pm", :count {:d 159, :c 941, :r 36}}],
-    :count {:d 159, :c 941, :r 36},
-    :date #inst "2020-01-24T00:00:00.000-00:00"}
-   {:day "Jan25",
-    :sheets
-    [{:name "Jan25_10pm", :count {:d 406, :c 2019, :r 49}}
-     {:name "Jan25_12am", :count {:d 73, :c 1354, :r 38}}
-     {:name "Jan25_12pm", :count {:d 404, :c 1438, :r 39}}],
-    :count {:d 406, :c 2019, :r 49},
-    :date #inst "2020-01-25T00:00:00.000-00:00"}
-   {:day "Jan26",
-    :sheets
-    [{:name "Jan26_11am", :count {:d 56, :c 2116, :r 52}}
-     {:name "Jan26_11pm", :count {:d 80, :c 2794, :r 54}}],
-    :count {:d 80, :c 2794, :r 54},
-    :date #inst "2020-01-26T00:00:00.000-00:00"}
-   {:day "Jan27",
-    :sheets
-    [{:name "Jan27_7pm", :count {:d 82, :c 2927, :r 61}}
-     {:name "Jan27_830pm", :count {:d 107, :c 4473, :r 63}}
-     {:name "Jan27_9am", :count {:d 81, :c 2886, :r 59}}],
-    :count {:d 107, :c 4473, :r 63},
-    :date #inst "2020-01-27T00:00:00.000-00:00"}
-   {:day "Jan28",
-    :sheets
-    [{:name "Jan28_11pm", :count {:d 132, :c 6057, :r 110}}
-     {:name "Jan28_1pm", :count {:d 106, :c 4690, :r 79}}
-     {:name "Jan28_6pm", :count {:d 131, :c 5578, :r 107}}],
-    :count {:d 132, :c 6057, :r 110},
-    :date #inst "2020-01-28T00:00:00.000-00:00"}
-   {:day "Jan29",
-    :sheets
-    [{:name "Jan29_130pm", :count {:d 132, :c 6164, :r 112}}
-     {:name "Jan29_230pm", :count {:d 133, :c 6165, :r 126}}
-     {:name "Jan29_9pm", :count {:d 170, :c 7783, :r 133}}],
-    :count {:d 170, :c 7783, :r 133},
-    :date #inst "2020-01-29T00:00:00.000-00:00"}
-   {:day "Jan30",
-    :sheets
-    [{:name "Jan30_11am", :count {:d 171, :c 8235, :r 143}}
-     {:name "Jan30_930pm", :count {:d 213, :c 9776, :r 187}}],
-    :count {:d 213, :c 9776, :r 187},
-    :date #inst "2020-01-30T00:00:00.000-00:00"}
-   {:day "Jan31",
-    :sheets
-    [{:name "Jan31_2pm", :count {:d 213, :c 9926, :r 222}}
-     {:name "Jan31_7pm", :count {:d 259, :c 11374, :r 252}}],
-    :count {:d 259, :c 11374, :r 252},
-    :date #inst "2020-01-31T00:00:00.000-00:00"}]
- #_[{:day "Feb01",
-   :sheets
-   [{:name "Feb01_10am", :count {:d 259, :c 12024, :r 287}}
-    {:name "Feb01_6pm", :count {:d 259, :c 12037, :r 284}}]}
-  {:day "Jan22",
-   :sheets
-   [{:name "Jan22_12am", :count {:d 169, :c 332, :r 0}}
-    {:name "Jan22_12pm", :count {:d 137, :c 555, :r 0}}]}
-  {:day "Jan23",
-   :sheets [{:name "Jan23_12pm", :count {:d 144, :c 653, :r 30}}]}
-  {:day "Jan24",
-   :sheets
-   [{:name "Jan24_12am", :count {:d 115, :c 881, :r 34}}
-    {:name "Jan24_12pm", :count {:d 159, :c 941, :r 36}}]}
-  {:day "Jan25",
-   :sheets
-   [{:name "Jan25_10pm", :count {:d 406, :c 2019, :r 49}}
-    {:name "Jan25_12am", :count {:d 73, :c 1354, :r 38}}
-    {:name "Jan25_12pm", :count {:d 404, :c 1438, :r 39}}]}
-  {:day "Jan26",
-   :sheets
-   [{:name "Jan26_11am", :count {:d 56, :c 2116, :r 52}}
-    {:name "Jan26_11pm", :count {:d 80, :c 2794, :r 54}}]}
-  {:day "Jan27",
-   :sheets
-   [{:name "Jan27_7pm", :count {:d 82, :c 2927, :r 61}}
-    {:name "Jan27_830pm", :count {:d 107, :c 4473, :r 63}}
-    {:name "Jan27_9am", :count {:d 81, :c 2886, :r 59}}]}
-  {:day "Jan28",
-   :sheets
-   [{:name "Jan28_11pm", :count {:d 132, :c 6057, :r 110}}
-    {:name "Jan28_1pm", :count {:d 106, :c 4690, :r 79}}
-    {:name "Jan28_6pm", :count {:d 131, :c 5578, :r 107}}]}
-  {:day "Jan29",
-   :sheets
-   [{:name "Jan29_130pm", :count {:d 132, :c 6164, :r 112}}
-    {:name "Jan29_230pm", :count {:d 133, :c 6165, :r 126}}
-    {:name "Jan29_9pm", :count {:d 170, :c 7783, :r 133}}]}
-  {:day "Jan30",
-   :sheets
-   [{:name "Jan30_11am", :count {:d 171, :c 8235, :r 143}}
-    {:name "Jan30_930pm", :count {:d 213, :c 9776, :r 187}}]}
-  {:day "Jan31",
-   :sheets
-   [{:name "Jan31_2pm", :count {:d 213, :c 9926, :r 222}}
-    {:name "Jan31_7pm", :count {:d 259, :c 11374, :r 252}}]}])
+(defn sort-messy-days [days]
+  (->> days
+       (map (fn [d] (str d "_12am"))) ;; start of the day
+       (map normal-time)
+       (sort)
+       (map (fn [dt]
+              (str (->> (.substring dt 0 2)
+                        (messy-month)
+                        (csk/->PascalCase))
+                   (.substring dt 2 4))))))
 
 (defn sum-up-sheets-key [key sheets]
   {key (->> sheets
@@ -393,51 +305,118 @@
        (map (fn [k] (sum-up-sheets-key k sheets)))
        (apply conj)))
 
-(defn all-sheet-names []
-  (->> data
-       (map :sheets)
-       flatten
-       (map :name)
-       (map normal-time)))
-
-(defn last-sheet-of [sheets]
-  #_"Jan26_11pm"
+(defn create-hms-day-sheets
+  "Returns e.g
+  [{:day \"Feb04\" :normal \"0204_0000\"
+  :sheets [{:name \"Feb04_8AM\" :normal \"0204_0800\"}
+           {:name \"Feb04_10PM\" :normal \"0204_2200\"}
+           {:name \"Feb04_1150AM\" :normal \"0204_1150\"}]}]"
+  [sheets]
   (->> sheets
-       (map (fn [hm] (conj hm {:normal-time (normal-time (:name hm))})))
-       (sort-by :normal-time)
-       (last)
-       :name
-       ))
+       (map get-messy-day)
+       (distinct)
+       (sort-messy-days)
+       (mapv (defn messy-day-sheets [messy-day]
+               #_(println "messy-day" messy-day)
+               {:day messy-day
+                :normal (normal-time (str messy-day "_12am"))
+                :sheets
+                (->> sheets
+                     (filterv (fn [sheet] (= (get-messy-day sheet)
+                                                  messy-day)))
+                     (mapv (fn [sheet] {:name sheet
+                                       :normal (normal-time sheet)})))}))))
 
-(defn graph-sums
-  "Calculate the data"
+(defn create-date [messy-day]
+  (let [n-day (read-string (.substring messy-day 3))
+        month (->> (.substring messy-day 0 3)
+                   (clojure.string/lower-case)
+                   (normal-month)
+                   (read-string)
+                   )
+        year 2020
+        time-zone
+        #_(TimeZone/getTimeZone "Europe/Berlin")
+        (TimeZone/getTimeZone "Europe/London")
+        c (GregorianCalendar.)
+        ]
+    (.clear c)
+    (.setTimeZone c time-zone)
+    (.set c year (dec month) n-day 0 0 0)
+    (.getTime c)))
+
+(defn missing-sheets
+  "Returns a set of all missing sheets
+  e.g. #{\"Feb04_8AM\" \"Feb04_10PM\" \"Feb04_1150AM\"}"
   []
-  (mapv (fn [day-sheets-hm]
-          (let [{day :day sheets :sheets} day-sheets-hm]
-            (conj day-sheets-hm
-                  {:count
-                   (let [last-sheet-of (last-sheet-of sheets)]
-                     (->> sheets
-                          (filter (fn [name-count-hm]
-                                    (= last-sheet-of (:name name-count-hm))))
-                          (map :count)
-                          (into {})))}
-                  {:date
-                   (let [n-day (read-string (.substring day 3))
-                         month (->> (.substring day 0 3)
-                                    (clojure.string/lower-case)
-                                    (normal-month)
-                                    (read-string)
-                                    )
-                         year 2020
-                         time-zone
-                         #_(TimeZone/getTimeZone "Europe/Berlin")
-                         (TimeZone/getTimeZone "Europe/London")
-                         c (GregorianCalendar.)
-                         ]
-                     (.clear c)
-                     (.setTimeZone c time-zone)
-                     (.set c year (dec month) n-day 0 0 0)
-                     (.getTime c))})))
-        data-new
-        #_(graph)))
+  (let [old-sheet-titles (->> @r/hms-day-sheets
+                              (map :sheets)
+                              (flatten)
+                              (map :name))]
+    (clojure.set/difference (set (sheet-titles))
+                            (set old-sheet-titles))))
+
+(defn count-date--hm-day-sheets [{:keys [day sheets] :as hm-day-sheets}]
+  (conj hm-day-sheets
+        {:count
+         (let [last-sheet-of (last-sheet-of sheets)]
+           (->> sheets
+                (filter (fn [name-count-hm]
+                          (= last-sheet-of (:name name-count-hm))))
+                (map :count)
+                (into {})))}
+        {:date (create-date day)}))
+
+(defn add-count-sheet [{:keys [name] :as sheet}]
+  (conj sheet {:count (sum-up name)}))
+
+(defn calc-count-per-messy-day
+  "Calculate the counts per messy-day"
+  []
+  (if-let [sheets-to-calculate (not-empty
+                                (set ["Feb01_10am"])
+                                #_(set ["Jan22_12am"])
+                                #_(set ["Jan24_12pm"])
+                                ;; calculate only missing sheets
+                                #_(missing-sheets)
+                                ;; (re-)calculate all sheets
+                                (set (sheet-titles))
+                                ;; (re-)calculate only the last sheet
+                                #_(set (take-last 2 (sheet-titles))))]
+    #_[{:day "Feb04",
+        :sheets
+        [{:name "Feb04_8AM", :count {:c 20680, :d 427, :r 723}}
+         {:name "Feb04_10PM", :count {:c 24503, :d 492, :r 899}}
+         {:name "Feb04_1150AM", :count {:c 20704, :d 427, :r 727}}],
+        :count {:c 24503, :d 492, :r 899},
+        :date #inst "2020-02-04T00:00:00.000-00:00"}]
+    (->>
+     ;; e.g
+     ;; #{"Feb04_8AM" "Feb04_10PM" "Feb04_1150AM"}
+     sheets-to-calculate
+     ;; e.g.
+     ;; [{:day "Feb04" :normal "0204_0000"
+     ;;   :sheets [{:name "Feb04_8AM"}
+     ;;            {:name "Feb04_10PM"}
+     ;;            {:name "Feb04_1150AM"}]}]
+     (create-hms-day-sheets)
+
+     ;; e.g.
+     ;; [{:day "Feb04" :normal "0204_0000"
+     ;;   :sheets [{:name "Feb04_8AM"    :count {:c 20680 :d 427 :r 723}}
+     ;;            {:name "Feb04_10PM"   :count {:c 24503 :d 492 :r 899}}
+     ;;            {:name "Feb04_1150AM" :count {:c 20704 :d 427 :r 727}}]}]
+     (mapv (fn [{:keys [sheets] :as hm-day-sheets}]
+             (conj hm-day-sheets
+                   {:sheets (mapv add-count-sheet sheets)})))
+     (mapv count-date--hm-day-sheets))
+    ;; TODO update the @r/hms-day-sheets
+    )
+
+
+  ;; get the counts from
+  #_(let [(->> @r/hms-day-sheets
+             (map (fn [hm-day-sheets] (select-keys hm-day-sheets [:day :count])))
+             (sort-by :normal)
+            )])
+  )

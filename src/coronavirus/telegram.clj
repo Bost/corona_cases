@@ -93,18 +93,11 @@
        :normal   (int (Math/round percentage))
        (throw (Exception. "ERROR: get-percentage [:high|:low|:normal] <PLACE> <TOTAL_COUNT>"))))))
 
-(defn info-msg
-  "TODO memoize it and reread on notification"
-  []
-  (let [range (d/row-count)
-        sheet (d/last-sheet)
-        confirmed (d/confirmed-sum sheet range)
-        deaths    (d/deaths-sum    sheet range)
-        recovered (d/recovered-sum sheet range)
-        ]
+(defn info-msg []
+  (let [[confirmed deaths recovered] (d/calc-count-per-messy-day)]
     (str
      "\n"
-     (str sheet " EST (Eastern Time Zone):") "\n"
+     (str (d/last-sheet) " EST (Eastern Time Zone):") "\n"
      (confirmed-header sheet) ": " confirmed "\n"
      (deaths-header    sheet) ": " deaths
      "  ~  " (get-percentage deaths confirmed) "%\n"
@@ -114,35 +107,19 @@
 
 (defn link [name url] (str "[" name "]""(" url ")"))
 
-(defn data []
-  (->> (d/graph-sums)
+(defn pic-data []
+  (->> (d/calc-count-per-messy-day)
        (map (fn [hm]
               (select-keys hm [:date :count])))
        (sort-by :date)))
 
 (defn pic []
-  #_(let [r (java.util.Random. 42)]
-    (-> {"Maxime" {:x (range 10)
-                   :y (mapv #(+ % (* 3 (.nextDouble r)))
-                            (range 10))}
-         "Tyrone" {:x (range 10)
-                   :y (mapv #(+ 2 % (* 4 (.nextDouble r)))
-                            (range 0 5 0.5))}}
-        (c/xy-chart
-         {:title "Longest running distance"
-          :x-axis {:title "Months (since start)"}
-          :y-axis {:title "Distance"
-                   :decimal-pattern "##.## km"}
-          :theme :matlab})
-        (c/to-bytes :png)
-        #_(c/view)))
-
   (-> (c/xy-chart
        (conj {}
              {"Confirmed"
               (conj {}
-                    {:x (map :date (data))
-                     :y (map (fn [hm] (->> hm :count :c)) (data))
+                    {:x (map :date (pic-data))
+                     :y (map (fn [hm] (->> hm :count :c)) (pic-data))
                      :style
                      (conj {}
                            {:marker-type :none}
@@ -152,8 +129,8 @@
                            )})}
              {"Deaths"
               (conj {}
-                    {:x (map :date (data))
-                     :y (map (fn [hm] (->> hm :count :d)) (data))}
+                    {:x (map :date (pic-data))
+                     :y (map (fn [hm] (->> hm :count :d)) (pic-data))}
                     {:style
                      (conj {}
                            {:marker-type :none}
@@ -162,8 +139,8 @@
                      })}
              {"Recovered"
               (conj {}
-                    {:x (map :date (data))
-                     :y (map (fn [hm] (->> hm :count :r)) (data))}
+                    {:x (map :date (pic-data))
+                     :y (map (fn [hm] (->> hm :count :r)) (pic-data))}
                     {:style
                      (conj {}
                            {:marker-type :none}
@@ -191,33 +168,47 @@
        (cmd-fn id)
        (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd "]") chat)))))
 
+#_(defn refresh-cmd-fn [id]
+  (a/send-text token id (info-msg))
+  (a/send-photo token id (pic)))
+
 ;; long polling
 (h/defhandler handler
-  (register-cmd "start"   (fn [id] (a/send-text token id (info-msg))))
-  (register-cmd "refresh" (fn [id] (a/send-text token id (info-msg))))
   (register-cmd
-   "about" (fn [id]
-             (a/send-photo token id (pic))
-             #_(a/send-photo token id
-                             (io/input-stream -stream "/path/to/photo.png"))
-             (a/send-text
-              token id
-              {:parse_mode "Markdown"}
-              (str
-               "Bot version: " bot-ver "\n"
-               "Percentage calculation: <cases> / confirmed\n"
-               "See "
-               (link "data source"
-                     (str "https://docs.google.com/spreadsheets/d/"
-                          d/spreadsheet-id "/edit?usp=sharing"))
-               " and "
-               (link "dashboard & geo map"
-                     (str "https://gisanddata.maps.arcgis.com/apps/"
-                          "opsdashboard/index.html#/"
-                          "bda7594740fd40299423467b48e9ecf6"))
-               "\n"
-               msg-footer))
-             (a/send-text token id (info-msg))))
+   "start"
+   #_refresh-cmd-fn
+   (fn [id]
+     (a/send-text token id (info-msg))
+     (a/send-photo token id (pic))))
+  (register-cmd
+   "refresh"
+   #_refresh-cmd-fn
+   (fn [id]
+     (a/send-text token id (info-msg))
+     (a/send-photo token id (pic))))
+  (register-cmd
+   "about"
+   #_about-cmd-fn
+   (fn [id]
+     #_(a/send-photo token id
+                     (io/input-stream -stream "/path/to/photo.png"))
+     (a/send-text
+      token id
+      {:parse_mode "Markdown"}
+      (str
+       "Bot version: " bot-ver "\n"
+       "Percentage calculation: <cases> / confirmed\n"
+       "See "
+       (link "data source"
+             (str "https://docs.google.com/spreadsheets/d/"
+                  d/spreadsheet-id "/edit?usp=sharing"))
+       " and "
+       (link "dashboard & geo map"
+             (str "https://gisanddata.maps.arcgis.com/apps/"
+                  "opsdashboard/index.html#/"
+                  "bda7594740fd40299423467b48e9ecf6"))
+       "\n"
+       msg-footer))))
 
   #_(h/message-fn
      (fn [{{id :id} :chat :as message}]
