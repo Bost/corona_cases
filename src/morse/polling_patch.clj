@@ -34,7 +34,7 @@
               (close! running)
               (close! updates)
               (log/fatal "ABORT on ::wait-timeout")
-              (System/exit 1))
+              (api-error-handle-fn))
 
           ::api/error
           (do (log/warn "Got error from Telegram API, stopping polling")
