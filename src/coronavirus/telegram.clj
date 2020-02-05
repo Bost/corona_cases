@@ -13,6 +13,7 @@
             [clj-time.core :as t]
             [com.hypirion.clj-xchart :as c]
             [coronavirus.data :as d]
+            [coronavirus.raw-data :as r]
             [clojure.tools.logging :as log]
             [clojure.core.async :as async]
             )
@@ -94,10 +95,11 @@
        (throw (Exception. "ERROR: get-percentage [:high|:low|:normal] <PLACE> <TOTAL_COUNT>"))))))
 
 (defn info-msg []
-  (let [[confirmed deaths recovered] (d/calc-count-per-messy-day)]
+  (let [sheet (d/last-sheet)
+        {confirmed :c deaths :d recovered :r} (:count (d/calc-count-per-messy-day))]
     (str
      "\n"
-     (str (d/last-sheet) " EST (Eastern Time Zone):") "\n"
+     (str sheet " EST (Eastern Time Zone):") "\n"
      (confirmed-header sheet) ": " confirmed "\n"
      (deaths-header    sheet) ": " deaths
      "  ~  " (get-percentage deaths confirmed) "%\n"
@@ -108,56 +110,64 @@
 (defn link [name url] (str "[" name "]""(" url ")"))
 
 (defn pic-data []
-  (->> (d/calc-count-per-messy-day)
+  (->> @r/hms-day-sheets
        (map (fn [hm]
               (select-keys hm [:date :count])))
        (sort-by :date)))
 
+(defn get-vals [pic-data k]
+  (->> pic-data
+       (map (fn [hm] (->> hm :count k)))
+       (map (fn [v] (if (nil? v) 0 v)))))
+
 (defn pic []
-  (-> (c/xy-chart
-       (conj {}
-             {"Confirmed"
-              (conj {}
-                    {:x (map :date (pic-data))
-                     :y (map (fn [hm] (->> hm :count :c)) (pic-data))
-                     :style
-                     (conj {}
-                           {:marker-type :none}
-                           #_{:render-style :line}
-                           #_{:line-color :orange}
-                           #_{:fill-color :orange}
-                           )})}
-             {"Deaths"
-              (conj {}
-                    {:x (map :date (pic-data))
-                     :y (map (fn [hm] (->> hm :count :d)) (pic-data))}
-                    {:style
-                     (conj {}
-                           {:marker-type :none}
-                           {:render-style :line}
-                           #_{:line-color :red})
-                     })}
-             {"Recovered"
-              (conj {}
-                    {:x (map :date (pic-data))
-                     :y (map (fn [hm] (->> hm :count :r)) (pic-data))}
-                    {:style
-                     (conj {}
-                           {:marker-type :none}
-                           {:render-style :line}
-                           #_{:line-color :green})})})
-       (conj {}
-             {:title "Coronavirus (2019-nCoV)"
-              :render-style :area
-              :legend {:position :inside-nw}
-              :x-axis {:title "Day"}
-              :y-axis {:title "Cases"}}
-             #_{:theme :matlab}
-             #_{:width 640 :height 500}
-             {:width 800 :height 600}
-             {:date-pattern "MMMd"}))
-      #_(c/view)
-      (c/to-bytes :png)))
+  (let [pic-data (pic-data)
+        dates (map :date pic-data)]
+    (println "pic-data" pic-data)
+    (-> (c/xy-chart
+         (conj {}
+               {"Confirmed"
+                (conj {}
+                      {:x dates
+                       :y (get-vals pic-data :c)
+                       :style
+                       (conj {}
+                             {:marker-type :none}
+                             #_{:render-style :line}
+                             #_{:line-color :orange}
+                             #_{:fill-color :orange}
+                             )})}
+               {"Deaths"
+                (conj {}
+                      {:x dates
+                       :y (get-vals pic-data :d)}
+                      {:style
+                       (conj {}
+                             {:marker-type :none}
+                             {:render-style :line}
+                             #_{:line-color :red})
+                       })}
+               {"Recovered"
+                (conj {}
+                      {:x dates
+                       :y (get-vals pic-data :r)}
+                      {:style
+                       (conj {}
+                             {:marker-type :none}
+                             {:render-style :line}
+                             #_{:line-color :green})})})
+         (conj {}
+               {:title "Coronavirus (2019-nCoV)"
+                :render-style :area
+                :legend {:position :inside-nw}
+                :x-axis {:title "Day"}
+                :y-axis {:title "Cases"}}
+               #_{:theme :matlab}
+               #_{:width 640 :height 500}
+               {:width 800 :height 600}
+               {:date-pattern "MMMd"}))
+        #_(c/view)
+        (c/to-bytes :png))))
 
 (defn register-cmd [cmd cmd-fn]
   (h/command-fn

@@ -55,7 +55,7 @@
    {:sheet "Feb02_5am"    :range "D2:F" :kws [:c :d :r] :at-once true}
    {:sheet "Feb01_11pm"   :range "D2:F" :kws [:c :d :r] :at-once true}
    {:sheet "Feb01_6pm"    :range "D2:F" :kws [:c :d :r] :at-once true} ;; Starting from this tab, map is updating (almost) in real time (China data - at least once per hour; non China data - several times per day). This table is planning to be updated twice a day. The discrepancy between the map and this sheet is expected. Sorry for any confusion and inconvenience.
-   {:sheet "Feb01_10am"   :range "D2:F" :kws [:c :d :r] :at-once true}
+   {:sheet "Feb01_10am"   :range "D2:F" :kws [:c :d :r]}
    {:sheet "Jan31_7pm"    :range "D2:F" :kws [:c :d :r]}
    {:sheet "Jan31_2pm"    :range "D2:F" :kws [:c :d :r]}
    {:sheet "Jan30_930pm"  :range "D2:F" :kws [:c :d :r]}
@@ -94,6 +94,14 @@
 ;; (set! *print-level* 3) (set! *print-length* 3)
 (set! *print-level* nil) (set! *print-length* nil)
 
+(defn row-count [sheet]
+  1000
+  #_(->> sheet
+       (sheet-id)
+       (v4/get-sheet-info service spreadsheet-id)
+       (.getGridProperties)
+       (.getRowCount)))
+
 (defn sum-up-at-once
   ([sheet]
    (sum-up-at-once sheet 800))
@@ -108,7 +116,7 @@
          (println "sum-up-at-once" "sheet-range" sheet-range "kws" kws
                   ;; "sheet-vals" sheet-vals
                   )
-         #_sheet-vals
+         #_(def sheet-vals sheet-vals)
          (->>
           sheet-vals
           (first)
@@ -274,13 +282,6 @@
 (defn sheet-id [sheet]
   (v4/find-sheet-id service spreadsheet-id sheet))
 
-(defn row-count [sheet]
-  (->> sheet
-       (sheet-id)
-       (v4/get-sheet-info service spreadsheet-id)
-       (.getGridProperties)
-       (.getRowCount)))
-
 (defn get-messy-day [sheet-title]
   (.substring sheet-title 0 5))
 
@@ -367,20 +368,32 @@
                 (into {})))}
         {:date (create-date day)}))
 
-(defn add-count-sheet [{:keys [name] :as sheet}]
-  (conj sheet {:count (sum-up name)}))
+(defn add-count-sheet [{:keys [name delay] :as sheet}]
+  (conj sheet {:count (sum-up name delay)}))
+
+(defn last-date-count []
+  (let [last-day (->> @r/hms-day-sheets
+                      #_(map (fn [hm-day-sheets] (select-keys hm-day-sheets [:day :normal :count])))
+                      (sort-by :normal)
+                      (last)
+                      :day
+                      )]
+    (select-keys (->> @r/hms-day-sheets
+                      (filter (fn [hm] (= (:day hm) last-day)))
+                      (first))
+                 [:date :count])))
 
 (defn calc-count-per-messy-day
   "Calculate the counts per messy-day"
   []
-  (if-let [sheets-to-calculate (not-empty
-                                (set ["Feb01_10am"])
+  #_(if-let [sheets-to-calculate (not-empty
+                                #_(set ["Feb01_10am"])
                                 #_(set ["Jan22_12am"])
                                 #_(set ["Jan24_12pm"])
                                 ;; calculate only missing sheets
-                                #_(missing-sheets)
+                                (missing-sheets)
                                 ;; (re-)calculate all sheets
-                                (set (sheet-titles))
+                                #_(set (sheet-titles))
                                 ;; (re-)calculate only the last sheet
                                 #_(set (take-last 2 (sheet-titles))))]
     #_[{:day "Feb04",
@@ -408,15 +421,10 @@
      ;;            {:name "Feb04_1150AM" :count {:c 20704 :d 427 :r 727}}]}]
      (mapv (fn [{:keys [sheets] :as hm-day-sheets}]
              (conj hm-day-sheets
-                   {:sheets (mapv add-count-sheet sheets)})))
+                   {:sheets (mapv add-count-sheet (conj sheets {:delay 0}))})))
      (mapv count-date--hm-day-sheets))
     ;; TODO update the @r/hms-day-sheets
     )
 
-
   ;; get the counts from
-  #_(let [(->> @r/hms-day-sheets
-             (map (fn [hm-day-sheets] (select-keys hm-day-sheets [:day :count])))
-             (sort-by :normal)
-            )])
-  )
+  (last-date-count))
