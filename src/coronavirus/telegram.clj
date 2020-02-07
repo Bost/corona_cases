@@ -202,8 +202,8 @@
                "bda7594740fd40299423467b48e9ecf6"))
     "\n"
     "\n"
-    "The notch in the graph on Feb05 - the collected data is apparently not complete."
-    "\n"
+    "- The notch in the graph on Feb05 - the collected data is apparently not complete.\n"
+    "- /refresh takes ~10 seconds to executes, sorry. I'm working on it.\n"
     msg-footer)))
 
 ;; long polling
