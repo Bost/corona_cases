@@ -157,7 +157,7 @@
                              {:render-style :line}
                              #_{:line-color :green})})})
          (conj {}
-               {:title "Coronavirus (2019-nCoV)"
+               {:title "Coronavirus (2019-nCoV) - see the /about command"
                 :render-style :area
                 :legend {:position :inside-nw}
                 :x-axis {:title "Day"}
@@ -200,6 +200,9 @@
           (str "https://gisanddata.maps.arcgis.com/apps/"
                "opsdashboard/index.html#/"
                "bda7594740fd40299423467b48e9ecf6"))
+    "\n"
+    "\n"
+    "The notch in the graph on Feb05 - the collected data is apparently not complete."
     "\n"
     msg-footer)))
 
