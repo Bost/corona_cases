@@ -3,15 +3,16 @@
    [utils.core :refer [in?]]
    ))
 
-(def va
-  (atom
-   [{:day "o" :s [{:n "o1" :cnt {:d 0 :c -1 :r -2}}]}
-    {:day "a" :s [{:n "a1" :cnt {:d 0 :c 1 :r 2}}]}]))
+(comment
+  (def va
+    (atom
+     [{:day "o" :s [{:n "o1" :cnt {:d 0 :c -1 :r -2}}]}
+      {:day "a" :s [{:n "a1" :cnt {:d 0 :c 1 :r 2}}]}]))
 
-(def n1 {:day "a" :s [{:n "a1" :cnt {:d 10 :c 11 :r 12}}]})
-(def nb {:day "b" :s [{:n "b1" :cnt {:d 0 :c 1 :r 2}}]})
+  (def n1 {:day "a" :s [{:n "a1" :cnt {:d 10 :c 11 :r 12}}]})
+  (def nb {:day "b" :s [{:n "b1" :cnt {:d 0 :c 1 :r 2}}]})
 
-#_(swap! vector-atom update-in [:d] merge [{:d "a" :s [{:n "a1" :cnt {:d 0 :c -1 :r -2}}]}])
+  (swap! va (fn [_] (update-va [n1 nb]))))
 
 (defn update-coll-of-hms
   [coll-of-hms k new-hm]
@@ -46,14 +47,6 @@
         acc
         (recur (rest new-hms)
                (update-coll-of-hms acc :day (first new-hms)))))))
-
-#_(swap! va (fn [_] (update-coll-of-hms--with--coll-of-new-hms @va [n1 nb])))
-
-;; TODO test:
-;; - one day missing
-;; - multiple days missing
-;; - missing 1 sheet
-;; - missing multiple sheets
 
 (def hms-day-sheets
   (atom
