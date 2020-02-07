@@ -12,10 +12,10 @@
             [clj-time-ext.core :as te]
             [clj-time.core :as t]
             [com.hypirion.clj-xchart :as c]
-            [coronavirus.data :as d]
-            [coronavirus.raw-data :as r]
             [clojure.tools.logging :as log]
             [clojure.core.async :as async]
+            [coronavirus.data :as d]
+            [coronavirus.raw-data :as r]
             )
   (:gen-class))
 
@@ -95,17 +95,18 @@
        (throw (Exception. "ERROR: get-percentage [:high|:low|:normal] <PLACE> <TOTAL_COUNT>"))))))
 
 (defn info-msg []
-  (let [sheet (d/last-sheet)
-        {confirmed :c deaths :d recovered :r} (:count (d/calc-count-per-messy-day))]
-    (str
-     "\n"
-     (str sheet " EST (Eastern Time Zone):") "\n"
-     (confirmed-header sheet) ": " confirmed "\n"
-     (deaths-header    sheet) ": " deaths
-     "  ~  " (get-percentage deaths confirmed) "%\n"
-     (recovered-header sheet) ": " recovered
-     "  ~  " (get-percentage recovered confirmed) "%\n"
-     msg-footer)))
+  (let [sheet (d/last-sheet)]
+    #_(println "sheet" sheet)
+    (let [{confirmed :c deaths :d recovered :r} (:count (d/calc-count-per-messy-day))]
+      (str
+       "\n"
+       (str sheet " EST (Eastern Time Zone):") "\n"
+       (confirmed-header sheet) ": " confirmed "\n"
+       (deaths-header    sheet) ": " deaths
+       "  ~  " (get-percentage deaths confirmed) "%\n"
+       (recovered-header sheet) ": " recovered
+       "  ~  " (get-percentage recovered confirmed) "%\n"
+       msg-footer))))
 
 (defn link [name url] (str "[" name "]""(" url ")"))
 
@@ -123,7 +124,6 @@
 (defn pic []
   (let [pic-data (pic-data)
         dates (map :date pic-data)]
-    (println "pic-data" pic-data)
     (-> (c/xy-chart
          (conj {}
                {"Confirmed"
@@ -174,51 +174,40 @@
    cmd
    (fn [{{id :id :as chat} :chat}]
      (let [tbeg (te/tnow)]
-       (println (str "[" tbeg "           "" " bot-ver " /" cmd "]") chat)
+       (println (str "[" tbeg "           " " " bot-ver " /" cmd "]") chat)
        (cmd-fn id)
        (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd "]") chat)))))
 
-#_(defn refresh-cmd-fn [id]
+(defn refresh-cmd-fn [id]
   (a/send-text token id (info-msg))
   (a/send-photo token id (pic)))
 
+(defn about-cmd-fn [id]
+  #_(a/send-photo token id
+                  (io/input-stream -stream "/path/to/photo.png"))
+  (a/send-text
+   token id
+   {:parse_mode "Markdown"}
+   (str
+    "Bot version: " bot-ver "\n"
+    "Percentage calculation: <cases> / confirmed\n"
+    "See "
+    (link "data source"
+          (str "https://docs.google.com/spreadsheets/d/"
+               d/spreadsheet-id "/edit?usp=sharing"))
+    " and "
+    (link "dashboard & geo map"
+          (str "https://gisanddata.maps.arcgis.com/apps/"
+               "opsdashboard/index.html#/"
+               "bda7594740fd40299423467b48e9ecf6"))
+    "\n"
+    msg-footer)))
+
 ;; long polling
 (h/defhandler handler
-  (register-cmd
-   "start"
-   #_refresh-cmd-fn
-   (fn [id]
-     (a/send-text token id (info-msg))
-     (a/send-photo token id (pic))))
-  (register-cmd
-   "refresh"
-   #_refresh-cmd-fn
-   (fn [id]
-     (a/send-text token id (info-msg))
-     (a/send-photo token id (pic))))
-  (register-cmd
-   "about"
-   #_about-cmd-fn
-   (fn [id]
-     #_(a/send-photo token id
-                     (io/input-stream -stream "/path/to/photo.png"))
-     (a/send-text
-      token id
-      {:parse_mode "Markdown"}
-      (str
-       "Bot version: " bot-ver "\n"
-       "Percentage calculation: <cases> / confirmed\n"
-       "See "
-       (link "data source"
-             (str "https://docs.google.com/spreadsheets/d/"
-                  d/spreadsheet-id "/edit?usp=sharing"))
-       " and "
-       (link "dashboard & geo map"
-             (str "https://gisanddata.maps.arcgis.com/apps/"
-                  "opsdashboard/index.html#/"
-                  "bda7594740fd40299423467b48e9ecf6"))
-       "\n"
-       msg-footer))))
+  (register-cmd "start"   (fn [id] (refresh-cmd-fn id)))
+  (register-cmd "refresh" (fn [id] (refresh-cmd-fn id)))
+  (register-cmd "about"   (fn [id] (about-cmd-fn id)))
 
   #_(h/message-fn
      (fn [{{id :id} :chat :as message}]
