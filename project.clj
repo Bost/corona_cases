@@ -16,8 +16,6 @@
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
    [com.hypirion/clj-xchart "0.2.0"]
    [camel-snake-kebab       "0.4.1"]
-   [org.clojars.bost/utils  "0.0.0-31-0x566f"] ;; pulls in also clj-time-ext
-
    ]
   :min-lein-version "2.0.0"
   :plugins

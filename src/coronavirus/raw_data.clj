@@ -1,7 +1,4 @@
-(ns coronavirus.raw-data
-  (:require
-   [utils.core :refer [in?]]
-   ))
+(ns coronavirus.raw-data)
 
 (comment
   (def va
@@ -13,6 +10,11 @@
   (def nb {:day "b" :s [{:n "b1" :cnt {:d 0 :c 1 :r 2}}]})
 
   (swap! va (fn [_] (update-va [n1 nb]))))
+
+(defn in?
+  "true if seq contains elm"
+  [seq elm]
+  (boolean (some (fn [e] (= elm e)) seq)))
 
 (defn update-coll-of-hms
   [coll-of-hms k new-hm]
