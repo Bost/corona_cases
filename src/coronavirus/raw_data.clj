@@ -113,7 +113,7 @@
     {:day "Feb01" :normal "0201_0000"
      :sheets
      [{:name "Feb01_11pm" :normal "0201_2300" :count {:c 14549 :d 305 :r 340}}
-      {:name "Feb01_10am" :normal "0201_1000" :count {:c 12024, :d 259, :r 287}}
+      {:name "Feb01_10am" :normal "0201_1000" :count {:c 12024 :d 259 :r 287}}
       {:name "Feb01_6pm" :normal "0201_1800" :count {:c 12038 :d 259 :r 284}}]
      :count {:c 14549 :d 305 :r 340} :date #inst "2020-02-01T00:00:00.000-00:00"}
     {:day "Feb02" :normal "0202_0000"
@@ -122,7 +122,8 @@
       {:name "Feb02_745pm" :normal "0202_1945" :count {:c 16823 :d 362 :r 472}}
       {:name "Feb02_9PM" :normal "0202_2100" :count {:c 17295 :d 362 :r 487}}]
      :count {:c 17295 :d 362 :r 487} :date #inst "2020-02-02T00:00:00.000-00:00"}
-    {:day "Feb03" :normal "0203_0000" :sheets
+    {:day "Feb03" :normal "0203_0000"
+     :sheets
      [{:name "Feb03_940pm" :normal "0203_2140" :count {:c 20588 :d 426 :r 644}}
       {:name "Feb03_1230pm" :normal "0203_1230" :count {:c 17491 :d 362 :r 536}}]
      :count {:c 20588 :d 426 :r 644} :date #inst "2020-02-03T00:00:00.000-00:00"}
@@ -131,6 +132,4 @@
      [{:name "Feb04_8AM" :normal "0204_0800" :count {:c 20680 :d 427 :r 723}}
       {:name "Feb04_1150AM" :normal "0204_1150" :count {:c 20704 :d 427 :r 727}}
       {:name "Feb04_10PM" :normal "0204_2200" :count {:c 24503 :d 492 :r 899}}]
-     :count {:c 24503 :d 492 :r 899} :date #inst "2020-02-04T00:00:00.000-00:00"}]))
-
-
+     :count {:c 24503 :d 492 :r 899} :date #inst "2020-02-04T00:00:00.000-00:00"}
