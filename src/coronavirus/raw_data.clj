@@ -1,7 +1,53 @@
-(ns coronavirus.raw-data)
+(ns coronavirus.raw-data
+  (:require
+   [utils.core :refer [in?]]
+   ))
 
-(def at (atom [{:d "a" :s [{:n "a1" :cnt {:d 0 :c 1 :r 2}}]}]))
-(def new-d {:d "b" :s [{:n "b1" :cnt {:d 0 :c 1 :r 2}}]})
+(def va
+  (atom
+   [{:day "o" :s [{:n "o1" :cnt {:d 0 :c -1 :r -2}}]}
+    {:day "a" :s [{:n "a1" :cnt {:d 0 :c 1 :r 2}}]}]))
+
+(def n1 {:day "a" :s [{:n "a1" :cnt {:d 10 :c 11 :r 12}}]})
+(def nb {:day "b" :s [{:n "b1" :cnt {:d 0 :c 1 :r 2}}]})
+
+#_(swap! vector-atom update-in [:d] merge [{:d "a" :s [{:n "a1" :cnt {:d 0 :c -1 :r -2}}]}])
+
+(defn update-coll-of-hms
+  [coll-of-hms k new-hm]
+  (if (in? (keys new-hm) k)
+    (let [new-coll-of-hms
+          (let [v (k new-hm)
+                idx (->> coll-of-hms
+                         (keep-indexed (fn [idx hm]
+                                         #_(println "k" k "v" v)
+                                         #_(println "hm" hm)
+                                         (if (= (k hm) v) idx)))
+                         ;; TODO a coll of one or none elems can be returned
+                         (first))]
+            #_(println "idx" idx "(boolean idx)" (boolean idx))
+            (if idx
+              (do
+                #_(println (format "(assoc %s (merge ...))" idx))
+                (assoc coll-of-hms idx
+                       (merge (nth coll-of-hms idx) new-hm)))
+              (do
+                #_(println (format "(conj ... %s)" new-hm))
+                (conj coll-of-hms new-hm))))]
+      new-coll-of-hms)
+    (println (format "Key %s not in the new-hm %s" k new-hm))))
+
+(def update-coll-of-hms--with--coll-of-new-hms
+  (fn [vec-of-hms init-new-hms]
+    (loop [new-hms init-new-hms
+           acc vec-of-hms]
+      #_(println "acc" acc)
+      (if (empty? new-hms)
+        acc
+        (recur (rest new-hms)
+               (update-coll-of-hms acc :day (first new-hms)))))))
+
+#_(swap! va (fn [_] (update-coll-of-hms--with--coll-of-new-hms @va [n1 nb])))
 
 ;; TODO test:
 ;; - one day missing
@@ -83,8 +129,8 @@
     {:day "Feb04" :normal "0204_0000"
      :sheets
      [{:name "Feb04_8AM" :normal "0204_0800" :count {:c 20680 :d 427 :r 723}}
-      {:name "Feb04_10PM" :normal "0204_2200" :count {:c 24503 :d 492 :r 899}}
-      {:name "Feb04_1150AM" :normal "0204_1150" :count {:c 20704 :d 427 :r 727}}]
+      {:name "Feb04_1150AM" :normal "0204_1150" :count {:c 20704 :d 427 :r 727}}
+      {:name "Feb04_10PM" :normal "0204_2200" :count {:c 24503 :d 492 :r 899}}]
      :count {:c 24503 :d 492 :r 899} :date #inst "2020-02-04T00:00:00.000-00:00"}]))
 
 
