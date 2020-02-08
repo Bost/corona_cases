@@ -16,6 +16,7 @@
             [clojure.core.async :as async]
             [coronavirus.data :as d]
             [coronavirus.raw-data :as r]
+            [clojure.core.memoize :as memo]
             )
   (:gen-class))
 
@@ -54,30 +55,40 @@
             bot-ver
             bot-type)))
 
-(log/info "Telegram Chatbot:" bot)
+#_(log/info "Telegram Chatbot:" bot)
 
-(defn confirmed-header [sheet]
-  (let [column "D"]
-    (->>
-     [(str sheet "!" column "1:" column "1")]
-     (v4/get-cell-values d/service d/spreadsheet-id)
-     (flatten)
-     (apply str))))
+;; TODO I hope the headers don't change!
+(def confirmed-header
+  (memo/memo
+   (defn confirmed-header-query [sheet]
+     (println "confirmed-header-query")
+     (let [column "D"]
+       (->>
+        [(str sheet "!" column "1:" column "1")]
+        (v4/get-cell-values d/service d/spreadsheet-id)
+        (flatten)
+        (apply str))))))
 
-(defn deaths-header [sheet]
-  (let [column "E"]
-    (->>
-     [(str sheet "!" column "1:" column "1")]
-     (v4/get-cell-values d/service d/spreadsheet-id)
-     (flatten)
-     (apply str))))
+(def deaths-header
+  (memo/memo
+   (defn deaths-header-query[sheet]
+     (println "deaths-header-query")
+     (let [column "E"]
+       (->>
+        [(str sheet "!" column "1:" column "1")]
+        (v4/get-cell-values d/service d/spreadsheet-id)
+        (flatten)
+        (apply str))))))
 
-(defn recovered-header [sheet]
-  (let [column "F"]
-    (->> [(str sheet "!" column "1:" column "1")]
-         (v4/get-cell-values d/service d/spreadsheet-id)
-         (flatten)
-         (apply str))))
+(def recovered-header
+  (memo/memo
+   (defn recovered-header-query [sheet]
+     (println "recovered-header-query")
+     (let [column "F"]
+       (->> [(str sheet "!" column "1:" column "1")]
+            (v4/get-cell-values d/service d/spreadsheet-id)
+            (flatten)
+            (apply str))))))
 
 (def msg-footer (str
                  "\n"
@@ -243,6 +254,11 @@
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start   [] (swap! test-obj (fn [_] (start-polling token handler))))
+(defn start   []
+  (->> [d/row-count d/sum-up-at-once d/sum-up-col d/sheet-titles d/sheet-id
+        confirmed-header deaths-header recovered-header]
+       (memo/memo-clear!))
+  (swap! test-obj (fn [_] (start-polling token handler))))
+
 (defn stop    [] (p/stop @test-obj))
 (defn restart [] (if @test-obj (stop)) (start))

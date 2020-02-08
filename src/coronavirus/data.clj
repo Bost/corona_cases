@@ -5,8 +5,10 @@
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
+            [clj-time-ext.core :as te]
             [camel-snake-kebab.core :as csk]
             [coronavirus.raw-data :as r]
+            [clojure.core.memoize :as memo]
             )
   (:import java.util.GregorianCalendar
            java.util.TimeZone))
@@ -37,10 +39,14 @@
        (json/write-str $ :escape-slash false)
        (.replaceAll $ "\\\\n" "\\n")))
 
-(defonce service (->> (c/credential-with-scopes
-                       (c/credential-from-json (json-env-prms))
-                       (set [com.google.api.services.drive.DriveScopes/DRIVE]))
-                      (v4/build-service)))
+;; TODO this should really be executed only once
+(defonce service
+  (do
+    (println "defonce service spreadsheet query")
+    (->> (c/credential-with-scopes
+          (c/credential-from-json (json-env-prms))
+          (set [com.google.api.services.drive.DriveScopes/DRIVE]))
+         (v4/build-service))))
 
 (defonce spreadsheet-id
   #_"1yZv9w9zRKwrGTaR-YzmAqMefw4wMlaXocejdxZaTs6w" ;; old
@@ -89,7 +95,6 @@
   (let [filtered-sheet (->> sheet-structure
                             (filter (fn [range] (= sheet (:sheet range))))
                             (first))]
-    #_(println "filtered-sheet" filtered-sheet)
     (if filtered-sheet
       (kw filtered-sheet)
       (do
@@ -104,49 +109,10 @@
 
 (defn transpose [coll] (apply mapv vector coll))
 
-#_Jan22_12pm
-#_Jan22_12am
 ;; (set! *print-level* 3) (set! *print-length* 3)
-(set! *print-level* nil) (set! *print-length* nil)
+;; (set! *print-level* nil) (set! *print-length* nil)
 
-(defn row-count [sheet]
-  1000
-  #_(->> sheet
-       (sheet-id)
-       (v4/get-sheet-info service spreadsheet-id)
-       (.getGridProperties)
-       (.getRowCount)))
-
-(defn sum-up-at-once
-  ([sheet]
-   (sum-up-at-once sheet 800))
-  ([sheet delay]
-   (let [range (get-from-sheet-structure sheet :range)
-         ]
-     (let [kws (get-from-sheet-structure sheet :kws)]
-       (Thread/sleep delay)
-       (let [
-             full-range (str range (row-count sheet))
-             ]
-         (let [sheet-range (str sheet "!" full-range)]
-           (let [sheet-vals (->> [sheet-range]
-                                 (v4/get-cell-values service spreadsheet-id))]
-             (println "sum-up-at-once" "sheet-range" sheet-range "kws" kws
-                      ;; "sheet-vals" sheet-vals
-                      )
-             #_(def sheet-vals sheet-vals)
-             (->>
-              sheet-vals
-              (first)
-              #_(take 30)
-              (filter (fn [row] (some some? row)))  ;; keep only rows containing at least one value
-              (vec)
-              (mapv (fn [col] (vec (map (fn [v] (if (nil? v) 0
-                                                  (int v)))
-                                       col))))
-              (transpose)
-              (mapv (fn [v] (apply + v)))
-              (zipmap kws)))))))))
+(def time-to-live (* 1000 60 1)) ;; 15 minutes
 
 (defn get-ranges [range]
   (case range
@@ -155,58 +121,38 @@
     "D2:G" ["D2:D" "E2:E" "F2:F" "G2:G"]
     (throw (Exception. (format "Unrecognized range: %s" range)))))
 
-(defn sum-up-col
-  [sheet range row-count kw]
-  (let [full-range (str range row-count)
-        sheet-range (str sheet "!" full-range)]
-    (let [sheet-vals
-          (->> [sheet-range]
-               (v4/get-cell-values service spreadsheet-id))]
-      (println "sum-up-col" "sheet-range" sheet-range "kw" kw
-               ;; "sheet-vals" sheet-vals
-               )
-      #_sheet-vals
-      (->>
-       sheet-vals
-       (first)
-       #_(take 30)
-       (filter (fn [row] (some some? row)))  ;; keep only rows containing at least one value
-       (vec)
-       (mapv (fn [col] (vec (map (fn [v] (if (nil? v) 0
-                                           (int v)))
-                                col))))
-       (transpose)
-       (mapv (fn [v] (apply + v)))
-       (zipmap [kw])))))
+(def sum-up-col
+  (memo/ttl
+   (defn sum-up-col-query [sheet range row-count kw]
+     (println "sum-up-col-query")
+     (let [full-range (str range row-count)
+           sheet-range (str sheet "!" full-range)]
+       (let [sheet-vals
+             (->> [sheet-range]
+                  (v4/get-cell-values service spreadsheet-id))]
+         #_sheet-vals
+         (->>
+          sheet-vals
+          (first)
+          #_(take 30)
+          (filter (fn [row] (some some? row)))  ;; keep only rows containing at least one value
+          (vec)
+          (mapv (fn [col] (vec (map (fn [v] (if (nil? v) 0
+                                              (int v)))
+                                   col))))
+          (transpose)
+          (mapv (fn [v] (apply + v)))
+          (zipmap [kw])))))
+   :ttl/threshold time-to-live))
 
-(defn sum-up-one-by-one
-  ([sheet]
-   (sum-up-one-by-one sheet 800))
-  ([sheet delay]
-   (let [range (get-from-sheet-structure sheet :range)
-         ]
-     (let [
-           ranges (get-ranges range)
-           kws (get-from-sheet-structure sheet :kws)
-           row-count (row-count sheet)
-           ]
-       (->> ranges
-            (map-indexed (fn [idx r]
-                           (sum-up-col sheet r row-count (nth kws idx))))
-            (into {}))))))
-
-(defn sum-up
-  ([sheet]
-   (sum-up sheet 1000))
-  ([sheet delay]
-   (if-let [at-once (get-from-sheet-structure sheet :at-once)]
-     (sum-up-at-once    sheet delay)
-     (sum-up-one-by-one sheet delay))))
-
-(defn sheet-titles []
-  (->> (v4/get-sheet-titles service spreadsheet-id)
-       (map first)
-       (sort)))
+(def sheet-titles
+  (memo/ttl
+   (defn sheet-titles-query []
+     (println "sheet-titles-query")
+     (->> (v4/get-sheet-titles service spreadsheet-id)
+          (map first)
+          (sort)))
+   :ttl/threshold time-to-live))
 
 (def month-nr-hm
   {
@@ -298,8 +244,75 @@
        (map (fn [name] {:name name}))
        (last-sheet-of)))
 
-(defn sheet-id [sheet]
-  (v4/find-sheet-id service spreadsheet-id sheet))
+(def sheet-id
+  (memo/ttl
+   (defn sheet-id-query [sheet]
+     (println "sheet-id-query")
+     (v4/find-sheet-id service spreadsheet-id sheet))
+   :ttl/threshold time-to-live))
+
+(def row-count
+  (memo/ttl
+   (defn row-count-query [sheet]
+     #_1000
+     (do
+       (println "row-count-query")
+       (->> sheet
+            (sheet-id)
+            (v4/get-sheet-info service spreadsheet-id)
+            (.getGridProperties)
+            (.getRowCount))))
+   :ttl/threshold time-to-live))
+
+(defn sum-up-one-by-one
+  ([sheet]
+   (sum-up-one-by-one sheet 800))
+  ([sheet delay]
+   (let [range (get-from-sheet-structure sheet :range)
+         ]
+     (let [
+           ranges (get-ranges range)
+           kws (get-from-sheet-structure sheet :kws)
+           row-count (row-count sheet)
+           ]
+       (->> ranges
+            (map-indexed (fn [idx r]
+                           (sum-up-col sheet r row-count (nth kws idx))))
+            (into {}))))))
+
+(def sum-up-at-once
+  (memo/ttl
+   (defn sum-up-at-once-query [sheet]
+     (println "sum-up-at-once-query")
+     (let [range (get-from-sheet-structure sheet :range)]
+       (let [kws (get-from-sheet-structure sheet :kws)]
+         #_(Thread/sleep 500)
+         (let [full-range (str range (row-count sheet))]
+           (let [sheet-range (str sheet "!" full-range)]
+             (let [sheet-vals (->> [sheet-range]
+                                   (v4/get-cell-values service spreadsheet-id))]
+               #_(def sheet-vals sheet-vals)
+               (->>
+                sheet-vals
+                (first)
+                #_(take 30)
+                (filter (fn [row] (some some? row)))  ;; keep only rows containing at least one value
+                (vec)
+                (mapv (fn [col] (vec (map (fn [v] (if (nil? v) 0
+                                                    (int v)))
+                                         col))))
+                (transpose)
+                (mapv (fn [v] (apply + v)))
+                (zipmap kws))))))))
+   :ttl/threshold time-to-live))
+
+(defn sum-up
+  ([sheet]
+   (sum-up sheet 1000))
+  ([sheet delay]
+   (if-let [at-once (get-from-sheet-structure sheet :at-once)]
+     (sum-up-at-once    sheet delay)
+     (sum-up-one-by-one sheet delay))))
 
 (defn get-messy-day [sheet-title]
   (.substring sheet-title 0 5))
@@ -337,7 +350,6 @@
        (distinct)
        (sort-messy-days)
        (mapv (defn messy-day-sheets [messy-day]
-               #_(println "messy-day" messy-day)
                {:day messy-day
                 :normal (normal-time (str messy-day "_12am"))
                 :sheets
@@ -404,49 +416,48 @@
                  [:date :count])))
 
 (defn calc-count-per-messy-day
-  "Calculate the counts per messy-day"
-  []
-  (if-let [sheets-to-calculate (not-empty
-                                #_(set ["Feb01_10am"])
-                                #_(set ["Jan22_12am"])
-                                #_(set ["Jan24_12pm"])
-                                ;; calculate only missing sheets
-                                (missing-sheets)
-                                ;; (re-)calculate all sheets
-                                #_(set (sheet-titles))
-                                ;; (re-)calculate only the last sheet
-                                #_(set (take-last 2 (sheet-titles))))]
-    #_[{:day "Feb04",
-        :sheets
-        [{:name "Feb04_8AM", :count {:c 20680, :d 427, :r 723}}
-         {:name "Feb04_10PM", :count {:c 24503, :d 492, :r 899}}
-         {:name "Feb04_1150AM", :count {:c 20704, :d 427, :r 727}}],
-        :count {:c 24503, :d 492, :r 899},
-        :date #inst "2020-02-04T00:00:00.000-00:00"}]
-    (let [new-hms
-          (->>
-           ;; e.g
-           ;; #{"Feb04_8AM" "Feb04_10PM" "Feb04_1150AM"}
-           sheets-to-calculate
-           ;; e.g.
-           ;; [{:day "Feb04" :normal "0204_0000"
-           ;;   :sheets [{:name "Feb04_8AM"}
-           ;;            {:name "Feb04_10PM"}
-           ;;            {:name "Feb04_1150AM"}]}]
-           (create-hms-day-sheets)
-           ;; e.g.
-           ;; [{:day "Feb04" :normal "0204_0000"
-           ;;   :sheets [{:name "Feb04_8AM"    :count {:c 20680 :d 427 :r 723}}
-           ;;            {:name "Feb04_10PM"   :count {:c 24503 :d 492 :r 899}}
-           ;;            {:name "Feb04_1150AM" :count {:c 20704 :d 427 :r 727}}]}]
-           (mapv (fn [{:keys [sheets] :as hm-day-sheets}]
-                   (conj hm-day-sheets
-                         {:sheets (mapv add-count-sheet sheets)})))
-           (mapv count-date--hm-day-sheets)
-           #_(dbg))]
-      (swap! r/hms-day-sheets
-             (fn [_]
-               (r/update-coll-of-hms--with--coll-of-new-hms @r/hms-day-sheets new-hms)))))
+     "Calculate the counts per messy-day"
+     []
+     (if-let [sheets-to-calculate (not-empty
+                                   #_(set ["Feb01_10am"])
+                                   #_(set ["Jan22_12am"])
+                                   #_(set ["Jan24_12pm"])
+                                   ;; calculate only missing sheets
+                                   (missing-sheets)
+                                   ;; (re-)calculate all sheets
+                                   #_(set (sheet-titles))
+                                   ;; (re-)calculate only the last sheet
+                                   #_(set (take-last 2 (sheet-titles))))]
+       #_[{:day "Feb04",
+           :sheets
+           [{:name "Feb04_8AM", :count {:c 20680, :d 427, :r 723}}
+            {:name "Feb04_10PM", :count {:c 24503, :d 492, :r 899}}
+            {:name "Feb04_1150AM", :count {:c 20704, :d 427, :r 727}}],
+           :count {:c 24503, :d 492, :r 899},
+           :date #inst "2020-02-04T00:00:00.000-00:00"}]
+       (let [new-hms
+             (->>
+              ;; e.g
+              ;; #{"Feb04_8AM" "Feb04_10PM" "Feb04_1150AM"}
+              sheets-to-calculate
+              ;; e.g.
+              ;; [{:day "Feb04" :normal "0204_0000"
+              ;;   :sheets [{:name "Feb04_8AM"}
+              ;;            {:name "Feb04_10PM"}
+              ;;            {:name "Feb04_1150AM"}]}]
+              (create-hms-day-sheets)
+              ;; e.g.
+              ;; [{:day "Feb04" :normal "0204_0000"
+              ;;   :sheets [{:name "Feb04_8AM"    :count {:c 20680 :d 427 :r 723}}
+              ;;            {:name "Feb04_10PM"   :count {:c 24503 :d 492 :r 899}}
+              ;;            {:name "Feb04_1150AM" :count {:c 20704 :d 427 :r 727}}]}]
+              (mapv (fn [{:keys [sheets] :as hm-day-sheets}]
+                      (conj hm-day-sheets
+                            {:sheets (mapv add-count-sheet sheets)})))
+              (mapv count-date--hm-day-sheets))]
+         (swap! r/hms-day-sheets
+                (fn [_]
+                  (r/update-coll-of-hms--with--coll-of-new-hms @r/hms-day-sheets new-hms)))))
 
-  ;; get the counts from
-  (last-date-count))
+     ;; get the counts from
+     (last-date-count))
