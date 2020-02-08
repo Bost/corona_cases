@@ -265,21 +265,18 @@
             (.getRowCount))))
    :ttl/threshold time-to-live))
 
-(defn sum-up-one-by-one
-  ([sheet]
-   (sum-up-one-by-one sheet 800))
-  ([sheet delay]
-   (let [range (get-from-sheet-structure sheet :range)
-         ]
-     (let [
-           ranges (get-ranges range)
-           kws (get-from-sheet-structure sheet :kws)
-           row-count (row-count sheet)
-           ]
-       (->> ranges
-            (map-indexed (fn [idx r]
-                           (sum-up-col sheet r row-count (nth kws idx))))
-            (into {}))))))
+(defn sum-up-one-by-one [sheet]
+  (let [range (get-from-sheet-structure sheet :range)
+        ]
+    (let [
+          ranges (get-ranges range)
+          kws (get-from-sheet-structure sheet :kws)
+          row-count (row-count sheet)
+          ]
+      (->> ranges
+           (map-indexed (fn [idx r]
+                          (sum-up-col sheet r row-count (nth kws idx))))
+           (into {})))))
 
 (def sum-up-at-once
   (memo/ttl
@@ -307,13 +304,10 @@
                 (zipmap kws))))))))
    :ttl/threshold time-to-live))
 
-(defn sum-up
-  ([sheet]
-   (sum-up sheet 1000))
-  ([sheet delay]
-   (if-let [at-once (get-from-sheet-structure sheet :at-once)]
-     (sum-up-at-once    sheet delay)
-     (sum-up-one-by-one sheet delay))))
+(defn sum-up [sheet]
+  (if-let [at-once (get-from-sheet-structure sheet :at-once)]
+    (sum-up-at-once    sheet)
+    (sum-up-one-by-one sheet)))
 
 (defn get-messy-day [sheet-title]
   (.substring sheet-title 0 5))
@@ -401,8 +395,7 @@
         {:date (create-date day)}))
 
 (defn add-count-sheet [{:keys [name] :as sheet}]
-  (let [delay 0]
-    (conj sheet {:count (sum-up name delay)})))
+  (conj sheet {:count (sum-up name)}))
 
 (defn last-date-count []
   (let [last-day (->> @r/hms-day-sheets
