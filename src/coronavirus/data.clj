@@ -112,7 +112,8 @@
 ;; (set! *print-level* 3) (set! *print-length* 3)
 ;; (set! *print-level* nil) (set! *print-length* nil)
 
-(def time-to-live (* 1000 60 1)) ;; 15 minutes
+(def time-to-live-minutes 15)
+(def time-to-live (* 1000 60 time-to-live-minutes))
 
 (defn get-ranges [range]
   (case range

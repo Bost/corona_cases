@@ -214,7 +214,9 @@
     "\n"
     "\n"
     "- The notch in the graph on Feb05 - the collected data is apparently not complete.\n"
-    "- /refresh takes ~10 seconds to executes, sorry. I'm working on it.\n"
+    "- A full data source query takes ~10 seconds and it is cached for "
+    d/time-to-live-minutes " minutes."
+    "\n"
     msg-footer)))
 
 ;; long polling
