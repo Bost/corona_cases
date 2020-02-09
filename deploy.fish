@@ -21,3 +21,4 @@ heroku ps:scale web=1 --app $APP
 # heroku ps:scale web=0 --app $APP; and \
 # heroku ps:scale web=1 --app $APP
 # heroku open --app $APP
+# heroku logs --tail --app $APP
