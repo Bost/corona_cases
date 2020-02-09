@@ -1,20 +1,18 @@
 (ns coronavirus.raw-data)
 
-(comment
-  (def va
-    (atom
-     [{:day "o" :s [{:n "o1" :cnt {:d 0 :c -1 :r -2}}]}
-      {:day "a" :s [{:n "a1" :cnt {:d 0 :c 1 :r 2}}]}]))
-
-  (def n1 {:day "a" :s [{:n "a1" :cnt {:d 10 :c 11 :r 12}}]})
-  (def nb {:day "b" :s [{:n "b1" :cnt {:d 0 :c 1 :r 2}}]})
-
-  (swap! va (fn [_] (update-va [n1 nb]))))
-
 (defn in?
   "true if seq contains elm"
   [seq elm]
   (boolean (some (fn [e] (= elm e)) seq)))
+
+(defn merge-fn [& vs]
+  (if (every? vector? vs)
+    (->> vs
+         (apply into)
+         (set)
+         (vec))
+    ;; return the old val
+    (first vs)))
 
 (defn update-coll-of-hms
   [coll-of-hms k new-hm]
@@ -23,20 +21,16 @@
           (let [v (k new-hm)
                 idx (->> coll-of-hms
                          (keep-indexed (fn [idx hm]
-                                         #_(println "k" k "v" v)
-                                         #_(println "hm" hm)
                                          (if (= (k hm) v) idx)))
                          ;; TODO a coll of one or none elems can be returned
                          (first))]
-            #_(println "idx" idx "(boolean idx)" (boolean idx))
             (if idx
-              (do
-                #_(println (format "(assoc %s (merge ...))" idx))
-                (assoc coll-of-hms idx
-                       (merge (nth coll-of-hms idx) new-hm)))
-              (do
-                #_(println (format "(conj ... %s)" new-hm))
-                (conj coll-of-hms new-hm))))]
+              (let [map coll-of-hms
+                    key idx
+                    old-hm (nth coll-of-hms idx)
+                    val (merge-with merge-fn old-hm new-hm)]
+                (assoc map key val))
+              (conj coll-of-hms new-hm)))]
       new-coll-of-hms)
     (println (format "Key %s not in the new-hm %s" k new-hm))))
 
@@ -44,7 +38,6 @@
   (fn [vec-of-hms init-new-hms]
     (loop [new-hms init-new-hms
            acc vec-of-hms]
-      #_(println "acc" acc)
       (if (empty? new-hms)
         acc
         (recur (rest new-hms)
@@ -143,6 +136,11 @@
      :count {:c 31532 :d 638 :r 1763} :date #inst "2020-02-07T00:00:00.000-00:00"}
     {:day "Feb08" :normal "0208_0000"
      :sheets
-     [{:name "Feb08_340PM" :normal "0208_1540" :count {:c 34963 :d 725 :r 2394}}]
-     :count {:c 34963 :d 725 :r 2394} :date #inst "2020-02-08T00:00:00.000-00:00"}
+     [{:name "Feb08_340PM" :normal "0208_1540" :count {:c 34963 :d 725 :r 2394}}
+      {:name "Feb08_1109PM" :normal "0208_2309" :count {:c 37549 :d 813 :r 2701}}]
+     :count {:c 37549 :d 813 :r 2701} :date #inst "2020-02-08T00:00:00.000-00:00"}
+    {:day "Feb09" :normal "0209_0000"
+     :sheets
+     [{:name "Feb09_1030AM" :normal "0209_1030" :count {:c 37592 :d 814 :r 2922}}]
+     :count {:c 37592 :d 814 :r 2922} :date #inst "2020-02-09T00:00:00.000-00:00"}
     ]))

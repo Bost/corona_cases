@@ -381,16 +381,25 @@
     (.set c year (dec month) n-day 0 0 0)
     (.getTime c)))
 
+(defn old-sheet-titles []
+  (->> @r/hms-day-sheets
+       (map :sheets)
+       (flatten)
+       (map :name)
+       (sort)
+       (set)))
+
+(defn new-sheet-titles []
+  (->> (sheet-titles)
+       (sort)
+       (set)))
+
 (defn missing-sheets
   "Returns a set of all missing sheets
   e.g. #{\"Feb04_8AM\" \"Feb04_10PM\" \"Feb04_1150AM\"}"
   []
-  (let [old-sheet-titles (->> @r/hms-day-sheets
-                              (map :sheets)
-                              (flatten)
-                              (map :name))]
-    (clojure.set/difference (set (sheet-titles))
-                            (set old-sheet-titles))))
+  (clojure.set/difference (new-sheet-titles)
+                          (old-sheet-titles)))
 
 (defn count-date--hm-day-sheets [{:keys [day sheets] :as hm-day-sheets}]
   (conj hm-day-sheets
@@ -426,7 +435,7 @@
                                    #_(set ["Jan22_12am"])
                                    #_(set ["Jan24_12pm"])
                                    ;; calculate only missing sheets
-                                   (missing-sheets)
+                                   (dbg (missing-sheets))
                                    ;; (re-)calculate all sheets
                                    #_(set (sheet-titles))
                                    ;; (re-)calculate only the last sheet
@@ -460,7 +469,9 @@
               (mapv count-date--hm-day-sheets))]
          (swap! r/hms-day-sheets
                 (fn [_]
-                  (r/update-coll-of-hms--with--coll-of-new-hms @r/hms-day-sheets new-hms)))))
+                  (r/update-coll-of-hms--with--coll-of-new-hms
+                   @r/hms-day-sheets
+                   new-hms)))))
 
      ;; get the counts from
      (last-date-count))
