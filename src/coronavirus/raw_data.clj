@@ -136,4 +136,13 @@
      :sheets
      [{:name "Feb06_0118PM" :normal "0206_1318" :count {:c 28353 :d 565 :r 1382}}
       {:name "Feb06_0805PM" :normal "0206_2005" :count {:c 30877 :d 636 :r 1499}}]
-     :count {:c 30877 :d 636 :r 1499} :date #inst "2020-02-06T00:00:00.000-00:00"}]))
+     :count {:c 30877 :d 636 :r 1499} :date #inst "2020-02-06T00:00:00.000-00:00"}
+    {:day "Feb07" :normal "0207_0000"
+     :sheets
+     [{:name "Feb07_0813PM" :normal "0207_2013" :count {:c 31532 :d 638 :r 1763}}]
+     :count {:c 31532 :d 638 :r 1763} :date #inst "2020-02-07T00:00:00.000-00:00"}
+    {:day "Feb08" :normal "0208_0000"
+     :sheets
+     [{:name "Feb08_340PM" :normal "0208_1540" :count {:c 34963 :d 725 :r 2394}}]
+     :count {:c 34963 :d 725 :r 2394} :date #inst "2020-02-08T00:00:00.000-00:00"}
+    ]))
