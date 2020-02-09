@@ -196,6 +196,12 @@
      ;; time
      (.substring time-am-pm 0 (- length 2))]))
 
+(defn fix-octal-val
+  "(read-string s-day \"08\") produces a NumberFormatException
+  https://clojuredocs.org/clojure.core/read-string#example-5ccee021e4b0ca44402ef71a"
+  [s]
+  (clojure.string/replace s #"^0+" ""))
+
 (defn normal-time
   "Remember: Always code as if the person who ends up maintaining your code is a
   violent psychopath who knows where you live
@@ -214,9 +220,9 @@
                        4 time)               ;; e.g. 1130pm
         s-hour       (.substring time-normal 0 2)
         s-min        (.substring time-normal 2)
-        n-hour       (read-string (if (.startsWith s-hour "0")
-                                    (.substring s-hour 1)
-                                    s-hour))
+        n-hour       (->> s-hour
+                          (fix-octal-val)
+                          (read-string))
         hour-normal  (+ n-hour (case am-pm
                                  ;; 12am ~ 00:00 / Midnight / day-start
                                  "am" (if (= 12 n-hour) -12 0)
@@ -353,14 +359,17 @@
                                                   messy-day)))
                      (mapv (fn [sheet] {:name sheet
                                        :normal (normal-time sheet)})))}))))
-
-(defn create-date [messy-day]
-  (let [n-day (read-string (.substring messy-day 3))
+(defn create-date
+  "E.g. (create-date \"Aug08\") produces: #inst \"2020-08-07T23:00:00.000-00:00\""
+  [messy-day]
+  (let [n-day (->> (.substring messy-day 3)
+                  (fix-octal-val)
+                  (read-string))
         month (->> (.substring messy-day 0 3)
                    (clojure.string/lower-case)
                    (normal-month)
-                   (read-string)
-                   )
+                   (fix-octal-val)
+                   (read-string))
         year 2020
         time-zone
         #_(TimeZone/getTimeZone "Europe/Berlin")
