@@ -9,6 +9,7 @@
             [camel-snake-kebab.core :as csk]
             [coronavirus.raw-data :as r]
             [clojure.core.memoize :as memo]
+            [clojure.string :as s]
             )
   (:import java.util.GregorianCalendar
            java.util.TimeZone))
@@ -17,9 +18,41 @@
   `(let [x# ~x]
      (println '~x "=" x#) x#))
 
+(def month-nr-hm
+  {
+   "jan" "01"
+   "feb" "02"
+   "mar" "03"
+   "apr" "04"
+   "may" "05"
+   "jun" "06"
+   "jul" "07"
+   "aug" "08"
+   "sep" "09"
+   "oct" "10"
+   "nov" "11"
+   "dec" "12"
+   })
+
+(defn messy-timedate-format?
+  "Check if the s is a timedate.
+  E.g.
+  (messy-timedate-format? \"Jan28_11pm\") => true
+  (messy-timedate-format? \"Jan28_1100pm\") => true
+  (messy-timedate-format? \"Jan28__1100pm\") => nil"
+  [s]
+  (as-> month-nr-hm $
+    (keys $)
+    (interpose "|" $)
+    (s/join $)
+    (str "(" $ ")\\d{2}_\\d{2,4}(am|pm)")
+    (re-pattern $)
+    (re-matches $ (s/lower-case s))
+    (boolean $)))
+
 (defn ignore-sheets [sheets]
   (->> sheets
-       (remove (fn [sheet] (= sheet "Announcement")))))
+       (filter messy-timedate-format?)))
 
 (def env-prms [
                :type
@@ -160,22 +193,6 @@
           (sort)))
    :ttl/threshold time-to-live))
 
-(def month-nr-hm
-  {
-  "jan" "01"
-  "feb" "02"
-  "mar" "03"
-  "apr" "04"
-  "may" "05"
-  "jun" "06"
-  "jul" "07"
-  "aug" "08"
-  "sep" "09"
-  "oct" "10"
-  "nov" "11"
-  "dec" "12"
-   })
-
 (defn normal-month [messy-month]
   (if-let [normal-m (get month-nr-hm messy-month)]
     normal-m
@@ -214,7 +231,7 @@
   e.g. (normal-time \"Jan28_11pm\") returns: \"0128_2300\""
   [messy-date-time]
   (let [
-        date-time    (clojure.string/lower-case messy-date-time)
+        date-time    (s/lower-case messy-date-time)
         month        (.substring date-time 0 3)
         month-normal (normal-month month)
         [am-pm time] (time-am-pm date-time)
