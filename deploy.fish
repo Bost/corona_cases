@@ -12,6 +12,7 @@ echo "APP" $APP
 echo "REMOTE" $REMOTE
 echo ""
 
+# heroku logs --tail --app $APP blocks the execution
 heroku addons:open papertrail --app $APP; and \
 heroku ps:scale web=0 --app $APP; and \
 git push $REMOTE master; and \
@@ -21,4 +22,5 @@ heroku ps:scale web=1 --app $APP
 # heroku ps:scale web=0 --app $APP; and \
 # heroku ps:scale web=1 --app $APP
 # heroku open --app $APP
+# heroku addons:open papertrail --app $APP
 # heroku logs --tail --app $APP
