@@ -213,7 +213,7 @@
                "bda7594740fd40299423467b48e9ecf6"))
     "\n"
     "\n"
-    "- The data collected for Feb05, Feb07, Feb09 is apparently not complete.\n"
+    "- The data collected for Feb05, Feb07 is apparently not complete.\n"
     "- A full data source query takes ~10 seconds and it is cached for "
     d/time-to-live-minutes " minutes."
     "\n"
