@@ -17,6 +17,10 @@
   `(let [x# ~x]
      (println '~x "=" x#) x#))
 
+(defn ignore-sheets [sheets]
+  (->> sheets
+       (remove (fn [sheet] (= sheet "Announcement")))))
+
 (def env-prms [
                :type
                #_:project-id
@@ -152,6 +156,7 @@
      (println "sheet-titles-query")
      (->> (v4/get-sheet-titles service spreadsheet-id)
           (map first)
+          (ignore-sheets)
           (sort)))
    :ttl/threshold time-to-live))
 
@@ -206,7 +211,7 @@
   "Remember: Always code as if the person who ends up maintaining your code is a
   violent psychopath who knows where you live
 
-  e.g. (normal-time \"Jan28_11pm\")"
+  e.g. (normal-time \"Jan28_11pm\") returns: \"0128_2300\""
   [messy-date-time]
   (let [
         date-time    (clojure.string/lower-case messy-date-time)

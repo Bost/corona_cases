@@ -43,7 +43,9 @@
         (recur (rest new-hms)
                (update-coll-of-hms acc :day (first new-hms)))))))
 
-(def hms-day-sheets
+(def
+  hms-day-sheets
+  "See also https://github.com/CSSEGISandData/2019-nCoV"
   (atom
    [{:day "Jan22" :normal "0122_0000"
      :sheets
