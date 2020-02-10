@@ -385,7 +385,9 @@
                      (mapv (fn [sheet] {:name sheet
                                        :normal (normal-time sheet)})))}))))
 (defn create-date
-  "E.g. (create-date \"Aug08\") produces: #inst \"2020-08-07T23:00:00.000-00:00\""
+  "E.g.
+  (create-date \"Aug08\")
+  => #inst \"2020-08-07T23:00:00.000-00:00\""
   [messy-day]
   (let [n-day (->> (.substring messy-day 3)
                   (fix-octal-val)
