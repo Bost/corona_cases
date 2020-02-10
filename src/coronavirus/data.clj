@@ -6,7 +6,6 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [clj-time-ext.core :as te]
-            [camel-snake-kebab.core :as csk]
             [coronavirus.raw-data :as r]
             [clojure.core.memoize :as memo]
             [clojure.string :as s]
@@ -340,7 +339,11 @@
 (defn get-messy-day [sheet-title]
   (.substring sheet-title 0 5))
 
-(defn sort-messy-days [days]
+(defn sort-messy-days
+  "E.g.
+  (sort-messy-days [\"Feb04\" \"Jan04\"])
+  => (\"Jan04\" \"Feb04\")"
+  [days]
   (->> days
        (map (fn [d] (str d "_12am"))) ;; start of the day
        (map normal-time)
@@ -348,7 +351,7 @@
        (map (fn [dt]
               (str (->> (.substring dt 0 2)
                         (messy-month)
-                        (csk/->PascalCase))
+                        (clojure.string/capitalize))
                    (.substring dt 2 4))))))
 
 (defn sum-up-sheets-key [key sheets]
