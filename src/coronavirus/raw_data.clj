@@ -146,4 +146,19 @@
      [{:name "Feb09_1030AM" :normal "0209_1030" :count {:c 37592 :d 814 :r 2922}}
       {:name "Feb09_1120PM" :normal "0209_2320" :count {:c 40536 :d 910 :r 3312}}]
      :count {:c 40536 :d 910 :r 3312} :date #inst "2020-02-09T00:00:00.000-00:00"}
+    {:day "Feb10" :normal "0210_0000"
+     :sheets
+     [{:name "Feb10_1030AM" :normal "0210_1030" :count {:c 40574 :d 910 :r 3578}}
+      {:name "Feb10_730PM" :normal "0210_1930" :count {:c 42767 :d 1013 :r 3950}}]
+     :count {:c 42767 :d 1013 :r 3950} :date #inst "2020-02-10T00:00:00.000-00:00"}
+    {:day "Feb11" :normal "0211_0000"
+     :sheets
+     [{:name "Feb11_1050AM" :normal "0211_1050" :count {:c 43141 :d 1018 :r 4340}}
+      {:name "Feb11_844PM" :normal "0211_2044" :count {:c 45117 :d 1115 :r 4781}}]
+     :count {:c 45117 :d 1115 :r 4781} :date #inst "2020-02-11T00:00:00.000-00:00"}
+    {:day "Feb12" :normal "0212_0000"
+     :sheets
+     [{:name "Feb12_1020AM" :normal "0211_1020" :count {:c 45206 :d 1117 :r 5123}}
+      {:name "Feb12_10PM" :normal "0211_2200" :count {:c 60328 :d 1368 :r 5986}}]
+     :count {:c 60328 :d 1368 :r 5986} :date #inst "2020-02-12T00:00:00.000-00:00"}
     ]))

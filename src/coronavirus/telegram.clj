@@ -111,7 +111,8 @@
     (let [{confirmed :c deaths :d recovered :r} (:count (d/calc-count-per-messy-day))]
       (str
        "\n"
-       (str sheet " EST (Eastern Time Zone):") "\n"
+       ;; TODO fix this
+       (str "Feb12_10PM" " EST (Eastern Time Zone):") "\n"
        (confirmed-header sheet) ": " confirmed "\n"
        (deaths-header    sheet) ": " deaths
        "  ~  " (get-percentage deaths confirmed) "%\n"
@@ -203,8 +204,8 @@
     "Bot version: " bot-ver "\n"
     "Percentage calculation: <cases> / confirmed\n"
     "See "
-    (link "data source"
-          (str "https://docs.google.com/spreadsheets/d/"
+    (link "data source" "https://github.com/CSSEGISandData/COVID-19"
+          #_(str "https://docs.google.com/spreadsheets/d/"
                d/spreadsheet-id "/edit?usp=sharing"))
     " and "
     (link "dashboard & geo map"
