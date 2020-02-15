@@ -16,6 +16,7 @@ echo ""
 heroku addons:open papertrail --app $APP; and \
 heroku ps:scale web=0 --app $APP; and \
 git push $REMOTE master; and \
+# git push --force $REMOTE master; and \
 heroku config:set BOT_VER=(git rev-parse --short master) --app $APP; and \
 heroku ps:scale web=1 --app $APP
 
