@@ -112,7 +112,7 @@
       (str
        "\n"
        ;; TODO fix this
-       (str "Feb14_820PM" " EST (Eastern Time Zone):") "\n"
+       (str "Feb15_820PM" " EST (Eastern Time Zone):") "\n"
        (confirmed-header sheet) ": " confirmed "\n"
        (deaths-header    sheet) ": " deaths
        "  ~  " (get-percentage deaths confirmed) "%\n"
