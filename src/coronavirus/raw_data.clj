@@ -174,4 +174,8 @@
      :sheets
      [{:name "Feb15_820PM" :normal "0215_2020" :count {:c 69032 :d 1666 :r 9395}}]
      :count {:c 69032 :d 1666 :r 9395} :date #inst "2020-02-15T00:00:00.000-00:00"}
+    {:day "Feb16" :normal "0216_0000"
+     :sheets
+     [{:name "Feb16_2353PM" :normal "0216_2353" :count {:c 71226 :d 1770 :r 10865}}]
+     :count {:c 71226 :d 1770 :r 10865} :date #inst "2020-02-16T00:00:00.000-00:00"}
     ]))
