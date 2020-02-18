@@ -8,7 +8,7 @@
             [morse.api :as a]
             [clojure.java.io :as io]
             [clj-time-ext.core :as te]
-            [clj-time.core :as t]
+            [clj-time.format :as tf]
             [com.hypirion.clj-xchart :as c]
             [clojure.tools.logging :as log]
             [clojure.core.async :as async]
@@ -79,7 +79,10 @@
   (let [{day :f confirmed :c deaths :d recovered :r} (last (csv/get-counts))]
     (str
      "\n"
-     day "\n"
+     (tf/unparse (tf/formatter "dd MMM yyyy")
+                 (tf/parse (tf/formatter "MM-dd-yyyy")
+                           (subs day 0 10)))
+     "\n"
      "Confirmed: " confirmed "\n"
      "Deaths: " deaths
      "  ~  " (get-percentage deaths confirmed) "%\n"
