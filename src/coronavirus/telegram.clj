@@ -6,18 +6,18 @@
             [morse.polling :as p]
             [morse.polling-patch :as p-patch]
             [morse.api :as a]
-            [google-apps-clj.credentials]
-            [google-apps-clj.google-sheets-v4 :as v4]
             [clojure.java.io :as io]
             [clj-time-ext.core :as te]
             [clj-time.core :as t]
             [com.hypirion.clj-xchart :as c]
             [clojure.tools.logging :as log]
             [clojure.core.async :as async]
-            [coronavirus.data :as d]
-            [coronavirus.raw-data :as r]
             [clojure.core.memoize :as memo]
+            [coronavirus
+             [csv :as csv]
+             [interpolate :as i]]
             )
+  (:import java.text.SimpleDateFormat)
   (:gen-class))
 
 (def token (env :telegram-token))
@@ -57,39 +57,6 @@
 
 #_(log/info "Telegram Chatbot:" bot)
 
-;; TODO I hope the headers don't change!
-(def confirmed-header
-  (memo/memo
-   (defn confirmed-header-query [sheet]
-     (println "confirmed-header-query")
-     (let [column "D"]
-       (->>
-        [(str sheet "!" column "1:" column "1")]
-        (v4/get-cell-values d/service d/spreadsheet-id)
-        (flatten)
-        (apply str))))))
-
-(def deaths-header
-  (memo/memo
-   (defn deaths-header-query[sheet]
-     (println "deaths-header-query")
-     (let [column "E"]
-       (->>
-        [(str sheet "!" column "1:" column "1")]
-        (v4/get-cell-values d/service d/spreadsheet-id)
-        (flatten)
-        (apply str))))))
-
-(def recovered-header
-  (memo/memo
-   (defn recovered-header-query [sheet]
-     (println "recovered-header-query")
-     (let [column "F"]
-       (->> [(str sheet "!" column "1:" column "1")]
-            (v4/get-cell-values d/service d/spreadsheet-id)
-            (flatten)
-            (apply str))))))
-
 (def msg-footer (str
                  "\n"
                  "Available commands:  /refresh   /about"
@@ -106,42 +73,37 @@
        (throw (Exception. "ERROR: get-percentage [:high|:low|:normal] <PLACE> <TOTAL_COUNT>"))))))
 
 (defn info-msg []
-  (let [sheet (d/last-sheet)]
-    #_(println "sheet" sheet)
-    (let [{confirmed :c deaths :d recovered :r} (:count (d/calc-count-per-messy-day))]
-      (str
-       "\n"
-       ;; TODO fix this
-       (str "Feb17_2353PM" " UTC") "\n"
-       (confirmed-header sheet) ": " confirmed "\n"
-       (deaths-header    sheet) ": " deaths
-       "  ~  " (get-percentage deaths confirmed) "%\n"
-       (recovered-header sheet) ": " recovered
-       "  ~  " (get-percentage recovered confirmed) "%\n"
-       msg-footer))))
+  (let [{day :f confirmed :c deaths :d recovered :r} (last (csv/get-counts))]
+    (str
+     "\n"
+     day "\n"
+     "Confirmed: " confirmed "\n"
+     "Deaths: " deaths
+     "  ~  " (get-percentage deaths confirmed) "%\n"
+     "Recovered: " recovered
+     "  ~  " (get-percentage recovered confirmed) "%\n"
+     msg-footer)))
 
 (defn link [name url] (str "[" name "]""(" url ")"))
 
-(defn pic-data []
-  (->> @r/hms-day-sheets
-       (map (fn [hm]
-              (select-keys hm [:date :count])))
-       (sort-by :date)))
+;; By default Vars are static, but Vars can be marked as dynamic to
+;; allow per-thread bindings via the macro binding. Within each thread
+;; they obey a stack discipline:
+#_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
-(defn get-vals [pic-data k]
-  (->> pic-data
-       (map (fn [hm] (->> hm :count k)))
-       (map (fn [v] (if (nil? v) 0 v)))))
-
-(defn pic []
-  (let [pic-data (pic-data)
-        dates (map :date pic-data)]
+(defn absolute-numbers-pic []
+  (let [dates (map (fn [hm] (.parse (new SimpleDateFormat "MM-dd-yyyy")
+                                   (subs (:f hm) 0 10)))
+                   (csv/get-counts))
+        [confirmed deaths recovered] [(map :c (csv/get-counts))
+                                      (map :d (csv/get-counts))
+                                      (map :r (csv/get-counts))]]
     (-> (c/xy-chart
          (conj {}
                {"Confirmed"
                 (conj {}
                       {:x dates
-                       :y (get-vals pic-data :c)
+                       :y confirmed
                        :style
                        (conj {}
                              {:marker-type :none}
@@ -152,7 +114,7 @@
                {"Deaths"
                 (conj {}
                       {:x dates
-                       :y (get-vals pic-data :d)}
+                       :y deaths}
                       {:style
                        (conj {}
                              {:marker-type :none}
@@ -162,7 +124,7 @@
                {"Recovered"
                 (conj {}
                       {:x dates
-                       :y (get-vals pic-data :r)}
+                       :y recovered}
                       {:style
                        (conj {}
                              {:marker-type :none}
@@ -181,6 +143,13 @@
         #_(c/view)
         (c/to-bytes :png))))
 
+(defn aproximation-pic []
+  (let [points
+        #_[[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]]
+        (mapv (fn [x y] [x y]) (range) (map :c (csv/get-counts)))]
+    #_(println "points" points)
+    (i/go points)))
+
 (defn register-cmd [cmd cmd-fn]
   (h/command-fn
    cmd
@@ -192,7 +161,7 @@
 
 (defn refresh-cmd-fn [id]
   (a/send-text token id (info-msg))
-  (a/send-photo token id (pic)))
+  (a/send-photo token id (absolute-numbers-pic)))
 
 (defn about-cmd-fn [id]
   #_(a/send-photo token id
@@ -203,20 +172,15 @@
    (str
     "Bot version: " bot-ver "\n"
     "Percentage calculation: <cases> / confirmed\n"
-    "See "
-    (link "data source" "https://github.com/CSSEGISandData/COVID-19"
-          #_(str "https://docs.google.com/spreadsheets/d/"
-               d/spreadsheet-id "/edit?usp=sharing"))
-    " and "
-    (link "dashboard & geo map"
-          (str "https://gisanddata.maps.arcgis.com/apps/"
-               "opsdashboard/index.html#/"
-               "bda7594740fd40299423467b48e9ecf6"))
+    "See " (link "Visual dashboard" "https://arcg.is/0fHmTX")
     "\n"
     "\n"
     "- The data collected for Feb05, Feb07 is apparently not complete.\n"
-    "- A full data source query takes ~10 seconds and it is cached for "
-    d/time-to-live-minutes " minutes."
+    "- The spike observed on Feb12 is the result, for the most part, of a change"
+    " in diagnosis classification adopted by the province of Hubei.\n"
+    "- Due to the frequent changes of the "
+    (link "data source" "https://github.com/CSSEGISandData/COVID-19")
+    " format and structure the numbers are updated manually once per day."
     "\n"
     msg-footer)))
 
@@ -247,7 +211,7 @@
 (defn -main
   [& args]
   (log/info (str "[" (te/tnow) " " bot-ver "]") "Starting Telegram Chatbot...")
-  (let [blank-prms (->> (conj d/env-prms :telegram-token)
+  (let [blank-prms (->> [:telegram-token]
                         (filter (fn [prm] (str/blank? (env prm)))))]
     (when (not-empty blank-prms)
       (log/fatal (str "Undef environment var(s): " blank-prms))
@@ -258,9 +222,6 @@
 ;; For interactive development:
 (def test-obj (atom nil))
 (defn start   []
-  (->> [d/row-count d/sum-up-at-once d/sum-up-col d/sheet-titles d/sheet-id
-        confirmed-header deaths-header recovered-header]
-       (memo/memo-clear!))
   (swap! test-obj (fn [_] (start-polling token handler))))
 
 (defn stop    [] (p/stop @test-obj))

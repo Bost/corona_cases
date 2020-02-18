@@ -1,5 +1,5 @@
 (defproject coronavirus
-  "1.2.1"
+  "1.2.2"
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"
   :license {:name "Eclipse Public License v1.0"
@@ -15,6 +15,7 @@
    [org.clojure/data.json   "0.2.7"]
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
    [com.hypirion/clj-xchart "0.2.0"]
+   [incanter                "1.9.3"]
    ]
   :min-lein-version "2.0.0"
   :plugins
