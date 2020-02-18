@@ -168,19 +168,21 @@
                   (io/input-stream -stream "/path/to/photo.png"))
   (a/send-text
    token id
-   {:parse_mode "Markdown"}
+   {:parse_mode "Markdown"
+    :disable_web_page_preview true}
    (str
     "Bot version: " bot-ver "\n"
     "Percentage calculation: <cases> / confirmed\n"
-    "See " (link "Visual dashboard" "https://arcg.is/0fHmTX")
+    "See also " (link "visual dashboard" "https://arcg.is/0fHmTX") " and "
+    (link "worldometer"
+          "https://www.worldometers.info/coronavirus/coronavirus-cases/")
     "\n"
     "\n"
-    "- The data collected for Feb05, Feb07 is apparently not complete.\n"
-    "- The spike observed on Feb12 is the result, for the most part, of a change"
-    " in diagnosis classification adopted by the province of Hubei.\n"
+    "- The spike observed on Feb12 is the result, for the most part, of a"
+    " change in diagnosis classification adopted by the province of Hubei.\n"
     "- Due to the frequent changes of the "
     (link "data source" "https://github.com/CSSEGISandData/COVID-19")
-    " format and structure the numbers are updated manually once per day."
+    " format and structure the updates are done manually once per day."
     "\n"
     msg-footer)))
 

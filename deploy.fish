@@ -25,3 +25,7 @@ heroku ps:scale web=1 --app $APP
 # heroku open --app $APP
 # heroku addons:open papertrail --app $APP
 # heroku logs --tail --app $APP
+# heroku maintenance:on  --app $APP
+# heroku config:unset type private_key_id private_key client_id client_email \
+    # --app $APP
+# heroku maintenance:off --app $APP
