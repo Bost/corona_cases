@@ -11,11 +11,12 @@
    [ring/ring-jetty-adapter "1.8.0"]
    [environ                 "1.1.0"]
    [morse                   "0.4.3"]
-   [google-apps-clj         "0.6.1"]
    [org.clojure/data.json   "0.2.7"]
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
    [com.hypirion/clj-xchart "0.2.0"]
-   [incanter                "1.9.3"]
+   #_[incanter                "1.9.3"]
+   [incanter/incanter-core   "1.9.3"]
+   [incanter/incanter-charts "1.9.3"]
    ]
   :min-lein-version "2.0.0"
   :plugins

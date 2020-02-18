@@ -1,9 +1,7 @@
 (ns coronavirus.interpolate
-  #_(:use [incanter core stats charts io interpolation])
   (:require [incanter
              [charts :as charts]
              [core :as core]
-             [stats :as stats]
              [interpolation :as interp]
              ]))
 (defn plot [points fn]
@@ -11,9 +9,6 @@
       (charts/add-points (map first points)
                          (map second points))
       #_(core/view)))
-
-
-#_(core/view (plot interp))
 
 (defn go [points]
   (let [chart (plot points (interp/interpolate points :linear-least-squares))
@@ -23,9 +18,3 @@
                     (java.io.ByteArrayInputStream.
                      (.toByteArray out-stream)))]
     in-stream))
-
-;; (use '(incanter core stats charts))
-;; (def hist (histogram (sample-normal 1000)))
-;; (view hist)
-;; (def plot (.getPlot hist))
-;; (.setPaint (.getRenderer plot) java.awt.Color/RED)
