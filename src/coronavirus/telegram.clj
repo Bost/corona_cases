@@ -70,7 +70,10 @@
        :high     (int (Math/ceil  percentage))
        :low      (int (Math/floor percentage))
        :normal   (int (Math/round percentage))
-       (throw (Exception. "ERROR: get-percentage [:high|:low|:normal] <PLACE> <TOTAL_COUNT>"))))))
+       (throw
+        (Exception. (str "ERROR: "
+                         "get-percentage [:high|:low|:normal] "
+                         "<PLACE> <TOTAL_COUNT>")))))))
 
 (defn info-msg []
   (let [{day :f confirmed :c deaths :d recovered :r} (last (csv/get-counts))]
