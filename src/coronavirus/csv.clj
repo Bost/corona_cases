@@ -11,10 +11,8 @@
   (clojure.string/replace s #"^0+" ""))
 
 ;; get all the file names in one directory
-(def directory (io/file
-                (str "resources/COVID-19/csse_covid_19_data/"
-                     "csse_covid_19_daily_reports")))
-(def files (file-seq directory))
+(def directory (io/file "resources/csv"))
+(def files (filter #(.isFile %) (file-seq directory)))
 (def filestr (map str files))
 ;; find all the xls files in the directory
 (def csv-files (->> filestr

@@ -12,6 +12,16 @@ echo "APP" $APP
 echo "REMOTE" $REMOTE
 echo ""
 
+set --local repo ../COVID-19/.git; and \
+git --git-dir=$repo pull --rebase origin master; and \
+cp -r ../COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/*.csv \
+    resources/csv; and \
+git add resources/csv/*.csv
+
+if test $status = 0
+    git commit -m "Add new csv files"
+end
+
 # heroku logs --tail --app $APP blocks the execution
 heroku addons:open papertrail --app $APP; and \
 heroku ps:scale web=0 --app $APP; and \
@@ -29,3 +39,10 @@ heroku ps:scale web=1 --app $APP
 # heroku config:unset type private_key_id private_key client_id client_email \
     # --app $APP
 # heroku maintenance:off --app $APP
+
+# Fix: Push rejected, submodule install failed
+# Thanks to https://stackoverflow.com/a/31545903
+# heroku plugins:install https://github.com/heroku/heroku-repo.git
+# heroku repo:reset --app $APP
+
+# heroku run bash --app $APP

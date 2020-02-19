@@ -1,7 +1,7 @@
 
 # coronavirus
 
-## Running Locally
+## Running locally
 
 ```sh
 (require 'coronavirus.web)
@@ -11,7 +11,7 @@
 (coronavirus.telegram/-main)
 ```
 
-Your app should now be running on [localhost:5000](http://localhost:5000/).
+See [localhost:5000](http://localhost:5000/).
 
 ## Deploying to Heroku
 
@@ -29,11 +29,6 @@ set --local APP hokuspokus-bot
 
 ```fish
 heroku ps:scale web=0 --app $APP; and \
-heroku config:set type="..." --app $APP; and \
-heroku config:set private_key_id="..." --app $APP; and \
-heroku config:set private_key="..." --app $APP; and \
-heroku config:set client_email="..." --app $APP; and \
-heroku config:set client_id="..." --app $APP; and \
 heroku ps:scale web=1 --app $APP; and \
 heroku config --app $APP; and \
 notify-send "heroku config:set ... done"; or \
