@@ -40,11 +40,23 @@
 # ------------------
 # " , "disable_notification": false}' "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage"
 
-curl --request POST -H 'Content-Type: application/json' -d '{"chat_id":112885364, "parse_mode" : "MarkdownV2" , "text" : "
-| Tables   |      Are      |  Cool |
-|----------|---------------|-------|
-| col 1 is |  left-aligned | $1600 |
-| col 2 is |    centered   |   $12 |
-| col 3 is | right-aligned |    $1 |
-" , "disable_notification": false}' "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage"
+# curl --request POST -H 'Content-Type: application/json' -d '{"chat_id":112885364, "parse_mode" : "MarkdownV2" , "text" : "
+# | Tables   |      Are      |  Cool |
+# |----------|---------------|-------|
+# | col 1 is |  left-aligned | $1600 |
+# | col 2 is |    centered   |   $12 |
+# | col 3 is | right-aligned |    $1 |
+# " , "disable_notification": false}' "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage"
+
+
+# curl --request POST -H 'Content-Type: application/json' -d '{"chat_id":112885364, "parse_mode" : "MarkdownV2" , "text" : "notification" , "disable_notification": false}' "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage"
+# curl --request POST -H 'Content-Type: application/json' -d '{"chat_id":112885364,"text":"notification","disable_notification":false}' "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage"
+# curl --request POST -H 'Content-Type: application/json' -d '{"chat_id":112885364,"text":"notification","disable_notification":true}' "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage"
+
+# curl --request POST -H 'Content-Type: application/json' -d '{"chat_id":112885364,"text":"typing"}' "https://api.telegram.org/bot$TELEGRAM_TOKEN/getMe"
+
+curl --request POST -H 'Content-Type: application/json' -d '{"chat_id":112885364,"message_id":2043,"caption":""}' "https://api.telegram.org/bot$TELEGRAM_TOKEN/editMessageCaption"
+# curl --request POST -H 'Content-Type: application/json' -d '{"chat_id":112885364,"text":"notification","caption":"this is caption","disable_notification":true}' "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage"
+
+
 

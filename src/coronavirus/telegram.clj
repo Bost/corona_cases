@@ -159,21 +159,19 @@
 (defn register-cmd [cmd cmd-fn]
   (h/command-fn
    cmd
-   (fn [{{id :id :as chat} :chat}]
+   (fn [{{chat-id :id :as chat} :chat}]
      (let [tbeg (te/tnow)]
        (println (str "[" tbeg "           " " " bot-ver " /" cmd "]") chat)
-       (cmd-fn id)
+       (cmd-fn chat-id)
        (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd "]") chat)))))
 
-(defn refresh-cmd-fn [id]
-  (a/send-text token id (info-msg))
-  (a/send-photo token id (absolute-numbers-pic)))
+(defn refresh-cmd-fn [chat-id]
+  (a/send-text token chat-id (info-msg))
+  (a/send-photo token chat-id (absolute-numbers-pic)))
 
-(defn about-cmd-fn [id]
-  #_(a/send-photo token id
-                  (io/input-stream -stream "/path/to/photo.png"))
+(defn about-cmd-fn [chat-id]
   (a/send-text
-   token id
+   token chat-id
    {:parse_mode "Markdown"
     :disable_web_page_preview true}
    (str
@@ -194,13 +192,9 @@
 
 ;; long polling
 (h/defhandler handler
-  (register-cmd "start"   (fn [id] (refresh-cmd-fn id)))
-  (register-cmd "refresh" (fn [id] (refresh-cmd-fn id)))
-  (register-cmd "about"   (fn [id] (about-cmd-fn id)))
-
-  #_(h/message-fn
-     (fn [{{id :id} :chat :as message}]
-       (a/send-text token id (str "Echoing message: " message)))))
+  (register-cmd "start"   (fn [chat-id] (refresh-cmd-fn chat-id)))
+  (register-cmd "refresh" (fn [chat-id] (refresh-cmd-fn chat-id)))
+  (register-cmd "about"   (fn [chat-id] (about-cmd-fn chat-id))))
 
 (defn start-polling
   "Starts long-polling process.
