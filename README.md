@@ -1,9 +1,11 @@
+# Coronavirus Cases - COVID-19
 
-# coronavirus
+Few numbers about the Coronavirus Disease 2019 (COVID-19) presented by the
+Telegram Chatbot: @corona_cases_bot
 
 ## Running locally
 
-```sh
+```clojure
 (require 'coronavirus.web)
 (def server (coronavirus.web/-main))
 
@@ -13,44 +15,6 @@
 
 See [localhost:5000](http://localhost:5000/).
 
-## Deploying to Heroku
+## Deploy to Heroku
 
-```fish
-# set up remotes - prod environment
-set --local REMOTE heroku-corona-cases-bot
-set --local APP corona-cases-bot
-```
-
-```fish
-# set up remotes - test environment
-set --local REMOTE heroku-hokuspokus-bot
-set --local APP hokuspokus-bot
-```
-
-```fish
-heroku ps:scale web=0 --app $APP; and \
-heroku ps:scale web=1 --app $APP; and \
-heroku config --app $APP; and \
-notify-send "heroku config:set ... done"; or \
-notify-send "heroku config:set ... failed"
-```
-```fish
-# heroku config:unset <env-param-name> --app $APP
-```
-
-```fish
-heroku create
-
-# heroku ps:scale web=0 --app $APP; and \
-# git push $REMOTE master; and \
-# heroku config:set BOT_VER=(git rev-parse --short master) --app $APP; \
-# heroku ps:scale web=1 --app $APP
-
-# heroku ps:scale web=0 --app $APP; and \
-# heroku ps:scale web=1 --app $APP
-
-git push $REMOTE master; and \
-heroku config:set BOT_VER=(git rev-parse --short master) --app $APP
-
-heroku open --app $APP
-```
+See [deploy.sh](./deploy.sh).
