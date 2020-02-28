@@ -24,5 +24,5 @@
    [environ/environ.lein "0.3.1"]
    ]
   :hooks [environ.leiningen.hooks]
-  :uberjar-name "coronavirus-standalone.jar"
+  :uberjar-name "corona_cases-standalone.jar"
   :profiles {:production {:env {:production true}}})
