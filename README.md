@@ -1,7 +1,7 @@
 # Coronavirus Cases - COVID-19
 
 Few numbers about the Coronavirus Disease 2019 (COVID-19) presented by the
-Telegram Chatbot: @corona_cases_bot
+Telegram Chatbot: [@corona_cases_bot](https://t.me/corona_cases_bot)
 
 ## Running locally
 
@@ -17,4 +17,4 @@ See [localhost:5000](http://localhost:5000/).
 
 ## Deploy to Heroku
 
-See [deploy.sh](./deploy.sh).
+See [deploy.fish](./deploy.fish).

@@ -19,7 +19,7 @@ cp -r ../COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/*.csv \
 git add resources/csv/*.csv
 
 if test $status = 0
-    git commit -m "Add new csv files"
+    git commit -m "Add new csv file(s)"
 end
 
 # heroku logs --tail --app $APP blocks the execution

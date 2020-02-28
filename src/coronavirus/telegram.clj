@@ -184,9 +184,11 @@
     "\n"
     "- The spike observed on Feb12 is the result, for the most part, of a"
     " change in diagnosis classification adopted by the province of Hubei.\n"
-    "- Due to the frequent changes of the "
-    (link "data source" "https://github.com/CSSEGISandData/COVID-19")
-    " format and structure the updates are done manually once per day."
+    "- " (link "Data source" "https://github.com/CSSEGISandData/COVID-19")
+    " (Updates deployed manually once a day.)"
+    "- Source code "
+    "on: " (link "GitHub" "https://github.com/Bost/corona_cases")
+    " and " (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases")
     "\n"
     msg-footer)))
 
