@@ -59,7 +59,7 @@
 
 (def msg-footer (str
                  "\n"
-                 "Available commands:  /refresh   /about"
+                 "Available commands:  /refresh   /interpolate   /about"
                  #_(str "Response generated in " " seconds")))
 
 (defn get-percentage
@@ -135,7 +135,8 @@
                              {:render-style :line}
                              #_{:line-color :green})})})
          (conj {}
-               {:title "Coronavirus (2019-nCoV) - see the /about command"
+               {:title
+                "@corona_cases_bot: total numbers; see /about"
                 :render-style :area
                 :legend {:position :inside-nw}
                 :x-axis {:title "Day"}
@@ -149,10 +150,19 @@
 
 (defn aproximation-pic [] (i/create-pic i/points))
 
+(def chats (atom #{}))
+
 (defn register-cmd [cmd cmd-fn]
   (h/command-fn
    cmd
    (fn [{{chat-id :id :as chat} :chat}]
+     (if (= cmd "start")
+       (do
+         (swap! chats clojure.set/union #{chat})
+         (->> @chats
+              prn-str
+              (spit "chats.edn")
+              )))
      (let [tbeg (te/tnow)]
        (println (str "[" tbeg "           " " " bot-ver " /" cmd "]") chat)
        (cmd-fn chat-id)
@@ -161,8 +171,11 @@
 (defn refresh-cmd-fn [chat-id]
   (a/send-text token chat-id (info-msg))
   (a/send-photo token chat-id
-                (aproximation-pic)
-                #_(absolute-numbers-pic)))
+                (absolute-numbers-pic)))
+
+(defn interpolate-cmd-fn [chat-id]
+  (a/send-photo token chat-id
+                (aproximation-pic)))
 
 (defn about-cmd-fn [chat-id]
   (a/send-text
@@ -170,20 +183,25 @@
    {:parse_mode "Markdown"
     :disable_web_page_preview true}
    (str
-    "Bot version: " bot-ver "\n"
-    "Percentage calculation: <cases> / confirmed\n"
+    "@corona\\_cases\\_bot version: " bot-ver "\n"
+    "Percentage calculation: <cases> / confirmed.\n"
+    "The interpolation method is: linear "
+    (link "least squares" "https://en.wikipedia.org/wiki/Least_squares") "."
+    "\n"
     "See also " (link "visual dashboard" "https://arcg.is/0fHmTX") " and "
     (link "worldometer"
-          "https://www.worldometers.info/coronavirus/coronavirus-cases/")
+          "https://www.worldometers.info/coronavirus/coronavirus-cases/") "."
     "\n"
     "\n"
-    "- The spike observed on Feb12 is the result, for the most part, of a"
-    " change in diagnosis classification adopted by the province of Hubei.\n"
+    "- The spike from Feb12 results, for the most part, from a change in"
+    " the diagnosis classification adopted by the province of Hubei.\n"
     "- " (link "Data source" "https://github.com/CSSEGISandData/COVID-19")
     " (Updates deployed manually once a day.)"
-    "- Source code "
-    "on: " (link "GitHub" "https://github.com/Bost/corona_cases")
-    " and " (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases")
+    "\n"
+    "- Chatbot source code available on "
+    (link "GitHub" "https://github.com/Bost/corona_cases") " and "
+    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases")
+    "."
     ;; TODO home page
     #_(str
      "\n"
@@ -195,6 +213,8 @@
 (h/defhandler handler
   (register-cmd "start"   (fn [chat-id] (refresh-cmd-fn chat-id)))
   (register-cmd "refresh" (fn [chat-id] (refresh-cmd-fn chat-id)))
+  (register-cmd "interpolate"
+                (fn [chat-id] (interpolate-cmd-fn chat-id)))
   (register-cmd "about"   (fn [chat-id] (about-cmd-fn chat-id))))
 
 (defn start-polling

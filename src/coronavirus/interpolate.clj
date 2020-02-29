@@ -20,12 +20,13 @@
        (csv/get-counts)))
 
 (defn plot [points fn]
-  (-> (charts/function-plot fn 0 (count points)
-                            :title "Coronavirus (2019-nCoV) - see the /about command"
-                            :x-label "Day" :y-label "Cases")
+  (-> (charts/function-plot
+       fn 0 (count points)
+       :title "@corona_cases_bot: interpolation - confirmed cases; see /about"
+       :x-label "Jan12 + <day-number>" :y-label "Cases")
       (charts/add-points (map first points)
                          (map second points))
-      (core/view)))
+      #_(core/view)))
 
 (defn interpolate-points [points]
   (interp/interpolate points :linear-least-squares))
