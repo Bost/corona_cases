@@ -98,9 +98,7 @@
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
 (defn absolute-numbers-pic []
-  (let [dates (map (fn [hm] (.parse (new SimpleDateFormat "MM-dd-yyyy")
-                                   (subs (:f hm) 0 10)))
-                   (csv/get-counts))
+  (let [dates i/dates
         [confirmed deaths recovered] [(map :c (csv/get-counts))
                                       (map :d (csv/get-counts))
                                       (map :r (csv/get-counts))]]
@@ -149,12 +147,7 @@
         #_(c/view)
         (c/to-bytes :png))))
 
-(defn aproximation-pic []
-  (let [points
-        #_[[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]]
-        (mapv (fn [x y] [x y]) (range) (map :c (csv/get-counts)))]
-    #_(println "points" points)
-    (i/go points)))
+(defn aproximation-pic [] (i/create-pic i/points))
 
 (defn register-cmd [cmd cmd-fn]
   (h/command-fn
@@ -167,7 +160,9 @@
 
 (defn refresh-cmd-fn [chat-id]
   (a/send-text token chat-id (info-msg))
-  (a/send-photo token chat-id (absolute-numbers-pic)))
+  (a/send-photo token chat-id
+                (aproximation-pic)
+                #_(absolute-numbers-pic)))
 
 (defn about-cmd-fn [chat-id]
   (a/send-text
