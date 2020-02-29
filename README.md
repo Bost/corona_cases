@@ -1,9 +1,11 @@
-# Coronavirus Cases - COVID-19
-
-Coronavirus numbers via Telegram Chatbot
+Coronavirus disease 2019 (COVID-19) cases delivered via Telegram Chatbot
 [@corona_cases_bot](https://t.me/corona_cases_bot)
 
 ## Running locally
+
+```fish
+lein repl
+```
 
 ```clojure
 (require 'coronavirus.web)
@@ -17,4 +19,4 @@ See [localhost:5000](http://localhost:5000/).
 
 ## Deploy to Heroku
 
-See [deploy.fish](./deploy.fish).
+Using fish-shell: see [deploy.fish](./deploy.fish).

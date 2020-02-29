@@ -12,6 +12,7 @@ echo "APP" $APP
 echo "REMOTE" $REMOTE
 echo ""
 
+# git clone https://github.com/CSSEGISandData/COVID-19.git ../COVID-19
 set --local repo ../COVID-19/.git; and \
 git --git-dir=$repo pull --rebase origin master; and \
 cp -r ../COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/*.csv \
