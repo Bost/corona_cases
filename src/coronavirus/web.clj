@@ -16,7 +16,17 @@
 (def telegram-hook "telegram")
 (def google-hook "google")
 
-(defn splash []
+(defn home-page []
+  {:status 200
+   :headers {"Content-Type" "text/plain"}
+   :body
+   (clojure.string/join
+    "\n"
+    [
+     "TODO home page"
+     ])})
+
+(defn links []
   {:status 200
    :headers {"Content-Type" "text/plain"}
    :body
@@ -72,7 +82,9 @@
         :headers {"Content-Type" "text/plain"}
         :body (str "input was " input)})
   (GET "/" []
-       (splash))
+       (home-page))
+  (GET "/links" []
+       (links))
   (ANY "*" []
        (route/not-found (slurp (io/resource "404.html")))))
 

@@ -189,6 +189,10 @@
     "- Source code "
     "on: " (link "GitHub" "https://github.com/Bost/corona_cases")
     " and " (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases")
+    ;; TODO home page
+    #_(str
+     "\n"
+     " - " (link "Home page" "https://heroku.com/corona_cases"))
     "\n"
     msg-footer)))
 
