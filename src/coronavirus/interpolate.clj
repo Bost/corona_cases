@@ -19,17 +19,30 @@
                         (subs (:f hm) 0 10)))
        (csv/get-counts)))
 
+(def degree
+  13
+  #_0
+  #_(quot (count points) 4)       ;; 1/4
+  #_(quot (count points) 3)         ;; 1/3
+  #_(quot (count points) 2)       ;; 1/2
+  #_(* 2 (quot (count points) 3)) ;; 2/3
+  #_(* 3 (quot (count points) 4)) ;; 3/4
+  #_(count points))
+
 (defn plot [points fn]
-  (-> (charts/function-plot
-       fn 0 (count points)
-       :title "@corona_cases_bot: interpolation - confirmed cases; see /about"
+  (-> (
+       charts/parametric-plot fn 0 1
+       ;; charts/function-plot fn 0 (count points)
+       :title
+       #_(str "degree" degree)
+       "@corona_cases_bot: interpolation - confirmed cases; see /about"
        :x-label "Jan12 + <day-number>" :y-label "Cases")
       (charts/add-points (map first points)
                          (map second points))
       #_(core/view)))
 
 (defn interpolate-points [points]
-  (interp/interpolate points :linear-least-squares))
+  (interp/interpolate-parametric points :b-spline :degree degree))
 
 (defn create-pic [points]
   (let [chart (plot points (interpolate-points points))

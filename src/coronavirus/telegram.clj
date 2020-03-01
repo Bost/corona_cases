@@ -76,7 +76,8 @@
                          "<PLACE> <TOTAL_COUNT>")))))))
 
 (defn info-msg []
-  (let [{day :f confirmed :c deaths :d recovered :r} (last (csv/get-counts))]
+  (let [{day :f confirmed :c deaths :d recovered :r} (last (csv/get-counts))
+        ill (- confirmed (+ recovered deaths))]
     (str
      "\n"
      (tf/unparse (tf/formatter "dd MMM yyyy")
@@ -88,6 +89,7 @@
      "  ~  " (get-percentage deaths confirmed) "%\n"
      "Recovered: " recovered
      "  ~  " (get-percentage recovered confirmed) "%\n"
+     "Currently ill: " ill "  ~  " (get-percentage ill confirmed) "%\n"
      msg-footer)))
 
 (defn link [name url] (str "[" name "]""(" url ")"))
@@ -185,8 +187,10 @@
    (str
     "@corona\\_cases\\_bot version: " bot-ver "\n"
     "Percentage calculation: <cases> / confirmed.\n"
-    "The interpolation method is: linear "
-    (link "least squares" "https://en.wikipedia.org/wiki/Least_squares") "."
+    "Interpolation method: "
+    (link "b-spline"
+          "https://en.wikipedia.org/wiki/B-spline")
+    "; degree of \"smoothness\" " i/degree "."
     "\n"
     "See also " (link "visual dashboard" "https://arcg.is/0fHmTX") " and "
     (link "worldometer"
