@@ -20,13 +20,16 @@
        (csv/get-counts)))
 
 (def degree
-  13
+  #_21
+  (Math/round (* 0.55 (count points)))
   #_0
+  #_(quot (count points) 5)       ;; 1/5
   #_(quot (count points) 4)       ;; 1/4
-  #_(quot (count points) 3)         ;; 1/3
+  #_(quot (count points) 3)       ;; 1/3
   #_(quot (count points) 2)       ;; 1/2
   #_(* 2 (quot (count points) 3)) ;; 2/3
   #_(* 3 (quot (count points) 4)) ;; 3/4
+  #_(* 3 (quot (count points) 5)) ;; 3/5
   #_(count points))
 
 (defn plot [points fn]

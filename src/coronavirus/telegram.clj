@@ -21,6 +21,9 @@
   (:gen-class))
 
 (def token (env :telegram-token))
+(def home-page
+  ;; TODO (env :home-page)
+  "https://corona-cases-bot.herokuapp.com/")
 
 (def bot-ver
   (str
@@ -206,12 +209,16 @@
     (link "GitHub" "https://github.com/Bost/corona_cases") " and "
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases")
     "."
-    ;; TODO home page
+    ;; TODO home page; average recovery time
     #_(str
      "\n"
-     " - " (link "Home page" "https://heroku.com/corona_cases"))
+     " - " (link "Home page" home-page))
     "\n"
-    msg-footer)))
+    msg-footer))
+  (a/send-text token chat-id
+               {:disable_web_page_preview false}
+               "https://www.who.int/gpsc/media/how_to_handwash_lge.gif"
+               #_"https://www.who.int/gpsc/clean_hands_protection/en/"))
 
 ;; long polling
 (h/defhandler handler
