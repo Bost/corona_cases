@@ -1,12 +1,11 @@
 #!/usr/bin/env fish
 
-# prod environment
-set --local REMOTE heroku-corona-cases-bot
-set --local APP corona-cases-bot
+# set up environment
+set --local envName corona-cases  # prod
+set --local envName hokuspokus    # test
 
-# test environment
-# set --local REMOTE heroku-hokuspokus-bot
-# set --local APP hokuspokus-bot
+set --local APP $envName"-bot"
+set --local REMOTE "heroku-"$APP
 
 echo "APP" $APP
 echo "REMOTE" $REMOTE
