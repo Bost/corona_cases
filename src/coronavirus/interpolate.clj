@@ -33,9 +33,7 @@
   #_(count points))
 
 (defn plot [points fn]
-  (-> (
-       charts/parametric-plot fn 0 1
-       ;; charts/function-plot fn 0 (count points)
+  (-> (charts/parametric-plot fn 0 1
        :title
        #_(str "degree" degree)
        "@corona_cases_bot: interpolation - confirmed cases; see /about"

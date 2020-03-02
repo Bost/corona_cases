@@ -41,8 +41,8 @@
    (->> file take-csv rest)))
 
 (defn sum-up [sum-up-fn]
-  (->> csv-files
-       (map (fn [file] (sum-up-file sum-up-fn file)))))
+  (map (fn [file] (sum-up-file sum-up-fn file))
+       csv-files))
 
 (defn get-counts []
   (map (fn [f c d r] {:f

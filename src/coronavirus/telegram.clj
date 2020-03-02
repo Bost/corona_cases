@@ -103,42 +103,35 @@
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
 (defn absolute-numbers-pic []
-  (let [dates i/dates
-        [confirmed deaths recovered] [(map :c (csv/get-counts))
+  (let [[confirmed deaths recovered] [(map :c (csv/get-counts))
                                       (map :d (csv/get-counts))
                                       (map :r (csv/get-counts))]]
     (-> (c/xy-chart
          (conj {}
                {"Confirmed"
                 (conj {}
-                      {:x dates
-                       :y confirmed
-                       :style
-                       (conj {}
-                             {:marker-type :none}
-                             #_{:render-style :line}
-                             #_{:line-color :orange}
-                             #_{:fill-color :orange}
-                             )})}
+                      {:x i/dates :y confirmed
+                       :style (conj {}
+                                    {:marker-type :none}
+                                    #_{:render-style :line}
+                                    #_{:line-color :orange}
+                                    #_{:fill-color :orange}
+                                    )})}
                {"Deaths"
                 (conj {}
-                      {:x dates
-                       :y deaths}
-                      {:style
-                       (conj {}
-                             {:marker-type :none}
-                             {:render-style :line}
-                             #_{:line-color :red})
+                      {:x i/dates :y deaths}
+                      {:style (conj {}
+                                    {:marker-type :none}
+                                    {:render-style :line}
+                                    #_{:line-color :red})
                        })}
                {"Recovered"
                 (conj {}
-                      {:x dates
-                       :y recovered}
-                      {:style
-                       (conj {}
-                             {:marker-type :none}
-                             {:render-style :line}
-                             #_{:line-color :green})})})
+                      {:x i/dates :y recovered}
+                      {:style (conj {}
+                                    {:marker-type :none}
+                                    {:render-style :line}
+                                    #_{:line-color :green})})})
          (conj {}
                {:title
                 "@corona_cases_bot: total numbers; see /about"
@@ -153,34 +146,29 @@
         #_(c/view)
         (c/to-bytes :png))))
 
-(defn aproximation-pic [] (i/create-pic i/points))
-
 (def chats (atom #{}))
 
 (defn register-cmd [cmd cmd-fn]
   (h/command-fn
    cmd
    (fn [{{chat-id :id :as chat} :chat}]
-     (if (= cmd "start")
-       (do
-         (swap! chats clojure.set/union #{chat})
-         (->> @chats
-              prn-str
-              (spit "chats.edn")
-              )))
+     (when (= cmd "start")
+       (swap! chats clojure.set/union #{chat})
+       (->> @chats
+            prn-str
+            (spit "chats.edn")
+            ))
      (let [tbeg (te/tnow)]
        (println (str "[" tbeg "           " " " bot-ver " /" cmd "]") chat)
        (cmd-fn chat-id)
        (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd "]") chat)))))
 
 (defn refresh-cmd-fn [chat-id]
-  (a/send-text token chat-id (info-msg))
-  (a/send-photo token chat-id
-                (absolute-numbers-pic)))
+  (a/send-text  token chat-id (info-msg))
+  (a/send-photo token chat-id (absolute-numbers-pic)))
 
 (defn interpolate-cmd-fn [chat-id]
-  (a/send-photo token chat-id
-                (aproximation-pic)))
+  (a/send-photo token chat-id (i/create-pic i/points)))
 
 (defn about-cmd-fn [chat-id]
   (a/send-text
@@ -222,11 +210,10 @@
 
 ;; long polling
 (h/defhandler handler
-  (register-cmd "start"   (fn [chat-id] (refresh-cmd-fn chat-id)))
-  (register-cmd "refresh" (fn [chat-id] (refresh-cmd-fn chat-id)))
-  (register-cmd "interpolate"
-                (fn [chat-id] (interpolate-cmd-fn chat-id)))
-  (register-cmd "about"   (fn [chat-id] (about-cmd-fn chat-id))))
+  (register-cmd "start"       (fn [chat-id] (refresh-cmd-fn     chat-id)))
+  (register-cmd "refresh"     (fn [chat-id] (refresh-cmd-fn     chat-id)))
+  (register-cmd "interpolate" (fn [chat-id] (interpolate-cmd-fn chat-id)))
+  (register-cmd "about"       (fn [chat-id] (about-cmd-fn       chat-id))))
 
 (defn start-polling
   "Starts long-polling process.
@@ -245,18 +232,14 @@
 (defn -main
   [& args]
   (log/info (str "[" (te/tnow) " " bot-ver "]") "Starting Telegram Chatbot...")
-  (let [blank-prms (->> [:telegram-token]
-                        (filter (fn [prm] (str/blank? (env prm)))))]
+  (let [blank-prms (filter #(-> % env str/blank?) [:telegram-token])]
     (when (not-empty blank-prms)
       (log/fatal (str "Undef environment var(s): " blank-prms))
       (System/exit 1)))
-
   (<!! (start-polling token handler)))
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start   []
-  (swap! test-obj (fn [_] (start-polling token handler))))
-
+(defn start   [] (swap! test-obj (fn [_] (start-polling token handler))))
 (defn stop    [] (p/stop @test-obj))
 (defn restart [] (if @test-obj (stop)) (start))
