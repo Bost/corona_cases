@@ -1,14 +1,13 @@
 (ns coronavirus.web
-  (:require [compojure.core :refer [defroutes GET PUT POST DELETE ANY]]
+  (:require [clojure.data.json :as json]
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
+            [compojure.core :refer [ANY defroutes GET POST]]
             [compojure.handler :refer [site]]
             [compojure.route :as route]
-            [clojure.java.io :as io]
-            [ring.adapter.jetty :as jetty]
-            [environ.core :refer [env]]
             [coronavirus.telegram :as corona]
-            [clojure.data.json :as json]
-            [clojure.tools.logging :as log]
-            ))
+            [environ.core :refer [env]]
+            [ring.adapter.jetty :as jetty]))
 
 (def chat-id "112885364")
 (def token (env :telegram-token))

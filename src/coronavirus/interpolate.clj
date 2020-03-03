@@ -1,13 +1,8 @@
 (ns coronavirus.interpolate
-  (:require
-   [incanter
-    [charts :as charts]
-    [core :as core]
-    [interpolation :as interp]
-    ]
-   [coronavirus
-    [csv :as csv]]
-   )
+  (:require [coronavirus.csv :as csv]
+            [incanter.charts :as charts]
+            [incanter.core :as core]
+            [incanter.interpolation :as interp])
   (:import java.text.SimpleDateFormat))
 
 (def points

@@ -1,19 +1,14 @@
 (ns coronavirus.telegram
-  (:require [clojure.core.async :refer [<!!]]
+  (:gen-class)
+  (:require [clj-time-ext.core :as te]
+            [clojure.core.async :as async :refer [<!!]]
             [clojure.string :as str]
+            [clojure.tools.logging :as log]
+            [coronavirus.messages :as m]
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
-            [morse.polling-patch :as p-patch]
-            [clj-time-ext.core :as te]
-            [clojure.tools.logging :as log]
-            [clojure.core.async :as async]
-            [clojure.core.memoize :as memo]
-            [coronavirus
-             [messages :as m]]
-            )
-  (:import java.text.SimpleDateFormat)
-  (:gen-class))
+            [morse.polling-patch :as p-patch]))
 
 #_(log/info "Telegram Chatbot:" bot)
 
