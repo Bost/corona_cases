@@ -7,6 +7,8 @@ set --local envName corona-cases  # prod
 set --local APP $envName"-bot"
 set --local REMOTE "heroku-"$APP
 
+# set --local pushFlags "--force"
+
 echo "APP" $APP
 echo "REMOTE" $REMOTE
 echo ""
@@ -25,12 +27,11 @@ end
 # heroku logs --tail --app $APP blocks the execution
 heroku addons:open papertrail --app $APP; and \
 heroku ps:scale web=0 --app $APP; and \
-git push $REMOTE master; and \
-# git push --force $REMOTE master; and \
+git push $pushFlags $REMOTE master; and \
 heroku config:set BOT_VER=(git rev-parse --short master) --app $APP; and \
 heroku ps:scale web=1 --app $APP
 
-git push origin; and git push gitlab
+git push $pushFlags origin; and git push $pushFlags gitlab
 
 # heroku ps:scale web=0 --app $APP; and \
 # heroku ps:scale web=1 --app $APP
