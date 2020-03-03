@@ -69,10 +69,11 @@
   (let [{day :f confirmed :c deaths :d recovered :r
          ill :i} (last (csv/get-counts))]
     (str
-     "\n"
+     "*"
      (tf/unparse (tf/formatter "dd MMM yyyy")
                  (tf/parse (tf/formatter "MM-dd-yyyy")
                            (subs day 0 10)))
+     "*"
      "\n"
      "Confirmed: " confirmed "\n"
      "Deaths: " deaths
@@ -143,7 +144,10 @@
         (c/to-bytes :png))))
 
 (defn refresh-cmd-fn [chat-id]
-  (a/send-text  token chat-id (info-msg))
+  (a/send-text  token chat-id
+                {:parse_mode "Markdown"
+                 :disable_web_page_preview true}
+                (info-msg))
   (a/send-photo token chat-id (absolute-numbers-pic)))
 
 (defn interpolate-cmd-fn [chat-id]
