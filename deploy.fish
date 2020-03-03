@@ -2,7 +2,7 @@
 
 # set up environment
 set --local envName corona-cases  # prod
-set --local envName hokuspokus    # test
+# set --local envName hokuspokus    # test
 
 set --local APP $envName"-bot"
 set --local REMOTE "heroku-"$APP
@@ -29,6 +29,8 @@ git push $REMOTE master; and \
 # git push --force $REMOTE master; and \
 heroku config:set BOT_VER=(git rev-parse --short master) --app $APP; and \
 heroku ps:scale web=1 --app $APP
+
+git push origin; and git push gitlab
 
 # heroku ps:scale web=0 --app $APP; and \
 # heroku ps:scale web=1 --app $APP
