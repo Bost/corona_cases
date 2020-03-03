@@ -29,6 +29,13 @@
 (defn getc [[_ _ _ c _ _]] c)
 (defn getd [[_ _ _ _ d _]] d)
 (defn getr [[_ _ _ _ _ r]] r)
+(defn geti [[_ _ u c d r]]
+  (let [[nc nd nr] (map (fn [v]
+                          (if (or (empty? v) (= "0" v))
+                            0
+                            (-> v fix-octal-val read-string)))
+                        [c d r])]
+    (- nc (+ nr nd))))
 
 (defn sum-up-file [sum-up-fn file]
   (transduce
@@ -45,11 +52,11 @@
        csv-files))
 
 (defn get-counts []
-  (map (fn [f c d r] {:f
-                     (subs f (inc (s/last-index-of f "/")))
-                     :c c :d d :r r})
+  (map (fn [f c d r i] {:f (subs f (inc (s/last-index-of f "/")))
+                       :c c :d d :r r :i i})
        csv-files
        (sum-up getc)
        (sum-up getd)
-       (sum-up getr)))
+       (sum-up getr)
+       (sum-up geti)))
 
