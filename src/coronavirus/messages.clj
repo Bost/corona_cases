@@ -47,10 +47,11 @@
             bot-ver
             bot-type)))
 
-(def msg-footer (str
-                 "\n"
-                 "Available commands:  /refresh   /interpolate   /about"
-                 #_(str "Response generated in " " seconds")))
+(defn msg-footer [cmds]
+  (str
+   "\n"
+   "Available commands:\n"
+   (clojure.string/join "    " (map #(str "/" %) cmds))))
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -65,7 +66,7 @@
                          "get-percentage [:high|:low|:normal] "
                          "<PLACE> <TOTAL_COUNT>")))))))
 
-(defn info-msg []
+(defn info-msg [cmds]
   (let [{day :f confirmed :c deaths :d recovered :r
          ill :i} (last (csv/get-counts))]
     (str
@@ -81,7 +82,7 @@
      "Recovered: " recovered
      "  ~  " (get-percentage recovered confirmed) "%\n"
      "Currently ill: " ill "  ~  " (get-percentage ill confirmed) "%\n"
-     msg-footer)))
+     (msg-footer cmds))))
 
 (defn link [name url] (str "[" name "]""(" url ")"))
 
@@ -143,28 +144,27 @@
         #_(c/view)
         (c/to-bytes :png))))
 
-(defn refresh-cmd-fn [chat-id]
+(defn refresh-cmd-fn [cmd-names chat-id]
   (a/send-text  token chat-id
                 {:parse_mode "Markdown"
                  :disable_web_page_preview true}
-                (info-msg))
+                (info-msg cmd-names))
   (a/send-photo token chat-id (absolute-numbers-pic)))
 
-(defn interpolate-cmd-fn [chat-id]
+(defn interpolate-cmd-fn [cmd-names chat-id]
   (a/send-photo token chat-id (i/create-pic i/points)))
 
-(defn about-cmd-fn [chat-id]
-  (a/send-text
-   token chat-id
-   {:parse_mode "Markdown"
-    :disable_web_page_preview true}
-   (str
+(defn about-msg [cmd-names]
+  (str
     "@corona\\_cases\\_bot version: " bot-ver "\n"
     "Percentage calculation: <cases> / confirmed.\n"
     "Interpolation method: "
     (link "b-spline"
           "https://en.wikipedia.org/wiki/B-spline")
     "; degree of \"smoothness\" " i/degree "."
+    "\n"
+    #_(link "Country codes"
+          "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
     "\n"
     "See also " (link "visual dashboard" "https://arcg.is/0fHmTX") " and "
     (link "worldometer"
@@ -185,9 +185,23 @@
      "\n"
      " - " (link "Home page" home-page))
     "\n"
-    msg-footer))
-  (a/send-text token chat-id
-               {:disable_web_page_preview false}
-               "https://www.who.int/gpsc/media/how_to_handwash_lge.gif"
-               #_"https://www.who.int/gpsc/clean_hands_protection/en/"))
+    (msg-footer cmd-names)))
 
+(defn about-cmd-fn [cmd-names chat-id]
+  (a/send-text token chat-id
+                 {:parse_mode "Markdown" :disable_web_page_preview true}
+                 (about-msg cmd-names))
+  (a/send-text token chat-id
+               {:disable_web_page_preview true}
+               "https://www.who.int/gpsc/clean_hands_protection/en/"
+               #_"https://www.who.int/gpsc/media/how_to_handwash_lge.gif")
+  (a/send-photo token chat-id (io/input-stream
+                               "resources/pics/how_to_handwash_lge.gif")))
+
+(defn keepcalm-cmd-fn [cmd-names chat-id]
+  (a/send-photo token chat-id (io/input-stream
+                               "resources/pics/keepcalm.jpg"))
+  #_(a/send-text
+   token chat-id
+   {:disable_web_page_preview false}
+   "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))

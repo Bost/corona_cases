@@ -31,12 +31,20 @@
 
 (def cmds
   [
-   {:name "start"       :f (fn [chat-id] (m/refresh-cmd-fn     chat-id))}
-   {:name "refresh"     :f (fn [chat-id] (m/refresh-cmd-fn     chat-id))}
-   {:name "interpolate" :f (fn [chat-id] (m/interpolate-cmd-fn chat-id))}
-   {:name "about"       :f (fn [chat-id] (m/about-cmd-fn       chat-id))}
-   {:name "keepcalm"    :f (fn [chat-id] (m/keepcalm-cmd-fn    chat-id))}
+   {:name "refresh"     :f m/refresh-cmd-fn
+    :desc "Start here"}
+   {:name "interpolate" :f m/interpolate-cmd-fn
+    :desc "Smooth the data / leave out the noise"}
+   {:name "about"       :f m/about-cmd-fn
+    :desc "Bot version & some additional info"}
+   {:name "whattodo"    :f m/keepcalm-cmd-fn
+    :desc "Some personalized instructions"}
    ])
+
+(def cmd-names (map :name cmds))
+
+(defn create-sexp [{:keys [name f]}]
+  (list 'register-cmd name (fn [chat-id] (f cmd-names chat-id))))
 
 ;; long polling
 ;; (as-> ...) creates
@@ -45,7 +53,7 @@
 ;;   (register-cmd "refresh" (fn [chat-id] ...))
 ;;   ...)
 (as-> cmds $
-  (map (fn [{:keys [name f]}] (list 'register-cmd name f)) $)
+  (map create-sexp $)
   (conj $ 'handler 'h/defhandler)
   (eval $))
 
@@ -77,3 +85,7 @@
 (defn start   [] (swap! test-obj (fn [_] (start-polling m/token handler))))
 (defn stop    [] (p/stop @test-obj))
 (defn restart [] (if @test-obj (stop)) (start))
+
+(defn bot-father-edit-cmds []
+  (map (fn [{:keys [name desc]}] (println name "-" desc))
+       cmds))
