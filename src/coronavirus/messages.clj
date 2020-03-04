@@ -5,7 +5,8 @@
             [com.hypirion.clj-xchart :as c]
             [clojure.java.io :as io]
             [coronavirus
-             [csv :as csv]
+             #_[csv :as data]
+             [api :as data]
              [interpolate :as i]]
             ))
 
@@ -87,15 +88,16 @@
 
 (defn absolute-numbers-pic []
   (let [[confirmed deaths recovered ill]
-        [(map :c (csv/get-counts))
-         (map :d (csv/get-counts))
-         (map :r (csv/get-counts))
-         (map :i (csv/get-counts))]]
+        [(map :c (data/get-counts))
+         (map :d (data/get-counts))
+         (map :r (data/get-counts))
+         (map :i (data/get-counts))]
+        dates    (data/dates)]
     (-> (c/xy-chart
          (conj {}
                {"Confirmed"
                 (conj {}
-                      {:x i/dates :y confirmed
+                      {:x dates :y confirmed
                        :style (conj {}
                                     {:marker-type :none}
                                     #_{:render-style :line}
@@ -104,7 +106,7 @@
                                     )})}
                {"Deaths"
                 (conj {}
-                      {:x i/dates :y deaths}
+                      {:x dates :y deaths}
                       {:style (conj {}
                                     {:marker-type :none}
                                     {:render-style :line}
@@ -112,14 +114,14 @@
                        })}
                {"Recovered"
                 (conj {}
-                      {:x i/dates :y recovered}
+                      {:x dates :y recovered}
                       {:style (conj {}
                                     {:marker-type :none}
                                     {:render-style :line}
                                     #_{:line-color :green})})}
                {"Currently ill"
                 (conj {}
-                      {:x i/dates :y ill}
+                      {:x dates :y ill}
                       {:style (conj {}
                                     {:marker-type :none}
                                     {:render-style :line}

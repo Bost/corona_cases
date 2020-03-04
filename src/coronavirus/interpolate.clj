@@ -2,17 +2,11 @@
   (:require [coronavirus.csv :as csv]
             [incanter.charts :as charts]
             [incanter.core :as core]
-            [incanter.interpolation :as interp])
-  (:import java.text.SimpleDateFormat))
+            [incanter.interpolation :as interp]))
 
 (def points
   #_[[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]]
   (mapv (fn [x y] [x y]) (range) (map :c (csv/get-counts))))
-
-(def dates
-  (map (fn [hm] (.parse (new SimpleDateFormat "MM-dd-yyyy")
-                        (subs (:f hm) 0 10)))
-       (csv/get-counts)))
 
 (def degree
   #_21
