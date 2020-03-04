@@ -29,12 +29,25 @@
        (cmd-fn chat-id)
        (println (str "[" tbeg ":" (te/tnow) " " m/bot-ver " /" cmd "]") chat)))))
 
+(def cmds
+  [
+   {:name "start"       :f (fn [chat-id] (m/refresh-cmd-fn     chat-id))}
+   {:name "refresh"     :f (fn [chat-id] (m/refresh-cmd-fn     chat-id))}
+   {:name "interpolate" :f (fn [chat-id] (m/interpolate-cmd-fn chat-id))}
+   {:name "about"       :f (fn [chat-id] (m/about-cmd-fn       chat-id))}
+   {:name "keepcalm"    :f (fn [chat-id] (m/keepcalm-cmd-fn    chat-id))}
+   ])
+
 ;; long polling
-(h/defhandler handler
-  (register-cmd "start"       (fn [chat-id] (m/refresh-cmd-fn     chat-id)))
-  (register-cmd "refresh"     (fn [chat-id] (m/refresh-cmd-fn     chat-id)))
-  (register-cmd "interpolate" (fn [chat-id] (m/interpolate-cmd-fn chat-id)))
-  (register-cmd "about"       (fn [chat-id] (m/about-cmd-fn       chat-id))))
+;; (as-> ...) creates
+;; (h/defhandler handlerx
+;;   (register-cmd "start"   (fn [chat-id] ...))
+;;   (register-cmd "refresh" (fn [chat-id] ...))
+;;   ...)
+(as-> cmds $
+  (map (fn [{:keys [name f]}] (list 'register-cmd name f)) $)
+  (conj $ 'handler 'h/defhandler)
+  (eval $))
 
 (defn start-polling
   "Starts long-polling process.
