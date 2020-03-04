@@ -14,20 +14,6 @@
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
 
-(def bot-ver
-  (str
-   (let [pom-props
-         (with-open
-           [pom-props-reader
-            (->> "META-INF/maven/coronavirus/coronavirus/pom.properties"
-                 io/resource
-                 io/reader)]
-           (doto (java.util.Properties.)
-             (.load pom-props-reader)))]
-     (get pom-props "version"))
-   "-"
-   (env :bot-ver)))
-
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]
     (if (or (= suffix "Fq8") (= suffix "MR8"))
@@ -41,11 +27,19 @@
       "Fq8" "PROD"
       "MR8" "TEST")))
 
-(def bot
-  (let [suffix (telegram-token-suffix)]
-    (format "%s:%s"
-            bot-ver
-            bot-type)))
+(def bot-ver
+  (str (let [pom-props
+             (with-open
+               [pom-props-reader
+                (->> "META-INF/maven/coronavirus/coronavirus/pom.properties"
+                     io/resource
+                     io/reader)]
+               (doto (java.util.Properties.)
+                 (.load pom-props-reader)))]
+         (get pom-props "version"))
+       "-" (env :bot-ver)))
+
+(def bot (str bot-ver ":" bot-type))
 
 (defn msg-footer [cmds]
   (str
