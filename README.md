@@ -8,11 +8,11 @@ lein repl
 ```
 
 ```clojure
-(require 'coronavirus.web)
-(def server (coronavirus.web/-main))
+(require 'corona.web)
+(def server (corona.web/-main))
 
-(require '[coronavirus.telegram])
-(coronavirus.telegram/-main)
+(require '[corona.telegram])
+(corona.telegram/-main)
 ```
 
 See [localhost:5000](http://localhost:5000/).

@@ -1,4 +1,4 @@
-(ns coronavirus.core
+(ns corona.core
   (:require [environ.core :refer [env]]
             [clojure.java.io :as io]))
 
@@ -21,7 +21,7 @@
   (str (let [pom-props
              (with-open
                [pom-props-reader
-                (->> "META-INF/maven/coronavirus/coronavirus/pom.properties"
+                (->> "META-INF/maven/corona/corona/pom.properties"
                      io/resource
                      io/reader)]
                (doto (java.util.Properties.)

@@ -1,4 +1,4 @@
-(defproject coronavirus
+(defproject corona
   "1.4.7"
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"

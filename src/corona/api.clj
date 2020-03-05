@@ -1,10 +1,10 @@
-(ns coronavirus.api
+(ns corona.api
   (:require [clj-http.client :as client]
             [clj-time-ext.core :as te]
             [clojure.core.memoize :as memo]
             [clojure.data.json :as json]
-            [coronavirus.core :refer [bot-ver]]
-            [coronavirus.csv :refer [calculate-ill]])
+            [corona.core :refer [bot-ver]]
+            [corona.csv :refer [calculate-ill]])
   (:import java.text.SimpleDateFormat))
 
 (defmacro dbg [body]

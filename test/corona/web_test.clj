@@ -1,6 +1,6 @@
-(ns coronavirus.web-test
+(ns corona.web-test
   (:require [clojure.test :refer :all]
-            [coronavirus.web :refer :all]))
+            [corona.web :refer :all]))
 
 (deftest first-test
   (is false "Tests should be written"))

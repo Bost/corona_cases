@@ -1,11 +1,11 @@
-(ns coronavirus.web
+(ns corona.web
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [compojure.core :refer [ANY defroutes GET POST]]
             [compojure.handler :refer [site]]
             [compojure.route :as route]
-            [coronavirus.telegram :as corona]
+            [corona.telegram :as corona]
             [environ.core :refer [env]]
             [ring.adapter.jetty :as jetty]))
 

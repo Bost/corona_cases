@@ -1,10 +1,10 @@
-(ns coronavirus.telegram
+(ns corona.telegram
   (:gen-class)
   (:require [clj-time-ext.core :as te]
             [clojure.core.async :as async :refer [<!!]]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [coronavirus
+            [corona
              [core :refer [bot-ver bot-type token]]
              [messages :as m]]
             [environ.core :refer [env]]

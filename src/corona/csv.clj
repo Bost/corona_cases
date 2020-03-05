@@ -1,4 +1,4 @@
-(ns coronavirus.csv
+(ns corona.csv
   (:require [clojure.data.csv :as dcsv]
             #_[clojure-csv.core :as ccsv]
             [clojure.java.io :as io]
