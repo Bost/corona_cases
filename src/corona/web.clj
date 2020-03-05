@@ -5,12 +5,10 @@
             [compojure.core :refer [ANY defroutes GET POST]]
             [compojure.handler :refer [site]]
             [compojure.route :as route]
+            [corona.core :refer [bot-type chat-id token]]
             [corona.telegram :as corona]
             [environ.core :refer [env]]
             [ring.adapter.jetty :as jetty]))
-
-(def chat-id "112885364")
-(def token (env :telegram-token))
 
 (def telegram-hook "telegram")
 (def google-hook "google")
@@ -88,7 +86,7 @@
        (route/not-found (slurp (io/resource "404.html")))))
 
 (defn webapp [& [port]]
-  (log/info "Starting webapp...")
+  (log/info (str "Starting webapp on " bot-type "..."))
   (let [port (Integer. (or port (env :port) 5000))]
     (jetty/run-jetty (site #'app) {:port port :join? false})))
 

@@ -4,6 +4,7 @@
 
 (def project-name "corona_cases") ;; see project.clj: defproject
 (def token (env :telegram-token))
+(def chat-id "112885364")
 (def bot-name (str "@" project-name "_bot"))
 
 (defn telegram-token-suffix []

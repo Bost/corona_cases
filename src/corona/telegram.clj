@@ -72,7 +72,8 @@
 
 (defn -main
   [& args]
-  (log/info (str "[" (te/tnow) " " bot-ver "]") "Starting Telegram Chatbot...")
+  (log/info (str "[" (te/tnow) " " bot-ver "]")
+            "Starting Telegram Chatbot on " bot-type "...")
   (let [blank-prms (filter #(-> % env str/blank?) [:telegram-token])]
     (when (not-empty blank-prms)
       (log/fatal (str "Undef environment var(s): " blank-prms))
