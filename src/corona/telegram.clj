@@ -41,7 +41,6 @@
        (cmd-fn chat-id)
        (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd "]") chat)))))
 
-#_(declare handler)
 ;; long polling
 ;; (as-> ...) creates
 ;; (h/defhandler handler

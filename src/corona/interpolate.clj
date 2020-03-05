@@ -1,18 +1,10 @@
 (ns corona.interpolate
   (:require
-   [corona.api :refer [confirmed]]
    [incanter.charts :as charts]
    [incanter.core :as core]
    [incanter.interpolation :as interp]))
 
-#_[corona.api :refer [confirmed]]
-#_[corona.csv :refer [confirmed]]
-
-(def points
-  #_[[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]]
-  (mapv (fn [x y] [x y]) (range) (confirmed)))
-
-(def degree
+(defn degree [points]
   #_21
   (Math/round (* 0.55 (count points)))
   #_0
@@ -34,10 +26,12 @@
       #_(core/view)))
 
 (defn interpolate-points [points]
-  (interp/interpolate-parametric points :b-spline :degree degree))
+  (interp/interpolate-parametric points :b-spline :degree (degree points)))
 
-(defn create-pic [title points]
-  (let [chart (plot title points (interpolate-points points))
+(defn create-pic [title vals]
+  (let [points (mapv (fn [x y] [x y]) (range) vals)
+               #_[[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]]
+        chart (plot title points (interpolate-points points))
         out-stream (java.io.ByteArrayOutputStream.)
         in-stream (do
                     (core/save chart out-stream :width 800 :height 600)

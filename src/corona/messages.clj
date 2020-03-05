@@ -89,7 +89,7 @@
                       {:x dates :y confirmed
                        :style (conj {}
                                     {:marker-type :none}
-                                    #_{:render-style :line}
+                                    {:render-style :line}
                                     #_{:line-color :orange}
                                     #_{:fill-color :orange}
                                     )})}
@@ -113,7 +113,7 @@
                       {:x dates :y ill}
                       {:style (conj {}
                                     {:marker-type :none}
-                                    {:render-style :line}
+                                    #_{:render-style :line}
                                     #_{:line-color :green})})})
          (conj {}
                {:title
@@ -136,10 +136,13 @@
                 (info-msg cmd-names))
   (a/send-photo token chat-id (absolute-numbers-pic)))
 
+(def interpolated-vals (ill))
+(def interpolated-name s-sick)
+
 (defn interpolate-cmd-fn [cmd-names chat-id]
-  (as-> (str bot-name ": interpolation - confirmed cases; see /"
+  (as-> (str bot-name ": interpolation - " interpolated-name "; see /"
              cmd-s-about) $
-    (i/create-pic $ i/points)
+    (i/create-pic $ interpolated-vals)
     (a/send-photo token chat-id $)))
 
 (defn about-msg [cmd-names]
@@ -154,7 +157,7 @@
     "- Percentage calculation: <cases> / confirmed.\n"
     "- Interpolation method: "
     (link "b-spline" "https://en.wikipedia.org/wiki/B-spline")
-    "; degree of \"smoothness\" " i/degree ".\n"
+    "; degree of \"smoothness\" " (i/degree interpolated-vals) ".\n"
     #_(link "Country codes"
             "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
     "- Feb12-spike caused mainly by a change in the diagnosis classification"
