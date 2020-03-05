@@ -2,10 +2,9 @@
   (:require [environ.core :refer [env]]
             [clojure.java.io :as io]))
 
+(def project-name "corona_cases") ;; see project.clj: defproject
 (def token (env :telegram-token))
-(def bot-name
-  "@corona_cases_bot"
-  #_"@corona\\_cases\\_bot")
+(def bot-name (str "@" project-name "_bot"))
 
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]
@@ -24,7 +23,8 @@
   (str (let [pom-props
              (with-open
                [pom-props-reader
-                (->> "META-INF/maven/corona/corona/pom.properties"
+                (->> (format "META-INF/maven/%s/%s/pom.properties"
+                             project-name project-name)
                      io/resource
                      io/reader)]
                (doto (java.util.Properties.)
