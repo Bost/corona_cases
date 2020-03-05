@@ -121,8 +121,31 @@
 #_(require '[ clojure.inspector :as i])
 #_(i/inspect (data-memo))
 
+(defn raw-dates-unsorted []
+  #_[(keyword "2/22/20") (keyword "2/2/20")]
+  (->> (data-memo) :recovered :locations last :history keys))
+
+(defn keyname [key] (str (namespace key) "/" (name key)))
+
+(defn left-pad [s] (.replaceAll (format "%2s" s) " " "0"))
+
 (defn raw-dates []
-  (->> (data-memo) :recovered :locations last :history keys sort))
+  (->> (raw-dates-unsorted)
+       (map keyname)
+       (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
+       (map (fn [[_ m d y]]
+              (->> [y m d]
+                   (map left-pad)
+                   (interpose "/")
+                   (apply str))))
+       sort
+       (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
+       (map (fn [[_ y m d]]
+              (->> [m d y]
+                   (map read-number)
+                   (interpose "/")
+                   (apply str)
+                   (keyword))))))
 
 (defn sums-for-date [locations raw-date]
   (->> locations
@@ -145,8 +168,6 @@
         i (apply mapv calculate-ill crd)]
     (zipmap [:c :r :d :i]
             (conj crd i))))
-
-(defn keyname [key] (str (namespace key) "/" (name key)))
 
 (defn confirmed [] (:c (get-counts)))
 (defn deaths    [] (:d (get-counts)))
