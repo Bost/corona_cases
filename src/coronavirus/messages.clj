@@ -151,7 +151,9 @@
     "\n"
     "- The spike from Feb12 results, for the most part, from a change in"
     " the diagnosis classification adopted by the province of Hubei.\n"
-    "- Data retrieved *CONTINUOUSLY* from " (link url url)
+    ;; "- Data retrieved *CONTINUOUSLY* from " (link url url)
+    "- " (link "Data source" "https://github.com/CSSEGISandData/COVID-19")
+    " (Updates deployed manually once a day.)"
     "\n"
     "- Chatbot source code is on "
     (link "GitHub" "https://github.com/Bost/corona_cases") " and "
