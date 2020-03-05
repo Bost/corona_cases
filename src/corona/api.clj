@@ -86,9 +86,9 @@
 "}
     }])
 
-(def url
-  (let [{host :host route :route} (nth web-services 0)]
-    (str "https://" host route)))
+(def api-service (nth web-services 0))
+(def host (:host api-service))
+(def url (str "https://" host (:route api-service)))
 
 (defn get-data [url]
   (let [tbeg (te/tnow)]

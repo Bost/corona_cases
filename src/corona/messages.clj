@@ -1,23 +1,24 @@
 (ns corona.messages
   (:require [clj-time.coerce :as tc]
-            [clj-time.format :as tf]
             [clj-time.core :as t]
+            [clj-time.format :as tf]
             [clojure.java.io :as io]
             [com.hypirion.clj-xchart :as c]
             [corona.api
              :refer
-             [confirmed dates deaths ill last-day recovered url time-to-live]]
-            [corona.core :refer [bot-ver token bot-name]]
+             [confirmed dates deaths host ill last-day recovered time-to-live
+             url]]
+            [corona.core :refer [bot-name bot-ver token]]
             [corona.interpolate :as i]
-            [morse.api :as a]
-            [incanter.core :as core]))
+            [morse.api :as a]))
 
 #_[corona.csv
    :refer
    [confirmed dates deaths ill last-day recovered url]]
 #_[corona.api
    :refer
-   [confirmed dates deaths ill last-day recovered url time-to-live]]
+   [confirmed dates deaths ill last-day recovered url
+    host time-to-live]]
 
 (def home-page
   ;; TODO (env :home-page)
@@ -145,34 +146,30 @@
   (str
    ;; escape underscores for the markdown parsing
    (clojure.string/replace bot-name #"_" "\\\\_")
-    " version: " bot-ver "\n"
+   " version: " bot-ver " :  "
+   (str
+    (link "GitHub" "https://github.com/Bost/corona_cases") ", "
+    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases"))
+   "\n"
     "- Percentage calculation: <cases> / confirmed.\n"
     "- Interpolation method: "
-    (link "b-spline"
-          "https://en.wikipedia.org/wiki/B-spline")
-    "; degree of \"smoothness\" " i/degree "."
-    "\n"
+    (link "b-spline" "https://en.wikipedia.org/wiki/B-spline")
+    "; degree of \"smoothness\" " i/degree ".\n"
     #_(link "Country codes"
-          "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
-    "- See also " (link "visual dashboard" "https://arcg.is/0fHmTX") " and "
-    (link "worldometer"
-          "https://www.worldometers.info/coronavirus/coronavirus-cases/") "."
-    "\n"
-    "- Feb12-spike caused mainly by a change in the diagnosis classification of"
-    " the province of Hubei.\n"
-    "- Data retrieved *CONTINUOUSLY* from " (link url url) " and cached for "
-    time-to-live
-    " minutes."
-    "\n"
-    "- Chatbot source code: "
-    (link "GitHub" "https://github.com/Bost/corona_cases") ", "
-    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases")
-    "."
+            "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
+    "- Feb12-spike caused mainly by a change in the diagnosis classification"
+    " of the Hubei province.\n"
+    "- Data retrieved *CONTINUOUSLY* every " time-to-live " minutes from the"
+    " " (link host url) ".\n"
+    (str
+     "- See also " (link "visual dashboard" "https://arcg.is/0fHmTX") ", "
+     (link "worldometer"
+           "https://www.worldometers.info/coronavirus/coronavirus-cases/")
+     ".\n")
     ;; TODO home page; average recovery time
     #_(str
      "\n"
      " - " (link "Home page" home-page))
-    "\n"
     (msg-footer cmd-names)))
 
 (defn about-cmd-fn [cmd-names chat-id]
