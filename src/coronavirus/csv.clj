@@ -56,7 +56,10 @@
        csv-files))
 
 (defn get-counts []
-  (map (fn [f c d r i] {:f (subs f (inc (s/last-index-of f "/")))
+  (map (fn [f c d r i] {:f
+                       (let [date (subs f (inc (s/last-index-of f "/")))
+                             sdf (new SimpleDateFormat "MM-dd-yyyy")]
+                         (.parse sdf date))
                        :c c :d d :r r :i i})
        csv-files
        (sum-up getc)
@@ -64,7 +67,11 @@
        (sum-up getr)
        (sum-up geti)))
 
-(defn dates []
-  (let [sdf (new SimpleDateFormat "MM-dd-yyyy")]
-    (map (fn [hm] (.parse sdf (subs (:f hm) 0 10)))
-         (get-counts))))
+(defn confirmed [] (map :c (get-counts)))
+(defn deaths    [] (map :d (get-counts)))
+(defn recovered [] (map :r (get-counts)))
+(defn ill       [] (map :i (get-counts)))
+(defn dates     [] (map :f (get-counts)))
+(defn last-day  [] (last (get-counts)))
+
+(def url "https://github.com/CSSEGISandData/COVID-19")

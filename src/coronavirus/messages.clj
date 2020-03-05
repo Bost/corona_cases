@@ -1,46 +1,23 @@
 (ns coronavirus.messages
-  (:require [morse.api :as a]
+  (:require [clj-time.coerce :as tc]
             [clj-time.format :as tf]
-            [environ.core :refer [env]]
-            [com.hypirion.clj-xchart :as c]
+            [clj-time.core :as t]
             [clojure.java.io :as io]
-            [coronavirus
-             #_[csv :as data]
-             [api :as data]
-             [interpolate :as i]]
-            ))
+            [com.hypirion.clj-xchart :as c]
+            [coronavirus.csv
+             :refer
+             [confirmed dates deaths ill last-day recovered url]]
+            [coronavirus.core :refer [bot-ver token]]
+            [coronavirus.interpolate :as i]
+            [morse.api :as a]))
 
-(def token (env :telegram-token))
+#_[coronavirus.csv
+ :refer
+ [confirmed dates deaths ill last-day recovered url]]
+
 (def home-page
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
-
-(defn telegram-token-suffix []
-  (let [suffix (.substring token (- (count token) 3))]
-    (if (or (= suffix "Fq8") (= suffix "MR8"))
-      suffix
-      (throw (Exception.
-              (format "Unrecognized TELEGRAM_TOKEN suffix: %s" suffix))))))
-
-(def bot-type
-  (let [suffix (telegram-token-suffix)]
-    (case suffix
-      "Fq8" "PROD"
-      "MR8" "TEST")))
-
-(def bot-ver
-  (str (let [pom-props
-             (with-open
-               [pom-props-reader
-                (->> "META-INF/maven/coronavirus/coronavirus/pom.properties"
-                     io/resource
-                     io/reader)]
-               (doto (java.util.Properties.)
-                 (.load pom-props-reader)))]
-         (get pom-props "version"))
-       "-" (env :bot-ver)))
-
-(def bot (str bot-ver ":" bot-type))
 
 (defn msg-footer [cmds]
   (str
@@ -61,22 +38,29 @@
                          "get-percentage [:high|:low|:normal] "
                          "<PLACE> <TOTAL_COUNT>")))))))
 
+(def s-confirmed "Confirmed")
+(def s-deaths "Deaths")
+(def s-recovered "Recovered")
+(def s-sick "Sick")
+
+(def custom-time-formatter (tf/with-zone (tf/formatter "dd MMM yyyy")
+                             (t/default-time-zone)))
+
 (defn info-msg [cmds]
-  (let [{day :f confirmed :c deaths :d recovered :r
-         ill :i} (last (csv/get-counts))]
+  (let [{day :f confirmed :c deaths :d recovered :r ill :i} (last-day)]
     (str
      "*"
-     (tf/unparse (tf/formatter "dd MMM yyyy")
-                 (tf/parse (tf/formatter "MM-dd-yyyy")
-                           (subs day 0 10)))
+     #_day
+     (tf/unparse custom-time-formatter
+                 (tc/from-date day))
      "*"
      "\n"
-     "Confirmed: " confirmed "\n"
-     "Deaths: " deaths
+     s-confirmed ": " confirmed "\n"
+     s-deaths ": " deaths
      "  ~  " (get-percentage deaths confirmed) "%\n"
-     "Recovered: " recovered
+     s-recovered ": " recovered
      "  ~  " (get-percentage recovered confirmed) "%\n"
-     "Currently ill: " ill "  ~  " (get-percentage ill confirmed) "%\n"
+     s-sick ": " ill "  ~  " (get-percentage ill confirmed) "%\n"
      (msg-footer cmds))))
 
 (defn link [name url] (str "[" name "]""(" url ")"))
@@ -87,15 +71,14 @@
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
 (defn absolute-numbers-pic []
-  (let [[confirmed deaths recovered ill]
-        [(map :c (data/get-counts))
-         (map :d (data/get-counts))
-         (map :r (data/get-counts))
-         (map :i (data/get-counts))]
-        dates    (data/dates)]
+  (let [confirmed (confirmed)
+        deaths    (deaths)
+        recovered (recovered)
+        ill       (ill)
+        dates     (dates)]
     (-> (c/xy-chart
          (conj {}
-               {"Confirmed"
+               {s-confirmed
                 (conj {}
                       {:x dates :y confirmed
                        :style (conj {}
@@ -104,7 +87,7 @@
                                     #_{:line-color :orange}
                                     #_{:fill-color :orange}
                                     )})}
-               {"Deaths"
+               {s-deaths
                 (conj {}
                       {:x dates :y deaths}
                       {:style (conj {}
@@ -112,14 +95,14 @@
                                     {:render-style :line}
                                     #_{:line-color :red})
                        })}
-               {"Recovered"
+               {s-recovered
                 (conj {}
                       {:x dates :y recovered}
                       {:style (conj {}
                                     {:marker-type :none}
                                     {:render-style :line}
                                     #_{:line-color :green})})}
-               {"Currently ill"
+               {s-sick
                 (conj {}
                       {:x dates :y ill}
                       {:style (conj {}
@@ -161,7 +144,6 @@
     "\n"
     #_(link "Country codes"
           "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
-    "\n"
     "See also " (link "visual dashboard" "https://arcg.is/0fHmTX") " and "
     (link "worldometer"
           "https://www.worldometers.info/coronavirus/coronavirus-cases/") "."
@@ -169,10 +151,9 @@
     "\n"
     "- The spike from Feb12 results, for the most part, from a change in"
     " the diagnosis classification adopted by the province of Hubei.\n"
-    "- " (link "Data source" "https://github.com/CSSEGISandData/COVID-19")
-    " (Updates deployed manually once a day.)"
+    "- Data retrieved *CONTINUOUSLY* from " (link url url)
     "\n"
-    "- Chatbot source code available on "
+    "- Chatbot source code is on "
     (link "GitHub" "https://github.com/Bost/corona_cases") " and "
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases")
     "."

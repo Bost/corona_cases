@@ -1,12 +1,14 @@
 (ns coronavirus.interpolate
-  (:require [coronavirus.csv :as csv]
-            [incanter.charts :as charts]
-            [incanter.core :as core]
-            [incanter.interpolation :as interp]))
+  (:require
+   [coronavirus.csv :as data]
+   [incanter.charts :as charts]
+   [incanter.core :as core]
+   [incanter.interpolation :as interp]))
 
+#_[coronavirus.api :as data]
 (def points
   #_[[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]]
-  (mapv (fn [x y] [x y]) (range) (map :c (csv/get-counts))))
+  (mapv (fn [x y] [x y]) (range) (map :c (data/get-counts))))
 
 (def degree
   #_21

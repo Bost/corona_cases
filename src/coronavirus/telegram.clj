@@ -4,7 +4,9 @@
             [clojure.core.async :as async :refer [<!!]]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [coronavirus.messages :as m]
+            [coronavirus
+             [core :refer [bot-ver bot-type token]]
+             [messages :as m]]
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
@@ -25,9 +27,9 @@
             (spit "chats.edn")
             ))
      (let [tbeg (te/tnow)]
-       (println (str "[" tbeg "           " " " m/bot-ver " /" cmd "]") chat)
+       (println (str "[" tbeg "           " " " bot-ver " /" cmd "]") chat)
        (cmd-fn chat-id)
-       (println (str "[" tbeg ":" (te/tnow) " " m/bot-ver " /" cmd "]") chat)))))
+       (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd "]") chat)))))
 
 (def cmds
   [
@@ -66,23 +68,23 @@
    (let [running (async/chan)
          updates (p-patch/create-producer-with-handle
                   running token opts (fn []
-                                       (when (= m/bot-type "PROD")
+                                       (when (= bot-type "PROD")
                                          (System/exit 2))))]
      (p/create-consumer updates handler)
      running)))
 
 (defn -main
   [& args]
-  (log/info (str "[" (te/tnow) " " m/bot-ver "]") "Starting Telegram Chatbot...")
+  (log/info (str "[" (te/tnow) " " bot-ver "]") "Starting Telegram Chatbot...")
   (let [blank-prms (filter #(-> % env str/blank?) [:telegram-token])]
     (when (not-empty blank-prms)
       (log/fatal (str "Undef environment var(s): " blank-prms))
       (System/exit 1)))
-  (<!! (start-polling m/token handler)))
+  (<!! (start-polling token handler)))
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start   [] (swap! test-obj (fn [_] (start-polling m/token handler))))
+(defn start   [] (swap! test-obj (fn [_] (start-polling token handler))))
 (defn stop    [] (p/stop @test-obj))
 (defn restart [] (if @test-obj (stop)) (start))
 

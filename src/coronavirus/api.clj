@@ -1,11 +1,10 @@
 (ns coronavirus.api
   (:require [clj-http.client :as client]
+            [clj-time-ext.core :as te]
+            [clojure.core.memoize :as memo]
             [clojure.data.json :as json]
-            [clj-time
-             [format :as tf]
-             [core :as time]
-             [coerce :as tc]]
-            [coronavirus.csv :as csv])
+            [coronavirus.core :refer [bot-ver]]
+            [coronavirus.csv :refer [calculate-ill]])
   (:import java.text.SimpleDateFormat))
 
 (defmacro dbg [body]
@@ -92,10 +91,14 @@
     (str "https://" host route)))
 
 (defn get-data [url]
-  (as-> url $
-    (client/get $ {:accept :json})
-    (:body $)
-    (json/read-json $)))
+  (let [tbeg (te/tnow)]
+    (println (str "[" tbeg "           " " " bot-ver " /" "get-data: " url "]"))
+    (let [r (as-> url $
+              (client/get $ {:accept :json})
+              (:body $)
+              (json/read-json $))]
+      (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" "get-data: " url "]"))
+      r)))
 
 (defn fix-octal-val
   "(read-string s-day \"08\") produces a NumberFormatException
@@ -109,39 +112,54 @@
     (-> v fix-octal-val read-string)))
 
 (defn data [] (get-data url))
+
+(def data-memo
+  (memo/ttl data {} :ttl/threshold (* 5 60 1000))) ;; 5 minutes
+
 #_(require '[ clojure.inspector :as i])
-#_(i/inspect data)
+#_(i/inspect (data-memo))
 
 (defn raw-dates []
-  (->> (data) :recovered :locations last :history keys sort))
+  (->> (data-memo) :recovered :locations last :history keys sort))
+
+(defn sums-for-date [locations raw-date]
+  (->> locations
+       #_(take-last 1)
+       (map (fn [loc]
+              (->> loc
+                   :history
+                   raw-date
+                   read-number)))
+       (apply +)))
 
 (defn sums-for-case [case]
-  (defn sums-for-date [date]
-    (->> data case :locations
+  (let [locations (->> (data-memo) case :locations)]
+    (->> (raw-dates)
          #_(take-last 1)
-         (map (fn [loc]
-                (->> loc
-                     :history
-                     date
-                     read-number)))
-         (apply +)))
-  (->> raw-dates
-       #_(take-last 2)
-       (map sums-for-date)))
+         (map (fn [raw-date] (sums-for-date locations raw-date))))))
 
 (defn get-counts []
-  (let [crd (mapv sums-for-case [:confirmed :deaths :recovered])
-        i (apply map (fn [c r d] (csv/calculate-ill c r d)) crd)]
-    (zipmap [:c :d :r :i]
+  (let [crd (mapv sums-for-case [:confirmed :recovered :deaths])
+        i (apply mapv calculate-ill crd)]
+    (zipmap [:c :r :d :i]
             (conj crd i))))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
+(defn confirmed [] (:c (get-counts)))
+(defn deaths    [] (:d (get-counts)))
+(defn recovered [] (:r (get-counts)))
+(defn ill       [] (:i (get-counts)))
+
 (defn dates []
-  #_(map (fn [hm] (.parse (new SimpleDateFormat "MM-dd-yyyy")
-                       (subs (:f hm) 0 10)))
-         (get-counts))
   (let [sdf (new SimpleDateFormat "MM/dd/yy")]
     (->> (raw-dates)
          ;; :2/24/20
-         (map (fn [rd] (->> rd keyname (.parse sdf)))))))
+         (map keyname)
+         (map (fn [rd] (.parse sdf rd))))))
+
+(defn last-day  []
+  (conj {:f (last (dates))}
+        (zipmap [:c :d :r :i]
+                (map last [(confirmed) (deaths) (recovered) (ill)]))))
+
