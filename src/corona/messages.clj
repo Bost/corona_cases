@@ -7,13 +7,17 @@
             [corona.api
              :refer
              [confirmed dates deaths ill last-day recovered url time-to-live]]
-            [corona.core :refer [bot-ver token]]
+            [corona.core :refer [bot-ver token bot-name]]
             [corona.interpolate :as i]
-            [morse.api :as a]))
+            [morse.api :as a]
+            [incanter.core :as core]))
 
 #_[corona.csv
- :refer
- [confirmed dates deaths ill last-day recovered url]]
+   :refer
+   [confirmed dates deaths ill last-day recovered url]]
+#_[corona.api
+   :refer
+   [confirmed dates deaths ill last-day recovered url time-to-live]]
 
 (def home-page
   ;; TODO (env :home-page)
@@ -23,6 +27,8 @@
   (str
    "\n"
    "Try:" "    " (clojure.string/join "    " (map #(str "/" %) cmds))))
+
+(def cmd-s-about "about")
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -110,7 +116,7 @@
                                     #_{:line-color :green})})})
          (conj {}
                {:title
-                "@corona_cases_bot: total numbers; see /about"
+                (str bot-name ": total numbers; see /" cmd-s-about)
                 :render-style :area
                 :legend {:position :inside-nw}
                 :x-axis {:title "Day"}
@@ -130,11 +136,16 @@
   (a/send-photo token chat-id (absolute-numbers-pic)))
 
 (defn interpolate-cmd-fn [cmd-names chat-id]
-  (a/send-photo token chat-id (i/create-pic i/points)))
+  (as-> (str bot-name ": interpolation - confirmed cases; see /"
+             cmd-s-about) $
+    (i/create-pic $ i/points)
+    (a/send-photo token chat-id $)))
 
 (defn about-msg [cmd-names]
   (str
-    "@corona\\_cases\\_bot version: " bot-ver "\n"
+   ;; escape underscores for the markdown parsing
+   (clojure.string/replace bot-name #"_" "\\\\_")
+    " version: " bot-ver "\n"
     "- Percentage calculation: <cases> / confirmed.\n"
     "- Interpolation method: "
     (link "b-spline"
@@ -168,10 +179,10 @@
   (a/send-text token chat-id
                  {:parse_mode "Markdown" :disable_web_page_preview true}
                  (about-msg cmd-names))
-  #_(a/send-text token chat-id
+  (a/send-text token chat-id
                {:disable_web_page_preview false}
-               "https://www.who.int/gpsc/clean_hands_protection/en/"
-               #_"https://www.who.int/gpsc/media/how_to_handwash_lge.gif")
+               #_"https://www.who.int/gpsc/clean_hands_protection/en/"
+               "https://www.who.int/gpsc/media/how_to_handwash_lge.gif")
   #_(a/send-photo token chat-id (io/input-stream
                                "resources/pics/how_to_handwash_lge.gif")))
 
@@ -182,3 +193,16 @@
    token chat-id
    {:disable_web_page_preview false}
    "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
+
+
+(def cmds
+  [
+   {:name "refresh"     :f refresh-cmd-fn
+    :desc "Start here"}
+   {:name "interpolate" :f interpolate-cmd-fn
+    :desc "Smooth the data / leave out the noise"}
+   {:name cmd-s-about   :f about-cmd-fn
+    :desc "Bot version & some additional info"}
+   {:name "whattodo"    :f keepcalm-cmd-fn
+    :desc "Some personalized instructions"}
+   ])

@@ -14,6 +14,11 @@
 
 #_(log/info "Telegram Chatbot:" bot)
 
+(defmacro dbg [body]
+  `(let [x# ~body]
+     (println "dbg:" '~body "=" x#)
+     x#))
+
 (def chats (atom #{}))
 
 (defn register-cmd [cmd cmd-fn]
@@ -31,19 +36,7 @@
        (cmd-fn chat-id)
        (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd "]") chat)))))
 
-(def cmds
-  [
-   {:name "refresh"     :f m/refresh-cmd-fn
-    :desc "Start here"}
-   {:name "interpolate" :f m/interpolate-cmd-fn
-    :desc "Smooth the data / leave out the noise"}
-   {:name "about"       :f m/about-cmd-fn
-    :desc "Bot version & some additional info"}
-   {:name "whattodo"    :f m/keepcalm-cmd-fn
-    :desc "Some personalized instructions"}
-   ])
-
-(def cmd-names (map :name cmds))
+(def cmd-names (map :name m/cmds))
 
 (defn create-sexp [{:keys [name f]}]
   (list 'register-cmd name (fn [chat-id] (f cmd-names chat-id))))
@@ -95,4 +88,4 @@
 
 (defn bot-father-edit-cmds []
   (map (fn [{:keys [name desc]}] (println name "-" desc))
-       cmds))
+       m/cmds))

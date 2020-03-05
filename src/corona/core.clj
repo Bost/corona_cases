@@ -3,6 +3,9 @@
             [clojure.java.io :as io]))
 
 (def token (env :telegram-token))
+(def bot-name
+  "@corona_cases_bot"
+  #_"@corona\\_cases\\_bot")
 
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]

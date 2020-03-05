@@ -23,11 +23,11 @@
   #_(* 3 (quot (count points) 5)) ;; 3/5
   #_(count points))
 
-(defn plot [points fn]
-  (-> (charts/parametric-plot fn 0 1
-       :title
-       #_(str "degree" degree)
-       "@corona_cases_bot: interpolation - confirmed cases; see /about"
+(defn plot [title points fun]
+  (println "fun" fun)
+  (println "points" points)
+  (-> (charts/parametric-plot fun 0 1
+       :title title #_(str "degree" degree)
        :x-label "Jan12 + <day-number>" :y-label "Cases")
       (charts/add-points (map first points)
                          (map second points))
