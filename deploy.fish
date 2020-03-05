@@ -31,7 +31,10 @@ git push $pushFlags $REMOTE master; and \
 heroku config:set BOT_VER=(git rev-parse --short master) --app $APP; and \
 heroku ps:scale web=1 --app $APP
 
-git push $pushFlags origin; and git push $pushFlags gitlab
+# publish source code only when deploying to production
+if test $envName = corona-cases
+    git push $pushFlags origin; and git push $pushFlags gitlab
+end
 
 # heroku ps:scale web=0 --app $APP; and \
 # heroku ps:scale web=1 --app $APP
