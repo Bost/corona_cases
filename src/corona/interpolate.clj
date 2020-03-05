@@ -26,8 +26,6 @@
   #_(count points))
 
 (defn plot [title points fun]
-  (println "fun" fun)
-  (println "points" points)
   (-> (charts/parametric-plot fun 0 1
        :title title #_(str "degree" degree)
        :x-label "Jan12 + <day-number>" :y-label "Cases")
