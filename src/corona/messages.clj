@@ -25,9 +25,9 @@
   "https://corona-cases-bot.herokuapp.com/")
 
 (defn msg-footer [cmds]
-  (str
-   "\n"
-   "Try:" "    " (clojure.string/join "    " (map #(str "/" %) cmds))))
+  (let [spacer "    "]
+    (str "\n"
+         "Try:" spacer (clojure.string/join spacer (map #(str "/" %) cmds)))))
 
 (def cmd-s-about "about")
 
@@ -45,9 +45,9 @@
                          "<PLACE> <TOTAL_COUNT>")))))))
 
 (def s-confirmed "Confirmed")
-(def s-deaths "Deaths")
+(def s-deaths    "Deaths")
 (def s-recovered "Recovered")
-(def s-sick "Sick")
+(def s-sick      "Sick")
 
 (def custom-time-formatter (tf/with-zone (tf/formatter "dd MMM yyyy")
                              (t/default-time-zone)))
@@ -55,12 +55,7 @@
 (defn info-msg [cmds]
   (let [{day :f confirmed :c deaths :d recovered :r ill :i} (last-day)]
     (str
-     "*"
-     #_day
-     (tf/unparse custom-time-formatter
-                 (tc/from-date day))
-     "*"
-     "\n"
+     "*" (tf/unparse custom-time-formatter (tc/from-date day)) "*\n"
      s-confirmed ": " confirmed "\n"
      s-deaths ": " deaths
      "  ~  " (get-percentage deaths confirmed) "%\n"
@@ -85,36 +80,30 @@
     (-> (c/xy-chart
          (conj {}
                {s-confirmed
-                (conj {}
-                      {:x dates :y confirmed
-                       :style (conj {}
-                                    {:marker-type :none}
-                                    {:render-style :line}
-                                    #_{:line-color :orange}
-                                    #_{:fill-color :orange}
-                                    )})}
+                {:x dates :y confirmed
+                 :style (conj {}
+                              {:marker-type :none}
+                              {:render-style :line}
+                              #_{:line-color :orange}
+                              #_{:fill-color :orange})}}
                {s-deaths
-                (conj {}
-                      {:x dates :y deaths}
-                      {:style (conj {}
-                                    {:marker-type :none}
-                                    {:render-style :line}
-                                    #_{:line-color :red})
-                       })}
+                {:x dates :y deaths
+                 :style (conj {}
+                              {:marker-type :none}
+                              {:render-style :line}
+                              #_{:line-color :red})}}
                {s-recovered
-                (conj {}
-                      {:x dates :y recovered}
-                      {:style (conj {}
-                                    {:marker-type :none}
-                                    {:render-style :line}
-                                    #_{:line-color :green})})}
+                {:x dates :y recovered
+                 :style (conj {}
+                              {:marker-type :none}
+                              {:render-style :line}
+                              #_{:line-color :green})}}
                {s-sick
-                (conj {}
-                      {:x dates :y ill}
-                      {:style (conj {}
-                                    {:marker-type :none}
-                                    #_{:render-style :line}
-                                    #_{:line-color :green})})})
+                {:x dates :y ill
+                 :style (conj {}
+                              {:marker-type :none}
+                              #_{:render-style :line}
+                              #_{:line-color :green})}})
          (conj {}
                {:title
                 (str bot-name ": total numbers; see /" cmd-s-about)
@@ -130,10 +119,10 @@
         (c/to-bytes :png))))
 
 (defn refresh-cmd-fn [cmd-names chat-id]
-  (a/send-text  token chat-id
-                {:parse_mode "Markdown"
-                 :disable_web_page_preview true}
-                (info-msg cmd-names))
+  (a/send-text token chat-id
+               {:parse_mode "Markdown"
+                :disable_web_page_preview true}
+               (info-msg cmd-names))
   (a/send-photo token chat-id (absolute-numbers-pic)))
 
 (def interpolated-vals (ill))

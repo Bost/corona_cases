@@ -2,19 +2,9 @@
   (:require [clojure.data.csv :as dcsv]
             #_[clojure-csv.core :as ccsv]
             [clojure.java.io :as io]
-            [clojure.string :as s])
+            [clojure.string :as s]
+            [corona.core :refer [read-number]])
   (:import java.text.SimpleDateFormat))
-
-(defn fix-octal-val
-  "(read-string s-day \"08\") produces a NumberFormatException
-  https://clojuredocs.org/clojure.core/read-string#example-5ccee021e4b0ca44402ef71a"
-  [s]
-  (clojure.string/replace s #"^0+" ""))
-
-(defn read-number [v]
-  (if (or (empty? v) (= "0" v))
-    0
-    (-> v fix-octal-val read-string)))
 
 ;; get all the file names in one directory
 (def directory (io/file "resources/csv"))

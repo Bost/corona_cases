@@ -3,7 +3,7 @@
             [clj-time-ext.core :as te]
             [clojure.core.memoize :as memo]
             [clojure.data.json :as json]
-            [corona.core :refer [bot-ver]]
+            [corona.core :refer [bot-ver read-number]]
             [corona.csv :refer [calculate-ill]])
   (:import java.text.SimpleDateFormat))
 
@@ -100,23 +100,11 @@
       (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" "get-data: " url "]"))
       r)))
 
-(defn fix-octal-val
-  "(read-string s-day \"08\") produces a NumberFormatException
-  https://clojuredocs.org/clojure.core/read-string#example-5ccee021e4b0ca44402ef71a"
-  [s]
-  (clojure.string/replace s #"^0+" ""))
-
-(defn read-number [v]
-  (if (or (empty? v) (= "0" v))
-    0
-    (-> v fix-octal-val read-string)))
-
 (defn data [] (get-data url))
 
 (def time-to-live "In minutes" 15)
 
-(def data-memo
-  (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
+(def data-memo (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
 
 #_(require '[ clojure.inspector :as i])
 #_(i/inspect (data-memo))
@@ -150,11 +138,7 @@
 (defn sums-for-date [locations raw-date]
   (->> locations
        #_(take-last 1)
-       (map (fn [loc]
-              (->> loc
-                   :history
-                   raw-date
-                   read-number)))
+       (map (fn [loc] (->> loc :history raw-date read-number)))
        (apply +)))
 
 (defn sums-for-case [case]
@@ -166,8 +150,7 @@
 (defn get-counts []
   (let [crd (mapv sums-for-case [:confirmed :recovered :deaths])
         i (apply mapv calculate-ill crd)]
-    (zipmap [:c :r :d :i]
-            (conj crd i))))
+    (zipmap [:c :r :d :i] (conj crd i))))
 
 (defn confirmed [] (:c (get-counts)))
 (defn deaths    [] (:d (get-counts)))
@@ -185,4 +168,3 @@
   (conj {:f (last (dates))}
         (zipmap [:c :d :r :i]
                 (map last [(confirmed) (deaths) (recovered) (ill)]))))
-

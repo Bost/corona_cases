@@ -1,8 +1,7 @@
 (ns corona.interpolate
-  (:require
-   [incanter.charts :as charts]
-   [incanter.core :as core]
-   [incanter.interpolation :as interp]))
+  (:require [incanter.charts :as charts]
+            [incanter.core :as core]
+            [incanter.interpolation :as interp]))
 
 (defn degree [points]
   #_21
