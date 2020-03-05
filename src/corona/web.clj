@@ -86,7 +86,7 @@
        (route/not-found (slurp (io/resource "404.html")))))
 
 (defn webapp [& [port]]
-  (log/info (str "Starting webapp on " bot-type "..."))
+  (log/info (str "Starting " bot-type " webapp..."))
   (let [port (Integer. (or port (env :port) 5000))]
     (jetty/run-jetty (site #'app) {:port port :join? false})))
 

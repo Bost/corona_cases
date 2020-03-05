@@ -49,3 +49,9 @@ git push $pushFlags origin; and git push $pushFlags gitlab
 # heroku repo:reset --app $APP
 
 # heroku run bash --app $APP
+
+# run locally:
+# lein uberjar; and \
+# set --export BOT_VER (git rev-parse --short master); and \
+# java $JVM_OPTS -cp target/corona_cases-standalone.jar:$cljjar:$cljsjar \
+    # clojure.main -m corona.web

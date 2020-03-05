@@ -10,7 +10,12 @@
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
-            [morse.polling-patch :as p-patch]))
+            [morse.polling-patch :as p-patch]
+
+            [clojure.string :as s]
+            [clojure.tools.macro :as macro]
+
+            ))
 
 #_(log/info "Telegram Chatbot:" bot)
 
@@ -36,25 +41,16 @@
        (cmd-fn chat-id)
        (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd "]") chat)))))
 
-(def cmd-names (map :name m/cmds))
-
-(defn create-sexp [{:keys [name f]}]
-  (list 'register-cmd name (fn [chat-id] (f cmd-names chat-id))))
-
-(declare handler)
+#_(declare handler)
 ;; long polling
 ;; (as-> ...) creates
 ;; (h/defhandler handler
 ;;   (register-cmd "start"   (fn [chat-id] ...))
 ;;   (register-cmd "refresh" (fn [chat-id] ...))
 ;;   ...)
-(defn create-handler []
-  (let [r (as-> m/cmds $
-          (map create-sexp $)
-          (conj $ 'handler 'h/defhandler)
-          (eval $))]
-    (println "create-handler" (str handler))
-    r))
+(def handler (->> m/cmds
+                  (mapv (fn [{:keys [name f]}] (register-cmd name f)))
+                  (apply h/handlers)))
 
 (defn start-polling
   "Starts long-polling process.
@@ -67,25 +63,29 @@
                   running token opts (fn []
                                        (when (= bot-type "PROD")
                                          (System/exit 2))))]
+     (println "Polling on handler" handler "...")
      (p/create-consumer updates handler)
      running)))
 
 (defn -main
   [& args]
   (log/info (str "[" (te/tnow) " " bot-ver "]")
-            "Starting Telegram Chatbot on " bot-type "...")
+            (str "Starting " bot-type " Telegram Chatbot..."))
   (let [blank-prms (filter #(-> % env str/blank?) [:telegram-token])]
     (when (not-empty blank-prms)
       (log/fatal (str "Undef environment var(s): " blank-prms))
       (System/exit 1)))
-  (<!! (start-polling token (create-handler))))
+  (<!! (start-polling token handler)))
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start   [] (swap! test-obj (fn [_]
-                                   (start-polling token (create-handler)))))
-(defn stop    [] (p/stop @test-obj))
-(defn restart [] (if @test-obj (stop)) (start))
+(defn start   [] (swap! test-obj (fn [_] (start-polling token handler))))
+(defn stop    [] (swap! test-obj (fn [_] (p/stop @test-obj))))
+(defn restart []
+  (if @test-obj
+    (do (stop)
+        (Thread/sleep 400)))
+  (start))
 
 (defn bot-father-edit-cmds []
   (map (fn [{:keys [name desc]}] (println name "-" desc))

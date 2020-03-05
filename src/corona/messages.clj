@@ -192,14 +192,16 @@
    "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
 
 
+(def cmd-names ["refresh" "interpolate" cmd-s-about "whattodo"])
+
 (def cmds
   [
-   {:name "refresh"     :f refresh-cmd-fn
+   {:name "refresh"     :f (fn [chat-id] (refresh-cmd-fn     cmd-names chat-id))
     :desc "Start here"}
-   {:name "interpolate" :f interpolate-cmd-fn
+   {:name "interpolate" :f (fn [chat-id] (interpolate-cmd-fn cmd-names chat-id))
     :desc "Smooth the data / leave out the noise"}
-   {:name cmd-s-about   :f about-cmd-fn
+   {:name cmd-s-about   :f (fn [chat-id] (about-cmd-fn       cmd-names chat-id))
     :desc "Bot version & some additional info"}
-   {:name "whattodo"    :f keepcalm-cmd-fn
+   {:name "whattodo"    :f (fn [chat-id] (keepcalm-cmd-fn    cmd-names chat-id))
     :desc "Some personalized instructions"}
    ])
