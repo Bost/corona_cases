@@ -11,9 +11,9 @@
             [coronavirus.interpolate :as i]
             [morse.api :as a]))
 
-#_[coronavirus.csv
+#_[coronavirus.api
  :refer
- [confirmed dates deaths ill last-day recovered url]]
+ [confirmed dates deaths ill last-day recovered url time-to-live]]
 
 (def home-page
   ;; TODO (env :home-page)
@@ -149,14 +149,16 @@
           "https://www.worldometers.info/coronavirus/coronavirus-cases/") "."
     "\n"
     "\n"
-    "- The spike from Feb12 results, for the most part, from a change in"
-    " the diagnosis classification adopted by the province of Hubei.\n"
-    ;; "- Data retrieved *CONTINUOUSLY* from " (link url url)
+    "- Feb12-spike caused mainly by a change in the diagnosis classification"
+    " adopted by the province of Hubei.\n"
+    ;; "- Data retrieved *CONTINUOUSLY* from " (link url url) " and cached for "
+    ;; time-to-live
+    ;; " minutes."
     "- " (link "Data source" "https://github.com/CSSEGISandData/COVID-19")
     " (Updates deployed manually once a day.)"
     "\n"
-    "- Chatbot source code is on "
-    (link "GitHub" "https://github.com/Bost/corona_cases") " and "
+    "- Chatbot source code: "
+    (link "GitHub" "https://github.com/Bost/corona_cases") ", "
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases")
     "."
     ;; TODO home page; average recovery time

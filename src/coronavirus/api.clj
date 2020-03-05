@@ -113,8 +113,10 @@
 
 (defn data [] (get-data url))
 
+(def time-to-live "In minutes" 15)
+
 (def data-memo
-  (memo/ttl data {} :ttl/threshold (* 5 60 1000))) ;; 5 minutes
+  (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
 
 #_(require '[ clojure.inspector :as i])
 #_(i/inspect (data-memo))

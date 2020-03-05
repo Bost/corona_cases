@@ -1,4 +1,4 @@
-Coronavirus disease 2019 (COVID-19) cases displayed via Telegram Chatbot
+Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 [@corona_cases_bot](https://t.me/corona_cases_bot)
 
 ## Running locally
