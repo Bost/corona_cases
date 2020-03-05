@@ -48,16 +48,20 @@
 (defn create-sexp [{:keys [name f]}]
   (list 'register-cmd name (fn [chat-id] (f cmd-names chat-id))))
 
+(declare handler)
 ;; long polling
 ;; (as-> ...) creates
-;; (h/defhandler handlerx
+;; (h/defhandler handler
 ;;   (register-cmd "start"   (fn [chat-id] ...))
 ;;   (register-cmd "refresh" (fn [chat-id] ...))
 ;;   ...)
-(as-> cmds $
-  (map create-sexp $)
-  (conj $ 'handler 'h/defhandler)
-  (eval $))
+(defn create-handler []
+  (let [r (as-> m/cmds $
+          (map create-sexp $)
+          (conj $ 'handler 'h/defhandler)
+          (eval $))]
+    (println "create-handler" (str handler))
+    r))
 
 (defn start-polling
   "Starts long-polling process.
@@ -80,11 +84,12 @@
     (when (not-empty blank-prms)
       (log/fatal (str "Undef environment var(s): " blank-prms))
       (System/exit 1)))
-  (<!! (start-polling token handler)))
+  (<!! (start-polling token (create-handler))))
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start   [] (swap! test-obj (fn [_] (start-polling token handler))))
+(defn start   [] (swap! test-obj (fn [_]
+                                   (start-polling token (create-handler)))))
 (defn stop    [] (p/stop @test-obj))
 (defn restart [] (if @test-obj (stop)) (start))
 
