@@ -3,6 +3,11 @@
             [clojure.string :as s]
             [clojure.java.io :as io]))
 
+(defn in?
+  "true if seq contains elm"
+  [seq elm]
+  (boolean (some (fn [e] (= elm e)) seq)))
+
 (def project-name "corona_cases") ;; see project.clj: defproject
 (def token (env :telegram-token))
 (def chat-id "112885364")
@@ -160,6 +165,4 @@
     "ZM" "Zambia" "ZW" "Zimbabwe"}
    xx-others))
 
-(defn create-cmd-fn []
-  #_(fn [chat-id] (refresh-cmd-fn     cmd-names chat-id))
-  )
+(defn all-country-codes [] (keys is-3166-abbrevs))
