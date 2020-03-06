@@ -117,6 +117,12 @@
 
 (defn left-pad [s] (.replaceAll (format "%2s" s) " " "0"))
 
+(def countries
+  (->> [:confirmed :deaths :recovered]
+       (map (fn [case] (->> (data-memo) case :locations (map :country) set)))
+       (reduce clojure.set/union)
+       #_(count)))
+
 (defn raw-dates []
   (->> (raw-dates-unsorted)
        (map keyname)
