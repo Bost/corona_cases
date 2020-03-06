@@ -12,13 +12,12 @@
             [corona.interpolate :as i]
             [morse.api :as a]))
 
-#_[corona.csv
-   :refer
-   [confirmed dates deaths ill last-day recovered url]]
-#_[corona.api
-   :refer
-   [confirmed dates deaths ill last-day recovered url
-    host time-to-live]]
+(def cmd-s-about "about")
+
+(def s-confirmed "Confirmed")
+(def s-deaths    "Deaths")
+(def s-recovered "Recovered")
+(def s-sick      "Sick")
 
 (def home-page
   ;; TODO (env :home-page)
@@ -28,8 +27,6 @@
   (let [spacer "    "]
     (str "\n"
          "Try:" spacer (clojure.string/join spacer (map #(str "/" %) cmds)))))
-
-(def cmd-s-about "about")
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -43,11 +40,6 @@
         (Exception. (str "ERROR: "
                          "get-percentage [:high|:low|:normal] "
                          "<PLACE> <TOTAL_COUNT>")))))))
-
-(def s-confirmed "Confirmed")
-(def s-deaths    "Deaths")
-(def s-recovered "Recovered")
-(def s-sick      "Sick")
 
 (def custom-time-formatter (tf/with-zone (tf/formatter "dd MMM yyyy")
                              (t/default-time-zone)))
@@ -182,7 +174,6 @@
    token chat-id
    {:disable_web_page_preview false}
    "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
-
 
 (def cmd-names ["refresh" "interpolate" cmd-s-about "whattodo"])
 
