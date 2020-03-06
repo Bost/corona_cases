@@ -86,21 +86,23 @@
        (map (fn [loc] (->> loc :history raw-date read-number)))
        (apply +)))
 
-(defn sums-for-case [case]
-  (let [locations (->> (data-memo) case :locations)]
+(defn sums-for-case [case pred]
+  (let [locations (->> (data-memo) case :locations
+                       (filter pred))]
     (->> (raw-dates)
          #_(take-last 1)
          (map (fn [raw-date] (sums-for-date locations raw-date))))))
 
-(defn get-counts []
-  (let [crd (mapv sums-for-case [:confirmed :recovered :deaths])
+(defn get-counts [pred]
+  (let [crd (mapv (fn [case] (sums-for-case case pred))
+                  [:confirmed :recovered :deaths])
         i (apply mapv calculate-ill crd)]
     (zipmap [:c :r :d :i] (conj crd i))))
 
-(defn confirmed [] (:c (get-counts)))
-(defn deaths    [] (:d (get-counts)))
-(defn recovered [] (:r (get-counts)))
-(defn ill       [] (:i (get-counts)))
+(defn confirmed [pred] (:c (get-counts pred)))
+(defn deaths    [pred] (:d (get-counts pred)))
+(defn recovered [pred] (:r (get-counts pred)))
+(defn ill       [pred] (:i (get-counts pred)))
 
 (defn dates []
   (let [sdf (new SimpleDateFormat "MM/dd/yy")]
@@ -109,7 +111,10 @@
          (map keyname)
          (map (fn [rd] (.parse sdf rd))))))
 
-(defn last-day []
+(defn last-day [pred]
   (conj {:f (last (dates))}
         (zipmap [:c :d :r :i]
-                (map last [(confirmed) (deaths) (recovered) (ill)]))))
+                (map last [(confirmed pred)
+                           (deaths    pred)
+                           (recovered pred)
+                           (ill       pred)]))))

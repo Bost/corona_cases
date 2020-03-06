@@ -42,8 +42,8 @@
 (def custom-time-formatter (tf/with-zone (tf/formatter "dd MMM yyyy")
                              (t/default-time-zone)))
 
-(defn info-msg [cmd-names]
-  (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day)]
+(defn info-msg [cmd-names pred]
+  (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day pred)]
     (str
      "*" (tf/unparse custom-time-formatter (tc/from-date day)) "*\n"
      s-confirmed ": " confirmed "\n"
@@ -61,11 +61,11 @@
 ;; they obey a stack discipline:
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
-(defn absolute-numbers-pic []
-  (let [confirmed (a/confirmed)
-        deaths    (a/deaths)
-        recovered (a/recovered)
-        ill       (a/ill)
+(defn absolute-numbers-pic [pred]
+  (let [confirmed (a/confirmed pred)
+        deaths    (a/deaths pred)
+        recovered (a/recovered pred)
+        ill       (a/ill pred)
         dates     (a/dates)]
     (-> (chart/xy-chart
          (conj {}
@@ -108,22 +108,22 @@
         #_(chart/view)
         (chart/to-bytes :png))))
 
-(defn refresh-cmd-fn [cmd-names chat-id]
+(defn refresh-cmd-fn [cmd-names chat-id pred]
   (morse/send-text
    c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
-   (info-msg cmd-names))
-  (morse/send-photo c/token chat-id (absolute-numbers-pic)))
+   (info-msg cmd-names pred))
+  (morse/send-photo c/token chat-id (absolute-numbers-pic pred)))
 
-(def interpolated-vals (a/ill))
+(defn interpolated-vals [pred] (a/ill pred))
 (def interpolated-name s-sick)
 
-(defn interpolate-cmd-fn [cmd-names chat-id]
+(defn interpolate-cmd-fn [cmd-names chat-id pred]
   (as-> (str c/bot-name ": interpolation - " interpolated-name "; see /"
              cmd-s-about) $
-    (i/create-pic $ interpolated-vals)
+    (i/create-pic $ (interpolated-vals pred))
     (morse/send-photo c/token chat-id $)))
 
-(defn about-msg [cmd-names]
+(defn about-msg [cmd-names pred]
   (str
    ;; escape underscores for the markdown parsing
    (s/replace c/bot-name #"_" "\\\\_")
@@ -135,7 +135,7 @@
     "- Percentage calculation: <cases> / confirmed.\n"
     "- Interpolation method: "
     (link "b-spline" "https://en.wikipedia.org/wiki/B-spline")
-    "; degree of \"smoothness\" " (i/degree interpolated-vals) ".\n"
+    "; degree of \"smoothness\" " (i/degree (interpolated-vals pred)) ".\n"
     #_(link "Country codes"
             "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
     "- Feb12-spike caused mainly by a change in the diagnosis classification"
@@ -155,10 +155,10 @@
      " - " (link "Home page" home-page))
     (msg-footer cmd-names)))
 
-(defn about-cmd-fn [cmd-names chat-id]
+(defn about-cmd-fn [cmd-names chat-id pred]
   (morse/send-text
    c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
-   (about-msg cmd-names))
+   (about-msg cmd-names pred))
   (morse/send-text
    c/token chat-id {:disable_web_page_preview false}
    #_"https://www.who.int/gpsc/clean_hands_protection/en/"
@@ -166,7 +166,7 @@
   #_(morse/send-photo
      token chat-id (io/input-stream "resources/pics/how_to_handwash_lge.gif")))
 
-(defn keepcalm-cmd-fn [cmd-names chat-id]
+(defn keepcalm-cmd-fn [cmd-names chat-id _]
   (morse/send-photo
    c/token chat-id (io/input-stream "resources/pics/keepcalm.jpg"))
   #_(morse/send-text
@@ -190,33 +190,35 @@
     (fn [c] (->> c (get c/is-3166-names) s/upper-case))   ;; /GERMANY
     (fn [c] (->> c (get c/is-3166-names) s/capitalize))   ;; /Germany
     ]
-   (mapv (fn [fun] {:name (fun country)
-                    :f (fn [chat-id]
-                         (morse/send-text
-                          c/token chat-id {:parse_mode "Markdown"
-                                           :disable_web_page_preview true}
-                          (format "%s: %s"
-                           (get c/is-3166-names country)
-                           (if (in? (a/affected-countries) country)
-                             "affected."
-                             "not affected."))))}))))
+   (mapv
+    (fn [fun]
+      {:name (fun country)
+       :f (fn [chat-id _]
+            (if (in? (a/affected-countries) country)
+              (refresh-cmd-fn cmd-names chat-id
+                              (fn [loc] (= country (:country_code loc))))
+              (morse/send-text
+               c/token chat-id {:parse_mode "Markdown"
+                                :disable_web_page_preview true}
+               (str (get c/is-3166-names country) "not affected."))))}))))
 
 (defn cmds []
   (into
-   [
-    {:name "refresh"
-     :f (fn [chat-id] (refresh-cmd-fn cmd-names chat-id))
-     :desc "Start here"}
-    {:name "interpolate"
-     :f (fn [chat-id] (interpolate-cmd-fn cmd-names chat-id))
-     :desc "Smooth the data / leave out the noise"}
-    {:name cmd-s-about
-     :f (fn [chat-id] (about-cmd-fn cmd-names chat-id))
-     :desc "Bot version & some additional info"}
-    {:name "whattodo"
-     :f (fn [chat-id] (keepcalm-cmd-fn cmd-names chat-id))
-     :desc "Some personalized instructions"}
-    ]
+   (let [pred (fn [_] true)]
+     [
+      {:name "refresh"
+       :f (fn [chat-id _] (refresh-cmd-fn     cmd-names chat-id pred))
+       :desc "Start here"}
+      {:name "interpolate"
+       :f (fn [chat-id _] (interpolate-cmd-fn cmd-names chat-id pred))
+       :desc "Smooth the data / leave out the noise"}
+      {:name cmd-s-about
+       :f (fn [chat-id _] (about-cmd-fn       cmd-names chat-id pred))
+       :desc "Bot version & some additional info"}
+      {:name "whattodo"
+       :f (fn [chat-id _] (keepcalm-cmd-fn    cmd-names chat-id pred))
+       :desc "Some personalized instructions"}
+      ])
    (->> (c/all-country-codes)
         (mapv cmds-country-code)
         flatten)))
