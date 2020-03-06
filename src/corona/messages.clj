@@ -197,3 +197,13 @@
    {:name "whattodo"    :f (fn [chat-id] (keepcalm-cmd-fn    cmd-names chat-id))
     :desc "Some personalized instructions"}
    ])
+
+(def bot-description
+  "Keep it in sync with README.md"
+  "Coronavirus disease 2019 (COVID-19) information on Telegram Messenger")
+
+(defn bot-father-edit-cmds []
+  (map (fn [{:keys [name desc]}] (println name "-" desc))
+       cmds))
+(defn bot-father-edit-description [] bot-description)
+(defn bot-father-edit-about [] bot-description)

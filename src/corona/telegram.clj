@@ -86,6 +86,3 @@
         (Thread/sleep 400)))
   (start))
 
-(defn bot-father-edit-cmds []
-  (map (fn [{:keys [name desc]}] (println name "-" desc))
-       m/cmds))
