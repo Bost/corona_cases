@@ -2,20 +2,14 @@
   (:gen-class)
   (:require [clj-time-ext.core :as te]
             [clojure.core.async :as async :refer [<!!]]
-            [clojure.string :as str]
+            [clojure.string :as s]
             [clojure.tools.logging :as log]
-            [corona
-             [core :refer [bot-ver bot-type token]]
-             [messages :as m]]
+            [corona.core :refer [bot-type bot-ver token]]
+            [corona.messages :as m]
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
-            [morse.polling-patch :as p-patch]
-
-            [clojure.string :as s]
-            [clojure.tools.macro :as macro]
-
-            ))
+            [morse.polling-patch :as p-patch]))
 
 #_(log/info "Telegram Chatbot:" bot)
 
@@ -47,7 +41,7 @@
 ;;   (register-cmd "start"   (fn [chat-id] ...))
 ;;   (register-cmd "refresh" (fn [chat-id] ...))
 ;;   ...)
-(def handler (->> m/cmds
+(def handler (->> (m/cmds)
                   (mapv (fn [{:keys [name f]}] (register-cmd name f)))
                   (apply h/handlers)))
 
@@ -70,7 +64,7 @@
   [& args]
   (log/info (str "[" (te/tnow) " " bot-ver "]")
             (str "Starting " bot-type " Telegram Chatbot..."))
-  (let [blank-prms (filter #(-> % env str/blank?) [:telegram-token])]
+  (let [blank-prms (filter #(-> % env s/blank?) [:telegram-token])]
     (when (not-empty blank-prms)
       (log/fatal (str "Undef environment var(s): " blank-prms))
       (System/exit 1)))

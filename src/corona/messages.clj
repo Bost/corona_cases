@@ -2,13 +2,11 @@
   (:require [clj-time.coerce :as tc]
             [clj-time.core :as t]
             [clj-time.format :as tf]
+            [clojure.string :as s]
             [clojure.java.io :as io]
             [com.hypirion.clj-xchart :as c]
-            [corona.api
-             :refer
-             [confirmed dates deaths host ill last-day recovered time-to-live
-             url]]
-            [corona.core :refer [bot-name bot-ver token]]
+            [corona.api :refer :all]
+            [corona.core :refer :all]
             [corona.interpolate :as i]
             [morse.api :as a]))
 
@@ -26,7 +24,7 @@
 (defn msg-footer [cmds]
   (let [spacer "    "]
     (str "\n"
-         "Try:" spacer (clojure.string/join spacer (map #(str "/" %) cmds)))))
+         "Try:" spacer (s/join spacer (map #(str "/" %) cmds)))))
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -129,7 +127,7 @@
 (defn about-msg [cmd-names]
   (str
    ;; escape underscores for the markdown parsing
-   (clojure.string/replace bot-name #"_" "\\\\_")
+   (s/replace bot-name #"_" "\\\\_")
    " version: " bot-ver " :  "
    (str
     (link "GitHub" "https://github.com/Bost/corona_cases") ", "
@@ -177,17 +175,50 @@
 
 (def cmd-names ["refresh" "interpolate" cmd-s-about "whattodo"])
 
-(def cmds
-  [
-   {:name "refresh"     :f (fn [chat-id] (refresh-cmd-fn     cmd-names chat-id))
-    :desc "Start here"}
-   {:name "interpolate" :f (fn [chat-id] (interpolate-cmd-fn cmd-names chat-id))
-    :desc "Smooth the data / leave out the noise"}
-   {:name cmd-s-about   :f (fn [chat-id] (about-cmd-fn       cmd-names chat-id))
-    :desc "Bot version & some additional info"}
-   {:name "whattodo"    :f (fn [chat-id] (keepcalm-cmd-fn    cmd-names chat-id))
-    :desc "Some personalized instructions"}
-   ])
+(defn cmds-for-country [country]
+  (println "country" country)
+  (->>
+   [(fn [c] (->> c s/lower-case))  ;; /de
+    (fn [c] (->> c s/upper-case))  ;; /DE
+    (fn [c] (->> c s/capitalize))  ;; /De
+
+    (fn [c] (->> c (get is-3166-abbrevs) s/lower-case)) ;; /deu
+    (fn [c] (->> c (get is-3166-abbrevs) s/upper-case)) ;; /DEU
+    (fn [c] (->> c (get is-3166-abbrevs) s/capitalize)) ;; /Deu
+
+    (fn [c] (->> c (get is-3166-names) s/lower-case))   ;; /germany
+    (fn [c] (->> c (get is-3166-names) s/upper-case))   ;; /GERMANY
+    (fn [c] (->> c (get is-3166-names) s/capitalize))   ;; /Germany
+    ]
+   (mapv (fn [fun] {:name (fun country)
+                    :f (fn [chat-id]
+                         (a/send-text token chat-id
+                                      {:parse_mode "Markdown"
+                                       :disable_web_page_preview true}
+                                      (get is-3166-names country)))}))))
+
+(defn countries-cmds []
+  (->> (countries)
+       (mapv cmds-for-country)
+       flatten))
+
+(defn cmds []
+  (into
+   [
+    {:name "refresh"
+     :f (fn [chat-id] (refresh-cmd-fn cmd-names chat-id))
+     :desc "Start here"}
+    {:name "interpolate"
+     :f (fn [chat-id] (interpolate-cmd-fn cmd-names chat-id))
+     :desc "Smooth the data / leave out the noise"}
+    {:name cmd-s-about
+     :f (fn [chat-id] (about-cmd-fn cmd-names chat-id))
+     :desc "Bot version & some additional info"}
+    {:name "whattodo"
+     :f (fn [chat-id] (keepcalm-cmd-fn cmd-names chat-id))
+     :desc "Some personalized instructions"}
+    ]
+   (countries-cmds)))
 
 (def bot-description
   "Keep it in sync with README.md"

@@ -3,6 +3,7 @@
             [clj-time-ext.core :as te]
             [clojure.core.memoize :as memo]
             [clojure.data.json :as json]
+            [clojure.string :as s]
             [corona.core :refer [bot-ver read-number]]
             [corona.csv :refer [calculate-ill]])
   (:import java.text.SimpleDateFormat))
@@ -88,7 +89,9 @@
 
 (def api-service (nth web-services 0))
 (def host (:host api-service))
-(def url (str "https://" host (:route api-service)))
+(def url
+  #_"http://127.0.0.1:5000/all"
+  (str "https://" host (:route api-service)))
 
 (defn get-data [url]
   (let [tbeg (te/tnow)]
@@ -117,11 +120,17 @@
 
 (defn left-pad [s] (.replaceAll (format "%2s" s) " " "0"))
 
-(def countries
+(defn countries []
   (->> [:confirmed :deaths :recovered]
-       (map (fn [case] (->> (data-memo) case :locations (map :country) set)))
+       (map (fn [case] (->> (data-memo)
+                           case :locations
+                           (map :country_code)
+                           set
+                           )))
        (reduce clojure.set/union)
-       #_(count)))
+       sort
+       vec
+       #_(take 2)))
 
 (defn raw-dates []
   (->> (raw-dates-unsorted)

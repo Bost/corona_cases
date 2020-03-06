@@ -5,6 +5,7 @@
             [compojure.core :refer [ANY defroutes GET POST]]
             [compojure.handler :refer [site]]
             [compojure.route :as route]
+            [clojure.string :as s]
             [corona.core :refer [bot-type chat-id token]]
             [corona.telegram :as corona]
             [environ.core :refer [env]]
@@ -17,7 +18,7 @@
   {:status 200
    :headers {"Content-Type" "text/plain"}
    :body
-   (clojure.string/join
+   (s/join
     "\n"
     [
      "TODO home page"
@@ -27,7 +28,7 @@
   {:status 200
    :headers {"Content-Type" "text/plain"}
    :body
-   (clojure.string/join
+   (s/join
     "\n"
     [
      "Send out these commands from shell:"
