@@ -170,7 +170,7 @@
          (map keyname)
          (map (fn [rd] (.parse sdf rd))))))
 
-(defn last-day  []
+(defn last-day []
   (conj {:f (last (dates))}
         (zipmap [:c :d :r :i]
                 (map last [(confirmed) (deaths) (recovered) (ill)]))))

@@ -87,5 +87,5 @@
    })
 
 (defn create-cmd-fn []
-  (fn [chat-id] (refresh-cmd-fn     cmd-names chat-id))
+  #_(fn [chat-id] (refresh-cmd-fn     cmd-names chat-id))
   )

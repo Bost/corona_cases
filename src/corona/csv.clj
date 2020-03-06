@@ -3,7 +3,7 @@
             #_[clojure-csv.core :as ccsv]
             [clojure.java.io :as io]
             [clojure.string :as s]
-            [corona.core :refer [read-number]])
+            [corona.core :refer [fix-octal-val read-number]])
   (:import java.text.SimpleDateFormat))
 
 ;; get all the file names in one directory
