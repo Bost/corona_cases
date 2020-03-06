@@ -132,11 +132,14 @@
     (link "GitHub" "https://github.com/Bost/corona_cases") ", "
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases"))
    "\n"
-    "- Percentage calculation: <cases> / confirmed.\n"
+   "- Percentage calculation: <cases> / confirmed.\n"
+
+   #_(str
     "- Interpolation method: "
     (link "b-spline" "https://en.wikipedia.org/wiki/B-spline")
-    "; degree of \"smoothness\" " (i/degree (interpolated-vals pred)) ".\n"
-    #_(link "Country codes"
+    "; degree of \"smoothness\" " (i/degree (interpolated-vals pred)) ".\n")
+
+   #_(link "Country codes"
             "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
     "- Feb12-spike caused mainly by a change in the diagnosis classification"
     " of the Hubei province.\n"
@@ -174,7 +177,9 @@
    {:disable_web_page_preview false}
    "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
 
-(def cmd-names ["refresh" "interpolate" cmd-s-about "whattodo" "<country>"])
+(def cmd-names ["refresh"
+                #_"interpolate"
+                cmd-s-about "whattodo" "<country>"])
 
 (defn cmds-country-code [country]
   (->>
@@ -209,7 +214,7 @@
       {:name "refresh"
        :f (fn [chat-id _] (refresh-cmd-fn     cmd-names chat-id pred))
        :desc "Start here"}
-      {:name "interpolate"
+      #_{:name "interpolate"
        :f (fn [chat-id _] (interpolate-cmd-fn cmd-names chat-id pred))
        :desc "Smooth the data / leave out the noise"}
       {:name cmd-s-about
