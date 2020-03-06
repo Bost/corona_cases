@@ -28,12 +28,17 @@ echo ""
 heroku addons:open papertrail --app $APP; and \
 heroku ps:scale web=0 --app $APP; and \
 git push $pushFlags $REMOTE master; and \
-heroku config:set BOT_VER=(git rev-parse --short master) --app $APP; and \
+set botVerSHA (git rev-parse --short master); and \
+set botVerNr (grep --max-count=1 --only-matching '\([0-9]\+\.\)\+[0-9]\+' project.clj); and \
+heroku config:set BOT_VER=$botVerSHA --app $APP; and \
 heroku ps:scale web=1 --app $APP
 
 # publish source code only when deploying to production
 if test $envName = corona-cases
-    git push $pushFlags origin; and git push $pushFlags gitlab
+    set gitTag $botVerNr"-"$botVerSHA; and \
+    git tag $gitTag; and \
+    git push $pushFlags origin; and \
+    git push $pushFlags gitlab
 end
 
 # heroku ps:scale web=0 --app $APP; and \
@@ -55,6 +60,6 @@ end
 
 # run locally:
 # lein uberjar; and \
-# set --export BOT_VER (git rev-parse --short master); and \
+# set --export BOT_VER $botVerSHA; and \
 # java $JVM_OPTS -cp target/corona_cases-standalone.jar:$cljjar:$cljsjar \
     # clojure.main -m corona.web
