@@ -27,5 +27,5 @@ Using fish-shell: see [deploy.fish](./deploy.fish).
 - Add `/feedback` commands to get an instant/immediate information from users. Tight feedback-loop
 - Prediction - extrapolate graphs
 - Use buttons instead of `/<command-name>`
-- Don't panic - compare data: Corona vs. Flu
+- Don't panic - compare data: Corona vs. Flu vs. World population
 - Improve user experience - show only interpolated graphs
