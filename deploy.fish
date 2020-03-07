@@ -38,7 +38,9 @@ if test $envName = corona-cases
     set gitTag $botVerNr"-"$botVerSHA; and \
     git tag $gitTag; and \
     git push $pushFlags origin; and \
-    git push $pushFlags gitlab
+    git push $pushFlags gitlab; and \
+    git push --tags $pushFlags origin; and \
+    git push --tags $pushFlags gitlab
 end
 
 # heroku ps:scale web=0 --app $APP; and \
