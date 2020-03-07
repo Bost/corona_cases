@@ -14,15 +14,15 @@ echo "REMOTE" $REMOTE
 echo ""
 
 # git clone https://github.com/CSSEGISandData/COVID-19.git ../COVID-19
-set --local repo ../COVID-19/.git; and \
-git --git-dir=$repo pull --rebase origin master; and \
-cp -r ../COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/*.csv \
-    resources/csv; and \
-git add resources/csv/*.csv
+# set --local repo ../COVID-19/.git; and \
+# git --git-dir=$repo pull --rebase origin master; and \
+# cp -r ../COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/*.csv \
+#     resources/csv; and \
+# git add resources/csv/*.csv
 
-if test $status = 0
-    git commit -m "Add new csv file(s)"
-end
+# if test $status = 0
+#     git commit -m "Add new csv file(s)"
+# end
 
 # heroku logs --tail --app $APP blocks the execution
 heroku addons:open papertrail --app $APP; and \
@@ -37,8 +37,8 @@ heroku ps:scale web=1 --app $APP
 if test $envName = corona-cases
     set gitTag $botVerNr"-"$botVerSHA; and \
     git tag $gitTag; and \
-    git push $pushFlags origin; and \
-    git push $pushFlags gitlab; and \
+    # git push $pushFlags origin; and \
+    # git push $pushFlags gitlab; and \
     git push --tags $pushFlags origin; and \
     git push --tags $pushFlags gitlab
 end

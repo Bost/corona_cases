@@ -5,7 +5,7 @@
             [clojure.java.io :as io]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
-            [corona.csv :as a]
+            [corona.api :as a]
             [corona.core :as c :refer [in?]]
             [corona.interpolate :as i]
             [morse.api :as morse]))
@@ -136,30 +136,36 @@
    "- Percentage calculation: <cases> / confirmed.\n"
 
    #_(str
-    "- Interpolation method: "
-    (link "b-spline" "https://en.wikipedia.org/wiki/B-spline")
-    "; degree of \"smoothness\" " (i/degree (interpolated-vals prm)) ".\n")
+      "- Interpolation method: "
+      (link "b-spline" "https://en.wikipedia.org/wiki/B-spline")
+      "; degree of \"smoothness\" " (i/degree (interpolated-vals prm)) ".\n")
 
+   #_(str
     "- Feb12-spike caused mainly by a change in the diagnosis classification"
-    " of the Hubei province.\n"
-    #_(str
-     "- Data retrieved *CONTINUOUSLY* every " corona.api/time-to-live " minutes from"
-     " " (link a/host a/url) ".\n")
-    (str
-     "- See also " (link "visual dashboard" "https://arcg.is/0fHmTX") ", "
-     (link "worldometer"
-           "https://www.worldometers.info/coronavirus/coronavirus-cases/")
-     ".\n")
-    #_(str
-     "\n"
-     "- Country *specific* information e.g.    /fr    /fra    /france\n")
-    #_(link "Country codes"
-          "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
-    ;; TODO home page; average recovery time
-    #_(str
-     "\n"
-     " - " (link "Home page" home-page))
-    (msg-footer prm)))
+    " of the Hubei province.\n")
+
+   (str
+    "- Data retrieved *CONTINUOUSLY* every " corona.api/time-to-live
+    " minutes from " (link a/host a/url) ".\n")
+
+   (str
+    "- See also " (link "visual dashboard" "https://arcg.is/0fHmTX") ", "
+    (link "worldometer"
+          "https://www.worldometers.info/coronavirus/coronavirus-cases/")
+    ".\n")
+
+   (str
+    "\n"
+    "- Country *specific* information e.g.:\n"
+    "/fr    /fra      /France\n"
+    "/us    /usa    /UnitedStates   (without spaces)\n")
+   #_(link "Country codes"
+           "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
+   ;; TODO home page; average recovery time
+   #_(str
+      "\n"
+      " - " (link "Home page" home-page))
+   (msg-footer prm)))
 
 (defn about-cmd-fn [{:keys [chat-id] :as prm}]
   (morse/send-text
@@ -182,7 +188,8 @@
 
 (def cmd-names ["refresh"
                 #_"interpolate"
-                cmd-s-about "whattodo" "<country>"])
+                cmd-s-about "whattodo"
+                "<country>"])
 
 (defn cmds-country-code [country]
   (->>

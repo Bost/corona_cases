@@ -22,7 +22,7 @@
 
 (defn register-cmd [{:keys [name f] :as prm}]
   (h/command-fn
-   name
+   (s/replace name " " "")
    (fn [{{chat-id :id :as chat} :chat}]
      (when (= name "start")
        (swap! chats clojure.set/union #{chat})
