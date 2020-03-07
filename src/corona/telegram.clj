@@ -21,19 +21,18 @@
 (def chats (atom #{}))
 
 (defn register-cmd [{:keys [name f] :as prm}]
-  (let [cmd (s/replace name " " "")]
-    (h/command-fn
-     cmd
-     (fn [{{chat-id :id :as chat} :chat}]
-       #_(when (= cmd "start")
+  (h/command-fn
+   name
+   (fn [{{chat-id :id :as chat} :chat}]
+     #_(when (= cmd "start")
          (swap! chats clojure.set/union #{chat})
          (->> @chats
               prn-str
               (spit "chats.edn")))
-       (let [tbeg (te/tnow)]
-         (println (str "[" tbeg "           " " " bot-ver " /" cmd "]") chat)
-         (f chat-id)
-         (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" cmd  "]") chat))))))
+     (let [tbeg (te/tnow)]
+       (println (str "[" tbeg "           " " " bot-ver " /" name "]") chat)
+       (f chat-id)
+       (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" name  "]") chat)))))
 
 ;; long polling
 ;; (as-> ...) creates

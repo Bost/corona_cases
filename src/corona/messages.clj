@@ -186,10 +186,13 @@
    {:disable_web_page_preview false}
    "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
 
-(def cmd-names ["world"
-                #_"interpolate"
-                cmd-s-about "whattodo"
-                "<country>"])
+(def cmd-names ["world" #_"interpolate" cmd-s-about "whattodo" "<country>"])
+
+(defn normalize
+  "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
+  [country-code]
+  (-> (get c/is-3166-names country-code)
+      (s/replace " " "")))
 
 (defn cmds-country-code [country]
   (->>
@@ -201,9 +204,9 @@
     (fn [c] (->> c (get c/is-3166-abbrevs) s/upper-case)) ;; /DEU
     (fn [c] (->> c (get c/is-3166-abbrevs) s/capitalize)) ;; /Deu
 
-    (fn [c] (->> c (get c/is-3166-names) s/lower-case))   ;; /germany
-    (fn [c] (->> c (get c/is-3166-names) s/upper-case))   ;; /GERMANY
-    (fn [c] (->> c (get c/is-3166-names)))
+    (fn [c] (->> c normalize s/lower-case))   ;; /unitedstates
+    (fn [c] (->> c normalize s/upper-case))   ;; /UNITEDSTATES
+    (fn [c] (->> c normalize))
     ]
    (mapv
     (fn [fun]
@@ -211,9 +214,9 @@
        :f (fn [chat-id]
             (if (in? (a/affected-countries) country)
               (world-cmd-fn {:cmd-names cmd-names
-                               :chat-id chat-id
-                               :country (get c/is-3166-names country)
-                               :pred (fn [loc] (= country (:country_code loc)))})
+                             :chat-id chat-id
+                             :country (get c/is-3166-names country)
+                             :pred (fn [loc] (= country (:country_code loc)))})
               (morse/send-text
                c/token chat-id {:parse_mode "Markdown"
                                 :disable_web_page_preview true}
@@ -225,7 +228,7 @@
     [
      {:name "world"
       :f (fn [chat-id] (world-cmd-fn (conj prm {:chat-id chat-id
-                                                  :country "Worldwide"})))
+                                               :country "Worldwide"})))
       :desc "Start here"}
      #_{:name "interpolate"
         :f (fn [chat-id] (interpolate-cmd-fn
@@ -239,9 +242,10 @@
       :desc "Some personalized instructions"}]))
 
 (defn cmds []
-  (into (cmds-general) (->> (c/all-country-codes)
-                            (mapv cmds-country-code)
-                            flatten)))
+  (->> (c/all-country-codes)
+       (mapv cmds-country-code)
+       flatten
+       (into (cmds-general))))
 
 (def bot-description
   "Keep it in sync with README.md"
