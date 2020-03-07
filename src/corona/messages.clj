@@ -5,7 +5,7 @@
             [clojure.java.io :as io]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
-            [corona.api :as a]
+            [corona.csv :as a]
             [corona.core :as c :refer [in?]]
             [corona.interpolate :as i]
             [morse.api :as morse]))
@@ -144,8 +144,9 @@
             "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
     "- Feb12-spike caused mainly by a change in the diagnosis classification"
     " of the Hubei province.\n"
-    "- Data retrieved *CONTINUOUSLY* every " a/time-to-live " minutes from"
-    " " (link a/host a/url) ".\n"
+    #_(str
+     "- Data retrieved *CONTINUOUSLY* every " corona.api/time-to-live " minutes from"
+     " " (link a/host a/url) ".\n")
     (str
      "- See also " (link "visual dashboard" "https://arcg.is/0fHmTX") ", "
      (link "worldometer"
@@ -178,6 +179,10 @@
    {:disable_web_page_preview false}
    "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
 
+(def cmd-names ["refresh"
+                #_"interpolate"
+                cmd-s-about "whattodo" "<country>"])
+
 (defn cmds-country-code [country]
   (->>
    [(fn [c] (->> c s/lower-case))  ;; /de
@@ -206,31 +211,29 @@
                                 :disable_web_page_preview true}
                (str (get c/is-3166-names country) "not affected."))))}))))
 
-(defn cmds []
-  (into
-   (let [prm {:cmd-names ["refresh"
-                          #_"interpolate"
-                          cmd-s-about "whattodo" "<country>"]
-              :pred (fn [_] true)}]
-     [
-      {:name "refresh"
-       :f (fn [chat-id] (refresh-cmd-fn (conj prm {:chat-id chat-id
+(defn cmds-general []
+  (let [prm {:cmd-names cmd-names
+             :pred (fn [_] true)}]
+    [
+     {:name "refresh"
+      :f (fn [chat-id] (refresh-cmd-fn (conj prm {:chat-id chat-id
                                                   :country "Worldwide"})))
-       :desc "Start here"}
-      #_{:name "interpolate"
-       :f (fn [chat-id] (interpolate-cmd-fn (conj prm {:chat-id chat-id
-                                                      :country "Worldwide"})))
-       :desc "Smooth the data / leave out the noise"}
-      {:name cmd-s-about
-       :f (fn [chat-id] (about-cmd-fn (conj prm {:chat-id chat-id})))
-       :desc "Bot version & some additional info"}
-      {:name "whattodo"
-       :f (fn [chat-id] (keepcalm-cmd-fn (conj prm {:chat-id chat-id})))
-       :desc "Some personalized instructions"}
-      ])
-   (->> (c/all-country-codes)
-        (mapv cmds-country-code)
-        flatten)))
+      :desc "Start here"}
+     #_{:name "interpolate"
+        :f (fn [chat-id] (interpolate-cmd-fn (conj prm {:chat-id chat-id
+                                                        :country "Worldwide"})))
+        :desc "Smooth the data / leave out the noise"}
+     {:name cmd-s-about
+      :f (fn [chat-id] (about-cmd-fn (conj prm {:chat-id chat-id})))
+      :desc "Bot version & some additional info"}
+     {:name "whattodo"
+      :f (fn [chat-id] (keepcalm-cmd-fn (conj prm {:chat-id chat-id})))
+      :desc "Some personalized instructions"}]))
+
+(defn cmds []
+  (into (cmds-general) (->> (c/all-country-codes)
+                            (mapv cmds-country-code)
+                            flatten)))
 
 (def bot-description
   "Keep it in sync with README.md"

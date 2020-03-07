@@ -45,7 +45,7 @@
   (map (fn [file] (sum-up-file sum-up-fn file))
        csv-files))
 
-(defn get-counts []
+(defn get-counts [prm]
   (map (fn [f c d r i] {:f
                        (let [date (subs f (inc (s/last-index-of f "/")))
                              sdf (new SimpleDateFormat "MM-dd-yyyy")]
@@ -57,11 +57,15 @@
        (sum-up getr)
        (sum-up geti)))
 
-(defn confirmed [] (map :c (get-counts)))
-(defn deaths    [] (map :d (get-counts)))
-(defn recovered [] (map :r (get-counts)))
-(defn ill       [] (map :i (get-counts)))
-(defn dates     [] (map :f (get-counts)))
-(defn last-day  [] (last (get-counts)))
+(defn confirmed [prm] (map :c (get-counts prm)))
+(defn deaths    [prm] (map :d (get-counts prm)))
+(defn recovered [prm] (map :r (get-counts prm)))
+(defn ill       [prm] (map :i (get-counts prm)))
+(defn dates     []    (map :f (get-counts {})))
+
+(defn last-day  [prm] (last (get-counts prm)))
 
 (def url "https://github.com/CSSEGISandData/COVID-19")
+
+(defn affected-countries []
+  [])
