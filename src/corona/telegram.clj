@@ -78,4 +78,3 @@
     (do (stop)
         (Thread/sleep 400)))
   (start))
-

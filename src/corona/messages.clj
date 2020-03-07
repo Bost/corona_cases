@@ -16,6 +16,7 @@
 (def s-deaths    "Deaths")
 (def s-recovered "Recovered")
 (def s-sick      "Sick")
+(def s-closed    "Closed")
 
 (def home-page
   ;; TODO (env :home-page)
@@ -39,19 +40,23 @@
                          "get-percentage [:high|:low|:normal] "
                          "<PLACE> <TOTAL_COUNT>")))))))
 
+(defn fmt [s n total explanation]
+  (format "%s: %s  ~ %s%%  %s\n" s n (get-percentage n total) explanation))
 
 (defn info-msg [{:keys [country] :as prm}]
-  (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day prm)]
+  (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day prm)
+        closed (+ deaths recovered)]
     (str
      "*" (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                        (t/default-time-zone)) (tc/from-date day))
      "* " country "\n"
      s-confirmed ": " confirmed "\n"
-     s-deaths ": " deaths
-     "  ~  " (get-percentage deaths confirmed) "%\n"
-     s-recovered ": " recovered
-     "  ~  " (get-percentage recovered confirmed) "%\n"
-     s-sick ": " ill "  ~  " (get-percentage ill confirmed) "%\n"
+     (fmt s-sick      ill       confirmed "")
+     (fmt s-recovered recovered confirmed "")
+     (fmt s-deaths    deaths    confirmed "")
+     (fmt s-closed    closed    confirmed (format "= %s + %s"
+                                                  (s/lower-case s-recovered)
+                                                  (s/lower-case s-deaths)))
      (msg-footer prm))))
 
 (defn link [name url] (str "[" name "]""(" url ")"))
