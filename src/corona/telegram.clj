@@ -20,7 +20,7 @@
 
 (def chats (atom #{}))
 
-(defn register-cmd [name f pred]
+(defn register-cmd [{:keys [name f] :as prm}]
   (h/command-fn
    name
    (fn [{{chat-id :id :as chat} :chat}]
@@ -32,7 +32,7 @@
             ))
      (let [tbeg (te/tnow)]
        (println (str "[" tbeg "           " " " bot-ver " /" name "]") chat)
-       (f chat-id pred)
+       (f chat-id)
        (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" name "]") chat)))))
 
 ;; long polling
@@ -42,7 +42,7 @@
 ;;   (register-cmd "refresh" (fn [chat-id] ...))
 ;;   ...)
 (def handler (->> (m/cmds)
-                  (mapv (fn [{:keys [name f pred]}] (register-cmd name f pred)))
+                  (mapv register-cmd)
                   (apply h/handlers)))
 
 (defn start-polling

@@ -21,10 +21,10 @@
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
 
-(defn msg-footer [cmds]
+(defn msg-footer [{:keys [cmd-names]}]
   (let [spacer "   "]
     (str "\n"
-         "Try:" spacer (s/join spacer (map #(str "/" %) cmds)))))
+         "Try:" spacer (s/join spacer (map #(str "/" %) cmd-names)))))
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -42,8 +42,8 @@
 (def custom-time-formatter (tf/with-zone (tf/formatter "dd MMM yyyy")
                              (t/default-time-zone)))
 
-(defn info-msg [cmd-names pred]
-  (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day pred)]
+(defn info-msg [prm]
+  (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day prm)]
     (str
      "*" (tf/unparse custom-time-formatter (tc/from-date day)) "*\n"
      s-confirmed ": " confirmed "\n"
@@ -52,7 +52,7 @@
      s-recovered ": " recovered
      "  ~  " (get-percentage recovered confirmed) "%\n"
      s-sick ": " ill "  ~  " (get-percentage ill confirmed) "%\n"
-     (msg-footer cmd-names))))
+     (msg-footer prm))))
 
 (defn link [name url] (str "[" name "]""(" url ")"))
 
@@ -61,11 +61,11 @@
 ;; they obey a stack discipline:
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
-(defn absolute-numbers-pic [pred]
-  (let [confirmed (a/confirmed pred)
-        deaths    (a/deaths pred)
-        recovered (a/recovered pred)
-        ill       (a/ill pred)
+(defn absolute-numbers-pic [{:keys [country] :as prm}]
+  (let [confirmed (a/confirmed prm)
+        deaths    (a/deaths    prm)
+        recovered (a/recovered prm)
+        ill       (a/ill       prm)
         dates     (a/dates)]
     (-> (chart/xy-chart
          (conj {}
@@ -96,7 +96,7 @@
                               #_{:line-color :green})}})
          (conj {}
                {:title
-                (str c/bot-name ": total numbers; see /" cmd-s-about)
+                (str c/bot-name ": " country "; see /" cmd-s-about)
                 :render-style :area
                 :legend {:position :inside-nw}
                 :x-axis {:title "Day"}
@@ -108,22 +108,22 @@
         #_(chart/view)
         (chart/to-bytes :png))))
 
-(defn refresh-cmd-fn [cmd-names chat-id pred]
+(defn refresh-cmd-fn [{:keys [chat-id] :as prm}]
   (morse/send-text
    c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
-   (info-msg cmd-names pred))
-  (morse/send-photo c/token chat-id (absolute-numbers-pic pred)))
+   (info-msg prm))
+  (morse/send-photo c/token chat-id (absolute-numbers-pic prm)))
 
-(defn interpolated-vals [pred] (a/ill pred))
+(defn interpolated-vals [prm] (a/ill prm))
 (def interpolated-name s-sick)
 
-(defn interpolate-cmd-fn [cmd-names chat-id pred]
+(defn interpolate-cmd-fn [{:keys [chat-id] :as prm}]
   (as-> (str c/bot-name ": interpolation - " interpolated-name "; see /"
              cmd-s-about) $
-    (i/create-pic $ (interpolated-vals pred))
+    (i/create-pic $ (interpolated-vals prm))
     (morse/send-photo c/token chat-id $)))
 
-(defn about-msg [cmd-names pred]
+(defn about-msg [prm]
   (str
    ;; escape underscores for the markdown parsing
    (s/replace c/bot-name #"_" "\\\\_")
@@ -137,7 +137,7 @@
    #_(str
     "- Interpolation method: "
     (link "b-spline" "https://en.wikipedia.org/wiki/B-spline")
-    "; degree of \"smoothness\" " (i/degree (interpolated-vals pred)) ".\n")
+    "; degree of \"smoothness\" " (i/degree (interpolated-vals prm)) ".\n")
 
    #_(link "Country codes"
             "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
@@ -156,12 +156,12 @@
     #_(str
      "\n"
      " - " (link "Home page" home-page))
-    (msg-footer cmd-names)))
+    (msg-footer prm)))
 
-(defn about-cmd-fn [cmd-names chat-id pred]
+(defn about-cmd-fn [{:keys [chat-id] :as prm}]
   (morse/send-text
    c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
-   (about-msg cmd-names pred))
+   (about-msg prm))
   (morse/send-text
    c/token chat-id {:disable_web_page_preview false}
    #_"https://www.who.int/gpsc/clean_hands_protection/en/"
@@ -169,7 +169,7 @@
   #_(morse/send-photo
      token chat-id (io/input-stream "resources/pics/how_to_handwash_lge.gif")))
 
-(defn keepcalm-cmd-fn [cmd-names chat-id _]
+(defn keepcalm-cmd-fn [{:keys [chat-id]}]
   (morse/send-photo
    c/token chat-id (io/input-stream "resources/pics/keepcalm.jpg"))
   #_(morse/send-text
@@ -193,15 +193,17 @@
 
     (fn [c] (->> c (get c/is-3166-names) s/lower-case))   ;; /germany
     (fn [c] (->> c (get c/is-3166-names) s/upper-case))   ;; /GERMANY
-    (fn [c] (->> c (get c/is-3166-names) s/capitalize))   ;; /Germany
+    (fn [c] (->> c (get c/is-3166-names)))
     ]
    (mapv
     (fn [fun]
       {:name (fun country)
-       :f (fn [chat-id _]
+       :f (fn [chat-id]
             (if (in? (a/affected-countries) country)
-              (refresh-cmd-fn cmd-names chat-id
-                              (fn [loc] (= country (:country_code loc))))
+              (refresh-cmd-fn {:cmd-names cmd-names
+                               :chat-id chat-id
+                               :country (get c/is-3166-names country)
+                               :pred (fn [loc] (= country (:country_code loc)))})
               (morse/send-text
                c/token chat-id {:parse_mode "Markdown"
                                 :disable_web_page_preview true}
@@ -209,19 +211,21 @@
 
 (defn cmds []
   (into
-   (let [pred (fn [_] true)]
+   (let [prm {:cmd-names cmd-names
+              :pred (fn [_] true)}]
      [
       {:name "refresh"
-       :f (fn [chat-id _] (refresh-cmd-fn     cmd-names chat-id pred))
+       :f (fn [chat-id] (refresh-cmd-fn (conj prm {:chat-id chat-id
+                                                  :country "Worldwide"})))
        :desc "Start here"}
       #_{:name "interpolate"
-       :f (fn [chat-id _] (interpolate-cmd-fn cmd-names chat-id pred))
+       :f (fn [chat-id] (interpolate-cmd-fn (conj prm {:chat-id chat-id})))
        :desc "Smooth the data / leave out the noise"}
       {:name cmd-s-about
-       :f (fn [chat-id _] (about-cmd-fn       cmd-names chat-id pred))
+       :f (fn [chat-id] (about-cmd-fn (conj prm {:chat-id chat-id})))
        :desc "Bot version & some additional info"}
       {:name "whattodo"
-       :f (fn [chat-id _] (keepcalm-cmd-fn    cmd-names chat-id pred))
+       :f (fn [chat-id] (keepcalm-cmd-fn (conj prm {:chat-id chat-id})))
        :desc "Some personalized instructions"}
       ])
    (->> (c/all-country-codes)
