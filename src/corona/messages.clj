@@ -117,8 +117,9 @@
 (defn interpolated-vals [prm] (a/ill prm))
 (def interpolated-name s-sick)
 
-(defn interpolate-cmd-fn [{:keys [chat-id] :as prm}]
-  (as-> (str c/bot-name ": interpolation - " interpolated-name "; see /"
+(defn interpolate-cmd-fn [{:keys [chat-id country] :as prm}]
+  (as-> (str c/bot-name ": " country
+             " interpolation - " interpolated-name "; see /"
              cmd-s-about) $
     (i/create-pic $ (interpolated-vals prm))
     (morse/send-photo c/token chat-id $)))
@@ -177,10 +178,6 @@
    {:disable_web_page_preview false}
    "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
 
-(def cmd-names ["refresh"
-                #_"interpolate"
-                cmd-s-about "whattodo" "<country>"])
-
 (defn cmds-country-code [country]
   (->>
    [(fn [c] (->> c s/lower-case))  ;; /de
@@ -211,7 +208,9 @@
 
 (defn cmds []
   (into
-   (let [prm {:cmd-names cmd-names
+   (let [prm {:cmd-names ["refresh"
+                          #_"interpolate"
+                          cmd-s-about "whattodo" "<country>"]
               :pred (fn [_] true)}]
      [
       {:name "refresh"
@@ -219,7 +218,8 @@
                                                   :country "Worldwide"})))
        :desc "Start here"}
       #_{:name "interpolate"
-       :f (fn [chat-id] (interpolate-cmd-fn (conj prm {:chat-id chat-id})))
+       :f (fn [chat-id] (interpolate-cmd-fn (conj prm {:chat-id chat-id
+                                                      :country "Worldwide"})))
        :desc "Smooth the data / leave out the noise"}
       {:name cmd-s-about
        :f (fn [chat-id] (about-cmd-fn (conj prm {:chat-id chat-id})))
