@@ -140,8 +140,6 @@
     (link "b-spline" "https://en.wikipedia.org/wiki/B-spline")
     "; degree of \"smoothness\" " (i/degree (interpolated-vals prm)) ".\n")
 
-   #_(link "Country codes"
-            "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
     "- Feb12-spike caused mainly by a change in the diagnosis classification"
     " of the Hubei province.\n"
     #_(str
@@ -152,8 +150,11 @@
      (link "worldometer"
            "https://www.worldometers.info/coronavirus/coronavirus-cases/")
      ".\n")
-    "\n"
-    "- Country *specific* information e.g.    /fr    /fra    /france\n"
+    #_(str
+     "\n"
+     "- Country *specific* information e.g.    /fr    /fra    /france\n")
+    #_(link "Country codes"
+          "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
     ;; TODO home page; average recovery time
     #_(str
      "\n"
@@ -209,7 +210,7 @@
               (morse/send-text
                c/token chat-id {:parse_mode "Markdown"
                                 :disable_web_page_preview true}
-               (str (get c/is-3166-names country) "not affected."))))}))))
+               (str (get c/is-3166-names country) " not affected."))))}))))
 
 (defn cmds-general []
   (let [prm {:cmd-names cmd-names
