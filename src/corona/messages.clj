@@ -108,7 +108,7 @@
         #_(chart/view)
         (chart/to-bytes :png))))
 
-(defn refresh-cmd-fn [{:keys [chat-id] :as prm}]
+(defn world-cmd-fn [{:keys [chat-id] :as prm}]
   (morse/send-text
    c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
    (info-msg prm))
@@ -186,7 +186,7 @@
    {:disable_web_page_preview false}
    "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
 
-(def cmd-names ["refresh"
+(def cmd-names ["world"
                 #_"interpolate"
                 cmd-s-about "whattodo"
                 "<country>"])
@@ -210,7 +210,7 @@
       {:name (fun country)
        :f (fn [chat-id]
             (if (in? (a/affected-countries) country)
-              (refresh-cmd-fn {:cmd-names cmd-names
+              (world-cmd-fn {:cmd-names cmd-names
                                :chat-id chat-id
                                :country (get c/is-3166-names country)
                                :pred (fn [loc] (= country (:country_code loc)))})
@@ -223,13 +223,13 @@
   (let [prm {:cmd-names cmd-names
              :pred (fn [_] true)}]
     [
-     {:name "refresh"
-      :f (fn [chat-id] (refresh-cmd-fn (conj prm {:chat-id chat-id
+     {:name "world"
+      :f (fn [chat-id] (world-cmd-fn (conj prm {:chat-id chat-id
                                                   :country "Worldwide"})))
       :desc "Start here"}
      #_{:name "interpolate"
-        :f (fn [chat-id] (interpolate-cmd-fn (conj prm {:chat-id chat-id
-                                                        :country "Worldwide"})))
+        :f (fn [chat-id] (interpolate-cmd-fn
+                         (conj prm {:chat-id chat-id :country "Worldwide"})))
         :desc "Smooth the data / leave out the noise"}
      {:name cmd-s-about
       :f (fn [chat-id] (about-cmd-fn (conj prm {:chat-id chat-id})))

@@ -39,7 +39,7 @@
 ;; (as-> ...) creates
 ;; (h/defhandler handler
 ;;   (register-cmd "start"   (fn [chat-id] ...))
-;;   (register-cmd "refresh" (fn [chat-id] ...))
+;;   (register-cmd "world" (fn [chat-id] ...))
 ;;   ...)
 (def handler (->> (m/cmds)
                   (mapv register-cmd)
