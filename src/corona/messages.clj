@@ -39,13 +39,13 @@
                          "get-percentage [:high|:low|:normal] "
                          "<PLACE> <TOTAL_COUNT>")))))))
 
-(def custom-time-formatter (tf/with-zone (tf/formatter "dd MMM yyyy")
-                             (t/default-time-zone)))
 
-(defn info-msg [prm]
+(defn info-msg [{:keys [country] :as prm}]
   (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day prm)]
     (str
-     "*" (tf/unparse custom-time-formatter (tc/from-date day)) "*\n"
+     "*" (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
+                       (t/default-time-zone)) (tc/from-date day))
+     "* " country "\n"
      s-confirmed ": " confirmed "\n"
      s-deaths ": " deaths
      "  ~  " (get-percentage deaths confirmed) "%\n"
