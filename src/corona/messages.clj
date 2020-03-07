@@ -238,6 +238,6 @@
 
 (defn bot-father-edit-cmds []
   (map (fn [{:keys [name desc]}] (println name "-" desc))
-       cmds))
+       (cmds-general)))
 (defn bot-father-edit-description [] bot-description)
 (defn bot-father-edit-about [] bot-description)
