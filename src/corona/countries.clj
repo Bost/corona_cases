@@ -1,8 +1,9 @@
-(ns corona.worldometer
+(ns corona.countries
   (:require
    [corona.core :as c :refer [in?]]))
 
 (def regions
+  "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)#List"
   [
    ["China"                                        "Asia"     "Eastern Asia"              "1427647786" "1433783686" "+0.43%"]
    ["India"                                        "Asia"     "Southern Asia"             "1352642280" "1366417754" "+1.02%"]
@@ -241,7 +242,9 @@
   )
 
 (def data
-  "TODO create spec. E.g. Rate is percentage must be between 0 and 100
+  "
+  https://www.worldometers.info/world-population/population-by-country/
+  TODO create spec. E.g. Rate is percentage must be between 0 and 100
 
   Country
   Population
@@ -498,6 +501,7 @@
 
  ;; Mapping of country names to alpha-2 codes.
 (def is_3166_1
+  "https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
   {
    "Afghanistan"                                  "AF"
    "Åland Islands"                                "AX"
@@ -802,6 +806,8 @@
    })
 
 (defn country_code
+(defn country_code
+(defn country_code
   "Return two letter country code (Alpha-2) according to
   https://en.wikipedia.org/wiki/ISO_3166-1
   Defaults to \"XX\"."
@@ -815,4 +821,4 @@
         (println (str
                   "No country code found for '" country "'. Using '"
                   default_code "'"))
-        default_code))))
+        default_code)))
