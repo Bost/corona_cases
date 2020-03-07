@@ -74,31 +74,33 @@
         dates     (a/dates)]
     (-> (chart/xy-chart
          (conj {}
+               {s-sick
+                {:x dates :y ill
+                 :style (conj {}
+                              {:marker-type :none}
+                              #_{:render-style :line}
+                              #_{:marker-color :blue}
+                              #_{:line-color :blue})}}
                {s-confirmed
                 {:x dates :y confirmed
                  :style (conj {}
                               {:marker-type :none}
                               {:render-style :line}
-                              #_{:line-color :orange}
+                              {:line-color :black}
                               #_{:fill-color :orange})}}
                {s-deaths
                 {:x dates :y deaths
                  :style (conj {}
                               {:marker-type :none}
                               {:render-style :line}
-                              #_{:line-color :red})}}
+                              {:line-color :red})}}
                {s-recovered
                 {:x dates :y recovered
                  :style (conj {}
                               {:marker-type :none}
                               {:render-style :line}
-                              #_{:line-color :green})}}
-               {s-sick
-                {:x dates :y ill
-                 :style (conj {}
-                              {:marker-type :none}
-                              #_{:render-style :line}
-                              #_{:line-color :green})}})
+                              {:line-color :green})}}
+               )
          (conj {}
                {:title
                 (str c/bot-name ": " country "; see /" cmd-s-about)
@@ -159,13 +161,15 @@
           "https://www.worldometers.info/coronavirus/coronavirus-cases/")
     ".\n")
 
-   (str
-    "\n"
-    "- Country *specific* information e.g.:\n"
-    "/fr    /fra      /France\n"
-    "/us    /usa    /UnitedStates   (without spaces)\n")
-   #_(link "Country codes"
-           "https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes")
+   (format
+    (str
+     "\n"
+     "- Country *specific* information using %s country codes & names. "
+     "Examples:\n"
+     "/fr    /fra      /France\n"
+     "/us    /usa    /UnitedStates   (without spaces)\n")
+    (link "ISO 3166"
+          "https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes"))
    ;; TODO home page; average recovery time
    #_(str
       "\n"
