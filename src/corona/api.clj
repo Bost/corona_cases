@@ -5,7 +5,9 @@
             [clojure.data.json :as json]
             [clojure.string :as s]
             [corona.core :refer [bot-ver read-number]]
-            [corona.csv :refer [calculate-ill]])
+            [corona.csv :refer [calculate-ill]]
+            [corona.countries :as cc]
+            [corona.core :as c])
   (:import java.text.SimpleDateFormat))
 
 (defmacro dbg [body]
@@ -49,7 +51,7 @@
 
 (defn left-pad [s] (.replaceAll (format "%2s" s) " " "0"))
 
-(defn affected-countries
+(defn affected-country-codes
   "Countries with some confirmed, deaths or recovered cases"
   []
   (->> [:confirmed :deaths :recovered]
@@ -60,7 +62,10 @@
        (reduce clojure.set/union)
        sort
        vec
-       #_(take 2)))
+       (into
+        (->> [c/country-code-worldwide c/country-code-others]
+             (reduce into)
+             (mapv (fn [[k v]] k))))))
 
 (defn raw-dates []
   (->> (raw-dates-unsorted)
@@ -82,7 +87,6 @@
 
 (defn sums-for-date [locations raw-date]
   (->> locations
-       #_(take-last 1)
        (map (fn [loc] (->> loc :history raw-date read-number)))
        (apply +)))
 
@@ -90,7 +94,6 @@
   (let [locations (->> (data-memo) case :locations
                        (filter pred))]
     (->> (raw-dates)
-         #_(take-last 1)
          (map (fn [raw-date] (sums-for-date locations raw-date))))))
 
 (defn get-counts [prm]

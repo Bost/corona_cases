@@ -44,19 +44,17 @@
 (defn fmt [s n total explanation]
   (format "%s: %s  ~ %s%%  %s\n" s n (get-percentage n total) explanation))
 
-;; TODO worldwide returns: /worldwide  /xx  /xxx - find proper unused country-codes
-(defn info-msg [{:keys [country] :as prm}]
+(defn info-msg [{:keys [country-code] :as prm}]
   (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day prm)
         closed (+ deaths recovered)]
     (str
      "*" (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                        (t/default-time-zone)) (tc/from-date day))
-     "* "
-     (apply (fn [c cc ccc] (format "%s  %s  %s" c cc ccc))
+     "* " (get c/is-3166-names country-code) " "
+     (apply (fn [cc ccc] (format "   %s   %s" cc ccc))
             (map (fn [s] (->> s s/lower-case (str "/")))
-                 [country
-                  (cc/country_code country)
-                  (get c/is-3166-abbrevs (cc/country_code country))]))
+                 [country-code
+                  (get c/is-3166-abbrevs country-code)]))
       "\n"
      s-confirmed ": " confirmed "\n"
      (fmt s-sick      ill       confirmed "")
@@ -74,7 +72,7 @@
 ;; they obey a stack discipline:
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
-(defn absolute-numbers-pic [{:keys [country] :as prm}]
+(defn absolute-numbers-pic [{:keys [country-code] :as prm}]
   (let [confirmed (a/confirmed prm)
         deaths    (a/deaths    prm)
         recovered (a/recovered prm)
@@ -111,7 +109,10 @@
                )
          (conj {}
                {:title
-                (str c/bot-name ": " country "; see /" cmd-s-about)
+                (format "%s: %s; see /%s"
+                        c/bot-name
+                        (get c/is-3166-names country-code)
+                        cmd-s-about)
                 :render-style :area
                 :legend {:position :inside-nw}
                 :x-axis {:title "Day"}
@@ -224,7 +225,7 @@
   (-> (get c/is-3166-names country-code)
       (s/replace " " "")))
 
-(defn cmds-country-code [country]
+(defn cmds-country-code [country-code]
   (->>
    [(fn [c] (->> c s/lower-case))  ;; /de
     (fn [c] (->> c s/upper-case))  ;; /DE
@@ -240,43 +241,55 @@
     ]
    (mapv
     (fn [fun]
-      {:name (fun country)
-       :f (fn [chat-id]
-            (if (in? (a/affected-countries) country)
-              (world-cmd-fn {:cmd-names cmd-names
-                             :chat-id chat-id
-                             :country (get c/is-3166-names country)
-                             :pred (fn [loc] (= country (:country_code loc)))})
-              (morse/send-text
-               c/token chat-id {:parse_mode "Markdown"
-                                :disable_web_page_preview true}
-               (str (get c/is-3166-names country) " not affected."))))}))))
+      {:name (fun country-code)
+       :f
+       (fn [chat-id]
+         (if (in? (a/affected-country-codes) country-code)
+           (world-cmd-fn {:cmd-names cmd-names
+                          :chat-id chat-id
+                          :country-code country-code
+                          :pred (fn [loc]
+                                  (condp = (s/upper-case country-code)
+                                    c/worldwide-2-country-code
+                                    true
+
+                                    c/default-2-country-code
+                                    ;; XX comes from the service
+                                    (= "XX" (:country_code loc))
+
+                                    (= country-code (:country_code loc))))})
+           (morse/send-text
+            c/token chat-id {:parse_mode "Markdown"
+                             :disable_web_page_preview true}
+            (str (get c/is-3166-names country-code) " " country-code " not affected."))))}))))
 
 (defn cmds-general []
   (let [prm {:cmd-names cmd-names
-             :pred (fn [_] true)}]
+             :pred (fn [_] true)}
+        prm-country-code {:country-code (cc/country_code "Worldwide")}]
     [
      {:name "snapshot"
-      :f (fn [chat-id] (snapshot-cmd-fn (conj prm {:chat-id chat-id})))
+      :f (fn [chat-id] (snapshot-cmd-fn (assoc prm :chat-id chat-id)))
       :desc
       "Get a snapshot of https://github.com/CSSEGISandData/COVID-19.git master branch"}
      {:name "world"
-      :f (fn [chat-id] (world-cmd-fn (conj prm {:chat-id chat-id
-                                               :country "Worldwide"})))
+      :f (fn [chat-id] (world-cmd-fn (-> (assoc prm :chat-id chat-id)
+                                        (conj prm-country-code))))
       :desc "Start here"}
      {:name "start"
-      :f (fn [chat-id] (world-cmd-fn (conj prm {:chat-id chat-id
-                                                :country "Worldwide"})))
+      :f (fn [chat-id] (world-cmd-fn (-> (assoc prm :chat-id chat-id)
+                                        (conj prm-country-code))))
       :desc "Start here"}
-     #_{:name "interpolate"
-        :f (fn [chat-id] (interpolate-cmd-fn
-                         (conj prm {:chat-id chat-id :country "Worldwide"})))
-        :desc "Smooth the data / leave out the noise"}
+     #_
+     {:name "interpolate"
+      :f (fn [chat-id] (interpolate-cmd-fn (-> (assoc prm :chat-id chat-id)
+                                              (conj prm-country-code))))
+      :desc "Smooth the data / leave out the noise"}
      {:name cmd-s-about
-      :f (fn [chat-id] (about-cmd-fn (conj prm {:chat-id chat-id})))
+      :f (fn [chat-id] (about-cmd-fn (assoc prm :chat-id chat-id)))
       :desc "Bot version & some additional info"}
      {:name "whattodo"
-      :f (fn [chat-id] (keepcalm-cmd-fn (conj prm {:chat-id chat-id})))
+      :f (fn [chat-id] (keepcalm-cmd-fn (assoc prm :chat-id chat-id)))
       :desc "Some personalized instructions"}]))
 
 (defn cmds []

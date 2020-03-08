@@ -52,8 +52,22 @@
     0
     (-> v fix-octal-val read-string)))
 
-(def xx-xxx {"XX" "XXX"})
-(def xx-others {"XX" "Others"})
+(def worldwide-2-country-code
+  "\"ZZ\" can be user-assigned."
+  "ZZ")
+(def worldwide-country-codes
+  "\"ZZZ\" can be user-assigned."
+  {worldwide-2-country-code "ZZZ"})
+
+(def default-2-country-code
+  "\"QQ\" can be user-assigned."
+  "QQ")
+(def default-country-codes
+  "\"QQQ\" can be user-assigned."
+  {default-2-country-code "QQQ"})
+
+(def country-code-worldwide {worldwide-2-country-code "Worldwide"})
+(def country-code-others {default-2-country-code "Others"})
 
 (def is-3166-abbrevs
   (conj
@@ -93,7 +107,8 @@
     "UG" "UGA" "UA" "UKR" "AE" "ARE" "GB" "GBR" "US" "USA" "UM" "UMI" "UY" "URY"
     "UZ" "UZB" "VU" "VUT" "VE" "VEN" "VN" "VNM" "VG" "VGB" "VI" "VIR" "WF" "WLF"
     "EH" "ESH" "YE" "YEM" "ZM" "ZMB" "ZW" "ZWE"}
-   xx-xxx))
+   default-country-codes
+   worldwide-country-codes))
 
 (def is-3166-names
   (conj
@@ -163,6 +178,7 @@
     Republic of" "VN" "Viet Nam" "VG" "Virgin Islands, British" "VI" "Virgin
     Islands, U.S." "WF" "Wallis and Futuna" "EH" "Western Sahara" "YE" "Yemen"
     "ZM" "Zambia" "ZW" "Zimbabwe"}
-   xx-others))
+   country-code-worldwide
+   country-code-others))
 
 (defn all-country-codes [] (keys is-3166-abbrevs))
