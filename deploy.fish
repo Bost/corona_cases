@@ -23,7 +23,12 @@ echo ""
 # if test $status = 0
 #     git commit -m "Add new csv file(s)"
 # end
-
+wget https://github.com/CSSEGISandData/COVID-19/archive/master.zip \
+    -O resources/COVID-19/master.zip; and \
+git resources/COVID-19/master.zip;
+if test $status = 0
+    git commit -m "Add COVID-19 repo snapshot"
+end
 # heroku logs --tail --app $APP blocks the execution
 heroku addons:open papertrail --app $APP; and \
 heroku ps:scale web=0 --app $APP; and \

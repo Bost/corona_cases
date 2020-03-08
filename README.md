@@ -30,3 +30,4 @@ Using fish-shell: see [deploy.fish](./deploy.fish).
 - Use buttons instead of `/<command-name>`
 - Don't panic - compare data: Corona vs. Flu vs. World population
 - Improve user experience - show only interpolated graphs
+- Include https://github.com/CSSEGISandData/COVID-19 snapshot
