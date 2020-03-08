@@ -26,7 +26,7 @@
 (defn msg-footer [{:keys [cmd-names]}]
   (let [spacer "   "]
     (str "\n"
-         "Try:" spacer (s/join spacer (map #(str "/" %) cmd-names)))))
+         "Try" spacer (s/join spacer (map #(str "/" %) cmd-names)))))
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -50,7 +50,7 @@
     (str
      "*" (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                        (t/default-time-zone)) (tc/from-date day))
-     "* " (get c/is-3166-names country-code) " "
+     "*    " (get c/is-3166-names country-code) " "
      (apply (fn [cc ccc] (format "   %s   %s" cc ccc))
             (map (fn [s] (->> s s/lower-case (str "/")))
                  [country-code
@@ -217,7 +217,8 @@
    {:disable_web_page_preview false}
    "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
 
-(def cmd-names ["world" #_"interpolate" cmd-s-about "whattodo" "<country>"])
+(def cmd-names ["world" #_"interpolate" cmd-s-about "whattodo" "<country>"
+                "contributors"])
 
 (defn normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
@@ -263,11 +264,29 @@
                              :disable_web_page_preview true}
             (str (get c/is-3166-names country-code) " " country-code " not affected."))))}))))
 
+(defn contributors-cmd-fn [{:keys [chat-id] :as prm}]
+  (morse/send-text
+   c/token chat-id {:parse_mode "Markdown"
+                    :disable_web_page_preview true}
+   (str
+    (format "%s\n\n%s\n%s\n"
+            (s/join "\n" ["@DerAnweiser" (link "maty535" "https://github.com/maty535")
+                          "@kostanjsek"])
+            (str
+             "The rest of the contributors prefer anonymity or haven't approved "
+             "their inclusion to this list yet.\n")
+            "🙏 Thanks you folks.")
+    (msg-footer prm))))
+
 (defn cmds-general []
   (let [prm {:cmd-names cmd-names
              :pred (fn [_] true)}
         prm-country-code {:country-code (cc/country_code "Worldwide")}]
     [
+     {:name "contributors"
+      :f (fn [chat-id] (contributors-cmd-fn (assoc prm :chat-id chat-id)))
+      :desc "Give credit where credit is due"}
+
      {:name "snapshot"
       :f (fn [chat-id] (snapshot-cmd-fn (assoc prm :chat-id chat-id)))
       :desc
