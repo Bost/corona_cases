@@ -25,7 +25,7 @@ echo ""
 # end
 wget https://github.com/CSSEGISandData/COVID-19/archive/master.zip \
     -O resources/COVID-19/master.zip; and \
-git resources/COVID-19/master.zip;
+git add resources/COVID-19/master.zip
 if test $status = 0
     git commit -m "Add COVID-19 repo snapshot"
 end

@@ -124,6 +124,15 @@
 (defn interpolated-vals [prm] (a/ill prm))
 (def interpolated-name s-sick)
 
+(defn snapshot-cmd-fn [{:keys [chat-id] :as prm}]
+  (morse/send-text
+   c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
+   "I'm sending you ~40MB file. Patience please...")
+  (morse/send-document
+   c/token chat-id
+   #_{:caption "https://github.com/CSSEGISandData/COVID-19/archive/master.zip"}
+   (io/input-stream "resources/COVID-19/master.zip")))
+
 (defn interpolate-cmd-fn [{:keys [chat-id country] :as prm}]
   (as-> (str c/bot-name ": " country
              " interpolation - " interpolated-name "; see /"
@@ -161,6 +170,9 @@
           "https://www.worldometers.info/coronavirus/coronavirus-cases/")
     ".\n")
 
+   (format "- Snapshot of %s master branch  /snapshot\n"
+           (link "CSSEGISandData/COVID-19" "https://github.com/CSSEGISandData/COVID-19.git"))
+
    (format
     (str
      "\n"
@@ -170,6 +182,7 @@
      "/us    /usa    /UnitedStates   (without spaces)\n")
     (link "ISO 3166"
           "https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes"))
+
    ;; TODO home page; average recovery time
    #_(str
       "\n"
@@ -235,13 +248,17 @@
   (let [prm {:cmd-names cmd-names
              :pred (fn [_] true)}]
     [
-     {:name "start"
-      :f (fn [chat-id] (world-cmd-fn (conj prm {:chat-id chat-id
-                                                :country "Worldwide"})))
-      :desc "Start here"}
+     {:name "snapshot"
+      :f (fn [chat-id] (snapshot-cmd-fn (conj prm {:chat-id chat-id})))
+      :desc
+      "Get a snapshot of https://github.com/CSSEGISandData/COVID-19.git master branch"}
      {:name "world"
       :f (fn [chat-id] (world-cmd-fn (conj prm {:chat-id chat-id
                                                :country "Worldwide"})))
+      :desc "Start here"}
+     {:name "start"
+      :f (fn [chat-id] (world-cmd-fn (conj prm {:chat-id chat-id
+                                                :country "Worldwide"})))
       :desc "Start here"}
      #_{:name "interpolate"
         :f (fn [chat-id] (interpolate-cmd-fn
@@ -265,7 +282,12 @@
   "Coronavirus disease 2019 (COVID-19) information on Telegram Messenger")
 
 (defn bot-father-edit-cmds []
-  (map (fn [{:keys [name desc]}] (println name "-" desc))
-       (cmds-general)))
+  (->> (cmds-general)
+       (remove (fn [hm] (= "start" (:name hm))))
+       (sort-by :name)
+       (reverse)
+       (map (fn [{:keys [name desc]}] (println name "-" desc)))
+       doall))
+
 (defn bot-father-edit-description [] bot-description)
 (defn bot-father-edit-about [] bot-description)
