@@ -3,6 +3,11 @@
             [clojure.string :as s]
             [clojure.java.io :as io]))
 
+(defmacro dbg [body]
+  `(let [x# ~body]
+     (println "dbg:" '~body "=" x#)
+     x#))
+
 (defn in?
   "true if seq contains elm"
   [seq elm]
@@ -182,3 +187,5 @@
    country-code-others))
 
 (defn all-country-codes [] (keys is-3166-abbrevs))
+
+(defn encode-cmd [s] (str "/" s))

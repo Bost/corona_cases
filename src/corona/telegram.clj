@@ -4,45 +4,33 @@
             [clojure.core.async :as async :refer [<!!]]
             [clojure.string :as s]
             [clojure.tools.logging :as log]
-            [corona.core :refer [bot-type bot-ver token]]
-            [corona.messages :as m]
+            [corona.core :refer [bot-type bot-ver token dbg]]
+            [corona.commands :as cmds]
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
             [morse.polling-patch :as p-patch]))
 
-#_(log/info "Telegram Chatbot:" bot)
-
-(defmacro dbg [body]
-  `(let [x# ~body]
-     (println "dbg:" '~body "=" x#)
-     x#))
-
 (def chats (atom #{}))
 
-(defn register-cmd [{:keys [name f] :as prm}]
-  (h/command-fn
-   name
-   (fn [{{chat-id :id :as chat} :chat}]
-     #_(when (= cmd "start")
-         (swap! chats clojure.set/union #{chat})
-         (->> @chats
-              prn-str
-              (spit "chats.edn")))
-     (let [tbeg (te/tnow)]
-       (println (str "[" tbeg "           " " " bot-ver " /" name "]") chat)
-       (f chat-id)
-       (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" name  "]") chat)))))
-
 ;; long polling
-;; (as-> ...) creates
-;; (h/defhandler handler
-;;   (register-cmd "start"   (fn [chat-id] ...))
-;;   (register-cmd "world" (fn [chat-id] ...))
-;;   ...)
-(def handler (->> (m/cmds)
-                  (mapv register-cmd)
-                  (apply h/handlers)))
+(def handler
+  (->> (cmds/cmds)
+       ;; TODO use monad for logging
+       (mapv (fn [{:keys [name f] :as prm}]
+               (h/command-fn
+                name
+                (fn [{{chat-id :id :as chat} :chat}]
+                  #_(when (= cmd "start")
+                      (swap! chats clojure.set/union #{chat})
+                      (->> @chats
+                           prn-str
+                           (spit "chats.edn")))
+                  (let [tbeg (te/tnow)]
+                    (println (str "[" tbeg "           " " " bot-ver " /" name "]") chat)
+                    (f chat-id)
+                    (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" name  "]") chat))))))
+       (apply h/handlers)))
 
 (defn start-polling
   "Starts long-polling process.
@@ -59,8 +47,7 @@
      (p/create-consumer updates handler)
      running)))
 
-(defn -main
-  [& args]
+(defn -main [& args]
   (log/info (str "[" (te/tnow) " " bot-ver "]")
             (str "Starting " bot-type " Telegram Chatbot..."))
   (let [blank-prms (filter #(-> % env s/blank?) [:telegram-token])]

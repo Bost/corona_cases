@@ -4,16 +4,11 @@
             [clojure.core.memoize :as memo]
             [clojure.data.json :as json]
             [clojure.string :as s]
-            [corona.core :refer [bot-ver read-number]]
+            [corona.core :refer [bot-ver read-number dbg]]
             [corona.csv :refer [calculate-ill]]
             [corona.countries :as cc]
             [corona.core :as c])
   (:import java.text.SimpleDateFormat))
-
-(defmacro dbg [body]
-  `(let [x# ~body]
-     (println "dbg:" '~body "=" x#)
-     x#))
 
 (def web-service
   {:host "coronavirus-tracker-api.herokuapp.com" :route "/all"})
@@ -25,6 +20,7 @@
   (str "https://" host (:route api-service)))
 
 (defn get-data [url]
+  ;; TODO use monad for logging
   (let [tbeg (te/tnow)]
     (println (str "[" tbeg "           " " " bot-ver " /" "get-data: " url "]"))
     (let [r (as-> url $
