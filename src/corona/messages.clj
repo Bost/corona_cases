@@ -235,6 +235,10 @@
   (let [prm {:cmd-names cmd-names
              :pred (fn [_] true)}]
     [
+     {:name "start"
+      :f (fn [chat-id] (world-cmd-fn (conj prm {:chat-id chat-id
+                                                :country "Worldwide"})))
+      :desc "Start here"}
      {:name "world"
       :f (fn [chat-id] (world-cmd-fn (conj prm {:chat-id chat-id
                                                :country "Worldwide"})))
