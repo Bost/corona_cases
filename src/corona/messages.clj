@@ -23,10 +23,11 @@
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
 
+(defn encode-cmd [s] (str "/" s))
+
 (defn msg-footer [{:keys [cmd-names]}]
   (let [spacer "   "]
-    (str "\n"
-         "Try" spacer (s/join spacer (map #(str "/" %) cmd-names)))))
+    (str "Try" spacer (s/join spacer (map encode-cmd cmd-names)))))
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -44,28 +45,46 @@
 (defn fmt [s n total explanation]
   (format "%s: %s  ~ %s%%  %s\n" s n (get-percentage n total) explanation))
 
-(defn info-msg [{:keys [country-code] :as prm}]
-  (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day prm)
-        closed (+ deaths recovered)]
-    (str
-     "*" (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
-                       (t/default-time-zone)) (tc/from-date day))
-     "*    " (get c/is-3166-names country-code) " "
-     (apply (fn [cc ccc] (format "   %s   %s" cc ccc))
-            (map (fn [s] (->> s s/lower-case (str "/")))
-                 [country-code
-                  (get c/is-3166-abbrevs country-code)]))
-      "\n"
-     s-confirmed ": " confirmed "\n"
-     (fmt s-sick      ill       confirmed "")
-     (fmt s-recovered recovered confirmed "")
-     (fmt s-deaths    deaths    confirmed "")
-     (fmt s-closed    closed    confirmed (format "= %s + %s"
-                                                  (s/lower-case s-recovered)
-                                                  (s/lower-case s-deaths)))
-     (msg-footer prm))))
+(defn cmds-for-country-code [country-code]
+  (apply (fn [cc ccc] (format "       %s      %s" cc ccc))
+         (map (fn [s] (->> s s/lower-case encode-cmd))
+              [country-code
+               (get c/is-3166-abbrevs country-code)])))
+
+(def ref-mortality
+  "https://www.worldometers.info/coronavirus/coronavirus-death-rate/")
 
 (defn link [name url] (str "[" name "]""(" url ")"))
+
+(defn info-msg [{:keys [country-code] :as prm}]
+  (let [last-day (a/last-day prm)
+        {day :f} last-day]
+    (format
+     "%s\n%s\n%s"
+     (str
+      "*" (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
+                        (t/default-time-zone)) (tc/from-date day))
+      "*    " (get c/is-3166-names country-code) " "
+      (cmds-for-country-code country-code))
+
+     (let [{confirmed :c} last-day]
+       (str
+        s-confirmed ": " confirmed "\n"
+        (if (pos? confirmed)
+          #_(in? (a/affected-country-codes) country-code)
+          (let [{deaths :d recovered :r ill :i} last-day
+                closed (+ deaths recovered)]
+            (str
+             (fmt s-sick      ill       confirmed "")
+             (fmt s-recovered recovered confirmed "")
+             (fmt s-deaths    deaths    confirmed
+                  (str "    See " (link "mortality Rate" ref-mortality)))
+             (fmt s-closed    closed    confirmed
+                  (format "= %s + %s"
+                          (s/lower-case s-recovered)
+                          (s/lower-case s-deaths))))))))
+
+     (msg-footer prm))))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread
@@ -124,11 +143,12 @@
         #_(chart/view)
         (chart/to-bytes :png))))
 
-(defn world-cmd-fn [{:keys [chat-id] :as prm}]
+(defn world-cmd-fn [{:keys [chat-id country-code] :as prm}]
   (morse/send-text
    c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
    (info-msg prm))
-  (morse/send-photo c/token chat-id (absolute-numbers-pic prm)))
+  (if (in? (a/affected-country-codes) country-code)
+    (morse/send-photo c/token chat-id (absolute-numbers-pic prm))))
 
 (defn interpolated-vals [prm] (a/ill prm))
 (def interpolated-name s-sick)
@@ -180,7 +200,8 @@
     ".\n")
 
    (format "- Snapshot of %s master branch  /snapshot\n"
-           (link "CSSEGISandData/COVID-19" "https://github.com/CSSEGISandData/COVID-19.git"))
+           (link "CSSEGISandData/COVID-19"
+                 "https://github.com/CSSEGISandData/COVID-19.git"))
 
    (format
     (str
@@ -188,7 +209,7 @@
      "- Country *specific* information using %s country codes & names. "
      "Examples:\n"
      "/fr    /fra      /France\n"
-     "/us    /usa    /UnitedStates   (without spaces)\n")
+     "/us    /usa    /UnitedStates   (without spaces)\n\n")
     (link "ISO 3166"
           "https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes"))
 
@@ -211,11 +232,7 @@
 
 (defn keepcalm-cmd-fn [{:keys [chat-id]}]
   (morse/send-photo
-   c/token chat-id (io/input-stream "resources/pics/keepcalm.jpg"))
-  #_(morse/send-text
-   token chat-id
-   {:disable_web_page_preview false}
-   "https://i.dailymail.co.uk/1s/2020/03/03/23/25501886-8071359-image-a-20_1583277118353.jpg"))
+   c/token chat-id (io/input-stream "resources/pics/keepcalm.jpg")))
 
 (def cmd-names ["world" #_"interpolate" cmd-s-about "whattodo" "<country>"
                 "contributors"])
@@ -245,38 +262,32 @@
       {:name (fun country-code)
        :f
        (fn [chat-id]
-         (if (in? (a/affected-country-codes) country-code)
-           (world-cmd-fn {:cmd-names cmd-names
-                          :chat-id chat-id
-                          :country-code country-code
-                          :pred (fn [loc]
-                                  (condp = (s/upper-case country-code)
-                                    c/worldwide-2-country-code
-                                    true
+         (world-cmd-fn {:cmd-names cmd-names
+                        :chat-id chat-id
+                        :country-code country-code
+                        :pred (fn [loc]
+                                (condp = (s/upper-case country-code)
+                                  c/worldwide-2-country-code
+                                  true
 
-                                    c/default-2-country-code
-                                    ;; XX comes from the service
-                                    (= "XX" (:country_code loc))
+                                  c/default-2-country-code
+                                  ;; XX comes from the service
+                                  (= "XX" (:country_code loc))
 
-                                    (= country-code (:country_code loc))))})
-           (morse/send-text
-            c/token chat-id {:parse_mode "Markdown"
-                             :disable_web_page_preview true}
-            (str (get c/is-3166-names country-code) " " country-code " not affected."))))}))))
+                                  (= country-code (:country_code loc))))}))}))))
 
 (defn contributors-cmd-fn [{:keys [chat-id] :as prm}]
   (morse/send-text
    c/token chat-id {:parse_mode "Markdown"
                     :disable_web_page_preview true}
-   (str
-    (format "%s\n\n%s\n%s\n"
-            (s/join "\n" ["@DerAnweiser" (link "maty535" "https://github.com/maty535")
-                          "@kostanjsek"])
-            (str
-             "The rest of the contributors prefer anonymity or haven't approved "
-             "their inclusion to this list yet.\n")
-            "🙏 Thanks you folks.")
-    (msg-footer prm))))
+   (format "%s\n\n%s\n\n%s"
+           (s/join "\n" ["@DerAnweiser"
+                         (link "maty535" "https://github.com/maty535")
+                         "@kostanjsek"])
+           (str
+            "The rest of the contributors prefer anonymity or haven't "
+            "approved their inclusion to this list yet. 🙏 Thanks you folks.")
+           (msg-footer prm))))
 
 (defn cmds-general []
   (let [prm {:cmd-names cmd-names
