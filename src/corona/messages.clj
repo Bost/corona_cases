@@ -6,6 +6,7 @@
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
             [corona.api :as a]
+            [corona.countries :as cc]
             [corona.core :as c :refer [in?]]
             [corona.interpolate :as i]
             [morse.api :as morse]))
@@ -43,13 +44,20 @@
 (defn fmt [s n total explanation]
   (format "%s: %s  ~ %s%%  %s\n" s n (get-percentage n total) explanation))
 
+;; TODO worldwide returns: /worldwide  /xx  /xxx - find proper unused country-codes
 (defn info-msg [{:keys [country] :as prm}]
   (let [{day :f confirmed :c deaths :d recovered :r ill :i} (a/last-day prm)
         closed (+ deaths recovered)]
     (str
      "*" (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                        (t/default-time-zone)) (tc/from-date day))
-     "* " country "\n"
+     "* "
+     (apply (fn [c cc ccc] (format "%s  %s  %s" c cc ccc))
+            (map (fn [s] (->> s s/lower-case (str "/")))
+                 [country
+                  (cc/country_code country)
+                  (get c/is-3166-abbrevs (cc/country_code country))]))
+      "\n"
      s-confirmed ": " confirmed "\n"
      (fmt s-sick      ill       confirmed "")
      (fmt s-recovered recovered confirmed "")
