@@ -494,14 +494,13 @@
    ["Niue"                     1626 0.68 11 6 260 nil nil 46 0.0]
    ["Tokelau"                  1357 1.27 17 136 10 nil nil 0 0.0]
    ["Holy See"                 801 0.25 2 2003 0 nil nil nil 0.0]
-   ]
-  )
+   ])
 
 (def default_code "XX")
 
- ;; Mapping of country names to alpha-2 codes.
 (def is_3166_1
-  "https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
+  "Mapping of country names to alpha-2 codes.
+  https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
   {
    "Afghanistan"                                  "AF"
    "Åland Islands"                                "AX"
@@ -754,9 +753,9 @@
    "Zimbabwe"                                     "ZW"
    })
 
-;; Mapping of alternative names, spelling, typos to the names of countries used
-;; by the ISO 3166-1 norm
 (def synonyms
+  "Mapping of alternative names, spelling, typos to the names of countries used by
+  the ISO 3166-1 norm."
   {
    "Mainland China"   "China"
    "Czechia"          "Czech Republic"
@@ -806,8 +805,6 @@
    })
 
 (defn country_code
-(defn country_code
-(defn country_code
   "Return two letter country code (Alpha-2) according to
   https://en.wikipedia.org/wiki/ISO_3166-1
   Defaults to \"XX\"."
@@ -821,4 +818,4 @@
         (println (str
                   "No country code found for '" country "'. Using '"
                   default_code "'"))
-        default_code)))
+        default_code))))
