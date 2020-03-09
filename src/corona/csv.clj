@@ -83,7 +83,7 @@
 
 (def url "https://github.com/CSSEGISandData/COVID-19")
 
-(defn affected-country-codes
+(defn all-affected-country-codes
   []
   (->> csv-files
        #_(take 2)

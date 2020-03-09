@@ -6,7 +6,9 @@
             [com.hypirion.clj-xchart :as chart]
             [corona.api :as data]
             [corona.interpolate :as i]
-            [corona.core :as c]))
+            [corona.tables :as tab]
+            [corona.countries :as co]
+            [corona.core :as c :refer [in?]]))
 
 (def cmd-s-about "about")
 (def s-confirmed "Confirmed")
@@ -19,7 +21,36 @@
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
 
-(defn affected-country-codes [] (data/affected-country-codes))
+(def options {:parse_mode "Markdown" :disable_web_page_preview true})
+
+(defn encode-cmd [s] (str "/" s))
+(defn encode-pseudo-cmd [s parse_mode]
+  (if (= parse_mode "HTML")
+    (let [s (s/replace s "<" "&lt;")
+          s (s/replace s ">" "&gt;")]
+      s)
+    s))
+
+(defn all-affected-country-codes [] (data/all-affected-country-codes))
+
+(defn affected-country-codes [continent-code]
+  (->> (data/all-affected-country-codes)
+       (filter (fn [country-code]
+                 (in? (tab/country-codes-of-continent continent-code)
+                      country-code)))
+       (into #{})))
+
+(defn all-affected-continent-codes []
+  ;; Can't really use the first implementation. See the doc of `tab/regions`
+  (->> (all-affected-country-codes)
+       (map (fn [acc]
+              (->> tab/continent-countries-map
+                   (filter (fn [[continent-code county-code]]
+                             (= acc county-code))))))
+       (remove empty?)
+       (reduce into [])
+       (map (fn [[continent-code &rest]] continent-code))
+       (into #{})))
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -42,16 +73,59 @@
 
 (defn link [name url] (str "[" name "]""(" url ")"))
 
-(defn footer [{:keys [cmd-names]}]
+(defn footer [{:keys [cmd-names parse_mode]}]
   (let [spacer "   "]
-    (str "Try" spacer (s/join spacer (map c/encode-cmd cmd-names)))))
+    (str "Try" spacer (->> cmd-names
+                           (map encode-cmd)
+                           (map (fn [cmd] (encode-pseudo-cmd cmd parse_mode)))
+                           (s/join spacer)))))
 
-(defn list-countries [{:keys [] :as prm}]
+(def max-country-name-len
+  (->> (all-affected-country-codes)
+       (map (fn [cc] (c/country-name cc)))
+       (sort-by count)
+       last
+       count))
+
+(def max-continent-name-len
+  (->> (all-affected-continent-codes)
+       (map (fn [cc] (co/continent-name cc)))
+       (sort-by count)
+       last
+       count))
+
+(defn list-continents [{:keys [] :as prm}]
   (format
-   "%s\n%s"
-   (s/join "\n" (affected-country-codes))
-
+   "Continent(s) hit:\n\n%s\n\n%s"
+   ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
+   (s/join "\n"
+           (->> (all-affected-continent-codes)
+                (map (fn [cc] (format "<code style=\"color:red;\">%s  </code>%s"
+                                     (c/right-pad (co/continent-name cc)
+                                                  max-continent-name-len)
+                                      (->> cc
+                                           encode-cmd
+                                           s/lower-case))))))
    (footer prm)))
+
+(defn list-c-countries [{:keys [continent-code] :as prm}]
+  (format
+   "% Country/-ies hit:\n\n%s\n\n%s"
+   ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
+   (co/continent-name continent-code)
+   (s/join "\n"
+           (->>
+            (affected-country-codes continent-code)
+            (map (fn [cc] (format "<code style=\"color:red;\">%s</code> %s"
+                                 (c/right-pad (c/country-name cc)
+                                              (/ max-country-name-len 2))
+                                 (->> cc
+                                      encode-cmd
+                                      s/lower-case))))
+            (partition 1)
+            (map (fn [part] (s/join " " part)))))
+   (footer prm)))
+
 
 (defn info [{:keys [country-code] :as prm}]
   (let [last-day (data/last-day prm)
@@ -61,11 +135,11 @@
      (str
       "*" (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                         (t/default-time-zone)) (tc/from-date day))
-      "*    " (get c/is-3166-names country-code) " "
+      "*    " (c/country-name country-code) " "
       (apply (fn [cc ccc] (format "       %s      %s" cc ccc))
-             (map (fn [s] (->> s s/lower-case c/encode-cmd))
+             (map (fn [s] (->> s s/lower-case encode-cmd))
                   [country-code
-                   (get c/is-3166-abbrevs country-code)])))
+                   (c/country-code-3-letter country-code)])))
 
      (let [{confirmed :c} last-day]
        (str
@@ -128,10 +202,10 @@
                )
          (conj {}
                {:title
-                (format "%s: %s; see /%s"
+                (format "%s: %s; see %s"
                         c/bot-name
-                        (get c/is-3166-names country-code)
-                        cmd-s-about)
+                        (c/country-name country-code)
+                        (encode-cmd cmd-s-about))
                 :render-style :area
                 :legend {:position :inside-nw}
                 :x-axis {:title "Day"}

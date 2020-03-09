@@ -76,7 +76,8 @@
 (def country-code-worldwide {worldwide-2-country-code "Worldwide"})
 (def country-code-others {default-2-country-code "Others"})
 
-(def is-3166-abbrevs
+(def country-code-2-to-3-hm
+  "Mapping of country codes 2 -> 3 letters"
   (conj
    {"AF" "AFG" "AX" "ALA" "AL" "ALB" "DZ" "DZA" "AS" "ASM" "AD" "AND" "AO" "AGO"
     "AI" "AIA" "AQ" "ATA" "AG" "ATG" "AR" "ARG" "AM" "ARM" "AW" "ABW" "AU" "AUS"
@@ -117,6 +118,10 @@
    default-country-codes
    worldwide-country-codes))
 
+(defn country-code-3-letter
+  "3-letter country code from 2-letter country code: \"DE\" -> \"DEU\" "
+  [cc] (get country-code-2-to-3-hm cc))
+
 (def is-3166-names
   (conj
    {"AF" "Afghanistan" "AX" "Åland Islands" "AL" "Albania" "DZ" "Algeria" "AS"
@@ -137,14 +142,15 @@
     "Cuba" "CW" "Curaçao" "CY" "Cyprus" "CZ" "Czech Republic" "DK" "Denmark"
     "DJ" "Djibouti" "DM" "Dominica" "DO" "Dominican Republic" "EC" "Ecuador"
     "EG" "Egypt" "SV" "El Salvador" "GQ" "Equatorial Guinea" "ER" "Eritrea" "EE"
-    "Estonia" "ET" "Ethiopia" "FK" "Falkland Islands (Malvinas)" "FO" "Faroe
-    Islands" "FJ" "Fiji" "FI" "Finland" "FR" "France" "GF" "French Guiana" "PF"
+    "Estonia" "ET" "Ethiopia" "FK" "Falkland Islands (Malvinas)"
+    "FO" "Faroe Islands" "FJ" "Fiji" "FI" "Finland" "FR" "France" "GF" "French Guiana" "PF"
     "French Polynesia" "TF" "French Southern Territories" "GA" "Gabon" "GM"
     "Gambia" "GE" "Georgia" "DE" "Germany" "GH" "Ghana" "GI" "Gibraltar" "GR"
     "Greece" "GL" "Greenland" "GD" "Grenada" "GP" "Guadeloupe" "GU" "Guam" "GT"
     "Guatemala" "GG" "Guernsey" "GN" "Guinea" "GW" "Guinea-Bissau" "GY" "Guyana"
-    "HT" "Haiti" "HM" "Heard Island and McDonald Islands" "VA" "Holy See
-    (Vatican City State)" "HN" "Honduras" "HK" "Hong Kong" "HU" "Hungary" "IS"
+    "HT" "Haiti" "HM" "Heard Island and McDonald Islands"
+    "VA" "Holy See (Vatican City State)"
+    "HN" "Honduras" "HK" "Hong Kong" "HU" "Hungary" "IS"
     "Iceland" "IN" "India" "ID" "Indonesia" "IR" "Iran, Islamic Republic of"
     "IQ" "Iraq" "IE" "Ireland" "IM" "Isle of Man" "IL" "Israel" "IT" "Italy"
     "JM" "Jamaica" "JP" "Japan" "JE" "Jersey" "JO" "Jordan" "KZ" "Kazakhstan"
@@ -158,8 +164,8 @@
     "Mayotte" "MX" "Mexico" "FM" "Micronesia, Federated States of" "MD"
     "Moldova, Republic of" "MC" "Monaco" "MN" "Mongolia" "ME" "Montenegro" "MS"
     "Montserrat" "MA" "Morocco" "MZ" "Mozambique" "MM" "Myanmar" "NA" "Namibia"
-    "NR" "Nauru" "NP" "Nepal" "NL" "Netherlands" "NC" "New Caledonia" "NZ" "New
-    Zealand" "NI" "Nicaragua" "NE" "Niger" "NG" "Nigeria" "NU" "Niue" "NF"
+    "NR" "Nauru" "NP" "Nepal" "NL" "Netherlands" "NC" "New Caledonia"
+    "NZ" "New Zealand" "NI" "Nicaragua" "NE" "Niger" "NG" "Nigeria" "NU" "Niue" "NF"
     "Norfolk Island" "MP" "Northern Mariana Islands" "NO" "Norway" "OM" "Oman"
     "PK" "Pakistan" "PW" "Palau" "PS" "Palestine, State of" "PA" "Panama" "PG"
     "Papua New Guinea" "PY" "Paraguay" "PE" "Peru" "PH" "Philippines" "PN"
@@ -168,8 +174,8 @@
     "Saint Barthélemy" "SH" "Saint Helena, Ascension and Tristan da Cunha" "KN"
     "Saint Kitts and Nevis" "LC" "Saint Lucia" "MF" "Saint Martin (French part)"
     "PM" "Saint Pierre and Miquelon" "VC" "Saint Vincent and the Grenadines"
-    "WS" "Samoa" "SM" "San Marino" "ST" "Sao Tome and Principe" "SA" "Saudi
-    Arabia" "SN" "Senegal" "RS" "Serbia" "SC" "Seychelles" "SL" "Sierra Leone"
+    "WS" "Samoa" "SM" "San Marino" "ST" "Sao Tome and Principe"
+    "SA" "Saudi Arabia" "SN" "Senegal" "RS" "Serbia" "SC" "Seychelles" "SL" "Sierra Leone"
     "SG" "Singapore" "SX" "Sint Maarten (Dutch part)" "SK" "Slovakia" "SI"
     "Slovenia" "SB" "Solomon Islands" "SO" "Somalia" "ZA" "South Africa" "GS"
     "South Georgia and the South Sandwich Islands" "SS" "South Sudan" "ES"
@@ -179,8 +185,8 @@
     United Republic of" "TH" "Thailand" "TL" "Timor-Leste" "TG" "Togo" "TK"
     "Tokelau" "TO" "Tonga" "TT" "Trinidad and Tobago" "TN" "Tunisia" "TR"
     "Turkey" "TM" "Turkmenistan" "TC" "Turks and Caicos Islands" "TV" "Tuvalu"
-    "UG" "Uganda" "UA" "Ukraine" "AE" "United Arab Emirates" "GB" "United
-    Kingdom" "US" "United States" "UM" "United States Minor Outlying Islands"
+    "UG" "Uganda" "UA" "Ukraine" "AE" "United Arab Emirates"
+    "GB" "United Kingdom" "US" "United States" "UM" "United States Minor Outlying Islands"
     "UY" "Uruguay" "UZ" "Uzbekistan" "VU" "Vanuatu" "VE" "Venezuela, Bolivarian
     Republic of" "VN" "Viet Nam" "VG" "Virgin Islands, British" "VI" "Virgin
     Islands, U.S." "WF" "Wallis and Futuna" "EH" "Western Sahara" "YE" "Yemen"
@@ -188,11 +194,25 @@
    country-code-worldwide
    country-code-others))
 
-(defn all-country-codes [] (keys is-3166-abbrevs))
+(defn country-name
+  "Country name from 2-letter country code: \"DE\" -> \"Germany\" "
+  [cc] (get is-3166-names cc))
 
-(defn encode-cmd [s] (str "/" s))
+(defn all-country-codes [] (keys country-code-2-to-3-hm))
 
 (def default-affected-country-codes
   (->> [country-code-worldwide country-code-others]
        (reduce into)
        (mapv (fn [[k v]] k))))
+
+(defn left-pad [s padding-len]
+  (s/replace (format (str "%" padding-len "s") s) " " "0"))
+
+#_
+(defn left-pad [s padding-len]
+  (str (s/join (repeat (- padding-len (count s)) " "))
+       s))
+
+(defn right-pad [s padding-len]
+  (str s
+       (s/join (repeat (- padding-len (count s)) " "))))

@@ -4,7 +4,32 @@
    [corona.core :as c :refer [in?]]
    [clojure.string :as s]))
 
-(def country-country-code
+(def continent-continent-code-hm
+  {"Africa" "AF"
+   "North America" "NA"
+   "Oceania" "OC"
+   "Antarctica" "AN"
+   "Asia" "AS"
+   "Europe" "EU"
+   "South America" "SA"}
+  ;; (clojure.set/map-invert continent-continent-code-hm)
+  ;; {
+  ;;  "AF" "Africa"
+  ;;  "NA" "North America"
+  ;;  "OC" "Oceania"
+  ;;  "AN" "Antarctica"
+  ;;  "AS" "Asia"
+  ;;  "EU" "Europe"
+  ;;  "SA" "South America"
+  ;;  }
+  )
+
+(defn continent-code [continent]
+  (get continent-continent-code-hm continent))
+(defn continent-name [continent-code]
+  (get (clojure.set/map-invert continent-continent-code-hm) continent-code))
+
+(def country-country-code-hm
   "Mapping of country names to alpha-2 codes.
   https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
   (reduce
@@ -264,7 +289,18 @@
 
 (def synonyms
   "Mapping of alternative names, spelling, typos to the names of countries used by
-  the ISO 3166-1 norm."
+  the ISO 3166-1 norm.
+
+  Conjoin \"North Ireland\" on \"United Kingdom\".
+
+  https://en.wikipedia.org/wiki/Channel_Islands
+  \"Guernsey\" and \"Jersey\" form \"Channel Islands\". Conjoin \"Guernsey\" on \"Jersey\".
+  \"Jersey\" has higher population.
+
+  \"Others\" has no mapping.
+
+  TODO \"Macau\" is probably just misspelled \"Macao\". Report it to CSSEGISandData/COVID-19.
+  "
   {
    "World"           (->> c/country-code-worldwide vals first)
    "Czechia"          "Czech Republic"
@@ -272,7 +308,10 @@
    "South Korea"      "Korea, Republic of"
    "Taiwan"           "Taiwan, Province of China"
    "US"               "United States"
-   "Macau"            "Macao"                       ;; TODO Macau is probably a typo. Report it to CSSEGISandData/COVID-19
+
+   ;; TODO Macau is probably just misspelled Macao. Report it to CSSEGISandData/COVID-19
+   "Macau"            "Macao"
+
    "Vietnam"          "Viet Nam"
    "UK"               "United Kingdom"
    "Russia"           "Russian Federation"
@@ -309,13 +348,23 @@
    "Falkland Islands"         "Falkland Islands (Malvinas)"
    "Holy See"                 "Holy See (Vatican City State)"
    "Republic of Ireland"      "Ireland"
-   " Azerbaijan"              "Azerbaijan"
    "Ivory Coast"              "Côte d'Ivoire"
 
-   ;; effectively including North Ireland into United Kingdom
+   ;; Conjoin North Ireland on United Kingdom
    "North Ireland"            "United Kingdom"
-   ;; "Channel Islands" ;; https://en.wikipedia.org/wiki/Channel_Islands
-   ;; "Caribbean Netherlands" ;; https://en.wikipedia.org/wiki/Caribbean_Netherlands
+
+   "East Timor"               "Timor-Leste"
+   "São Tomé and Príncipe"    "Sao Tome and Principe"
+
+   ;; Guernsey and Jersey form Channel Islands. Conjoin Guernsey on Jersey.
+   ;; Jersey has higher population.
+   ;; https://en.wikipedia.org/wiki/Channel_Islands
+   "Guernsey and Jersey"      "Jersey"
+   "Channel Islands"          "Jersey"
+
+   "Caribbean Netherlands"    "Bonaire, Sint Eustatius and Saba"
+
+   "F.S. Micronesia"          "Micronesia, Federated States of"
    ;; "Others" has no mapping
    })
 
@@ -330,13 +379,15 @@
   Defaults to `c/default-2-country-code`."
   [raw-country]
   (let [country (s/lower-case raw-country)
-        lcases-countries (lower-case country-country-code)]
+        lcases-countries (lower-case country-country-code-hm)]
     (if-let [cc (get lcases-countries country)]
       cc
       (if-let [synonym (get (lower-case synonyms) country)]
-        (get country-country-code synonym)
+        (get country-country-code-hm synonym)
         (do
-          (println (str
-                    "No country code found for '" raw-country "'. Using '"
-                    c/default-2-country-code "'"))
+          (println (format
+                    "No country code found for \"%s\". Using \"%s\""
+                    raw-country
+                    c/default-2-country-code
+                    ))
           c/default-2-country-code)))))

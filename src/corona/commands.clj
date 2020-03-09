@@ -8,22 +8,23 @@
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (morse/send-text
-   c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
+   c/token chat-id msg/options
    (msg/info prm))
-  (if (in? (msg/affected-country-codes) country-code)
+  (if (in? (msg/all-affected-country-codes) country-code)
     (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
 
-(defn list-countries [{:keys [chat-id country-code] :as prm}]
-  (morse/send-text
-   c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
-   (msg/list-countries prm)))
+(defn list-continents [{:keys [chat-id] :as prm}]
+  (let [prm (assoc prm :parse_mode "HTML")]
+    (morse/send-text
+     c/token chat-id (select-keys prm (keys msg/options))
+     (msg/list-continents prm))))
 
 (defn interpolate [{:keys [chat-id country] :as prm}]
   (morse/send-photo c/token chat-id (msg/interpolated-vals prm)))
 
 (defn snapshot [{:keys [chat-id] :as prm}]
   (morse/send-text
-   c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
+   c/token chat-id msg/options
    "I'm sending you ~40MB file. Patience please...")
   (morse/send-document
    c/token chat-id
@@ -32,7 +33,7 @@
 
 (defn about [{:keys [chat-id] :as prm}]
   (morse/send-text
-   c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
+   c/token chat-id msg/options
    (msg/about prm))
   (morse/send-text
    c/token chat-id {:disable_web_page_preview false}
@@ -47,11 +48,11 @@
 
 (defn contributors [{:keys [chat-id] :as prm}]
   (morse/send-text
-   c/token chat-id {:parse_mode "Markdown"
-                    :disable_web_page_preview true}
+   c/token chat-id msg/options
    (msg/contributors prm)))
 
 (def s-start "start")
+(def s-list "list")
 (def s-about msg/cmd-s-about)
 (def s-contributors "contributors")
 
@@ -60,12 +61,13 @@
                 s-about
                 "whattodo"
                 "<country>"
-                s-contributors])
+                s-contributors
+                s-list])
 
 #_(defn normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
   [country-code]
-  (-> (get c/is-3166-names country-code)
+  (-> (c/country-name country-code)
       (s/replace " " "")))
 
 (defn cmds-country-code [country-code]
@@ -73,7 +75,7 @@
   (defn- normalize
     "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
     []
-    (-> (get c/is-3166-names country-code)
+    (-> (c/country-name country-code)
         (s/replace " " "")))
 
   (->>
@@ -81,9 +83,9 @@
     (fn [c] (->> c s/upper-case))  ;; /DE
     (fn [c] (->> c s/capitalize))  ;; /De
 
-    (fn [c] (->> c (get c/is-3166-abbrevs) s/lower-case)) ;; /deu
-    (fn [c] (->> c (get c/is-3166-abbrevs) s/upper-case)) ;; /DEU
-    (fn [c] (->> c (get c/is-3166-abbrevs) s/capitalize)) ;; /Deu
+    (fn [c] (->> c c/country-code-3-letter s/lower-case)) ;; /deu
+    (fn [c] (->> c c/country-code-3-letter s/upper-case)) ;; /DEU
+    (fn [c] (->> c c/country-code-3-letter s/capitalize)) ;; /Deu
 
     (fn [c] (->> (normalize) s/lower-case))   ;; /unitedstates
     (fn [c] (->> (normalize) s/upper-case))   ;; /UNITEDSTATES
@@ -119,14 +121,17 @@
                            (= country-code (:country_code loc))))}))}))))
 
 (defn cmds-general []
-  (let [prm {:cmd-names cmd-names
-             :pred-csv (fn [_] true)
-             :pred (fn [_] true)}
+  (let [prm
+        (conj
+         {:cmd-names cmd-names
+          :pred-csv (fn [_] true)
+          :pred (fn [_] true)}
+         msg/options)
+
         prm-country-code {:country-code (cc/country_code "Worldwide")}]
     [{:name s-contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
-
      {:name "snapshot"
       :f (fn [chat-id] (snapshot (assoc prm :chat-id chat-id)))
       :desc
@@ -135,8 +140,8 @@
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
                                  (conj prm-country-code))))
       :desc "Start here"}
-     {:name "list"
-      :f (fn [chat-id] (list-countries (-> (assoc prm :chat-id chat-id)
+     {:name s-list
+      :f (fn [chat-id] (list-continents (-> (assoc prm :chat-id chat-id)
                                           (conj prm-country-code))))
       :desc "List of countries"}
      {:name s-start

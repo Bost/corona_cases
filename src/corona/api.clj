@@ -44,9 +44,9 @@
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
-(defn left-pad [s] (.replaceAll (format "%2s" s) " " "0"))
+(defn left-pad [s] (c/left-pad s 2))
 
-(defn affected-country-codes
+(defn all-affected-country-codes
   "Countries with some confirmed, deaths or recovered cases"
   []
   (->> [:confirmed :deaths :recovered]
@@ -57,7 +57,10 @@
        (reduce clojure.set/union)
        sort
        vec
-       (into c/default-affected-country-codes)))
+       (into c/default-affected-country-codes)
+       (mapv (fn [cc] (if (= "XX" cc)
+                       c/default-2-country-code
+                       cc)))))
 
 (defn raw-dates []
   (->> (raw-dates-unsorted)
