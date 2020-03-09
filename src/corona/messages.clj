@@ -4,7 +4,7 @@
             [clj-time.format :as tf]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
-            [corona.csv :as data]
+            [corona.api :as data]
             [corona.interpolate :as i]
             [corona.core :as c]))
 
@@ -18,6 +18,8 @@
 (def home-page
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
+
+(defn affected-country-codes [] (data/affected-country-codes))
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -43,6 +45,13 @@
 (defn footer [{:keys [cmd-names]}]
   (let [spacer "   "]
     (str "Try" spacer (s/join spacer (map c/encode-cmd cmd-names)))))
+
+(defn list-countries [{:keys [] :as prm}]
+  (format
+   "%s\n%s"
+   (s/join "\n" (affected-country-codes))
+
+   (footer prm)))
 
 (defn info [{:keys [country-code] :as prm}]
   (let [last-day (data/last-day prm)
@@ -201,8 +210,6 @@
       "\n"
       " - " (link "Home page" home-page))
    (footer prm)))
-
-(defn affected-country-codes[prm] (data/affected-country-codes prm))
 
 (def bot-description
   "Keep it in sync with README.md"

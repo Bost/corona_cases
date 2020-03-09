@@ -13,6 +13,11 @@
   (if (in? (msg/affected-country-codes) country-code)
     (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
 
+(defn list-countries [{:keys [chat-id country-code] :as prm}]
+  (morse/send-text
+   c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
+   (msg/list-countries prm)))
+
 (defn interpolate [{:keys [chat-id country] :as prm}]
   (morse/send-photo c/token chat-id (msg/interpolated-vals prm)))
 
@@ -82,8 +87,7 @@
 
     (fn [c] (->> (normalize) s/lower-case))   ;; /unitedstates
     (fn [c] (->> (normalize) s/upper-case))   ;; /UNITEDSTATES
-    (fn [c] (->> (normalize)))
-    ]
+    (fn [c] (->> (normalize)))]
    (mapv
     (fn [fun]
       {:name (fun country-code)
@@ -119,8 +123,7 @@
              :pred-csv (fn [_] true)
              :pred (fn [_] true)}
         prm-country-code {:country-code (cc/country_code "Worldwide")}]
-    [
-     {:name s-contributors
+    [{:name s-contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
 
@@ -130,11 +133,15 @@
       "Get a snapshot of https://github.com/CSSEGISandData/COVID-19.git master branch"}
      {:name "world"
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
-                                        (conj prm-country-code))))
+                                 (conj prm-country-code))))
       :desc "Start here"}
+     {:name "list"
+      :f (fn [chat-id] (list-countries (-> (assoc prm :chat-id chat-id)
+                                          (conj prm-country-code))))
+      :desc "List of countries"}
      {:name s-start
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
-                                        (conj prm-country-code))))
+                                 (conj prm-country-code))))
       :desc "Start here"}
      #_
      {:name "interpolate"
