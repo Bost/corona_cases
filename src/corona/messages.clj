@@ -138,7 +138,8 @@
   (format "%s\n\n%s\n\n%s"
           (s/join "\n" ["@DerAnweiser"
                         (link "maty535" "https://github.com/maty535")
-                        "@kostanjsek"])
+                        "@kostanjsek"
+                        "@DistrictBC"])
           (str
            "The rest of the contributors prefer anonymity or haven't "
            "approved their inclusion to this list yet. 🙏 Thanks you folks.")

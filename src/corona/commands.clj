@@ -46,10 +46,16 @@
                     :disable_web_page_preview true}
    (msg/contributors prm)))
 
+(def s-start "start")
 (def s-about msg/cmd-s-about)
+(def s-contributors "contributors")
 
-(def cmd-names ["world" #_"interpolate" s-about "whattodo" "<country>"
-                "contributors"])
+(def cmd-names ["world"
+                #_"interpolate"
+                s-about
+                "whattodo"
+                "<country>"
+                s-contributors])
 
 #_(defn normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
@@ -114,7 +120,7 @@
              :pred (fn [_] true)}
         prm-country-code {:country-code (cc/country_code "Worldwide")}]
     [
-     {:name "contributors"
+     {:name s-contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
 
@@ -126,7 +132,7 @@
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
                                         (conj prm-country-code))))
       :desc "Start here"}
-     {:name "start"
+     {:name s-start
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
                                         (conj prm-country-code))))
       :desc "Start here"}
@@ -150,7 +156,10 @@
 
 (defn bot-father-edit-cmds []
   (->> (cmds-general)
-       (remove (fn [hm] (= "start" (:name hm))))
+       (remove (fn [hm]
+                 (in? [s-start
+                       ;; Need to save space it the mobile app. Sorry guys.
+                       s-contributors] (:name hm))))
        (sort-by :name)
        (reverse)
        (map (fn [{:keys [name desc]}] (println name "-" desc)))

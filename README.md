@@ -29,11 +29,14 @@ See [localhost:5000](http://localhost:5000/).
 Using fish-shell: see [deploy.fish](./deploy.fish).
 
 ## TODOs
-- Show graphs for relative numbers (e.g. percentage)
+- Graphs:
+  -- better user experience - show:
+     only interpolated graphs
+     relative numbers (e.g. percentage)
+     logarithmic scale
 - Add `/feedback` commands to get an instant/immediate information from users. Tight feedback-loop
 - Prediction - extrapolate graphs
 - Use buttons instead of `/<command-name>`
 - Don't panic: Compare data: Corona vs. Flu vs. World population and Show deaths
   rates distribution by age / age-groups; probability calculator
-- Improve user experience - show only interpolated graphs
 - Automate repo CSSEGISandData/COVID-19 snapshot download
