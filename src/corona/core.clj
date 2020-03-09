@@ -18,6 +18,8 @@
 (def chat-id "112885364")
 (def bot-name (str "@" project-name "_bot"))
 
+(defn calculate-ill [c r d] (- c (+ r d)))
+
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]
     (if (or (= suffix "Fq8") (= suffix "MR8"))

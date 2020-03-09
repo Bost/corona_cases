@@ -4,7 +4,7 @@
             [clj-time.format :as tf]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
-            [corona.api :as a]
+            [corona.csv :as data]
             [corona.interpolate :as i]
             [corona.core :as c]))
 
@@ -45,7 +45,7 @@
     (str "Try" spacer (s/join spacer (map c/encode-cmd cmd-names)))))
 
 (defn info [{:keys [country-code] :as prm}]
-  (let [last-day (a/last-day prm)
+  (let [last-day (data/last-day prm)
         {day :f} last-day]
     (format
      "%s\n%s\n%s"
@@ -82,11 +82,12 @@
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
 (defn absolute-vals [{:keys [country-code] :as prm}]
-  (let [confirmed (a/confirmed prm)
-        deaths    (a/deaths    prm)
-        recovered (a/recovered prm)
-        ill       (a/ill       prm)
-        dates     (a/dates)]
+  (let [confirmed (data/confirmed prm)
+        deaths    (data/deaths    prm)
+        recovered (data/recovered prm)
+        ill       (data/ill       prm)
+        dates     (data/dates)]
+    (println "confirmed" confirmed)
     (-> (chart/xy-chart
          (conj {}
                {s-sick
@@ -148,7 +149,7 @@
    (str c/bot-name ": " country
         " interpolation - " s-sick "; see /"
         cmd-s-about)
-   (a/ill prm)))
+   (data/ill prm)))
 
 (defn about [prm]
   (str
@@ -172,7 +173,7 @@
 
    #_(str
     "- Data retrieved *CONTINUOUSLY* every " corona.api/time-to-live
-    " minutes from " (link a/host a/url) ".\n")
+    " minutes from " (link data/host data/url) ".\n")
 
    (str
     "- See also " (link "visual dashboard" "https://arcg.is/0fHmTX") ", "
@@ -199,6 +200,8 @@
       "\n"
       " - " (link "Home page" home-page))
    (footer prm)))
+
+(defn affected-country-codes[prm] (data/affected-country-codes prm))
 
 (def bot-description
   "Keep it in sync with README.md"

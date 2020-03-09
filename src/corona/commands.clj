@@ -1,7 +1,6 @@
 (ns corona.commands
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
-            [corona.api :as a]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cc]
             [corona.messages :as msg]
@@ -11,7 +10,7 @@
   (morse/send-text
    c/token chat-id {:parse_mode "Markdown" :disable_web_page_preview true}
    (msg/info prm))
-  (if (in? (a/affected-country-codes) country-code)
+  (if (in? (msg/affected-country-codes) country-code)
     (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
 
 (defn interpolate [{:keys [chat-id country] :as prm}]
@@ -65,6 +64,7 @@
     []
     (-> (get c/is-3166-names country-code)
         (s/replace " " "")))
+
   (->>
    [(fn [c] (->> c s/lower-case))  ;; /de
     (fn [c] (->> c s/upper-case))  ;; /DE
@@ -84,21 +84,33 @@
        :f
        (fn [chat-id]
          (world {:cmd-names cmd-names
-                        :chat-id chat-id
-                        :country-code country-code
-                        :pred (fn [loc]
-                                (condp = (s/upper-case country-code)
-                                  c/worldwide-2-country-code
-                                  true
+                 :chat-id chat-id
+                 :country-code country-code
+                 :pred-csv (fn [loc]
+                             (condp = country-code
+                               c/worldwide-2-country-code
+                               true
 
-                                  c/default-2-country-code
-                                  ;; XX comes from the service
-                                  (= "XX" (:country_code loc))
+                               c/default-2-country-code
+                               ;; XX comes from the service
+                               (= "XX" (cc/country_code loc))
 
-                                  (= country-code (:country_code loc))))}))}))))
+                               (= country-code (cc/country_code loc))))
+                 :pred (fn [loc]
+                         ;; TODO s/upper-case is probably not needed
+                         (condp = (s/upper-case country-code)
+                           c/worldwide-2-country-code
+                           true
+
+                           c/default-2-country-code
+                           ;; XX comes from the service
+                           (= "XX" (:country_code loc))
+
+                           (= country-code (:country_code loc))))}))}))))
 
 (defn cmds-general []
   (let [prm {:cmd-names cmd-names
+             :pred-csv (fn [_] true)
              :pred (fn [_] true)}
         prm-country-code {:country-code (cc/country_code "Worldwide")}]
     [

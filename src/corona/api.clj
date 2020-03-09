@@ -5,7 +5,6 @@
             [clojure.data.json :as json]
             [clojure.string :as s]
             [corona.core :refer [bot-ver read-number dbg]]
-            [corona.csv :refer [calculate-ill]]
             [corona.countries :as cc]
             [corona.core :as c])
   (:import java.text.SimpleDateFormat))
@@ -92,7 +91,7 @@
 (defn get-counts [prm]
   (let [crd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
                   [:confirmed :recovered :deaths])
-        i (apply mapv calculate-ill crd)]
+        i (apply mapv c/calculate-ill crd)]
     (zipmap [:c :r :d :i] (conj crd i))))
 
 (defn confirmed [prm] (:c (get-counts prm)))

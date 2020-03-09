@@ -16,6 +16,7 @@
                     (filter #(re-find #".csv" %))
                     sort))
 
+;; TODO read the resources/COVID-19/master.zip + delete the csv-files
 (defn take-csv
   "Takes file name and reads data."
   [fname]
@@ -23,46 +24,60 @@
     #_(-> file (slurp) (ccsv/parse-csv))
     (-> file (dcsv/read-csv) (doall))))
 
-(defn calculate-ill [c r d] (- c (+ r d)))
-
 (defn getc [[_ _ _ c _ _]] c)
 (defn getd [[_ _ _ _ d _]] d)
 (defn getr [[_ _ _ _ _ r]] r)
 (defn geti [[_ _ u c d r]]
   (let [[nc nd nr] (map read-number [c d r])]
-    (calculate-ill nc nr nd)))
+    (c/calculate-ill nc nr nd)))
 
-(defn sum-up-file [sum-up-fn file]
-  (transduce
-   (comp
-    (map sum-up-fn)
-    (map fix-octal-val)
-    (remove empty?)
-    (map read-string))
-   + 0
-   (->> file take-csv rest)))
+(defn sum-up-file [{:keys [sum-up-fn pred-csv pred file] :as prm}]
+  (let [r
+        (transduce
+         (comp
+          (map sum-up-fn)
+          (map fix-octal-val)
+          (remove empty?)
+          (map read-string))
+         + 0
+         (->> file take-csv rest
+              (take 1)
+              (filter (fn [[_ loc _ c _ _]]
+                        (if-not pred-csv
+                          (println "sum-up-fn" sum-up-fn))
+                        (if-not loc
+                          (println "loc" loc))
+                        #_(println c loc (pred-csv loc))
+                        (pred-csv loc)))))]
+    #_(println "r" r)
+    r))
 
-(defn sum-up [sum-up-fn]
-  (map (fn [file] (sum-up-file sum-up-fn file))
-       csv-files))
+(defn sum-up [prm]
+  (->> csv-files
+       (take-last 1)
+       (map (fn [file] (sum-up-file (assoc prm :file file))))))
 
-(defn get-counts [prm]
+(defn get-counts [{:keys [pred] :as prm}]
   (map (fn [f c d r i] {:f
                        (let [date (subs f (inc (s/last-index-of f "/")))
                              sdf (new SimpleDateFormat "MM-dd-yyyy")]
                          (.parse sdf date))
                        :c c :d d :r r :i i})
        csv-files
-       (sum-up getc)
-       (sum-up getd)
-       (sum-up getr)
-       (sum-up geti)))
+       (sum-up (assoc prm :sum-up-fn getc))
+       (sum-up (assoc prm :sum-up-fn getd))
+       (sum-up (assoc prm :sum-up-fn getr))
+       (sum-up (assoc prm :sum-up-fn geti))
+       ))
 
-(defn confirmed [prm] (map :c (get-counts prm)))
+;; http://blog.cognitect.com/blog/2017/6/5/repl-debugging-no-stacktrace-required
+(defn confirmed [prm] (map :c
+                           (let [r (get-counts prm)]
+                             (println "confirmed" r))))
 (defn deaths    [prm] (map :d (get-counts prm)))
 (defn recovered [prm] (map :r (get-counts prm)))
 (defn ill       [prm] (map :i (get-counts prm)))
-(defn dates     []    (map :f (get-counts {})))
+(defn dates     []    (map :f (get-counts {:pred (fn [_] true) :pred-csv (fn [_] true)})))
 
 (defn last-day  [prm] (last (get-counts prm)))
 
