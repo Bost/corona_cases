@@ -13,22 +13,35 @@ echo "APP" $APP
 echo "REMOTE" $REMOTE
 echo ""
 
-# git clone https://github.com/CSSEGISandData/COVID-19.git ../COVID-19
-# set --local repo ../COVID-19/.git; and \
-# git --git-dir=$repo pull --rebase origin master; and \
-# cp -r ../COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/*.csv \
-#     resources/csv; and \
-# git add resources/csv/*.csv
+# set dataSoure COVID-19_repo
+set dataSoure coronavirus-tracker-api
 
-# if test $status = 0
-#     git commit -m "Add new csv file(s)"
-# end
+if test $dataSoure = COVID-19_repo
+    # git clone https://github.com/CSSEGISandData/COVID-19.git ../COVID-19
+    set --local repo ../COVID-19/.git; and \
+    git --git-dir=$repo pull --rebase origin master; and \
+    cp -r ../COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/*.csv \
+        resources/csv; and \
+    git add resources/csv/*.csv
+
+    if test $status = 0
+        git commit -m "Add new csv file(s)"
+    end
+else if test $dataSoure = coronavirus-tracker-api
+    #
+else
+    echo "Unrecognized dataSoure" $dataSoure
+    exit 1
+end
+
 wget https://github.com/CSSEGISandData/COVID-19/archive/master.zip \
     -O resources/COVID-19/master.zip; and \
-git add resources/COVID-19/master.zip
+    git add resources/COVID-19/master.zip
+
 if test $status = 0
     git commit -m "Add COVID-19 repo snapshot"
 end
+
 # heroku logs --tail --app $APP blocks the execution
 heroku addons:open papertrail --app $APP; and \
 heroku ps:scale web=0 --app $APP; and \
