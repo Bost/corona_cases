@@ -1,7 +1,7 @@
 (ns corona.commands
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
-            [corona.csv :as a]
+            [corona.api :as a]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cc]
             [corona.messages :as msg]
@@ -47,9 +47,9 @@
                     :disable_web_page_preview true}
    (msg/contributors prm)))
 
-(def about msg/cmd-s-about)
+(def s-about msg/cmd-s-about)
 
-(def cmd-names ["world" #_"interpolate" about "whattodo" "<country>"
+(def cmd-names ["world" #_"interpolate" s-about "whattodo" "<country>"
                 "contributors"])
 
 #_(defn normalize
@@ -123,7 +123,7 @@
       :f (fn [chat-id] (interpolate (-> (assoc prm :chat-id chat-id)
                                        (conj prm-country-code))))
       :desc "Smooth the data / leave out the noise"}
-     {:name about
+     {:name s-about
       :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
       :desc "Bot version & some additional info"}
      {:name "whattodo"
