@@ -58,10 +58,7 @@
        (reduce clojure.set/union)
        sort
        vec
-       (into
-        (->> [c/country-code-worldwide c/country-code-others]
-             (reduce into)
-             (mapv (fn [[k v]] k))))))
+       (into c/default-affected-country-codes)))
 
 (defn raw-dates []
   (->> (raw-dates-unsorted)

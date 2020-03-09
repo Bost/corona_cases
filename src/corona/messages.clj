@@ -4,7 +4,7 @@
             [clj-time.format :as tf]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
-            [corona.api :as a]
+            [corona.csv :as a]
             [corona.interpolate :as i]
             [corona.core :as c]))
 
@@ -62,7 +62,6 @@
        (str
         s-confirmed ": " confirmed "\n"
         (if (pos? confirmed)
-          #_(in? (a/affected-country-codes) country-code)
           (let [{deaths :d recovered :r ill :i} last-day
                 closed (+ deaths recovered)]
             (str
@@ -171,7 +170,7 @@
     "- Feb12-spike caused mainly by a change in the diagnosis classification"
     " of the Hubei province.\n")
 
-   (str
+   #_(str
     "- Data retrieved *CONTINUOUSLY* every " corona.api/time-to-live
     " minutes from " (link a/host a/url) ".\n")
 

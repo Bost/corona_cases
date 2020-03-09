@@ -189,3 +189,8 @@
 (defn all-country-codes [] (keys is-3166-abbrevs))
 
 (defn encode-cmd [s] (str "/" s))
+
+(def default-affected-country-codes
+  (->> [country-code-worldwide country-code-others]
+       (reduce into)
+       (mapv (fn [[k v]] k))))

@@ -308,7 +308,12 @@
    "Saint Pierre & Miquelon"  "Saint Pierre and Miquelon"
    "Falkland Islands"         "Falkland Islands (Malvinas)"
    "Holy See"                 "Holy See (Vatican City State)"
+   "Republic of Ireland"      "Ireland"
+   " Azerbaijan"              "Azerbaijan"
+   "Ivory Coast"              "Côte d'Ivoire"
 
+   ;; effectively including North Ireland into United Kingdom
+   "North Ireland"            "United Kingdom"
    ;; "Channel Islands" ;; https://en.wikipedia.org/wiki/Channel_Islands
    ;; "Caribbean Netherlands" ;; https://en.wikipedia.org/wiki/Caribbean_Netherlands
    ;; "Others" has no mapping

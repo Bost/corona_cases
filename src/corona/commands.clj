@@ -1,7 +1,7 @@
 (ns corona.commands
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
-            [corona.api :as a]
+            [corona.csv :as a]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cc]
             [corona.messages :as msg]
