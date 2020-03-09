@@ -350,6 +350,8 @@
    "Republic of Ireland"      "Ireland"
    "Ivory Coast"              "Côte d'Ivoire"
 
+   " Azerbaijan"              "Azerbaijan"
+
    ;; Conjoin North Ireland on United Kingdom
    "North Ireland"            "United Kingdom"
 
