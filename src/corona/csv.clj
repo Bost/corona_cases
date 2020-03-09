@@ -67,5 +67,16 @@
 
 (def url "https://github.com/CSSEGISandData/COVID-19")
 
-(defn affected-country-codes []
-  [])
+(defn affected-country-codes
+  []
+  (->> csv-files
+       #_(take 2)
+       (map take-csv)
+       (map rest)
+       (reduce into [])
+       (map second)
+       (into #{})
+       (map co/country_code)
+       sort
+       vec
+       (into c/default-affected-country-codes)))

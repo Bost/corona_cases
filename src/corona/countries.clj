@@ -269,16 +269,16 @@
    "World"           (->> c/country-code-worldwide vals first)
    "Czechia"          "Czech Republic"
    "Mainland China"   "China"
-   "South Korea"      "Korea Republic of"
+   "South Korea"      "Korea, Republic of"
    "Taiwan"           "Taiwan, Province of China"
    "US"               "United States"
    "Macau"            "Macao"                       ;; TODO Macau is probably a typo. Report it to CSSEGISandData/COVID-19
    "Vietnam"          "Viet Nam"
    "UK"               "United Kingdom"
    "Russia"           "Russian Federation"
-   "Iran"             "Iran Islamic Republic of"
+   "Iran"             "Iran, Islamic Republic of"
    "Saint Barthelemy" "Saint Barthélemy"
-   "Palestine"        "Palestine State of"
+   "Palestine"        "Palestine, State of"
    "Vatican City"     "Holy See (Vatican City State)"
 
    "DR Congo"                 "Congo, the Democratic Republic of the"
@@ -288,7 +288,7 @@
    "Syria"                    "Syrian Arab Republic"
    "Bolivia"                  "Bolivia, Plurinational State of"
    "Laos"                     "Lao People's Democratic Republic"
-   "State of Palestine"       "Palestine State of"
+   "State of Palestine"       "Palestine, State of"
    "Moldova"                  "Moldova, Republic of"
    "Eswatini"                 "Swaziland"
    "Cabo Verde"               "Cape Verde"
