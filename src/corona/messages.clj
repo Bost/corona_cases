@@ -94,7 +94,9 @@
        last
        count))
 
-(defn list-continents [{:keys [] :as prm}]
+(defn list-continents
+  "TODO show counts for every continent"
+  [prm]
   (format
    "Continent(s) hit:\n\n%s\n\n%s"
    ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
@@ -108,7 +110,7 @@
                                            s/lower-case))))))
    (footer prm)))
 
-(defn list-c-countries [{:keys [continent-code] :as prm}]
+(defn list-countries [{:keys [continent-code] :as prm}]
   (format
    "% Country/-ies hit:\n\n%s\n\n%s"
    ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
@@ -170,7 +172,6 @@
         recovered (data/recovered prm)
         ill       (data/ill       prm)
         dates     (data/dates)]
-    (println "confirmed" confirmed)
     (-> (chart/xy-chart
          (conj {}
                {s-sick
@@ -271,7 +272,6 @@
 
    (format
     (str
-     "\n"
      "- Country *specific* information using %s country codes & names. "
      "Examples:\n"
      "/fr    /fra      /France\n"

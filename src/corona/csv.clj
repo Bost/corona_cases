@@ -71,9 +71,7 @@
        ))
 
 ;; http://blog.cognitect.com/blog/2017/6/5/repl-debugging-no-stacktrace-required
-(defn confirmed [prm] (map :c
-                           (let [r (get-counts prm)]
-                             (println "confirmed" r))))
+(defn confirmed [prm] (map :c (get-counts prm)))
 (defn deaths    [prm] (map :d (get-counts prm)))
 (defn recovered [prm] (map :r (get-counts prm)))
 (defn ill       [prm] (map :i (get-counts prm)))

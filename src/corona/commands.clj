@@ -62,7 +62,7 @@
                 "whattodo"
                 "<country>"
                 s-contributors
-                s-list])
+                #_s-list])
 
 #_(defn normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
@@ -140,6 +140,7 @@
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
                                  (conj prm-country-code))))
       :desc "Start here"}
+     #_
      {:name s-list
       :f (fn [chat-id] (list-continents (-> (assoc prm :chat-id chat-id)
                                           (conj prm-country-code))))
