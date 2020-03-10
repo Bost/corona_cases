@@ -287,7 +287,7 @@
     }
    (map clojure.set/map-invert [c/country-code-others c/country-code-worldwide])))
 
-(def synonyms
+(def aliases-hm
   "Mapping of alternative names, spelling, typos to the names of countries used by
   the ISO 3166-1 norm.
 
@@ -367,8 +367,22 @@
    "Caribbean Netherlands"    "Bonaire, Sint Eustatius and Saba"
 
    "F.S. Micronesia"          "Micronesia, Federated States of"
+
+   "Emirates"                 "United Arab Emirates"
+   ;; "Bosnia–Herzegovina"       "Bosnia and Herzegovina"
+   "Bosnia"                   "Bosnia and Herzegovina"
+   "Dominican Rep"            "Dominican Republic"
+   "Macedonia"                "North Macedonia"
    ;; "Others" has no mapping
    })
+
+(defn country-alias
+  "Get a country alias or the normal name if an alias doesn't exist"
+  [cc]
+  (let [country (c/country-name (s/upper-case cc))]
+    (get (clojure.set/map-invert aliases-hm) country country)))
+
+(country-alias "PS")
 
 (defn lower-case [hm]
   (->> hm
@@ -384,8 +398,8 @@
         lcases-countries (lower-case country-country-code-hm)]
     (if-let [cc (get lcases-countries country)]
       cc
-      (if-let [synonym (get (lower-case synonyms) country)]
-        (get country-country-code-hm synonym)
+      (if-let [alias (get (lower-case aliases-hm) country)]
+        (get country-country-code-hm alias)
         (do
           (println (format
                     "No country code found for \"%s\". Using \"%s\""

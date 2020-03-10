@@ -75,14 +75,35 @@
 
 (defn footer [{:keys [cmd-names parse_mode]}]
   (let [spacer "   "]
-    (str "Try" spacer (->> cmd-names
-                           (map encode-cmd)
-                           (map (fn [cmd] (encode-pseudo-cmd cmd parse_mode)))
-                           (s/join spacer)))))
+    (str
+     ;; "Try" spacer
+     (->> cmd-names
+          (map encode-cmd)
+          (map (fn [cmd] (encode-pseudo-cmd cmd parse_mode)))
+          (s/join spacer)))))
+
+(def to-alias ["VA"
+               "TW"
+               "DO"
+               "IR"
+               "RU"
+               "PS"
+               "AE"
+               "KR"
+               "MK"
+               #_"CZ"
+               "BA"])
+
+(defn country-name-aliased [cc]
+  (if (in? to-alias cc)
+    (co/country-alias cc)
+    (c/country-name cc)))
 
 (def max-country-name-len
   (->> (all-affected-country-codes)
-       (map (fn [cc] (c/country-name cc)))
+       (map (fn [cc]
+              (country-name-aliased cc )
+              #_(c/country-name cc)))
        (sort-by count)
        last
        count))
@@ -95,39 +116,45 @@
        count))
 
 (defn list-continents
-  "TODO show counts for every continent"
-  [prm]
-  (format
-   "Continent(s) hit:\n\n%s\n\n%s"
-   ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
-   (s/join "\n"
-           (->> (all-affected-continent-codes)
-                (map (fn [cc] (format "<code style=\"color:red;\">%s  </code>%s"
-                                     (c/right-pad (co/continent-name cc)
-                                                  max-continent-name-len)
-                                      (->> cc
-                                           encode-cmd
-                                           s/lower-case))))))
-   (footer prm)))
+    "TODO show counts for every continent"
+    [prm]
+    (format
+     "Continent(s) hit:\n\n%s\n\n%s"
+     ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
+     (s/join "\n"
+             (->> (all-affected-continent-codes)
+                  (map (fn [cc] (format "<code style=\"color:red;\">%s  </code>%s"
+                                        (c/right-pad (co/continent-name cc)
+                                                     max-continent-name-len)
+                                        (->> cc
+                                             encode-cmd
+                                             s/lower-case))))))
+     (footer prm)))
 
 (defn list-countries [{:keys [continent-code] :as prm}]
   (format
-   "% Country/-ies hit:\n\n%s\n\n%s"
+   "%s\n\nCountries hit: %s\n\n%s"
    ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
-   (co/continent-name continent-code)
-   (s/join "\n"
-           (->>
-            (affected-country-codes continent-code)
-            (map (fn [cc] (format "<code style=\"color:red;\">%s</code> %s"
-                                 (c/right-pad (c/country-name cc)
-                                              (/ max-country-name-len 2))
-                                 (->> cc
-                                      encode-cmd
-                                      s/lower-case))))
-            (partition 1)
-            (map (fn [part] (s/join " " part)))))
+   #_(co/continent-name continent-code)
+   (s/join
+    "\n"
+    (->>
+     (all-affected-country-codes)
+     (remove (fn [cc] (= c/default-2-country-code cc)))
+     #_(take-last 11)
+     (map (fn [cc] (format
+                   ;; "<code style=\"color:red;\">%s</code> %s"
+                   "%s     %s"
+                   (c/right-pad (country-name-aliased cc)
+                                (+ 4 max-country-name-len)
+                                #_(+ 4 (/ max-country-name-len 2)))
+                   (->> cc
+                        encode-cmd
+                        s/lower-case))))
+     (partition 2)
+     (map (fn [part] (s/join "       " part)))))
+   (count (all-affected-country-codes))
    (footer prm)))
-
 
 (defn info [{:keys [country-code] :as prm}]
   (let [last-day (data/last-day prm)
@@ -269,8 +296,9 @@
    (format "- Snapshot of %s master branch  /snapshot\n"
            (link "CSSEGISandData/COVID-19"
                  "https://github.com/CSSEGISandData/COVID-19.git"))
+   "\n"
 
-   (format
+   #_(format
     (str
      "- Country *specific* information using %s country codes & names. "
      "Examples:\n"

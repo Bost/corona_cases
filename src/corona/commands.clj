@@ -19,6 +19,12 @@
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/list-continents prm))))
 
+(defn list-countries [{:keys [chat-id] :as prm}]
+  (let [prm (assoc prm :parse_mode "HTML")]
+    (morse/send-text
+     c/token chat-id (select-keys prm (keys msg/options))
+     (msg/list-countries prm))))
+
 (defn interpolate [{:keys [chat-id country] :as prm}]
   (morse/send-photo c/token chat-id (msg/interpolated-vals prm)))
 
@@ -62,7 +68,7 @@
                 "whattodo"
                 "<country>"
                 s-contributors
-                #_s-list])
+                s-list])
 
 #_(defn normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
@@ -140,9 +146,9 @@
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
                                  (conj prm-country-code))))
       :desc "Start here"}
-     #_
+
      {:name s-list
-      :f (fn [chat-id] (list-continents (-> (assoc prm :chat-id chat-id)
+      :f (fn [chat-id] (list-countries (-> (assoc prm :chat-id chat-id)
                                           (conj prm-country-code))))
       :desc "List of countries"}
      {:name s-start
