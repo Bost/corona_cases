@@ -84,3 +84,7 @@ end
 # set --export BOT_VER $botVerSHA; and \
 # java $JVM_OPTS -cp target/corona_cases-standalone.jar:$cljjar:$cljsjar \
     # clojure.main -m corona.web
+
+# resize screnshot from CLI
+# set screenshot path/to/screenshot.jpg
+# convert -resize 40% $screenshot resources/pics/screenshot_40-percents.jpg
