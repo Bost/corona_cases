@@ -103,6 +103,20 @@
                                              s/lower-case))))))
      (footer prm)))
 
+(defn header [{:keys [day parse_mode] :as prm}]
+  (format
+   (str
+    (condp = parse_mode
+      "HTML" "<b>%s</b>"
+      ;; i.e. "Markdown"
+      "*%s*")
+    " %s")
+   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
+                 (t/default-time-zone)) (tc/from-date day))
+   (condp = parse_mode
+     "HTML" c/bot-name
+     ;; i.e. "Markdown"
+     (s/replace c/bot-name #"_" "\\\\_"))))
 
 (defn list-countries [{:keys [data] :as prm}]
   (let [separator " "]
@@ -142,21 +156,6 @@
            #_(map (fn [part] (s/join "       " part)))))
      (count (data/all-affected-country-codes))
      (footer prm))))
-
-(defn header [{:keys [day parse_mode] :as prm}]
-  (format
-   (str
-    (condp = parse_mode
-      "HTML" "<b>%s</b>"
-      ;; i.e. "Markdown"
-      "*%s*")
-    " %s")
-   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
-                 (t/default-time-zone)) (tc/from-date day))
-   (condp = parse_mode
-     "HTML" c/bot-name
-     ;; i.e. "Markdown"
-     (s/replace c/bot-name #"_" "\\\\_"))))
 
 (defn info [{:keys [country-code] :as prm}]
   (let [last-day (data/last-day prm)
