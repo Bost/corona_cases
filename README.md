@@ -34,7 +34,6 @@ Using fish-shell: see [deploy.fish](./deploy.fish).
      only interpolated graphs
      relative numbers (e.g. percentage)
      logarithmic scale
-- Add `/feedback` commands to get an instant/immediate information from users. Tight feedback-loop
 - Prediction - extrapolate graphs
 - Use buttons instead of `/<command-name>`
 - Don't panic: Compare data: Corona vs. Flu vs. World population and Show deaths

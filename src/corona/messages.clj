@@ -84,6 +84,14 @@
           (map (fn [cmd] (encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer)))))
 
+(defn remember-20-seconds [prm]
+  (format "%s\n%s %s\n\n%s"
+          "" #_(header prm) ;; TODO formatting corona\_cases\_bot
+          "Remember, at least *20* seconds! "
+          #_"https://www.who.int/gpsc/clean_hands_protection/en/"
+          "https://www.who.int/gpsc/media/how_to_handwash_lge.gif"
+          (footer prm)))
+
 (def max-continent-name-len
   (->> (all-affected-continent-codes)
        (map (fn [cc] (co/continent-name cc)))

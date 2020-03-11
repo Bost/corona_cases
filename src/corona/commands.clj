@@ -98,9 +98,9 @@
    (msg/about prm))
   (morse/send-text
    c/token chat-id {:disable_web_page_preview false}
-   #_"https://www.who.int/gpsc/clean_hands_protection/en/"
-   "https://www.who.int/gpsc/media/how_to_handwash_lge.gif")
-  #_(morse/send-photo
+   (msg/remember-20-seconds prm))
+  #_
+  (morse/send-photo
      token chat-id (io/input-stream "resources/pics/how_to_handwash_lge.gif")))
 
 (defn feedback [{:keys [chat-id] :as prm}]
@@ -108,9 +108,12 @@
    c/token chat-id msg/options
    (msg/feedback prm)))
 
-(defn keepcalm [{:keys [chat-id]}]
+(defn keepcalm [{:keys [chat-id] :as prm}]
   (morse/send-photo
-   c/token chat-id (io/input-stream "resources/pics/keepcalm.jpg")))
+   c/token chat-id (io/input-stream "resources/pics/keepcalm.jpg"))
+  (morse/send-text
+   c/token chat-id {:disable_web_page_preview false}
+   (msg/remember-20-seconds prm)))
 
 (defn contributors [{:keys [chat-id] :as prm}]
   (morse/send-text
@@ -129,8 +132,8 @@
                 s-about
                 s-whattodo
                 "<country>"
-                s-feedback
                 s-list
+                s-feedback
                 ])
 
 #_(defn normalize
@@ -229,7 +232,7 @@
      {:name s-feedback
       :f (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}
-     {:name "whattodo"
+     {:name s-whattodo
       :f (fn [chat-id] (keepcalm (assoc prm :chat-id chat-id)))
       :desc "Some personalized instructions"}]))
 
