@@ -30,12 +30,13 @@
 (def cmd-s-feedback s-feedback)
 (def cmd-s-contributors s-contributors)
 (def cmd-s-references s-references)
+(def cmd-s-country "<country>")
 
 (def cmd-names [s-world
                 #_"interpolate"
                 s-about
                 s-references
-                "<country>"
+                cmd-s-country
                 s-list
                 s-feedback
                 ])
@@ -364,7 +365,7 @@
         cmd-s-about)
    (data/ill prm)))
 
-(defn about [prm]
+(defn about [{:keys [parse_mode] :as prm}]
   (str
    ;; escape underscores for the markdown parsing
    (bot-name-formatted)
@@ -400,6 +401,11 @@
            (encode-cmd cmd-s-snapshot))
 
    (format "The %s\n" (encode-cmd cmd-s-contributors))
+
+   (format "Statistics per single %s - see the %s\n"
+           (encode-cmd
+            (encode-pseudo-cmd cmd-s-country parse_mode))
+           (encode-cmd s-list))
 
    "\n"
 
