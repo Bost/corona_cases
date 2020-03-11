@@ -31,8 +31,6 @@
       s)
     s))
 
-(defn all-affected-country-codes [] (data/all-affected-country-codes))
-
 (defn affected-country-codes [continent-code]
   (->> (data/all-affected-country-codes)
        (filter (fn [country-code]
@@ -42,7 +40,7 @@
 
 (defn all-affected-continent-codes []
   ;; Can't really use the first implementation. See the doc of `tab/regions`
-  (->> (all-affected-country-codes)
+  (->> (data/all-affected-country-codes)
        (map (fn [acc]
               (->> tab/continent-countries-map
                    (filter (fn [[continent-code county-code]]
@@ -82,32 +80,6 @@
           (map (fn [cmd] (encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer)))))
 
-(def to-alias ["VA"
-               "TW"
-               "DO"
-               "IR"
-               "RU"
-               "PS"
-               "AE"
-               "KR"
-               "MK"
-               #_"CZ"
-               "BA"])
-
-(defn country-name-aliased [cc]
-  (if (in? to-alias cc)
-    (co/country-alias cc)
-    (c/country-name cc)))
-
-(def max-country-name-len
-  (->> (all-affected-country-codes)
-       (map (fn [cc]
-              (country-name-aliased cc )
-              #_(c/country-name cc)))
-       (sort-by count)
-       last
-       count))
-
 (def max-continent-name-len
   (->> (all-affected-continent-codes)
        (map (fn [cc] (co/continent-name cc)))
@@ -131,30 +103,60 @@
                                              s/lower-case))))))
      (footer prm)))
 
-(defn list-countries [{:keys [continent-code] :as prm}]
+
+(defn list-countries [{:keys [data] :as prm}]
+  (let [separator " "]
+    (format
+     (format (str "%s\n"    ;; header
+                  "%s     " ;; sick
+                  "%s  "    ;; separator
+                  "%s  "    ;; recovered
+                  "%s     " ;; separator
+                  "%s\n"    ;; deaths
+                  "%s")
+             (header (assoc prm :day (:f data/last-day)))
+             s-sick
+             separator
+             s-recovered
+             separator
+             s-deaths
+             "%s\n\nTotal countries hit: %s\n\n%s")
+     #_(co/continent-name continent-code)
+     (s/join
+      "\n"
+      (->> data
+           #_(take-last 11)
+           (map (fn [data-country]
+                  (let [{ill :i recovered :r deaths :d
+                         country-name :cn country-code :cc} data-country]
+                    (format "<code>%s</code>%s<code>%s</code>%s<code>%s</code> <code>%s</code>  %s"
+                            (c/right-pad (str ill) 6)
+                            separator
+                            (c/right-pad (str recovered) 6)
+                            separator
+                            (c/right-pad (str deaths) 5)
+                            (c/right-pad country-name 17)
+                            (->> country-code encode-cmd s/lower-case)
+                            ))))
+           #_(partition-all 2)
+           #_(map (fn [part] (s/join "       " part)))))
+     (count (data/all-affected-country-codes))
+     (footer prm))))
+
+(defn header [{:keys [day parse_mode] :as prm}]
   (format
-   "%s\n\nCountries hit: %s\n\n%s"
-   ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
-   #_(co/continent-name continent-code)
-   (s/join
-    "\n"
-    (->>
-     (all-affected-country-codes)
-     (remove (fn [cc] (= c/default-2-country-code cc)))
-     #_(take-last 11)
-     (map (fn [cc] (format
-                   ;; "<code style=\"color:red;\">%s</code> %s"
-                   "%s     %s"
-                   (c/right-pad (country-name-aliased cc)
-                                (+ 4 max-country-name-len)
-                                #_(+ 4 (/ max-country-name-len 2)))
-                   (->> cc
-                        encode-cmd
-                        s/lower-case))))
-     (partition 2)
-     (map (fn [part] (s/join "       " part)))))
-   (count (all-affected-country-codes))
-   (footer prm)))
+   (str
+    (condp = parse_mode
+      "HTML" "<b>%s</b>"
+      ;; i.e. "Markdown"
+      "*%s*")
+    " %s")
+   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
+                 (t/default-time-zone)) (tc/from-date day))
+   (condp = parse_mode
+     "HTML" c/bot-name
+     ;; i.e. "Markdown"
+     (s/replace c/bot-name #"_" "\\\\_"))))
 
 (defn info [{:keys [country-code] :as prm}]
   (let [last-day (data/last-day prm)
@@ -162,10 +164,10 @@
     (format
      "%s\n%s\n%s"
      (str
-      "*" (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
-                        (t/default-time-zone)) (tc/from-date day))
-      "*    " (c/country-name country-code) " "
-      (apply (fn [cc ccc] (format "       %s      %s" cc ccc))
+      (header (assoc prm :day day))
+      "  "
+      (c/country-name country-code) " "
+      (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
              (map (fn [s] (->> s s/lower-case encode-cmd))
                   [country-code
                    (c/country-code-3-letter country-code)])))
@@ -250,10 +252,11 @@
           (s/join "\n" ["@DerAnweiser"
                         (link "maty535" "https://github.com/maty535")
                         "@kostanjsek"
-                        "@DistrictBC"])
+                        "@DistrictBC"
+                        "Michael J."])
           (str
            "The rest of the contributors prefer anonymity or haven't "
-           "approved their inclusion to this list yet. 🙏 Thanks you folks.")
+           "approved their inclusion to this list yet. 🙏 Thanks folks.")
           (footer prm)))
 
 (defn interpolated-vals [{:keys [country] :as prm}]

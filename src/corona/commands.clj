@@ -3,27 +3,82 @@
             [clojure.string :as s]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cc]
+            [corona.api :as data]
             [corona.messages :as msg]
-            [morse.api :as morse]))
+            [morse.api :as morse]
+            [corona.countries :as co]))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (morse/send-text
    c/token chat-id msg/options
    (msg/info prm))
-  (if (in? (msg/all-affected-country-codes) country-code)
+  (if (in? (data/all-affected-country-codes) country-code)
     (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
+
+(def to-alias ["VA"
+               "TW"
+               "DO"
+               "IR"
+               "RU"
+               "PS"
+               "AE"
+               "KR"
+               "MK"
+               #_"CZ"
+               "BA"])
+
+(defn country-name-aliased [cc]
+  (if (in? to-alias cc)
+    (co/country-alias cc)
+    (c/country-name cc)))
+
+(def max-country-name-len
+  (->> (data/all-affected-country-codes)
+       (map (fn [cc]
+              (country-name-aliased cc )
+              #_(c/country-name cc)))
+       (sort-by count)
+       last
+       count))
+
+(defn partition-in-chunks [col]
+  (partition-all (/ (count col) 5) col))
+
+(defn list-countries [{:keys [chat-id] :as prm}]
+  (->> (data/all-affected-country-codes)
+       distinct
+       #_(take 5)
+       (map (fn [cc]
+              (->> (fn [loc]
+                     (condp = cc ;; cc is upper-cased
+                       c/worldwide-2-country-code
+                       true
+
+                       c/default-2-country-code
+                       ;; XX comes from the service
+                       (= "XX" (:country_code loc))
+
+                       (= cc (:country_code loc))))
+                   (assoc prm :pred)
+                   (data/last-day)
+                   (conj {:cn (country-name-aliased cc)
+                          :cc cc}))))
+       (sort-by :i <)
+       partition-in-chunks
+       (map (fn [data-partition]
+              (morse/send-text
+               c/token chat-id (select-keys (assoc prm :parse_mode "HTML")
+                                            (keys msg/options))
+               (msg/list-countries (assoc prm
+                                          :data data-partition
+                                          :parse_mode "HTML")))))
+       doall))
 
 (defn list-continents [{:keys [chat-id] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
     (morse/send-text
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/list-continents prm))))
-
-(defn list-countries [{:keys [chat-id] :as prm}]
-  (let [prm (assoc prm :parse_mode "HTML")]
-    (morse/send-text
-     c/token chat-id (select-keys prm (keys msg/options))
-     (msg/list-countries prm))))
 
 (defn interpolate [{:keys [chat-id country] :as prm}]
   (morse/send-photo c/token chat-id (msg/interpolated-vals prm)))

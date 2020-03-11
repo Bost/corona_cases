@@ -382,8 +382,6 @@
   (let [country (c/country-name (s/upper-case cc))]
     (get (clojure.set/map-invert aliases-hm) country country)))
 
-(country-alias "PS")
-
 (defn lower-case [hm]
   (->> hm
        (map (fn [[k v]] [(s/lower-case k) v]))
@@ -398,8 +396,8 @@
         lcases-countries (lower-case country-country-code-hm)]
     (if-let [cc (get lcases-countries country)]
       cc
-      (if-let [alias (get (lower-case aliases-hm) country)]
-        (get country-country-code-hm alias)
+      (if-let [country-alias (get (lower-case aliases-hm) country)]
+        (get country-country-code-hm country-alias)
         (do
           (println (format
                     "No country code found for \"%s\". Using \"%s\""
