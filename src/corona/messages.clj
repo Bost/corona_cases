@@ -10,22 +10,77 @@
             [corona.countries :as co]
             [corona.core :as c :refer [in?]]))
 
-(def cmd-s-about "about")
-(def cmd-s-snapshot "snapshot")
-(def cmd-s-feedback "feedback")
-(def cmd-s-contributors "contributors")
+(def s-world        "world")
+(def s-world-desc   "Start here")
+(def s-start        "start")
+(def s-list         "list")
+(def s-list-desc    "List of countries")
+(def s-about        "about")
+(def s-contributors "contributors")
+(def s-references   "references")
+(def s-feedback     "feedback")
+(def s-confirmed    "Confirmed")
+(def s-deaths       "Deaths")
+(def s-recovered    "Recovered")
+(def s-sick         "Sick")
+(def s-closed       "Closed")
 
-(def s-confirmed "Confirmed")
-(def s-deaths    "Deaths")
-(def s-recovered "Recovered")
-(def s-sick      "Sick")
-(def s-closed    "Closed")
+(def cmd-s-about s-about)
+(def cmd-s-snapshot "snapshot")
+(def cmd-s-feedback s-feedback)
+(def cmd-s-contributors s-contributors)
+(def cmd-s-references s-references)
+
+(def cmd-names [s-world
+                #_"interpolate"
+                s-about
+                s-references
+                "<country>"
+                s-list
+                s-feedback
+                ])
+(defn bot-name-formatted []
+  (s/replace c/bot-name #"_" "\\\\_"))
 
 (def home-page
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
 
 (def options {:parse_mode "Markdown" :disable_web_page_preview true})
+
+(defn country-name-aliased [cc]
+  (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" #_"CZ" "BA"] cc)
+    (co/country-alias cc)
+    (c/country-name cc)))
+
+(def max-country-name-len
+  (->> (data/all-affected-country-codes)
+       (map (fn [cc]
+              (country-name-aliased cc )
+              #_(c/country-name cc)))
+       (sort-by count)
+       last
+       count))
+
+(defn affected-country--name-code [prm]
+  (->> (data/all-affected-country-codes)
+       distinct
+       #_(take 5)
+       (map (fn [cc]
+              (->> (fn [loc]
+                     (condp = cc ;; cc is upper-cased
+                       c/worldwide-2-country-code
+                       true
+
+                       c/default-2-country-code
+                       ;; XX comes from the web service
+                       (= "XX" (:country_code loc))
+
+                       (= cc (:country_code loc))))
+                   (assoc prm :pred)
+                   (data/last-day)
+                   (conj {:cn (country-name-aliased cc)
+                          :cc cc}))))))
 
 (defn encode-cmd [s] (str "/" s))
 (defn encode-pseudo-cmd [s parse_mode]
@@ -70,8 +125,17 @@
 (defn fmt [s n total explanation]
   (format "%s: %s  ~ %s%%  %s\n" s n (get-percentage n total) explanation))
 
-(def ref-mortality
+(def ref-mortality-rate
   "https://www.worldometers.info/coronavirus/coronavirus-death-rate/")
+
+(def ref-rober-koch
+  "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/nCoV.html")
+
+(def ref-3blue1brown-exp-growth
+  "https://youtu.be/Kas0tIxDvrg")
+
+(def ref-age-sex
+  "https://www.worldometers.info/coronavirus/coronavirus-age-sex-demographics/")
 
 (defn link [name url] (str "[" name "]""(" url ")"))
 
@@ -84,13 +148,32 @@
           (map (fn [cmd] (encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer)))))
 
+(defn references [prm]
+  (format
+   "%s\n\n%s\n\n%s\n\n%s\n\n%s"
+   (bot-name-formatted) #_(header prm)
+   (format "%s\n%s"
+           "Robert Koch-Institut (in German)"
+           (format "Infektionskrankheiten A-Z: %s"
+                   (link "COVID-19 (Coronavirus SARS-CoV-2)" ref-rober-koch)))
+   (format "%s\n%s"
+           "A bit of 👨‍🏫 math doesn't kill anyone!"
+           (format "3Blue1Brown: %s"
+                   (link "Exponential growth and epidemics"
+                         ref-3blue1brown-exp-growth)))
+
+   (format "%s\n%s\n%s"
+           "Worldometer - COVID-19 Coronavirus"
+           (link "Coronavirus Age Sex Demographics" ref-age-sex)
+           (link "Mortality rate" ref-mortality-rate))
+
+   (footer prm)))
+
 (defn remember-20-seconds [prm]
-  (format "%s\n%s %s\n\n%s"
-          "" #_(header prm) ;; TODO formatting corona\_cases\_bot
-          "Remember, at least *20* seconds! "
+  (format "%s\n%s"
+          "Remember, at least *20* seconds!"
           #_"https://www.who.int/gpsc/clean_hands_protection/en/"
-          "https://www.who.int/gpsc/media/how_to_handwash_lge.gif"
-          (footer prm)))
+          "https://www.who.int/gpsc/media/how_to_handwash_lge.gif"))
 
 (def max-continent-name-len
   (->> (all-affected-continent-codes)
@@ -193,7 +276,8 @@
              (fmt s-sick      ill       confirmed "")
              (fmt s-recovered recovered confirmed "")
              (fmt s-deaths    deaths    confirmed
-                  (str "    See " (link "mortality Rate" ref-mortality)))
+                  (str "    See " (encode-cmd cmd-s-references) " - mortality rate "
+                       (link "mortality rate" ref-mortality-rate)))
              (fmt s-closed    closed    confirmed
                   (format "= %s + %s"
                           (s/lower-case s-recovered)
@@ -283,13 +367,13 @@
 (defn about [prm]
   (str
    ;; escape underscores for the markdown parsing
-   (s/replace c/bot-name #"_" "\\\\_")
+   (bot-name-formatted)
    " version: " c/bot-ver " :  "
    (str
     (link "GitHub" "https://github.com/Bost/corona_cases") ", "
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases"))
    "\n"
-   "- Percentage calculation: <cases> / confirmed.\n"
+   "Percentage calculation: <cases> / confirmed\n"
 
    #_(str
       "- Interpolation method: "
@@ -305,16 +389,17 @@
     " minutes from " (link data/host data/url) ".\n")
 
    (str
-    "- See also " (link "visual dashboard" "https://arcg.is/0fHmTX") ", "
-    (link "worldometer"
+    "Useful visualizations: " (link "JHU CSSE" "https://arcg.is/0fHmTX") ", "
+    (link "Worldometer"
           "https://www.worldometers.info/coronavirus/coronavirus-cases/")
-    ".\n")
+    "\n")
 
-   (format "- Snapshot of %s master branch  /snapshot\n"
+   (format "%s master branch %s\n"
            (link "CSSEGISandData/COVID-19"
-                 "https://github.com/CSSEGISandData/COVID-19.git"))
+                 "https://github.com/CSSEGISandData/COVID-19.git")
+           (encode-cmd cmd-s-snapshot))
 
-   (format "- See who's helping: %s\n" (encode-cmd cmd-s-contributors))
+   (format "The %s\n" (encode-cmd cmd-s-contributors))
 
    "\n"
 

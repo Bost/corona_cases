@@ -9,6 +9,10 @@
             [corona.core :as c])
   (:import java.text.SimpleDateFormat))
 
+;; TODO evaluate web services
+;; https://sheets.googleapis.com/v4/spreadsheets/1jxkZpw2XjQzG04VTwChsqRnWn4-FsHH6a7UHVxvO95c/values/Dati?majorDimension=ROWS&key=AIzaSyAy6NFBLKa42yB9KMkFNucI4NLyXxlJ6jQ
+
+;; https://github.com/iceweasel1/COVID-19-Germany
 (def web-service
   {:host "coronavirus-tracker-api.herokuapp.com" :route "/all"})
 
