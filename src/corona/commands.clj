@@ -103,6 +103,11 @@
   #_(morse/send-photo
      token chat-id (io/input-stream "resources/pics/how_to_handwash_lge.gif")))
 
+(defn feedback [{:keys [chat-id] :as prm}]
+  (morse/send-text
+   c/token chat-id msg/options
+   (msg/feedback prm)))
+
 (defn keepcalm [{:keys [chat-id]}]
   (morse/send-photo
    c/token chat-id (io/input-stream "resources/pics/keepcalm.jpg")))
@@ -115,15 +120,18 @@
 (def s-start "start")
 (def s-list "list")
 (def s-about msg/cmd-s-about)
-(def s-contributors "contributors")
+(def s-contributors msg/cmd-s-contributors)
+(def s-whattodo "whattodo")
+(def s-feedback msg/cmd-s-feedback)
 
 (def cmd-names ["world"
                 #_"interpolate"
                 s-about
-                "whattodo"
+                s-whattodo
                 "<country>"
-                s-contributors
-                s-list])
+                s-feedback
+                s-list
+                ])
 
 #_(defn normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
@@ -218,6 +226,9 @@
      {:name s-about
       :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
       :desc "Bot version & some additional info"}
+     {:name s-feedback
+      :f (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
+      :desc "Talk to the bot-creator"}
      {:name "whattodo"
       :f (fn [chat-id] (keepcalm (assoc prm :chat-id chat-id)))
       :desc "Some personalized instructions"}]))

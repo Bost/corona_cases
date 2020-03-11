@@ -11,6 +11,10 @@
             [corona.core :as c :refer [in?]]))
 
 (def cmd-s-about "about")
+(def cmd-s-snapshot "snapshot")
+(def cmd-s-feedback "feedback")
+(def cmd-s-contributors "contributors")
+
 (def s-confirmed "Confirmed")
 (def s-deaths    "Deaths")
 (def s-recovered "Recovered")
@@ -246,6 +250,9 @@
         #_(chart/view)
         (chart/to-bytes :png))))
 
+(defn feedback [prm]
+  (str "Just write a message to @RostislavSvoboda thanks."))
+
 (defn contributors [prm]
   (format "%s\n\n%s\n\n%s"
           (s/join "\n" ["@DerAnweiser"
@@ -298,6 +305,9 @@
    (format "- Snapshot of %s master branch  /snapshot\n"
            (link "CSSEGISandData/COVID-19"
                  "https://github.com/CSSEGISandData/COVID-19.git"))
+
+   (format "- See who's helping: %s\n" (encode-cmd cmd-s-contributors))
+
    "\n"
 
    #_(format
