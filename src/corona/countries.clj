@@ -373,7 +373,24 @@
    "Bosnia"                   "Bosnia and Herzegovina"
    "Dominican Rep"            "Dominican Republic"
    "Macedonia"                "North Macedonia"
+
+   "occupied Palestinian territory" "Palestine, State of"
+   "Korea, South"                   "Korea, Republic of"
+   "Republic of Korea"              "Korea, Republic of"
+   "Macao SAR"                      "Macao"
+   "Iran (Islamic Republic of)"     "Iran, Islamic Republic of"
+   "Cote d'Ivoire"                  "Côte d'Ivoire"
+   "St. Martin"                     "Saint Martin (French part)"
+   "Hong Kong SAR"                  "Hong Kong"
+   "Republic of Moldova"            "Moldova, Republic of"
+   "Congo (Kinshasa)"               "Congo, the Democratic Republic of the"
+   "Taiwan*"                        "Taiwan, Province of China"
+   "Taipei and environs"            "Taiwan, Province of China"
+   "Reunion"                        "Réunion"
+
    ;; "Others" has no mapping
+   ;; "Cruise Ship" is mapped to the default val
+
    })
 
 (defn country-alias
