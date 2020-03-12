@@ -170,7 +170,7 @@
       :desc "Talk to the bot-creator"}
      {:name msg/s-references
       :f (fn [chat-id] (references (assoc prm :chat-id chat-id)))
-      :desc "Some personalized instructions"}]))
+      :desc "Knowledge is power - educate yourself"}]))
 
 (defn cmds []
   (->> (c/all-country-codes)
