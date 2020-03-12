@@ -277,8 +277,9 @@
              (fmt s-sick      ill       confirmed "")
              (fmt s-recovered recovered confirmed "")
              (fmt s-deaths    deaths    confirmed
-                  (str "    See " (encode-cmd cmd-s-references) " - mortality rate "
-                       (link "mortality rate" ref-mortality-rate)))
+                  (format "      See %s and %s"
+                          (link "mortality rate" ref-mortality-rate)
+                          (encode-cmd cmd-s-references)))
              (fmt s-closed    closed    confirmed
                   (format "= %s + %s"
                           (s/lower-case s-recovered)
