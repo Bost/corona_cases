@@ -218,10 +218,10 @@
   (let [separator " "]
     (format
      (format (str "%s\n"    ;; header
-                  "%s     " ;; sick
-                  "%s  "    ;; separator
-                  "%s  "    ;; recovered
-                  "%s     " ;; separator
+                  "%s " ;; sick
+                  "%s"    ;; separator
+                  "%s "    ;; recovered
+                  "%s" ;; separator
                   "%s\n"    ;; deaths
                   "%s")
              (header (assoc prm :day (:f data/last-day)))
