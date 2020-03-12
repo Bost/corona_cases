@@ -306,7 +306,10 @@
    "Czechia"          "Czech Republic"
    "Mainland China"   "China"
    "South Korea"      "Korea, Republic of"
-   "Taiwan"           "Taiwan, Province of China"
+   "Taiwan"                         "Taiwan, Province of China"
+   "Taiwan*"                        "Taiwan, Province of China"
+   "Taipei and environs"            "Taiwan, Province of China"
+
    "US"               "United States"
 
    ;; TODO Macau is probably just misspelled Macao. Report it to CSSEGISandData/COVID-19
@@ -384,8 +387,6 @@
    "Hong Kong SAR"                  "Hong Kong"
    "Republic of Moldova"            "Moldova, Republic of"
    "Congo (Kinshasa)"               "Congo, the Democratic Republic of the"
-   "Taiwan*"                        "Taiwan, Province of China"
-   "Taipei and environs"            "Taiwan, Province of China"
    "Reunion"                        "Réunion"
 
    ;; "Others" has no mapping
@@ -397,7 +398,9 @@
   "Get a country alias or the normal name if an alias doesn't exist"
   [cc]
   (let [country (c/country-name (s/upper-case cc))]
-    (get (clojure.set/map-invert aliases-hm) country country)))
+    (get (conj (clojure.set/map-invert aliases-hm)
+               ;; select desired aliases
+               {"Taiwan, Province of China" "Taiwan"}) country country)))
 
 (defn lower-case [hm]
   (->> hm
