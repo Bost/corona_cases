@@ -14,6 +14,12 @@ webServices = (
     # https://bachbauer.eu/projects/corona/create_csv_de.php
     # provides downloadable csv files; not a proper web service
     bachbauer.eu
+
+    # https://github.com/axisbits/covid-api
+    covid-api.com
+
+    # https://github.com/Laeyoung/COVID-19-API
+    wuhan-coronavirus-api.laeyoung.endpoint.ainize.ai
 )
 
 for srvc in "${webServices[@]}"; do
