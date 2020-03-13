@@ -50,7 +50,8 @@
 (def options {:parse_mode "Markdown" :disable_web_page_preview true})
 
 (defn country-name-aliased [cc]
-  (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" #_"CZ" "BA" "CD" "BO" "MD" "BN"] cc)
+  (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK"
+            #_"CZ" "BA" "CD" "BO" "MD" "BN"] cc)
     (co/country-alias cc)
     (c/country-name cc)))
 

@@ -306,6 +306,7 @@
    "Czechia"          "Czech Republic"
    "Mainland China"   "China"
    "South Korea"      "Korea, Republic of"
+
    "Taiwan"                         "Taiwan, Province of China"
    "Taiwan*"                        "Taiwan, Province of China"
    "Taipei and environs"            "Taiwan, Province of China"
@@ -320,23 +321,33 @@
    "Russia"           "Russian Federation"
    "Iran"             "Iran, Islamic Republic of"
    "Saint Barthelemy" "Saint Barthélemy"
-   "Palestine"        "Palestine, State of"
+
+   "Palestine"          "Palestine, State of"
+   "State of Palestine" "Palestine, State of"
+
    "Vatican City"     "Holy See (Vatican City State)"
 
-   "DR Congo"                 "Congo, the Democratic Republic of the"
+   "DR Congo"                         "Congo, the Democratic Republic of the"
+   "Congo (Kinshasa)"                 "Congo, the Democratic Republic of the"
+   "Democratic Republic of the Congo" "Congo, the Democratic Republic of the"
+
    "Tanzania"                 "Tanzania, United Republic of"
    "Venezuela"                "Venezuela, Bolivarian Republic of"
    "North Korea"              "Korea, Democratic People's Republic of"
    "Syria"                    "Syrian Arab Republic"
    "Bolivia"                  "Bolivia, Plurinational State of"
    "Laos"                     "Lao People's Democratic Republic"
-   "State of Palestine"       "Palestine, State of"
    "Moldova"                  "Moldova, Republic of"
+   "Republic of Moldova"      "Moldova, Republic of"
    "Eswatini"                 "Swaziland"
    "Cabo Verde"               "Cape Verde"
    "Brunei"                   "Brunei Darussalam"
    "Sao Tome & Principe"      "Sao Tome and Principe"
-   "Micronesia"               "Micronesia, Federated States of"
+
+   "Micronesia"                     "Micronesia, Federated States of"
+   "F.S. Micronesia"                "Micronesia, Federated States of"
+   "Federated States of Micronesia" "Micronesia, Federated States of"
+
    "St. Vincent & Grenadines" "Saint Vincent and the Grenadines"
    "U.S. Virgin Islands"      "Virgin Islands, U.S."
    "Saint Kitts & Nevis"      "Saint Kitts and Nevis"
@@ -369,8 +380,6 @@
 
    "Caribbean Netherlands"    "Bonaire, Sint Eustatius and Saba"
 
-   "F.S. Micronesia"          "Micronesia, Federated States of"
-
    "Emirates"                 "United Arab Emirates"
    ;; "Bosnia–Herzegovina"       "Bosnia and Herzegovina"
    "Bosnia"                   "Bosnia and Herzegovina"
@@ -385,8 +394,6 @@
    "Cote d'Ivoire"                  "Côte d'Ivoire"
    "St. Martin"                     "Saint Martin (French part)"
    "Hong Kong SAR"                  "Hong Kong"
-   "Republic of Moldova"            "Moldova, Republic of"
-   "Congo (Kinshasa)"               "Congo, the Democratic Republic of the"
    "Reunion"                        "Réunion"
 
    ;; "Others" has no mapping
@@ -400,7 +407,12 @@
   (let [country (c/country-name (s/upper-case cc))]
     (get (conj (clojure.set/map-invert aliases-hm)
                ;; select desired aliases
-               {"Taiwan, Province of China" "Taiwan"}) country country)))
+               {"Moldova, Republic of"                  "Moldova"
+                "Congo, the Democratic Republic of the" "DR Congo"
+                "Palestine, State of"                   "State of Palestine"
+                "Micronesia, Federated States of"       "Micronesia"
+                "Taiwan, Province of China"             "Taiwan"})
+         country country)))
 
 (defn lower-case [hm]
   (->> hm
@@ -411,8 +423,8 @@
   "Return two letter country code (Alpha-2) according to
   https://en.wikipedia.org/wiki/ISO_3166-1
   Defaults to `c/default-2-country-code`."
-  [raw-country]
-  (let [country (s/lower-case raw-country)
+  [country-name]
+  (let [country (s/lower-case country-name)
         lcases-countries (lower-case country-country-code-hm)]
     (if-let [cc (get lcases-countries country)]
       cc
@@ -421,7 +433,7 @@
         (do
           (println (format
                     "No country code found for \"%s\". Using \"%s\""
-                    raw-country
+                    country-name
                     c/default-2-country-code
                     ))
           c/default-2-country-code)))))
