@@ -86,7 +86,9 @@
 
 (defn sums-for-date [locations raw-date]
   (->> locations
-       (map (fn [loc] (->> loc :history raw-date read-number)))
+       (map (fn [loc]
+              #_(->> loc :history raw-date str read-number)
+              (->> loc :history raw-date)))
        (apply +)))
 
 (defn sums-for-case [{:keys [case pred]}]
