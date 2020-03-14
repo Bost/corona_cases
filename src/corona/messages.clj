@@ -4,7 +4,7 @@
             [clj-time.format :as tf]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
-            [corona.api :as data]
+            [corona.csv :as data]
             [corona.interpolate :as i]
             [corona.tables :as tab]
             [corona.countries :as co]

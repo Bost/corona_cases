@@ -97,6 +97,8 @@
   (let [locations (->> (data-memo) case :locations
                        (filter pred))]
     (->> (raw-dates)
+         #_(take 4)
+         #_(take-last 1)
          (map (fn [raw-date] (sums-for-date locations raw-date))))))
 
 (defn get-counts [prm]

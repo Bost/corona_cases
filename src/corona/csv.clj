@@ -51,7 +51,8 @@
 
 (defn sum-up [prm]
   (->> csv-files
-       (take-last 1)
+       #_(take 4)
+       #_(take-last 1)
        (map (fn [file] (sum-up-file (assoc prm :file file))))))
 
 (defn get-counts [{:keys [pred] :as prm}]
