@@ -39,3 +39,5 @@ Using fish-shell: see [deploy.fish](./deploy.fish).
 - Don't panic: Compare data: Corona vs. Flu vs. World population and Show deaths
   rates distribution by age / age-groups; probability calculator
 - Automate repo CSSEGISandData/COVID-19 snapshot download
+- Create web-service under https://corona-cases-bot.herokuapp.com/ even for own
+  use

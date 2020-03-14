@@ -10,27 +10,38 @@
             [corona.countries :as co]
             [corona.core :as c :refer [in?]]))
 
-(def s-world        "world")
-(def s-world-desc   "Start here")
-(def s-start        "start")
-(def s-list         "list")
-(def s-list-desc    "List of countries")
-(def s-about        "about")
-(def s-contributors "contributors")
-(def s-references   "references")
-(def s-feedback     "feedback")
-(def s-confirmed    "Confirmed")
-(def s-deaths       "Deaths")
-(def s-recovered    "Recovered")
-(def s-sick         "Sick")
-(def s-closed       "Closed")
+(def lang-strings
+  {
+   :world        "world"
+   :world-desc   "Start here"
+   :start        "start"
+   :list         "list"
+   :list-desc    "List of countries"
+   :about        "about"
+   :contributors "contributors"
+   :references   "references"
+   :feedback     "feedback"
+   :confirmed    "Confirmed"
+   :deaths       "Deaths"
+   :recovered    "Recovered"
+   :sick         "Sick"
+   :closed       "Closed"
+   })
 
-(def cmd-s-about s-about)
-(def cmd-s-snapshot "snapshot")
-(def cmd-s-feedback s-feedback)
-(def cmd-s-contributors s-contributors)
-(def cmd-s-references s-references)
-(def cmd-s-country "<country>")
+(def s-world        (:world        lang-strings))
+(def s-world-desc   (:world-desc   lang-strings))
+(def s-start        (:start        lang-strings))
+(def s-list         (:list         lang-strings))
+(def s-list-desc    (:list-desc    lang-strings))
+(def s-about        (:about        lang-strings))
+(def s-contributors (:contributors lang-strings))
+(def s-references   (:references   lang-strings))
+(def s-feedback     (:feedback     lang-strings))
+(def s-confirmed    (:confirmed    lang-strings))
+(def s-deaths       (:deaths       lang-strings))
+(def s-recovered    (:recovered    lang-strings))
+(def s-sick         (:sick         lang-strings))
+(def s-closed       (:closed       lang-strings))
 
 (def cmd-names [s-world
                 #_"interpolate"
@@ -218,12 +229,12 @@
 (defn list-countries [{:keys [data] :as prm}]
   (let [separator " "]
     (format
-     (format (str "%s\n"    ;; header
-                  "%s " ;; sick
-                  "%s"    ;; separator
-                  "%s "    ;; recovered
-                  "%s" ;; separator
-                  "%s\n"    ;; deaths
+     (format (str "%s\n" ;; header
+                  "%s "  ;; sick
+                  "%s"   ;; separator
+                  "%s "  ;; recovered
+                  "%s"   ;; separator
+                  "%s\n" ;; deaths
                   "%s")
              (header (assoc prm :day (:f data/last-day)))
              s-sick
