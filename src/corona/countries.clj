@@ -5,6 +5,10 @@
    [clojure.string :as s]))
 
 (def continent-continent-code-hm
+  "
+  TODO Conflicting 2 letter code of \"Namibia\" and \"North America\".
+  https://datahub.io/core/continent-codes#resource-continent-codes
+  "
   {"Africa" "AF"
    "North America" "NA"
    "Oceania" "OC"
