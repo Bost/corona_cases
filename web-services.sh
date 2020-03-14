@@ -20,6 +20,9 @@ webServices = (
 
     # https://github.com/Laeyoung/COVID-19-API
     wuhan-coronavirus-api.laeyoung.endpoint.ainize.ai
+
+    # https://www.micro-work.net/covid/ - as of now - work in progress
+    www.micro-work.net
 )
 
 for srvc in "${webServices[@]}"; do
