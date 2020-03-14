@@ -32,25 +32,22 @@
     (c/calculate-ill nc nr nd)))
 
 (defn sum-up-file [{:keys [sum-up-fn pred-csv pred file] :as prm}]
-  (let [r
-        (transduce
-         (comp
-          (map sum-up-fn)
-          (map fix-octal-val)
-          (remove empty?)
-          (map read-string))
-         + 0
-         (->> file take-csv rest
-              (take 1)
-              (filter (fn [[_ loc _ c _ _]]
-                        (if-not pred-csv
-                          (println "sum-up-fn" sum-up-fn))
-                        (if-not loc
-                          (println "loc" loc))
-                        #_(println c loc (pred-csv loc))
-                        (pred-csv loc)))))]
-    #_(println "r" r)
-    r))
+  (->> file take-csv rest
+       #_(take 1)
+       (filter (fn [[_ loc _ c _ _]]
+                 (if-not pred-csv
+                   (println "sum-up-fn" sum-up-fn))
+                 (if-not loc
+                   (println "loc" loc))
+                 #_(println c loc (pred-csv loc))
+                 (pred-csv loc)))
+       (transduce
+        (comp
+         (map sum-up-fn)
+         (map fix-octal-val)
+         (remove empty?)
+         (map read-string))
+        + 0)))
 
 (defn sum-up [prm]
   (->> csv-files

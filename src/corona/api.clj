@@ -87,9 +87,11 @@
 (defn sums-for-date [locations raw-date]
   (->> locations
        (map (fn [loc]
-              #_(->> loc :history raw-date str read-number)
-              (->> loc :history raw-date)))
-       (apply +)))
+              (->> loc :history raw-date
+                   ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
+                   ;; str read-number
+                   )))
+       (reduce + 0)))
 
 (defn sums-for-case [{:keys [case pred]}]
   (let [locations (->> (data-memo) case :locations
@@ -99,9 +101,8 @@
 
 (defn get-counts [prm]
   (let [crd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
-                  [:confirmed :recovered :deaths])
-        i (apply mapv c/calculate-ill crd)]
-    (zipmap [:c :r :d :i] (conj crd i))))
+                  [:confirmed :recovered :deaths])]
+    (zipmap [:c :r :d :i] (conj crd (apply mapv c/calculate-ill crd)))))
 
 (defn confirmed [prm] (:c (get-counts prm)))
 (defn deaths    [prm] (:d (get-counts prm)))
