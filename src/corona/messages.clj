@@ -354,7 +354,9 @@
                         (link "maty535" "https://github.com/maty535")
                         "@kostanjsek"
                         "@DistrictBC"
-                        "Michael J."])
+                        "Michael J."
+                        "Johannes D."
+                        ])
           (str
            "The rest of the contributors prefer anonymity or haven't "
            "approved their inclusion to this list yet. 🙏 Thanks folks.")
