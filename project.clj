@@ -7,6 +7,7 @@
   :dependencies
   [
    [org.clojure/clojure     "1.10.1"]
+   [org.clojure/data.csv    "1.0.0"]
    [compojure               "1.6.1"]
    [ring/ring-jetty-adapter "1.8.0"]
    [environ                 "1.1.0"]
@@ -14,9 +15,6 @@
    [org.clojure/data.json   "0.2.7"]
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
    [com.hypirion/clj-xchart "0.2.0"]
-   #_[incanter                "1.9.3"]
-   [incanter/incanter-core   "1.9.3"]
-   [incanter/incanter-charts "1.9.3"]
    ]
   :min-lein-version "2.0.0"
   :plugins

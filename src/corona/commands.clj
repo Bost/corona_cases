@@ -37,9 +37,6 @@
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/list-continents prm))))
 
-(defn interpolate [{:keys [chat-id country] :as prm}]
-  (morse/send-photo c/token chat-id (msg/interpolated-vals prm)))
-
 (defn snapshot [{:keys [chat-id] :as prm}]
   (morse/send-text
    c/token chat-id msg/options
@@ -157,11 +154,6 @@
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
                                  (conj prm-country-code))))
       :desc msg/s-world-desc}
-     #_
-     {:name "interpolate"
-      :f (fn [chat-id] (interpolate (-> (assoc prm :chat-id chat-id)
-                                       (conj prm-country-code))))
-      :desc "Smooth the data / leave out the noise"}
      {:name msg/s-about
       :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
       :desc "Bot version & some additional info"}

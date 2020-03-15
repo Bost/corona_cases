@@ -5,7 +5,6 @@
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
             [corona.csv :as data]
-            [corona.interpolate :as i]
             [corona.tables :as tab]
             [corona.countries :as co]
             [corona.core :as c :refer [in?]]))
@@ -44,7 +43,6 @@
 (def s-closed       (:closed       lang-strings))
 
 (def cmd-names [s-world
-                #_"interpolate"
                 s-about
                 s-references
                 cmd-s-country
@@ -373,13 +371,6 @@
            "approved their inclusion to this list yet. 🙏 Thanks folks.")
           (footer prm)))
 
-(defn interpolated-vals [{:keys [country] :as prm}]
-  (i/create-pic
-   (str c/bot-name ": " country
-        " interpolation - " s-sick "; see /"
-        cmd-s-about)
-   (data/ill prm)))
-
 (defn about [{:keys [parse_mode] :as prm}]
   (str
    ;; escape underscores for the markdown parsing
@@ -390,11 +381,6 @@
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases"))
    "\n"
    "Percentage calculation: <cases> / confirmed\n"
-
-   #_(str
-      "- Interpolation method: "
-      (link "b-spline" "https://en.wikipedia.org/wiki/B-spline")
-      "; degree of \"smoothness\" " (i/degree (interpolated-vals prm)) ".\n")
 
    #_(str
     "- Feb12-spike caused mainly by a change in the diagnosis classification"
