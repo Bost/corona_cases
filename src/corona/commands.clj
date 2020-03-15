@@ -15,8 +15,10 @@
   (if (in? (data/all-affected-country-codes) country-code)
     (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
 
-(defn partition-in-chunks [col]
-  (partition-all (/ (count col) 5) col))
+(defn partition-in-chunks
+  "nr-countries / nr-patitions : 126 / 6, 110 / 5"
+  [col]
+  (partition-all (/ (count col) 6) col))
 
 (defn list-countries [{:keys [chat-id] :as prm}]
   (->> (msg/affected-country--name-code prm)
