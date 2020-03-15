@@ -25,6 +25,10 @@
    :recovered    "Recovered"
    :sick         "Sick"
    :closed       "Closed"
+   ;; A文 doesn't get displayed blue as a telegram command. Hmm
+   :language     "lang"
+   :country      "country"
+   :snapshot     "snapshot"
    })
 
 (def s-world        (:world        lang-strings))
@@ -41,6 +45,11 @@
 (def s-recovered    (:recovered    lang-strings))
 (def s-sick         (:sick         lang-strings))
 (def s-closed       (:closed       lang-strings))
+(def s-language     (:language     lang-strings))
+(def s-snapshot     (:snapshot     lang-strings))
+(def cmd-s-country  (format "<%s>" (:country lang-strings)))
+
+(def lang-de "lang:de")
 
 (def cmd-names [s-world
                 s-about
@@ -48,6 +57,9 @@
                 cmd-s-country
                 s-list
                 s-feedback
+
+                #_s-language
+                #_lang-de
                 ])
 (defn bot-name-formatted []
   (s/replace c/bot-name #"_" "\\\\_"))
@@ -180,6 +192,14 @@
 
    (footer prm)))
 
+(defn language [prm]
+  (format
+   "/lang:%s\n/lang:%s\n/lang:%s\n"
+   "sk"
+   "de"
+   "en"
+   (footer prm)))
+
 (defn remember-20-seconds [prm]
   (format "%s\n%s"
           "Remember, at least *20* seconds!"
@@ -289,7 +309,7 @@
              (fmt s-deaths    deaths    confirmed
                   (format "      See %s and %s"
                           (link "mortality rate" ref-mortality-rate)
-                          (encode-cmd cmd-s-references)))
+                          (encode-cmd s-references)))
              (fmt s-closed    closed    confirmed
                   (format "= %s + %s"
                           (s/lower-case s-recovered)
@@ -342,7 +362,7 @@
                 (format "%s: %s; see %s"
                         c/bot-name
                         (c/country-name country-code)
-                        (encode-cmd cmd-s-about))
+                        (encode-cmd s-about))
                 :render-style :area
                 :legend {:position :inside-nw}
                 :x-axis {:title "Day"}
@@ -399,9 +419,9 @@
    (format "%s master branch %s\n"
            (link "CSSEGISandData/COVID-19"
                  "https://github.com/CSSEGISandData/COVID-19.git")
-           (encode-cmd cmd-s-snapshot))
+           (encode-cmd s-snapshot))
 
-   (format "The %s\n" (encode-cmd cmd-s-contributors))
+   (format "The %s\n" (encode-cmd s-contributors))
 
    (format "Statistics per single %s - see the %s\n"
            (encode-cmd
