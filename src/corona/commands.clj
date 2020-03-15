@@ -3,7 +3,7 @@
             [clojure.string :as s]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cc]
-            [corona.csv :as data]
+            [corona.api :as data]
             [corona.messages :as msg]
             [morse.api :as morse]
             [corona.countries :as co]))

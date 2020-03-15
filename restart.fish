@@ -11,20 +11,23 @@ set botEnvs $botEnvs --prod
 set prmEnvName $argv[1]
 
 if test $prmEnvName = $botEnvs[1]
-    set --local envName hokuspokus
+    set envName hokuspokus
 else if test $prmEnvName = $botEnvs[2]
-    set --local envName corona-cases
+    set envName corona-cases
 else
     echo "ERROR: Unknown parameter:" $prmEnvName
     echo "Possible values:" $botEnvs
     exit 1
 end
 
-set --local APP $envName"-bot"
-set --local REMOTE "heroku-"$APP
+set APP $envName"-bot"
+set REMOTE "heroku-"$APP
 
-set cmd heroku ps:scale web=0 --app $APP; and heroku ps:scale web=1 --app $APP
+set cmd heroku ps:scale web=0 --app $APP
+echo $cmd
+eval $cmd
 
+set cmd heroku ps:scale web=1 --app $APP
 echo $cmd
 eval $cmd
 
