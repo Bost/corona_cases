@@ -416,9 +416,11 @@
     (get (conj (clojure.set/map-invert aliases-hm)
                ;; select desired aliases
                {"Moldova, Republic of"                  "Moldova"
+                "Saint Vincent and the Grenadines"      "St. Vincent & Grenadines"
                 "Congo, the Democratic Republic of the" "DR Congo"
-                "Palestine, State of"                   "State of Palestine"
+                "Palestine, State of"                   "Palestine"
                 "Micronesia, Federated States of"       "Micronesia"
+                "Venezuela, Bolivarian Republic of"     "Venezuela"
                 "Taiwan, Province of China"             "Taiwan"})
          country country)))
 
