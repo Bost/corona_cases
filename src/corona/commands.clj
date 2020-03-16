@@ -80,19 +80,6 @@
   (-> (co/country-name country-code)
       (s/replace " " "")))
 
-(defn pred-fn [country-code]
-  (fn [loc]
-    ;; TODO s/upper-case is probably not needed
-    (condp = (s/upper-case country-code)
-      co/worldwide-2-country-code
-      true
-
-      co/default-2-country-code
-      ;; XX comes from the service
-      (= "XX" (:country_code loc))
-
-      (= country-code (:country_code loc)))))
-
 (defn cmds-country-code [country-code]
 
   (defn- normalize
@@ -121,18 +108,7 @@
          (world {:cmd-names msg/cmd-names
                  :chat-id chat-id
                  :country-code country-code
-                 :pred (pred-fn country-code)
-                 #_(fn [loc]
-                     ;; TODO s/upper-case is probably not needed
-                     (condp = (s/upper-case country-code)
-                       co/worldwide-2-country-code
-                       true
-
-                       co/default-2-country-code
-                       ;; XX comes from the service
-                       (= "XX" (:country_code loc))
-
-                       (= country-code (:country_code loc))))}))}))))
+                 :pred (msg/pred-fn country-code)}))}))))
 
 (defn cmds-general []
   (let [prm

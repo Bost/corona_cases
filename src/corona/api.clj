@@ -93,6 +93,19 @@
                    )))
        (reduce + 0)))
 
+(defn pred-fn [country-code]
+  (fn [loc]
+    ;; TODO s/upper-case is probably not needed
+    (condp = (s/upper-case country-code)
+      co/worldwide-2-country-code
+      true
+
+      co/default-2-country-code
+      ;; XX comes from the service
+      (= "XX" (:country_code loc))
+
+      (= country-code (:country_code loc)))))
+
 (defn sums-for-case [{:keys [case pred]}]
   (let [locations (->> (data-memo) case :locations
                        (filter pred))]
