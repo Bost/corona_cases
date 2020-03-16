@@ -8,8 +8,10 @@
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (morse/send-text
-   c/token chat-id msg/options
-   (msg/info prm))
+   c/token chat-id
+   (select-keys (assoc prm :parse_mode "HTML")
+                (keys msg/options))
+   (msg/info (assoc prm :parse_mode "HTML")))
   (if (in? (msg/all-affected-country-codes) country-code)
     (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
 

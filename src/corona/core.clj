@@ -59,14 +59,18 @@
     0
     (-> v fix-octal-val read-string)))
 
-(defn left-pad [s padding-len]
-  (s/replace (format (str "%" padding-len "s") s) " " "0"))
+(defn left-pad
+  ([s padding-len] (left-pad s "0" padding-len))
+  ([s with padding-len]
+   (s/replace (format (str "%" padding-len "s") s) " " with)))
 
 #_
 (defn left-pad [s padding-len]
   (str (s/join (repeat (- padding-len (count s)) " "))
        s))
 
-(defn right-pad [s padding-len]
-  (str s
-       (s/join (repeat (- padding-len (count s)) " "))))
+(defn right-pad
+  ([s padding-len] (right-pad s " " padding-len))
+  ([s with padding-len]
+   (str s
+        (s/join (repeat (- padding-len (count s)) with)))))

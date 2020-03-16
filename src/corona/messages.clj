@@ -165,7 +165,10 @@
 (def ref-age-sex
   "https://www.worldometers.info/coronavirus/coronavirus-age-sex-demographics/")
 
-(defn link [name url] (str "[" name "]""(" url ")"))
+(defn link [name url {:keys [parse_mode] :as prm}]
+  (if (= parse_mode "HTML")
+    (format "<a href=\"%s\">%s</a>" url name)
+    (format "[%s](%s)" name url)))
 
 (defn footer [{:keys [cmd-names parse_mode]}]
   (let [spacer "   "]
@@ -183,17 +186,19 @@
    (format "%s\n%s"
            "Robert Koch-Institut (in German)"
            (format "Infektionskrankheiten A-Z: %s"
-                   (link "COVID-19 (Coronavirus SARS-CoV-2)" ref-rober-koch)))
+                   (link "COVID-19 (Coronavirus SARS-CoV-2)"
+                         ref-rober-koch prm)))
    (format "%s\n%s"
            "A bit of 👨‍🏫 math doesn't kill anyone!"
            (format "3Blue1Brown: %s"
                    (link "Exponential growth and epidemics"
-                         ref-3blue1brown-exp-growth)))
+                         ref-3blue1brown-exp-growth
+                         prm)))
 
    (format "%s\n%s\n%s"
            "Worldometer - COVID-19 Coronavirus"
-           (link "Coronavirus Age Sex Demographics" ref-age-sex)
-           (link "Mortality rate" ref-mortality-rate))
+           (link "Coronavirus Age Sex Demographics" ref-age-sex prm)
+           (link "Mortality rate" ref-mortality-rate prm))
 
    (footer prm)))
 
@@ -302,23 +307,45 @@
                   [country-code
                    (co/country-code-3-letter country-code)])))
 
-     (let [{confirmed :c} last-day]
+     (let [{confirmed :c} last-day
+           rpad-len (count s-recovered)
+           lpad-len (->> confirmed str count)]
        (str
-        s-confirmed ": " confirmed "\n"
+        (format "<code>%s %s</code>\n"
+                (c/right-pad s-confirmed " " rpad-len)
+                (c/left-pad confirmed " " lpad-len))
         (if (pos? confirmed)
           (let [{deaths :d recovered :r ill :i} last-day
                 closed (+ deaths recovered)]
-            (str
-             (fmt s-sick      ill       confirmed "")
-             (fmt s-recovered recovered confirmed "")
-             (fmt s-deaths    deaths    confirmed
-                  (format "      See %s and %s"
-                          (link "mortality rate" ref-mortality-rate)
-                          (encode-cmd s-references)))
-             (fmt s-closed    closed    confirmed
-                  (format "= %s + %s"
-                          (s/lower-case s-recovered)
-                          (s/lower-case s-deaths))))))))
+            (format
+             "%s\n%s\n%s\n%s\n"
+             (format "<code>%s %s ~%s%%</code>  %s"
+                     (c/right-pad s-sick " " rpad-len)
+                     (c/left-pad ill " " lpad-len)
+                     (-> (get-percentage ill confirmed)
+                         (c/left-pad " " 3)) "")
+             (format "<code>%s %s ~%s%%</code>  %s"
+                     (c/right-pad s-recovered " " rpad-len)
+                     (c/left-pad recovered " " lpad-len)
+                     (-> (get-percentage recovered confirmed)
+                         (c/left-pad " " 3))
+                     "")
+             (format "<code>%s %s ~%s%%</code>  %s"
+                     (c/right-pad s-deaths " " rpad-len)
+                     (c/left-pad deaths " " lpad-len)
+                     (-> (get-percentage deaths confirmed)
+                         (c/left-pad " " 3))
+                     (format " See %s and %s"
+                             (link "mortality rate" ref-mortality-rate prm)
+                             (encode-cmd s-references)))
+             (format "<code>%s %s ~%s%%</code>  %s"
+                     (c/right-pad s-closed " " rpad-len)
+                     (c/left-pad closed " " lpad-len)
+                     (-> (get-percentage closed confirmed)
+                         (c/left-pad " " 3))
+                     (format "= %s + %s"
+                             (s/lower-case s-recovered)
+                             (s/lower-case s-deaths))))))))
 
      (footer prm))))
 
@@ -402,8 +429,8 @@
    (bot-name-formatted)
    " version: " c/bot-ver " :  "
    (str
-    (link "GitHub" "https://github.com/Bost/corona_cases") ", "
-    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases"))
+    (link "GitHub" "https://github.com/Bost/corona_cases" prm) ", "
+    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" prm))
    "\n"
    "Percentage calculation: <cases> / confirmed\n"
 
@@ -416,14 +443,14 @@
     " minutes from " (link data/host data/url) ".\n")
 
    (str
-    "Useful visualizations: " (link "JHU CSSE" "https://arcg.is/0fHmTX") ", "
+    "Useful visualizations: " (link "JHU CSSE" "https://arcg.is/0fHmTX" prm) ", "
     (link "Worldometer"
-          "https://www.worldometers.info/coronavirus/coronavirus-cases/")
+          "https://www.worldometers.info/coronavirus/coronavirus-cases/" prm)
     "\n")
 
    (format "%s master branch %s\n"
            (link "CSSEGISandData/COVID-19"
-                 "https://github.com/CSSEGISandData/COVID-19.git")
+                 "https://github.com/CSSEGISandData/COVID-19.git" prm)
            (encode-cmd s-snapshot))
 
    (format "The %s\n" (encode-cmd s-contributors))
@@ -442,7 +469,7 @@
      "/fr    /fra      /France\n"
      "/us    /usa    /UnitedStates   (without spaces)\n\n")
     (link "ISO 3166"
-          "https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes"))
+          "https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes" prm))
 
    ;; TODO home page; average recovery time
    #_(str
