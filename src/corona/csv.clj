@@ -33,7 +33,7 @@
 
 (defn pred-fn [country-code]
   (fn [country-code]
-    (condp = (s/upper-case country-code)
+    (condp = country-code
       co/worldwide-2-country-code
       true
 
