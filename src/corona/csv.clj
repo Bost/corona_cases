@@ -4,7 +4,7 @@
             [clojure.java.io :as io]
             [clojure.string :as s]
             [corona.countries :as co]
-            [corona.core :as c])
+            [corona.core :as c :refer [dbg]])
   (:import java.text.SimpleDateFormat))
 
 ;; get all the file names in one directory
@@ -31,16 +31,29 @@
   (let [[nc nd nr] (map c/read-number [c d r])]
     (c/calculate-ill nc nr nd)))
 
-(defn sum-up-file [{:keys [sum-up-fn pred pred file] :as prm}]
+(defn pred-fn [country-code]
+  (fn [country-code]
+    (condp = (s/upper-case country-code)
+      co/worldwide-2-country-code
+      true
+
+      co/default-2-country-code
+      ;; XX comes from the service
+      (= "XX" country-code)
+
+      true)))
+
+(defn sum-up-file-de [{:keys [sum-up-fn pred file] :as prm}]
   (->> file take-csv rest
-       #_(take 1)
-       (filter (fn [[_ loc _ c _ _]]
-                 (if-not pred
-                   (println "sum-up-fn" sum-up-fn))
-                 (if-not loc
-                   (println "loc" loc))
-                 #_(println c loc (pred loc))
-                 (pred loc)))
+       #_(take-last 1)
+       (filter (fn [[_ country-name _ c _ _]]
+                 (->> country-name
+                      co/country_code
+                      pred)))))
+
+(defn sum-up-file [{:keys [sum-up-fn pred file] :as prm}]
+  #_(println "prm" prm)
+  (->> (sum-up-file-de prm)
        (transduce
         (comp
          (map sum-up-fn)
@@ -52,7 +65,7 @@
 (defn sum-up [prm]
   (->> csv-files
        #_(take 4)
-       #_(take-last 1)
+       #_(take-last 1)  ;; TODO deactivate this
        (map (fn [file] (sum-up-file (assoc prm :file file))))))
 
 (defn get-counts [{:keys [pred] :as prm}]
