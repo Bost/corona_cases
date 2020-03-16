@@ -513,6 +513,9 @@
        (map (fn [[k v]] [(s/lower-case k) v]))
        (into {})))
 
+(def default-mappings
+  {"Cruise Ship" default-2-country-code})
+
 (defn country_code
   "Return two letter country code (Alpha-2) according to
   https://en.wikipedia.org/wiki/ISO_3166-1
@@ -524,10 +527,11 @@
       cc
       (if-let [country-alias (get (lower-case aliases-hm) country)]
         (get country--country-code-hm country-alias)
-        (do
-          (println (format
-                    "No country code found for \"%s\". Using \"%s\""
-                    country-name
-                    default-2-country-code
-                    ))
-          default-2-country-code)))))
+        (or
+         (get default-mappings country-name)
+         (do (println (format
+                     "No country code found for \"%s\". Using \"%s\""
+                     country-name
+                     default-2-country-code
+                     ))
+             default-2-country-code))))))
