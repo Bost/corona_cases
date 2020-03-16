@@ -95,17 +95,7 @@
        distinct
        #_(take 5)
        (map (fn [cc]
-              (->> (fn [loc]
-                     (condp = cc ;; cc is upper-cased
-                       co/worldwide-2-country-code
-                       true
-
-                       co/default-2-country-code
-                       ;; XX comes from the web service
-                       (= "XX" (:country_code loc))
-
-                       (= cc (:country_code loc))))
-                   (assoc prm :pred)
+              (->> (assoc prm :pred data/pred-fn)
                    (data/last-day)
                    (conj {:cn (country-name-aliased cc)
                           :cc cc}))))))
