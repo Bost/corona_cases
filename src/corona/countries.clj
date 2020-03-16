@@ -158,6 +158,7 @@
     "Kiribati"                                     "KI"
     "Korea, Democratic People's Republic of"       "KP"
     "Korea, Republic of"                           "KR"
+    "Kosovo"                                       "XK"
     "Kuwait"                                       "KW"
     "Kyrgyzstan"                                   "KG"
     "Lao People's Democratic Republic"             "LA"
@@ -399,6 +400,9 @@
    "St. Martin"                     "Saint Martin (French part)"
    "Hong Kong SAR"                  "Hong Kong"
    "Reunion"                        "Réunion"
+
+   "Curacao"                        "Curaçao"
+   "Congo (Brazzaville)"            "Congo"
 
    ;; "Others" has no mapping
    ;; "Cruise Ship" is mapped to the default val
