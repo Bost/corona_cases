@@ -72,15 +72,15 @@
 
 (defn country-name-aliased [cc]
   (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK"
-            #_"CZ" "BA" "CD" "BO" "MD" "BN"] cc)
+            #_"CZ" "BA" "CD" "BO" "MD" "BN" "VE" "VC"] cc)
     (co/country-alias cc)
-    (c/country-name cc)))
+    (co/country-name cc)))
 
 (def max-country-name-len
   (->> (data/all-affected-country-codes)
        (map (fn [cc]
               (country-name-aliased cc )
-              #_(c/country-name cc)))
+              #_(co/country-name cc)))
        (sort-by count)
        last
        count))
@@ -291,7 +291,7 @@
      (str
       (header (assoc prm :day day))
       "  "
-      (c/country-name country-code) " "
+      (co/country-name country-code) " "
       (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
              (map (fn [s] (->> s s/lower-case encode-cmd))
                   [country-code
@@ -361,7 +361,7 @@
                {:title
                 (format "%s: %s; see %s"
                         c/bot-name
-                        (c/country-name country-code)
+                        (co/country-name country-code)
                         (encode-cmd s-about))
                 :render-style :area
                 :legend {:position :inside-nw}

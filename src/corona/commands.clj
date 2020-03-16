@@ -24,6 +24,8 @@
   (->> (msg/affected-country--name-code prm)
        (sort-by :i <)
        partition-in-chunks
+       #_(take 3)
+       #_(take-last 1)
        (map (fn [chunk]
               (morse/send-text
                c/token chat-id (select-keys (assoc prm :parse_mode "HTML")
@@ -77,7 +79,7 @@
 #_(defn normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
   [country-code]
-  (-> (c/country-name country-code)
+  (-> (co/country-name country-code)
       (s/replace " " "")))
 
 (defn cmds-country-code [country-code]
@@ -85,7 +87,7 @@
   (defn- normalize
     "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
     []
-    (-> (c/country-name country-code)
+    (-> (co/country-name country-code)
         (s/replace " " "")))
 
   (->>
