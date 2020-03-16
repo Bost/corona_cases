@@ -95,7 +95,7 @@
        distinct
        #_(take 5)
        (map (fn [cc]
-              (->> (assoc prm :pred data/pred-fn)
+              (->> (assoc prm :pred (data/pred-fn cc))
                    (data/last-day)
                    (conj {:cn (country-name-aliased cc)
                           :cc cc}))))))
@@ -140,8 +140,34 @@
                          "get-percentage [:high|:low|:normal] "
                          "<PLACE> <TOTAL_COUNT>")))))))
 
-(defn fmt [s n total explanation]
-  (format "%s: %s  ~ %s%%  %s\n" s n (get-percentage n total) explanation))
+(def max-diff-order-of-magnitude 6)
+
+(defn plus-minus
+  "Display \"+0\" when n is zero"
+  [n]
+  (c/left-pad
+   (if (zero? n)
+     "+0"
+     (str
+      #_(cond (pos? n) "↑"
+              (neg? n) "↓"
+              :else "")
+      (cond (pos? n) "+"
+            :else "")
+      n))
+   " " max-diff-order-of-magnitude))
+
+(defn fmt [{:keys [s n total diff desc calc-rate]}]
+  (format "<code>%s %s %s %s</code> %s"
+          (c/right-pad s " " 9)
+          (c/left-pad n " " 6)
+          (c/left-pad
+           (if calc-rate
+             (str (get-percentage n total) "%")
+             " ")
+             " " 4)
+          (plus-minus diff)
+          desc))
 
 (def ref-mortality-rate
   "https://www.worldometers.info/coronavirus/coronavirus-death-rate/")
@@ -285,7 +311,8 @@
 
 (defn info [{:keys [country-code] :as prm}]
   (let [last-day (data/last-day prm)
-        {day :f} last-day]
+        {day :f} last-day
+        delta (data/delta prm)]
     (format
      "%s\n%s\n%s"
      (str
@@ -299,44 +326,34 @@
 
      (let [{confirmed :c} last-day
            rpad-len (count s-recovered)
-           lpad-len (->> confirmed str count)]
+           lpad-len (->> confirmed str count)
+           {dc :c} delta]
        (str
-        (format "<code>%s %s</code>\n"
-                (c/right-pad s-confirmed " " rpad-len)
-                (c/left-pad confirmed " " lpad-len))
+        (fmt {:s s-confirmed :n confirmed :diff dc
+              :desc "" :calc-rate false}) "\n"
         (if (pos? confirmed)
           (let [{deaths :d recovered :r ill :i} last-day
-                closed (+ deaths recovered)]
+                closed (+ deaths recovered)
+                {dd :d dr :r di :i} delta
+                dclosed (+ dd dr)]
             (format
              "%s\n%s\n%s\n%s\n"
-             (format "<code>%s %s ~%s%%</code>  %s"
-                     (c/right-pad s-sick " " rpad-len)
-                     (c/left-pad ill " " lpad-len)
-                     (-> (get-percentage ill confirmed)
-                         (c/left-pad " " 3)) "")
-             (format "<code>%s %s ~%s%%</code>  %s"
-                     (c/right-pad s-recovered " " rpad-len)
-                     (c/left-pad recovered " " lpad-len)
-                     (-> (get-percentage recovered confirmed)
-                         (c/left-pad " " 3))
-                     "")
-             (format "<code>%s %s ~%s%%</code>  %s"
-                     (c/right-pad s-deaths " " rpad-len)
-                     (c/left-pad deaths " " lpad-len)
-                     (-> (get-percentage deaths confirmed)
-                         (c/left-pad " " 3))
-                     (format " See %s and %s"
+             (fmt {:s s-sick :n ill :total confirmed :diff di :desc ""
+                   :calc-rate true})
+             (fmt {:s s-recovered :n recovered :total confirmed :diff dr :desc ""
+                   :calc-rate true})
+             (fmt {:s s-deaths :n deaths :total confirmed :diff dd
+                   :calc-rate true
+                   :desc (format " See %s"
+                                 (link "mortality rate" ref-mortality-rate prm))
+                   #_(format " See %s and %s"
                              (link "mortality rate" ref-mortality-rate prm)
-                             (encode-cmd s-references)))
-             (format "<code>%s %s ~%s%%</code>  %s"
-                     (c/right-pad s-closed " " rpad-len)
-                     (c/left-pad closed " " lpad-len)
-                     (-> (get-percentage closed confirmed)
-                         (c/left-pad " " 3))
-                     (format "= %s + %s"
-                             (s/lower-case s-recovered)
-                             (s/lower-case s-deaths))))))))
-
+                             (encode-cmd s-references))})
+             (fmt {:s s-closed :n closed :total confirmed :diff dclosed
+                   :calc-rate true
+                   :desc (format "= %s + %s"
+                                 (s/lower-case s-recovered )
+                                 (s/lower-case s-deaths))}))))))
      (footer prm))))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to

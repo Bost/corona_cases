@@ -130,10 +130,36 @@
          (map keyname)
          (map (fn [rd] (.parse sdf rd))))))
 
-(defn last-day [prm]
-  (conj {:f (last (dates))}
+(defn get-last [coll]
+  (->> coll
+       (take-last 1)
+       (first)))
+
+(defn get-prev [coll]
+  (->> coll
+       (take-last 2)
+       (first)))
+
+(defn eval-fun [{:keys [fun] :as prm}]
+  (conj {:f (fun (dates))}
         (zipmap [:c :d :r :i]
-                (map last [(confirmed prm)
-                           (deaths    prm)
-                           (recovered prm)
-                           (ill       prm)]))))
+                (map fun [(confirmed prm)
+                          (deaths    prm)
+                          (recovered prm)
+                          (ill       prm)]))))
+
+(defn delta
+  "Example (delta {:pred (pred-fn \"CN\")})"
+  [prm]
+  (->> [get-prev get-last]
+       (map (fn [fun] (eval-fun (assoc prm :fun fun))))
+       (apply (fn [prv lst]
+                (map (fn [k] k
+                       {k (- (k lst) (k prv))})
+                     [:c :d :r :i])
+                ))
+       (reduce into {})))
+
+(defn last-day
+  "Example (last-day {:pred (fn [_] true)})"
+  [prm] (eval-fun (assoc prm :fun get-last)))

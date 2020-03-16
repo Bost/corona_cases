@@ -88,7 +88,21 @@
 (defn ill       [prm] (map :i (get-counts prm)))
 (defn dates     []    (map :f (get-counts {:pred (fn [_] true)})))
 
-(defn last-day  [prm] (last (get-counts prm)))
+(defn last-day  [prm]
+  #_(last (get-counts prm))
+  (->> (get-counts prm)
+       (take-last 1)
+       first))
+
+(defn prev-day  [prm]
+  (->> (get-counts prm)
+       (take-last 2)
+       first))
+
+(defn delta [prm]
+  (let [last-d (last-day prm)
+        prev-d (prev-day prm)]
+    (map (fn [l p])) last-d prev-d))
 
 (def url "https://github.com/CSSEGISandData/COVID-19")
 
