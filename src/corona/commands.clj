@@ -2,7 +2,6 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
             [corona.core :as c :refer [in?]]
-            [corona.countries :as cc]
             [corona.api :as data]
             [corona.messages :as msg]
             [morse.api :as morse]
@@ -95,9 +94,9 @@
     (fn [c] (->> c s/upper-case))  ;; /DE
     (fn [c] (->> c s/capitalize))  ;; /De
 
-    (fn [c] (->> c c/country-code-3-letter s/lower-case)) ;; /deu
-    (fn [c] (->> c c/country-code-3-letter s/upper-case)) ;; /DEU
-    (fn [c] (->> c c/country-code-3-letter s/capitalize)) ;; /Deu
+    (fn [c] (->> c co/country-code-3-letter s/lower-case)) ;; /deu
+    (fn [c] (->> c co/country-code-3-letter s/upper-case)) ;; /DEU
+    (fn [c] (->> c co/country-code-3-letter s/capitalize)) ;; /Deu
 
     (fn [c] (->> (normalize) s/lower-case))   ;; /unitedstates
     (fn [c] (->> (normalize) s/upper-case))   ;; /UNITEDSTATES
@@ -112,21 +111,21 @@
                  :country-code country-code
                  :pred-csv (fn [loc]
                              (condp = country-code
-                               c/worldwide-2-country-code
+                               co/worldwide-2-country-code
                                true
 
-                               c/default-2-country-code
+                               co/default-2-country-code
                                ;; XX comes from the service
-                               (= "XX" (cc/country_code loc))
+                               (= "XX" (co/country_code loc))
 
-                               (= country-code (cc/country_code loc))))
+                               (= country-code (co/country_code loc))))
                  :pred (fn [loc]
                          ;; TODO s/upper-case is probably not needed
                          (condp = (s/upper-case country-code)
-                           c/worldwide-2-country-code
+                           co/worldwide-2-country-code
                            true
 
-                           c/default-2-country-code
+                           co/default-2-country-code
                            ;; XX comes from the service
                            (= "XX" (:country_code loc))
 
@@ -140,7 +139,7 @@
           :pred (fn [_] true)}
          msg/options)
 
-        prm-country-code {:country-code (cc/country_code "Worldwide")}]
+        prm-country-code {:country-code (co/country_code "Worldwide")}]
     [{:name msg/s-contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
@@ -175,7 +174,7 @@
       :desc "Knowledge is power - educate yourself"}]))
 
 (defn cmds []
-  (->> (c/all-country-codes)
+  (->> (co/all-country-codes)
        (mapv cmds-country-code)
        flatten
        (into (cmds-general))))

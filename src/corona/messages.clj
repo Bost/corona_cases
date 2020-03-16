@@ -92,10 +92,10 @@
        (map (fn [cc]
               (->> (fn [loc]
                      (condp = cc ;; cc is upper-cased
-                       c/worldwide-2-country-code
+                       co/worldwide-2-country-code
                        true
 
-                       c/default-2-country-code
+                       co/default-2-country-code
                        ;; XX comes from the web service
                        (= "XX" (:country_code loc))
 
@@ -295,7 +295,7 @@
       (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
              (map (fn [s] (->> s s/lower-case encode-cmd))
                   [country-code
-                   (c/country-code-3-letter country-code)])))
+                   (co/country-code-3-letter country-code)])))
 
      (let [{confirmed :c} last-day]
        (str

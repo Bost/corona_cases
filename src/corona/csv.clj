@@ -4,7 +4,7 @@
             [clojure.java.io :as io]
             [clojure.string :as s]
             [corona.countries :as co]
-            [corona.core :as c :refer [fix-octal-val read-number]])
+            [corona.core :as c])
   (:import java.text.SimpleDateFormat))
 
 ;; get all the file names in one directory
@@ -28,7 +28,7 @@
 (defn getd [[_ _ _ _ d _]] d)
 (defn getr [[_ _ _ _ _ r]] r)
 (defn geti [[_ _ u c d r]]
-  (let [[nc nd nr] (map read-number [c d r])]
+  (let [[nc nd nr] (map c/read-number [c d r])]
     (c/calculate-ill nc nr nd)))
 
 (defn sum-up-file [{:keys [sum-up-fn pred-csv pred file] :as prm}]
@@ -44,7 +44,7 @@
        (transduce
         (comp
          (map sum-up-fn)
-         (map fix-octal-val)
+         (map c/fix-octal-val)
          (remove empty?)
          (map read-string))
         + 0)))
@@ -91,4 +91,4 @@
        (map co/country_code)
        sort
        vec
-       (into c/default-affected-country-codes)))
+       (into co/default-affected-country-codes)))

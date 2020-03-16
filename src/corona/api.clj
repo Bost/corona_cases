@@ -5,7 +5,7 @@
             [clojure.data.json :as json]
             [clojure.string :as s]
             [corona.core :refer [bot-ver read-number dbg]]
-            [corona.countries :as cc]
+            [corona.countries :as co]
             [corona.core :as c])
   (:import java.text.SimpleDateFormat))
 
@@ -61,9 +61,9 @@
        (reduce clojure.set/union)
        sort
        vec
-       (into c/default-affected-country-codes)
+       (into co/default-affected-country-codes)
        (mapv (fn [cc] (if (= "XX" cc)
-                       c/default-2-country-code
+                       co/default-2-country-code
                        cc)))))
 
 (defn raw-dates []
