@@ -76,8 +76,11 @@
     (co/country-alias cc)
     (co/country-name cc)))
 
+(defn all-affected-country-codes []
+  (data/all-affected-country-codes))
+
 (def max-country-name-len
-  (->> (data/all-affected-country-codes)
+  (->> (all-affected-country-codes)
        (map (fn [cc]
               (country-name-aliased cc )
               #_(co/country-name cc)))
@@ -86,7 +89,7 @@
        count))
 
 (defn affected-country--name-code [prm]
-  (->> (data/all-affected-country-codes)
+  (->> (all-affected-country-codes)
        distinct
        #_(take 5)
        (map (fn [cc]
@@ -114,7 +117,7 @@
     s))
 
 (defn affected-country-codes [continent-code]
-  (->> (data/all-affected-country-codes)
+  (->> (all-affected-country-codes)
        (filter (fn [country-code]
                  (in? (tab/country-codes-of-continent continent-code)
                       country-code)))
@@ -122,7 +125,7 @@
 
 (defn all-affected-continent-codes []
   ;; Can't really use the first implementation. See the doc of `tab/regions`
-  (->> (data/all-affected-country-codes)
+  (->> (all-affected-country-codes)
        (map (fn [acc]
               (->> tab/continent-countries-map
                    (filter (fn [[continent-code county-code]]
@@ -269,7 +272,7 @@
            (map (fn [data-country]
                   (let [{ill :i recovered :r deaths :d
                          country-name :cn country-code :cc} data-country]
-                    (format "<code>%s</code>%s<code>%s</code>%s<code>%s</code> <code>%s</code>  %s"
+                    (format "<code>%s%s%s%s%s %s</code>  %s"
                             (c/right-pad (str ill) 6)
                             separator
                             (c/right-pad (str recovered) 6)
@@ -280,7 +283,7 @@
                             ))))
            #_(partition-all 2)
            #_(map (fn [part] (s/join "       " part)))))
-     (count (data/all-affected-country-codes))
+     (count (all-affected-country-codes))
      (footer prm))))
 
 (defn info [{:keys [country-code] :as prm}]

@@ -2,7 +2,6 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
             [corona.core :as c :refer [in?]]
-            [corona.api :as data]
             [corona.messages :as msg]
             [morse.api :as morse]
             [corona.countries :as co]))
@@ -11,7 +10,7 @@
   (morse/send-text
    c/token chat-id msg/options
    (msg/info prm))
-  (if (in? (data/all-affected-country-codes) country-code)
+  (if (in? (msg/all-affected-country-codes) country-code)
     (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
 
 (defn partition-in-chunks
@@ -81,6 +80,19 @@
   (-> (co/country-name country-code)
       (s/replace " " "")))
 
+(defn pred-fn [country-code]
+  (fn [loc]
+    ;; TODO s/upper-case is probably not needed
+    (condp = (s/upper-case country-code)
+      co/worldwide-2-country-code
+      true
+
+      co/default-2-country-code
+      ;; XX comes from the service
+      (= "XX" (:country_code loc))
+
+      (= country-code (:country_code loc)))))
+
 (defn cmds-country-code [country-code]
 
   (defn- normalize
@@ -109,33 +121,23 @@
          (world {:cmd-names msg/cmd-names
                  :chat-id chat-id
                  :country-code country-code
-                 :pred-csv (fn [loc]
-                             (condp = country-code
-                               co/worldwide-2-country-code
-                               true
+                 :pred (pred-fn country-code)
+                 #_(fn [loc]
+                     ;; TODO s/upper-case is probably not needed
+                     (condp = (s/upper-case country-code)
+                       co/worldwide-2-country-code
+                       true
 
-                               co/default-2-country-code
-                               ;; XX comes from the service
-                               (= "XX" (co/country_code loc))
+                       co/default-2-country-code
+                       ;; XX comes from the service
+                       (= "XX" (:country_code loc))
 
-                               (= country-code (co/country_code loc))))
-                 :pred (fn [loc]
-                         ;; TODO s/upper-case is probably not needed
-                         (condp = (s/upper-case country-code)
-                           co/worldwide-2-country-code
-                           true
-
-                           co/default-2-country-code
-                           ;; XX comes from the service
-                           (= "XX" (:country_code loc))
-
-                           (= country-code (:country_code loc))))}))}))))
+                       (= country-code (:country_code loc))))}))}))))
 
 (defn cmds-general []
   (let [prm
         (conj
          {:cmd-names msg/cmd-names
-          :pred-csv (fn [_] true)
           :pred (fn [_] true)}
          msg/options)
 

@@ -31,16 +31,16 @@
   (let [[nc nd nr] (map c/read-number [c d r])]
     (c/calculate-ill nc nr nd)))
 
-(defn sum-up-file [{:keys [sum-up-fn pred-csv pred file] :as prm}]
+(defn sum-up-file [{:keys [sum-up-fn pred pred file] :as prm}]
   (->> file take-csv rest
        #_(take 1)
        (filter (fn [[_ loc _ c _ _]]
-                 (if-not pred-csv
+                 (if-not pred
                    (println "sum-up-fn" sum-up-fn))
                  (if-not loc
                    (println "loc" loc))
-                 #_(println c loc (pred-csv loc))
-                 (pred-csv loc)))
+                 #_(println c loc (pred loc))
+                 (pred loc)))
        (transduce
         (comp
          (map sum-up-fn)
@@ -73,7 +73,7 @@
 (defn deaths    [prm] (map :d (get-counts prm)))
 (defn recovered [prm] (map :r (get-counts prm)))
 (defn ill       [prm] (map :i (get-counts prm)))
-(defn dates     []    (map :f (get-counts {:pred (fn [_] true) :pred-csv (fn [_] true)})))
+(defn dates     []    (map :f (get-counts {:pred (fn [_] true)})))
 
 (defn last-day  [prm] (last (get-counts prm)))
 
