@@ -11,7 +11,9 @@
    c/token chat-id
    (select-keys (assoc prm :parse_mode "HTML")
                 (keys msg/options))
-   (msg/info (assoc prm :parse_mode "HTML")))
+   (msg/info (assoc prm
+                    :parse_mode "HTML"
+                    :disable_web_page_preview true)))
   (if (in? (msg/all-affected-country-codes) country-code)
     (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
 
