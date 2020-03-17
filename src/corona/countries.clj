@@ -1,6 +1,5 @@
 (ns corona.countries
   (:require
-   [clojure.string :as s]
    [corona.core :as c :refer [in?]]
    [clojure.string :as s]))
 
@@ -19,7 +18,7 @@
   {default-2-country-code "QQQ"})
 
 (def country-code-worldwide {worldwide-2-country-code "Worldwide"})
-(def country-code-others {default-2-country-code "Others"})
+(def country-code-others    {default-2-country-code    "Others"})
 
 (def country-code-2-to-3-hm
   "Mapping of country codes 2 -> 3 letters"
@@ -78,7 +77,7 @@
        (reduce into)
        (mapv (fn [[k v]] k))))
 
-(def continent-continent-code-hm
+(def continent--continent-code
   "
   TODO Conflicting 2 letter code of \"Namibia\" and \"North America\".
   https://datahub.io/core/continent-codes#resource-continent-codes
@@ -90,7 +89,7 @@
    "Asia" "AS"
    "Europe" "EU"
    "South America" "SA"}
-  ;; (clojure.set/map-invert continent-continent-code-hm)
+  ;; (clojure.set/map-invert continent--continent-code)
   ;; {
   ;;  "AF" "Africa"
   ;;  "NA" "North America"
@@ -103,11 +102,11 @@
   )
 
 (defn continent-code [continent]
-  (get continent-continent-code-hm continent))
+  (get continent--continent-code continent))
 (defn continent-name [continent-code]
-  (get (clojure.set/map-invert continent-continent-code-hm) continent-code))
+  (get (clojure.set/map-invert continent--continent-code) continent-code))
 
-(def country-code--country-hm
+(def country-code--country
   (conj
     {
      "AF" "Afghanistan"
@@ -363,10 +362,10 @@
     country-code-worldwide
     country-code-others))
 
-(def country--country-code-hm
+(def country--country-code
   "Mapping of country names to alpha-2 codes.
   https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
-  (clojure.set/map-invert country-code--country-hm))
+  (clojure.set/map-invert country-code--country))
 
 (def aliases-hm
   "Mapping of alternative names, spelling, typos to the names of countries used by
@@ -500,13 +499,13 @@
 (defn country-alias
   "Get a country alias or the normal name if an alias doesn't exist"
   [cc]
-  (let [country (get country-code--country-hm (s/upper-case cc))]
+  (let [country (get country-code--country (s/upper-case cc))]
     (get aliases-inverted country country)))
 
 (defn country-name
   "Country name from 2-letter country code: \"DE\" -> \"Germany\" "
   [cc]
-  (get country-code--country-hm cc))
+  (get country-code--country cc))
 
 (defn lower-case [hm]
   (->> hm
@@ -522,11 +521,11 @@
   Defaults to `default-2-country-code`."
   [country-name]
   (let [country (s/lower-case country-name)
-        lcases-countries (lower-case country--country-code-hm)]
+        lcases-countries (lower-case country--country-code)]
     (if-let [cc (get lcases-countries country)]
       cc
       (if-let [country-alias (get (lower-case aliases-hm) country)]
-        (get country--country-code-hm country-alias)
+        (get country--country-code country-alias)
         (or
          (get default-mappings country-name)
          (do (println (format
