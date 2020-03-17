@@ -1,5 +1,6 @@
 # [@corona_cases_bot](https://t.me/corona_cases_bot)
 
+## Raison d´être
 > The Internet interprets censorship as damage and routes around it.
 > - John Gilmore
 
@@ -9,7 +10,6 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 ![Screenshot](/resources/pics/screenshot_40-percents.jpg)
 
 ## Running locally
-
 ```fish
 lein repl
 ```
@@ -25,7 +25,6 @@ lein repl
 See [localhost:5000](http://localhost:5000/).
 
 ## Deploy to Heroku
-
 Using fish-shell: see [deploy.fish](./deploy.fish).
 
 ## TODOs
