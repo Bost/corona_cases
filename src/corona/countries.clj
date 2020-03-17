@@ -77,35 +77,6 @@
        (reduce into)
        (mapv (fn [[k v]] k))))
 
-(def continent--continent-code
-  "
-  TODO Conflicting 2 letter code of \"Namibia\" and \"North America\".
-  https://datahub.io/core/continent-codes#resource-continent-codes
-  "
-  {"Africa" "AF"
-   "North America" "NA"
-   "Oceania" "OC"
-   "Antarctica" "AN"
-   "Asia" "AS"
-   "Europe" "EU"
-   "South America" "SA"}
-  ;; (clojure.set/map-invert continent--continent-code)
-  ;; {
-  ;;  "AF" "Africa"
-  ;;  "NA" "North America"
-  ;;  "OC" "Oceania"
-  ;;  "AN" "Antarctica"
-  ;;  "AS" "Asia"
-  ;;  "EU" "Europe"
-  ;;  "SA" "South America"
-  ;;  }
-  )
-
-(defn continent-code [continent]
-  (get continent--continent-code continent))
-(defn continent-name [continent-code]
-  (get (clojure.set/map-invert continent--continent-code) continent-code))
-
 (def country-code--country
   (conj
     {

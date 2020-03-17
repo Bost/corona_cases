@@ -1,11 +1,9 @@
 (ns corona.api
-  (:require [clj-http.client :as client]
-            [clj-time-ext.core :as te]
+  (:require [clj-time-ext.core :as te]
             [clojure.core.memoize :as memo]
-            [clojure.data.json :as json]
             [clojure.string :as s]
             [corona.core :refer [bot-ver read-number dbg]]
-            [corona.countries :as co]
+            [corona.countries :as cr]
             [corona.core :as c])
   (:import java.text.SimpleDateFormat))
 
@@ -22,20 +20,8 @@
   #_"http://127.0.0.1:5000/all"
   (str "https://" host (:route api-service)))
 
-(defn get-data [url]
-  ;; TODO use monad for logging
-  (let [tbeg (te/tnow)]
-    (println (str "[" tbeg "           " " " bot-ver " /" "get-data: " url "]"))
-    (let [r (as-> url $
-              (client/get $ {:accept :json})
-              (:body $)
-              (json/read-json $))]
-      (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" "get-data: " url "]"))
-      r)))
-
-(defn data [] (get-data url))
-
 (def time-to-live "In minutes" 15)
+(defn data [] (c/get-json url))
 
 (def data-memo (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
 
@@ -61,9 +47,9 @@
        (reduce clojure.set/union)
        sort
        vec
-       (into co/default-affected-country-codes)
+       (into cr/default-affected-country-codes)
        (mapv (fn [cc] (if (= "XX" cc)
-                       co/default-2-country-code
+                       cr/default-2-country-code
                        cc)))))
 
 (defn raw-dates []
@@ -96,10 +82,10 @@
 (defn pred-fn [country-code]
   (fn [loc]
     (condp = country-code
-      co/worldwide-2-country-code
+      cr/worldwide-2-country-code
       true
 
-      co/default-2-country-code
+      cr/default-2-country-code
       ;; XX comes from the service
       (= "XX" (:country_code loc))
 

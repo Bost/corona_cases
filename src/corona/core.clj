@@ -1,6 +1,9 @@
 (ns corona.core
   (:require [environ.core :refer [env]]
             [clojure.string :as s]
+            [clojure.data.json :as json]
+            [clj-time-ext.core :as te]
+            [clj-http.client :as client]
             [clojure.java.io :as io]))
 
 (defmacro dbg [body]
@@ -74,3 +77,15 @@
   ([s with padding-len]
    (str s
         (s/join (repeat (- padding-len (count s)) with)))))
+
+(defn get-json [url]
+  ;; TODO use monad for logging
+  (let [tbeg (te/tnow)]
+    (println (str "[" tbeg "           " " " bot-ver " /" "get-json " url "]"))
+    (let [r (as-> url $
+              (client/get $ {:accept :json})
+              (:body $)
+              (json/read-json $))]
+      (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" "get-json " url "]"))
+      r)))
+

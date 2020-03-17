@@ -4,7 +4,7 @@
             [corona.core :as c :refer [in?]]
             [corona.messages :as msg]
             [morse.api :as morse]
-            [corona.countries :as co]))
+            [corona.countries :as cr]))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (morse/send-text
@@ -81,7 +81,7 @@
 #_(defn normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
   [country-code]
-  (-> (co/country-name country-code)
+  (-> (cr/country-name country-code)
       (s/replace " " "")))
 
 (defn cmds-country-code [country-code]
@@ -89,7 +89,7 @@
   (defn- normalize
     "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
     []
-    (-> (co/country-name country-code)
+    (-> (cr/country-name country-code)
         (s/replace " " "")))
 
   (->>
@@ -97,9 +97,9 @@
     (fn [c] (->> c s/upper-case))  ;; /DE
     (fn [c] (->> c s/capitalize))  ;; /De
 
-    (fn [c] (->> c co/country-code-3-letter s/lower-case)) ;; /deu
-    (fn [c] (->> c co/country-code-3-letter s/upper-case)) ;; /DEU
-    (fn [c] (->> c co/country-code-3-letter s/capitalize)) ;; /Deu
+    (fn [c] (->> c cr/country-code-3-letter s/lower-case)) ;; /deu
+    (fn [c] (->> c cr/country-code-3-letter s/upper-case)) ;; /DEU
+    (fn [c] (->> c cr/country-code-3-letter s/capitalize)) ;; /Deu
 
     (fn [c] (->> (normalize) s/lower-case))   ;; /unitedstates
     (fn [c] (->> (normalize) s/upper-case))   ;; /UNITEDSTATES
@@ -121,7 +121,7 @@
           :pred (fn [_] true)}
          msg/options)
 
-        prm-country-code {:country-code (co/country_code "Worldwide")}]
+        prm-country-code {:country-code (cr/country_code "Worldwide")}]
     [{:name msg/s-contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
@@ -156,7 +156,7 @@
       :desc "Knowledge is power - educate yourself"}]))
 
 (defn cmds []
-  (->> (co/all-country-codes)
+  (->> (cr/all-country-codes)
        (mapv cmds-country-code)
        flatten
        (into (cmds-general))))
