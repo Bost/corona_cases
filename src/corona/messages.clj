@@ -256,6 +256,10 @@
                                              s/lower-case))))))
      (footer prm)))
 
+(defn format-day [day]
+  (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
+                (t/default-time-zone)) (tc/from-date day)))
+
 (defn header [{:keys [day parse_mode] :as prm}]
   (format
    (str
@@ -264,8 +268,7 @@
       ;; i.e. "Markdown"
       "*%s*")
     " %s")
-   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
-                 (t/default-time-zone)) (tc/from-date day))
+   (format-day day)
    (condp = parse_mode
      "HTML" c/bot-name
      ;; i.e. "Markdown"
@@ -399,7 +402,8 @@
                )
          (conj {}
                {:title
-                (format "%s: %s; see %s"
+                (format "%s; %s: %s; see %s"
+                        (->> prm data/last-day :f format-day)
                         c/bot-name
                         (co/country-name country-code)
                         (encode-cmd s-about))
