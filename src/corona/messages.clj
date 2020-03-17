@@ -74,7 +74,8 @@
 
 (defn country-name-aliased [cc]
   (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK"
-            #_"CZ" "BA" "CD" "BO" "MD" "BN" "VE" "VC"] cc)
+            #_"CZ" "BA" "CD" "BO" "MD" "BN" "VE" "VC"
+            "TZ" "VC"] cc)
     (co/country-alias cc)
     (co/country-name cc)))
 

@@ -430,6 +430,7 @@
    "Federated States of Micronesia" "Micronesia, Federated States of"
 
    "St. Vincent & Grenadines" "Saint Vincent and the Grenadines"
+   "Saint Vincent"                   "Saint Vincent and the Grenadines"
    "U.S. Virgin Islands"      "Virgin Islands, U.S."
    "Saint Kitts & Nevis"      "Saint Kitts and Nevis"
    "Faeroe Islands"           "Faroe Islands"
@@ -466,7 +467,6 @@
    "Bosnia"                   "Bosnia and Herzegovina"
    "Dominican Rep"            "Dominican Republic"
    "Macedonia"                "North Macedonia"
-
    "occupied Palestinian territory" "Palestine, State of"
    "Korea, South"                   "Korea, Republic of"
    "Republic of Korea"              "Korea, Republic of"
@@ -476,13 +476,12 @@
    "St. Martin"                     "Saint Martin (French part)"
    "Hong Kong SAR"                  "Hong Kong"
    "Reunion"                        "Réunion"
-
    "Curacao"                        "Curaçao"
    "Congo (Brazzaville)"            "Congo"
-
+   "Republic of the Congo"          "Congo"
+   "The Bahamas"                    "Bahamas"
    ;; "Others" has no mapping
    ;; "Cruise Ship" is mapped to the default val
-
    })
 
 (def aliases-inverted
@@ -495,6 +494,7 @@
          "Palestine, State of"                   "Palestine"
          "Micronesia, Federated States of"       "Micronesia"
          "Taiwan, Province of China"             "Taiwan"
+         "Saint Vincent and the Grenadines"      "Saint Vincent"
          }))
 
 (defn country-alias
