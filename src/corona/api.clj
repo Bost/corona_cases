@@ -50,7 +50,8 @@
        (into cr/default-affected-country-codes)
        (mapv (fn [cc] (if (= "XX" cc)
                        cr/default-2-country-code
-                       cc)))))
+                       cc)))
+       distinct))
 
 (defn raw-dates []
   (->> (raw-dates-unsorted)

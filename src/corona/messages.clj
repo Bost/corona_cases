@@ -4,11 +4,10 @@
             [clj-time.format :as tf]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
+            [corona.common :as com]
             [corona.api :as data]
-            [corona.tables :as tab]
             [corona.countries :as cr]
-            [corona.continents :as cn]
-            [corona.core :as c :refer [in?]]))
+            [corona.core :as c :refer [in? dbg]]))
 
 (def lang-strings
   {
@@ -73,35 +72,6 @@
 
 (defn pred-fn [country-code] (data/pred-fn country-code))
 
-(defn country-name-aliased [cc]
-  (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK"
-            #_"CZ" "BA" "CD" "BO" "MD" "BN" "VE" "VC"
-            "TZ" "VC"] cc)
-    (cr/country-alias cc)
-    (cr/country-name cc)))
-
-(defn all-affected-country-codes []
-  (data/all-affected-country-codes))
-
-(def max-country-name-len
-  (->> (all-affected-country-codes)
-       (map (fn [cc]
-              (country-name-aliased cc )
-              #_(cr/country-name cc)))
-       (sort-by count)
-       last
-       count))
-
-(defn affected-country--name-code [prm]
-  (->> (all-affected-country-codes)
-       distinct
-       #_(take 5)
-       (map (fn [cc]
-              (->> (assoc prm :pred (data/pred-fn cc))
-                   (data/last-day)
-                   (conj {:cn (country-name-aliased cc)
-                          :cc cc}))))))
-
 (defn encode-cmd [s] (str "/" s))
 (defn encode-pseudo-cmd [s parse_mode]
   (if (= parse_mode "HTML")
@@ -109,25 +79,6 @@
           s (s/replace s ">" "&gt;")]
       s)
     s))
-
-(defn affected-country-codes [continent-code]
-  (->> (all-affected-country-codes)
-       (filter (fn [country-code]
-                 (in? (tab/country-codes-of-continent continent-code)
-                      country-code)))
-       (into #{})))
-
-(defn all-affected-continent-codes []
-  ;; Can't really use the first implementation. See the doc of `tab/regions`
-  (->> (all-affected-country-codes)
-       (map (fn [acc]
-              (->> tab/continent-countries-map
-                   (filter (fn [[continent-code county-code]]
-                             (= acc county-code))))))
-       (remove empty?)
-       (reduce into [])
-       (map (fn [[continent-code &rest]] continent-code))
-       (into #{})))
 
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
@@ -234,28 +185,24 @@
           #_"https://www.who.int/gpsc/clean_hands_protection/en/"
           "https://www.who.int/gpsc/media/how_to_handwash_lge.gif"))
 
-(def max-continent-name-len
-  (->> (all-affected-continent-codes)
-       (map (fn [cc] (cn/continent-name cc)))
-       (sort-by count)
-       last
-       count))
-
 (defn list-continents
-    "TODO show counts for every continent"
-    [prm]
-    (format
-     "Continent(s) hit:\n\n%s\n\n%s"
-     ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
-     (s/join "\n"
-             (->> (all-affected-continent-codes)
-                  (map (fn [cc] (format "<code style=\"color:red;\">%s  </code>%s"
-                                        (c/right-pad (cn/continent-name cc)
-                                                     max-continent-name-len)
-                                        (->> cc
-                                             encode-cmd
-                                             s/lower-case))))))
-     (footer prm)))
+  "Examples (list-continents {})
+  TODO show counts for every continent"
+  [prm]
+  (format
+   "Continent(s) hit:\n\n%s\n\n%s"
+   ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
+   (->> (com/all-affected-continent-codes)
+        (map (fn [continent-code]
+               continent-code
+               (format "<code>%s</code>          %s\n"
+                       (c/right-pad (com/continent-name continent-code)
+                                    com/max-affected-continent-name-len)
+                       (->> continent-code
+                            encode-cmd
+                            s/lower-case))))
+        (apply str))
+   (footer prm)))
 
 (defn format-day [day]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
@@ -311,7 +258,7 @@
                             ))))
            #_(partition-all 2)
            #_(map (fn [part] (s/join "       " part)))))
-     (count (all-affected-country-codes))
+     (count (com/all-affected-country-codes))
      (footer prm))))
 
 (defn info [{:keys [country-code] :as prm}]
@@ -335,7 +282,7 @@
          {dc :c} delta]
      (str
       "  "
-      (cr/country-name country-code) " "
+      (com/country-name country-code) " "
       (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
              (map (fn [s] (->> s s/lower-case encode-cmd))
                   [country-code
@@ -418,7 +365,7 @@
                 (format "%s; %s: %s; see %s"
                         (->> prm data/last-day :f format-day)
                         c/bot-name
-                        (cr/country-name country-code)
+                        (com/country-name country-code)
                         (encode-cmd s-about))
                 :render-style :area
                 :legend {:position :inside-nw}

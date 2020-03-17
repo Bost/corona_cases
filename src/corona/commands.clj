@@ -1,9 +1,10 @@
 (ns corona.commands
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
-            [corona.core :as c :refer [in?]]
+            [corona.core :as c :refer [in? dbg]]
             [corona.messages :as msg]
             [morse.api :as morse]
+            [corona.common :as com]
             [corona.countries :as cr]))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
@@ -14,7 +15,7 @@
    (msg/info (assoc prm
                     :parse_mode "HTML"
                     :disable_web_page_preview true)))
-  (if (in? (msg/all-affected-country-codes) country-code)
+  (if (in? (com/all-affected-country-codes) country-code)
     (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
 
 (defn partition-in-chunks
@@ -23,25 +24,31 @@
   (partition-all (/ (count col) 7) col))
 
 (defn list-countries [{:keys [chat-id] :as prm}]
-  (->> (msg/affected-country--name-code prm)
-       (sort-by :i <)
-       partition-in-chunks
-       #_(take 3)
-       #_(take-last 1)
-       (map (fn [chunk]
-              (morse/send-text
-               c/token chat-id (select-keys (assoc prm :parse_mode "HTML")
-                                            (keys msg/options))
-               (msg/list-countries (assoc prm
-                                          :data chunk
-                                          :parse_mode "HTML")))))
-       doall))
+  (let [prm (assoc prm :parse_mode "HTML")]
+    (->> (com/all-affected-country-codes)
+         (sort-by :i <)
+         partition-in-chunks
+         #_(take 3)
+         #_(take-last 1)
+         (map (fn [chunk]
+                (morse/send-text
+                 c/token chat-id (select-keys prm (keys msg/options))
+                 (msg/list-countries (assoc prm :data chunk)))))
+         doall)))
 
 (defn list-continents [{:keys [chat-id] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
-    (morse/send-text
-     c/token chat-id (select-keys prm (keys msg/options))
-     (msg/list-continents prm))))
+    (->> (msg/list-continents prm)
+         (morse/send-text c/token
+                          chat-id (select-keys prm (keys msg/options)))
+         doall)))
+
+(defn list-stuff [{:keys [chat-id] :as prm}]
+  ;; TODO see why `doall` doesn't work here
+  #_(->> [(list-countries prm) (list-continents prm)]
+       (map doall))
+  #_(list-countries prm)
+  (list-continents prm))
 
 (defn snapshot [{:keys [chat-id] :as prm}]
   (morse/send-text
@@ -89,7 +96,7 @@
   (defn- normalize
     "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
     []
-    (-> (cr/country-name country-code)
+    (-> (com/country-name country-code)
         (s/replace " " "")))
 
   (->>
@@ -121,7 +128,7 @@
           :pred (fn [_] true)}
          msg/options)
 
-        prm-country-code {:country-code (cr/country_code "Worldwide")}]
+        prm-country-code {:country-code (com/country_code "Worldwide")}]
     [{:name msg/s-contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
@@ -135,8 +142,8 @@
       :desc msg/s-world-desc}
 
      {:name msg/s-list
-      :f (fn [chat-id] (list-countries (-> (assoc prm :chat-id chat-id)
-                                          (conj prm-country-code))))
+      :f (fn [chat-id] (list-stuff (-> (assoc prm :chat-id chat-id)
+                                      (conj prm-country-code))))
       :desc msg/s-list-desc}
      {:name msg/s-start
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)

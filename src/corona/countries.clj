@@ -1,7 +1,4 @@
-(ns corona.countries
-  (:require
-   [corona.core :as c :refer [in?]]
-   [clojure.string :as s]))
+(ns corona.countries)
 
 (def worldwide-2-country-code
   "\"ZZ\" can be user-assigned."
@@ -13,9 +10,14 @@
 (def default-2-country-code
   "\"QQ\" can be user-assigned."
   "QQ")
+
+(def default-3-country-code
+  "\"QQQ\" can be user-assigned."
+  "QQQ")
+
 (def default-country-codes
   "\"QQQ\" can be user-assigned."
-  {default-2-country-code "QQQ"})
+  {default-2-country-code default-3-country-code})
 
 (def country-code-worldwide {worldwide-2-country-code "Worldwide"})
 (def country-code-others    {default-2-country-code    "Others"})
@@ -467,41 +469,6 @@
          "Saint Vincent and the Grenadines"      "Saint Vincent"
          }))
 
-(defn country-alias
-  "Get a country alias or the normal name if an alias doesn't exist"
-  [cc]
-  (let [country (get country-code--country (s/upper-case cc))]
-    (get aliases-inverted country country)))
-
-(defn country-name
-  "Country name from 2-letter country code: \"DE\" -> \"Germany\" "
-  [cc]
-  (get country-code--country cc))
-
-(defn lower-case [hm]
-  (->> hm
-       (map (fn [[k v]] [(s/lower-case k) v]))
-       (into {})))
-
 (def default-mappings
   {"Cruise Ship" default-2-country-code})
 
-(defn country_code
-  "Return two letter country code (Alpha-2) according to
-  https://en.wikipedia.org/wiki/ISO_3166-1
-  Defaults to `default-2-country-code`."
-  [country-name]
-  (let [country (s/lower-case country-name)
-        lcases-countries (lower-case country--country-code)]
-    (if-let [cc (get lcases-countries country)]
-      cc
-      (if-let [country-alias (get (lower-case aliases-hm) country)]
-        (get country--country-code country-alias)
-        (or
-         (get default-mappings country-name)
-         (do (println (format
-                     "No country code found for \"%s\". Using \"%s\""
-                     country-name
-                     default-2-country-code
-                     ))
-             default-2-country-code))))))
