@@ -23,6 +23,9 @@ webServices = (
 
     # https://www.micro-work.net/covid/ - as of now - work in progress
     www.micro-work.net
+
+    # https://github.com/Omaroid/Covid-19-API
+    covid19api.herokuapp.com
 )
 
 for srvc in "${webServices[@]}"; do
