@@ -121,9 +121,7 @@
     (jetty/run-jetty (site #'app) {:port port :join? false})))
 
 (defn -main [& [port]]
-  (pmap (fn [fn-name] (fn-name)) [
-                                 telegram/-main
-                                 webapp]))
+  (pmap (fn [fn-name] (fn-name)) [telegram/-main webapp]))
 
 ;; For interactive development:
 (def test-obj (atom nil))
