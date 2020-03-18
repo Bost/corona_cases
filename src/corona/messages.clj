@@ -204,9 +204,10 @@
         (apply str))
    (footer prm)))
 
-(defn format-day [day]
+(defn format-last-day [prm]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
-                (t/default-time-zone)) (tc/from-date day)))
+                (t/default-time-zone))
+              (->> prm data/last-day :f tc/from-date)))
 
 (defn header [{:keys [parse_mode] :as prm}]
   (format
@@ -216,7 +217,7 @@
       ;; i.e. "Markdown"
       "*%s*")
     " %s")
-   (->> prm data/last-day :f format-day)
+   (format-last-day prm)
    (condp = parse_mode
      "HTML" c/bot-name
      ;; i.e. "Markdown"
@@ -287,6 +288,7 @@
              (map (fn [s] (->> s s/lower-case encode-cmd))
                   [country-code
                    (cr/country-code-3-letter country-code)])))
+     (str "Day " (count (data/raw-dates)))
 
      (let [{confirmed :c} last-day
            rpad-len (count s-recovered)
@@ -363,7 +365,7 @@
          (conj {}
                {:title
                 (format "%s; %s: %s; see %s"
-                        (->> prm data/last-day :f format-day)
+                        (format-last-day prm)
                         c/bot-name
                         (com/country-name country-code)
                         (encode-cmd s-about))
