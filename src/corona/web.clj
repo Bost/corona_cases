@@ -7,9 +7,12 @@
             [compojure.route :as route]
             [clojure.string :as s]
             [corona.core :refer [bot-type chat-id token]]
-            [corona.telegram :as corona]
+            [corona.telegram :as telegram]
             [environ.core :refer [env]]
-            [ring.adapter.jetty :as jetty]))
+            [ring.adapter.jetty :as jetty]
+            [corona.common :as com]
+            [corona.core :as c]
+            [corona.defs :as d]))
 
 (def telegram-hook "telegram")
 (def google-hook "google")
@@ -23,6 +26,28 @@
     [
      "TODO home page"
      ])})
+
+(def project-ver "See also `c/project-ver`" "dev" #_"1.7.2")
+(def ws-path (format "ws/%s" project-ver))
+
+(defn web-service [{:keys [type] :as prm}]
+  (println "web-service" prm) ;; TODO better logging
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body
+   (json/write-str
+    (->> (condp = type
+           :names (conj #_{"desc" ""}
+                        (com/all-continent-names--country-names))
+           :codes (conj {"desc" "continent-code -> country-codes"}
+                        (com/all-continent-codes--country-codes))
+           (format "Error. Wrong type %s" type))
+         (conj (if (= "dev" project-ver)
+                 {"warn" "Under construction. Don't use it in PROD env"}
+                 #_{}))
+         (conj {"source" "https://github.com/Bost/corona_cases"})
+         ;; swapped order x y -> y x
+         (into (sorted-map-by (fn [x y] (compare y x))))))})
 
 (defn links []
   {:status 200
@@ -83,6 +108,10 @@
        (home-page))
   (GET "/links" []
        (links))
+  (GET (format "/%s/names" ws-path) []
+       (web-service {:type :names}))
+  (GET (format "/%s/codes" ws-path) []
+       (web-service {:type :codes}))
   (ANY "*" []
        (route/not-found (slurp (io/resource "404.html")))))
 
@@ -92,7 +121,9 @@
     (jetty/run-jetty (site #'app) {:port port :join? false})))
 
 (defn -main [& [port]]
-  (pmap (fn [fn-name] (fn-name)) [corona/-main webapp]))
+  (pmap (fn [fn-name] (fn-name)) [
+                                 telegram/-main
+                                 webapp]))
 
 ;; For interactive development:
 (def test-obj (atom nil))

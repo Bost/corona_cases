@@ -48,8 +48,8 @@
   ;; TODO see why `doall` doesn't work here
   #_(->> [(list-countries prm) (list-continents prm)]
        (map doall))
-  #_(list-countries prm)
-  (list-continents prm))
+  (list-countries prm)
+  #_(list-continents prm))
 
 (defn snapshot [{:keys [chat-id] :as prm}]
   (morse/send-text

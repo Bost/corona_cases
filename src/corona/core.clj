@@ -36,18 +36,20 @@
       "Fq8" "PROD"
       "MR8" "TEST")))
 
+(def project-ver
+  (let [pom-props
+        (with-open
+          [pom-props-reader
+           (->> (format "META-INF/maven/%s/%s/pom.properties"
+                        project-name project-name)
+                io/resource
+                io/reader)]
+          (doto (java.util.Properties.)
+            (.load pom-props-reader)))]
+    (get pom-props "version")))
+
 (def bot-ver
-  (str (let [pom-props
-             (with-open
-               [pom-props-reader
-                (->> (format "META-INF/maven/%s/%s/pom.properties"
-                             project-name project-name)
-                     io/resource
-                     io/reader)]
-               (doto (java.util.Properties.)
-                 (.load pom-props-reader)))]
-         (get pom-props "version"))
-       "-" (env :bot-ver)))
+  (format "%s-%s" project-ver (env :bot-ver)))
 
 (def bot (str bot-ver ":" bot-type))
 

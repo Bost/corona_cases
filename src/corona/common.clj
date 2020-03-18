@@ -351,11 +351,20 @@
 
 (defn all-continent-codes--country-codes
   "Turkey and Russia are in Asia and Europe. Assigned to Europe.
-  TODO countries on multiple continents"
+  TODO countries on multiple continents
+  TODO use group-by"
   []
   (->> cn/continent-names--continent-codes-hm
        (map (fn [[_ ccode]]
               {ccode (continent-code--country-codes ccode)}))
+       (into {})))
+
+(defn all-continent-names--country-names
+  []
+  (->> cn/continent-names--continent-codes-hm
+       (map (fn [[cname ccode]]
+              {cname (->> (continent-code--country-codes ccode)
+                          (mapv country-name))}))
        (into {})))
 
 (defn country-code--continet-code [country-code]
