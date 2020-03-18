@@ -26,7 +26,7 @@
 
 (defn list-countries [{:keys [chat-id] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
-    (->> (com/all-affected-country-codes)
+    (->> (msg/all-affected-country-codes prm)
          (sort-by :i <)
          partition-in-chunks
          #_(take 3)

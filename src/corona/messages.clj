@@ -69,6 +69,14 @@
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
 
+(defn all-affected-country-codes [prm]
+  (->> (com/all-affected-country-codes)
+       (map (fn [cc]
+              (->> (assoc prm :pred (data/pred-fn cc))
+                   (data/last-day)
+                   (conj {:cn (com/country-name-aliased cc)
+                          :cc cc}))))))
+
 (def options {:parse_mode "Markdown" :disable_web_page_preview true})
 
 (defn pred-fn [country-code] (data/pred-fn country-code))
@@ -282,50 +290,37 @@
    (str "Day " (count (data/raw-dates)))
 
    (let [last-day (data/last-day prm)
-           delta (data/delta prm)
-           {confirmed :c} last-day
-           rpad-len (count s-recovered)
-           lpad-len (->> confirmed str count)
-           {dc :c} delta]
-       (str
-        "  "
-        (com/country-name country-code) " "
-        (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
-               (map (fn [s] (->> s s/lower-case encode-cmd))
-                    [country-code
-                     (cr/country-code-3-letter country-code)])))
-       (str "Day " (count (data/raw-dates)))
-
-       (let [{confirmed :c} last-day
-             rpad-len (count s-recovered)
-             lpad-len (->> confirmed str count)
-             {dc :c} delta]
-         (str
-          (fmt {:s s-confirmed :n confirmed :diff dc
-                :desc "" :calc-rate false}) "\n"
-          (if (pos? confirmed)
-            (let [{deaths :d recovered :r ill :i} last-day
-                  closed (+ deaths recovered)
-                  {dd :d dr :r di :i} delta
-                  dclosed (+ dd dr)]
-              (format
-               "%s\n%s\n%s\n%s\n"
-               (fmt {:s s-sick :n ill :total confirmed :diff di :desc ""
-                     :calc-rate true})
-               (fmt {:s s-recovered :n recovered :total confirmed :diff dr :desc ""
-                     :calc-rate true})
-               (fmt {:s s-deaths :n deaths :total confirmed :diff dd
-                     :calc-rate true
-                     :desc (format " See %s"
-                                   (link "mortality rate" ref-mortality-rate prm))
-                     #_(format " See %s and %s"
-                               (link "mortality rate" ref-mortality-rate prm)
-                               (encode-cmd s-references))})
-               (fmt {:s s-closed :n closed :total confirmed :diff dclosed
-                     :calc-rate true
-                     :desc (format "= %s + %s"
-                                   (s/lower-case s-recovered )
-                                   (s/lower-case s-deaths))})))))))
+         delta (data/delta prm)
+         {confirmed :c} last-day
+         rpad-len (count s-recovered)
+         lpad-len (->> confirmed str count)
+         {dc :c} delta]
+     (str
+      (fmt {:s s-confirmed :n confirmed :diff dc
+            :desc "" :calc-rate false}) "\n"
+      (if (pos? confirmed)
+        (let [{deaths :d recovered :r ill :i} last-day
+              closed (+ deaths recovered)
+              {dd :d dr :r di :i} delta
+              dclosed (+ dd dr)]
+          (format
+           "%s\n%s\n%s\n%s\n"
+           (fmt {:s s-sick :n ill :total confirmed :diff di :desc ""
+                 :calc-rate true})
+           (fmt {:s s-recovered :n recovered :total confirmed :diff dr :desc ""
+                 :calc-rate true})
+           (fmt {:s s-deaths :n deaths :total confirmed :diff dd
+                 :calc-rate true
+                 :desc (format " See %s"
+                               (link "mortality rate" ref-mortality-rate prm))
+                 #_(format " See %s and %s"
+                           (link "mortality rate" ref-mortality-rate prm)
+                           (encode-cmd s-references))})
+           (fmt {:s s-closed :n closed :total confirmed :diff dclosed
+                 :calc-rate true
+                 :desc (format "= %s + %s"
+                               (s/lower-case s-recovered )
+                               (s/lower-case s-deaths))}))))))
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
