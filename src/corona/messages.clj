@@ -424,7 +424,7 @@
 (defn contributors [prm]
   (format "%s\n\n%s\n\n%s"
           (s/join "\n" ["@DerAnweiser"
-                        (link "maty535" "https://github.com/maty535")
+                        (link "maty535" "https://github.com/maty535" prm)
                         "@kostanjsek"
                         "@DistrictBC"
                         "Michael J."
@@ -452,7 +452,7 @@
 
    #_(str
     "- Data retrieved *CONTINUOUSLY* every " corona.api/time-to-live
-    " minutes from " (link data/host data/url) ".\n")
+    " minutes from " (link data/host data/url prm) ".\n")
 
    (str
     "Useful visualizations: " (link "JHU CSSE" "https://arcg.is/0fHmTX" prm) ", "
@@ -486,7 +486,7 @@
    ;; TODO home page; average recovery time
    #_(str
       "\n"
-      " - " (link "Home page" home-page))
+      " - " (link "Home page" home-page prm))
    (footer prm)))
 
 (def bot-description
