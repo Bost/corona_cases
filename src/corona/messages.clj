@@ -282,7 +282,7 @@
    (str
     (header prm)
     "  "
-    (com/country-name country-code) " "
+    (com/country-name-aliased country-code) " "
     (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
            (map (fn [s] (->> s s/lower-case encode-cmd))
                 [country-code
@@ -368,7 +368,7 @@
                 (format "%s; %s: %s; see %s"
                         (format-last-day prm)
                         c/bot-name
-                        (com/country-name country-code)
+                        (com/country-name-aliased country-code)
                         (encode-cmd s-about))
                 :render-style :area
                 :legend {:position :inside-nw}

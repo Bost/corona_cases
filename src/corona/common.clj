@@ -339,7 +339,7 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
 
 (defn country-name-aliased [cc]
   (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK"
-            #_"CZ" "BA" "CD" "BO" "MD" "BN" "VE" "VC"
+            #_"CZ" "BA" "CD" "BO" "MD" "BN" "VE" "VC" "KP"
             "TZ" "VC"] cc)
     (country-alias cc)
     (country-name cc)))
