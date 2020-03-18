@@ -9,15 +9,13 @@
             [corona.defs :as d]))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
-  (morse/send-text
-   c/token chat-id
-   (select-keys (assoc prm :parse_mode "HTML")
-                (keys msg/options))
-   (msg/info (assoc prm
-                    :parse_mode "HTML"
-                    :disable_web_page_preview true)))
-  (if (in? (com/all-affected-country-codes) country-code)
-    (morse/send-photo c/token chat-id (msg/absolute-vals prm))))
+  (let [prm (assoc prm :parse_mode "HTML")]
+    (morse/send-text
+     c/token chat-id (select-keys prm (keys msg/options))
+     (msg/info (assoc prm :disable_web_page_preview true)))
+
+    (if (in? (com/all-affected-country-codes) country-code)
+      (morse/send-photo c/token chat-id (msg/absolute-vals prm)))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
@@ -41,13 +39,9 @@
   (let [prm (assoc prm :parse_mode "HTML")]
     (->> (msg/list-continents prm)
          (morse/send-text c/token
-                          chat-id (select-keys prm (keys msg/options)))
-         doall)))
+                          chat-id (select-keys prm (keys msg/options))))))
 
 (defn list-stuff [{:keys [chat-id] :as prm}]
-  ;; TODO see why `doall` doesn't work here
-  #_(->> [(list-countries prm) (list-continents prm)]
-       (map doall))
   (list-countries prm)
   #_(list-continents prm))
 

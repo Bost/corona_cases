@@ -194,12 +194,12 @@
           #_"https://www.who.int/gpsc/clean_hands_protection/en/"
           "https://www.who.int/gpsc/media/how_to_handwash_lge.gif"))
 
-(defn list-continents
-  "Examples (list-continents {})
+(defn fmt-continents
+  "Examples (fmt-continents {})
   TODO show counts for every continent"
   [prm]
   (format
-   "Continent(s) hit:\n\n%s\n\n%s"
+   "Continent(s) hit:\n%s"
    ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
    (->> (com/all-affected-continent-codes)
         (map (fn [continent-code]
@@ -210,8 +210,7 @@
                        (->> continent-code
                             encode-cmd
                             s/lower-case))))
-        (apply str))
-   (footer prm)))
+        (apply str))))
 
 (defn format-last-day [prm]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
@@ -231,6 +230,14 @@
      "HTML" c/bot-name
      ;; i.e. "Markdown"
      (s/replace c/bot-name #"_" "\\\\_"))))
+
+(defn list-continents [prm]
+  (format
+   "%s\n%s\n\n%s\n%s"
+   (header prm)
+   (str "Day " (count (data/raw-dates)))
+   (fmt-continents prm)
+   (footer prm)))
 
 (defn list-countries [{:keys [data] :as prm}]
   (let [separator " "]
@@ -277,6 +284,7 @@
     "%s\n"  ;; header
     "%s\n"  ;; day
     "%s\n"  ;; data
+    ;; "%s\n"  ;; fmt-continents
     "%s\n"  ;; footer
     )
    (str
@@ -321,6 +329,7 @@
                  :desc (format "= %s + %s"
                                (s/lower-case s-recovered )
                                (s/lower-case s-deaths))}))))))
+   #_(fmt-continents prm)
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
