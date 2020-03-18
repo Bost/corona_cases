@@ -9,6 +9,14 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 
 ![Screenshot](/resources/pics/screenshot_40-percents.jpg)
 
+## API web services
+
+continent-name -> country-names
+https://corona-cases-bot.herokuapp.com/srvc/1.7.2/names
+
+continent-code -> country-codes
+https://corona-cases-bot.herokuapp.com/srvc/1.7.2/codes
+
 ## Running locally
 ```fish
 lein repl
