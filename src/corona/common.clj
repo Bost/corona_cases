@@ -7,13 +7,15 @@
             [corona.core :as c :refer [in? dbg]]))
 
 (def continent-countries-hm
-  "https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
+  "
+https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
+https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent
+
   Kosovo doesn't have any numeric code assigned; XKX is just pseudo-defined by the Worldbank
   TODO verify this hm against other sources"
   [
    ["ASI"      "AF" "AFG" "004" "Afghanistan"]
    ["EUR"      "XK" "XKX"  nil  "Kosovo"]
-
    ["EUR"      "AL" "ALB" "008" "Albania, Republic of"]
    ["ANA"      "AQ" "ATA" "010" "Antarctica (the territory South of 60 deg S)"]
    ["AFR"      "DZ" "DZA" "012" "Algeria, People's Democratic Republic of"]
@@ -290,7 +292,6 @@
     d/worldwide-2-country-code
     d/worldwide-3-country-code
     nil   nil  d/worldwide]
-
    ])
 
 (defn continent-code [continent]
