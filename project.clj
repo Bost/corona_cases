@@ -15,6 +15,8 @@
    [org.clojure/data.json   "0.2.7"]
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
    [com.hypirion/clj-xchart "0.2.0"]
+   ;; internationalization, ISO 3166-1 country codes etc.
+   [com.neovisionaries/nv-i18n "1.27"]
    ]
   :min-lein-version "2.0.0"
   :plugins

@@ -1,5 +1,7 @@
 (ns corona.countries
-  (:require [corona.defs :as d]))
+  (:require [corona.defs :as d]
+            [clojure.string :as s])
+  (:import (com.neovisionaries.i18n CountryCode)))
 
 (def country-code-2-to-3-hm
   "Mapping of country codes 2 -> 3 letters"
@@ -59,9 +61,17 @@
        (reduce into)
        (mapv (fn [[k v]] k))))
 
+(defn country-code--country-nv-i18n []
+  (->> (CountryCode/values)
+       (map (fn [cc] [(str cc)
+                      (.getName cc)]))
+       (into {})))
+
 (def country-code--country
   (conj
-    {
+   (country-code--country-nv-i18n)
+   #_
+   {
      "AF" "Afghanistan"
      "AX" "Åland Islands"
      "AL" "Albania"
@@ -181,7 +191,7 @@
      "KI" "Kiribati"
      "KP" "Korea, Democratic People's Republic of"
      "KR" "Korea, Republic of"
-     "XK" "Kosovo"
+     "XK" "Kosovo, Republic of"
      "KW" "Kuwait"
      "KG" "Kyrgyzstan"
      "LA" "Lao People's Democratic Republic"
@@ -194,7 +204,7 @@
      "LT" "Lithuania"
      "LU" "Luxembourg"
      "MO" "Macao"
-     "MK" "North Macedonia"
+     "MK" "North Macedonia, Republic of"
      "MG" "Madagascar"
      "MW" "Malawi"
      "MY" "Malaysia"
@@ -276,7 +286,7 @@
      "SD" "Sudan"
      "SR" "Suriname"
      "SJ" "Svalbard and Jan Mayen"
-     "SZ" "Swaziland"
+     "SZ" "Eswatini"  ;; previous name "Swaziland"
      "SE" "Sweden"
      "CH" "Switzerland"
      "SY" "Syrian Arab Republic"
@@ -314,6 +324,15 @@
      }
     d/country-code-worldwide
     d/country-code-others))
+
+#_(defn country-code--country-locale
+  "Not according to the norm"
+  []
+  (->> (java.util.Locale/getISOCountries)
+       (map (fn [cc] [cc
+                     (-> (.getDisplayCountry (new Locale "" cc))
+                         #_(s/replace "&" "and"))]))
+       (into {})))
 
 (def country--country-code
   "Mapping of country names to alpha-2 codes.
@@ -447,4 +466,5 @@
          "Micronesia, Federated States of"       "Micronesia"
          "Taiwan, Province of China"             "Taiwan"
          "Saint Vincent and the Grenadines"      "Saint Vincent"
+         "North Macedonia, Republic of"          "Macedonia"
          }))
