@@ -5,7 +5,8 @@
             [corona.messages :as msg]
             [morse.api :as morse]
             [corona.common :as com]
-            [corona.countries :as cr]))
+            [corona.countries :as cr]
+            [corona.defs :as d]))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (morse/send-text
@@ -128,7 +129,7 @@
           :pred (fn [_] true)}
          msg/options)
 
-        prm-country-code {:country-code (com/country_code "Worldwide")}]
+        prm-country-code {:country-code (com/country-code d/worldwide)}]
     [{:name msg/s-contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}

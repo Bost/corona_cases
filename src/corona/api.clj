@@ -4,6 +4,7 @@
             [clojure.string :as s]
             [corona.core :refer [bot-ver read-number dbg]]
             [corona.countries :as cr]
+            [corona.defs :as d]
             [corona.core :as c])
   (:import java.text.SimpleDateFormat))
 
@@ -49,7 +50,7 @@
        vec
        (into cr/default-affected-country-codes)
        (mapv (fn [cc] (if (= "XX" cc)
-                       cr/default-2-country-code
+                       d/default-2-country-code
                        cc)))
        distinct))
 
@@ -83,10 +84,10 @@
 (defn pred-fn [country-code]
   (fn [loc]
     (condp = country-code
-      cr/worldwide-2-country-code
+      d/worldwide-2-country-code
       true
 
-      cr/default-2-country-code
+      d/default-2-country-code
       ;; XX comes from the service
       (= "XX" (:country_code loc))
 

@@ -4,6 +4,8 @@
             [clojure.java.io :as io]
             [clojure.string :as s]
             [corona.countries :as cr]
+            [corona.defs :as d]
+            [corona.common :as com]
             [corona.core :as c :refer [dbg]])
   (:import java.text.SimpleDateFormat))
 
@@ -34,10 +36,10 @@
 (defn pred-fn [country-code]
   (fn [country-code]
     (condp = country-code
-      cr/worldwide-2-country-code
+      d/worldwide-2-country-code
       true
 
-      cr/default-2-country-code
+      d/default-2-country-code
       ;; XX comes from the service
       (= "XX" country-code)
 
@@ -48,7 +50,7 @@
        #_(take-last 1)
        (filter (fn [[_ country-name _ c _ _]]
                  (->> country-name
-                      cr/country_code
+                      com/country-code
                       pred)))))
 
 (defn sum-up-file [{:keys [sum-up-fn pred file] :as prm}]
@@ -115,7 +117,7 @@
        (reduce into [])
        (map second)
        (into #{})
-       (map cr/country_code)
+       (map com/country-code)
        sort
        vec
        (into cr/default-affected-country-codes)))

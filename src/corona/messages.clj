@@ -6,6 +6,7 @@
             [com.hypirion.clj-xchart :as chart]
             [corona.common :as com]
             [corona.api :as data]
+            [corona.defs :as d]
             [corona.countries :as cr]
             [corona.core :as c :refer [in? dbg]]))
 
@@ -264,63 +265,68 @@
 
 (defn info [{:keys [country-code] :as prm}]
   (format
-   "%s\n%s\n%s\n%s"
+   (str
+    "%s\n"  ;; header
+    "%s\n"  ;; day
+    "%s\n"  ;; data
+    "%s\n"  ;; footer
+    )
    (str
     (header prm)
     "  "
-    (co/country-name country-code) " "
+    (com/country-name country-code) " "
     (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
            (map (fn [s] (->> s s/lower-case encode-cmd))
                 [country-code
-                 (co/country-code-3-letter country-code)])))
+                 (cr/country-code-3-letter country-code)])))
    (str "Day " (count (data/raw-dates)))
 
    (let [last-day (data/last-day prm)
-         delta (data/delta prm)
-         {confirmed :c} last-day
-         rpad-len (count s-recovered)
-         lpad-len (->> confirmed str count)
-         {dc :c} delta]
-     (str
-      "  "
-      (com/country-name country-code) " "
-      (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
-             (map (fn [s] (->> s s/lower-case encode-cmd))
-                  [country-code
-                   (cr/country-code-3-letter country-code)])))
-     (str "Day " (count (data/raw-dates)))
-
-     (let [{confirmed :c} last-day
+           delta (data/delta prm)
+           {confirmed :c} last-day
            rpad-len (count s-recovered)
            lpad-len (->> confirmed str count)
            {dc :c} delta]
        (str
-        (fmt {:s s-confirmed :n confirmed :diff dc
-              :desc "" :calc-rate false}) "\n"
-        (if (pos? confirmed)
-          (let [{deaths :d recovered :r ill :i} last-day
-                closed (+ deaths recovered)
-                {dd :d dr :r di :i} delta
-                dclosed (+ dd dr)]
-            (format
-             "%s\n%s\n%s\n%s\n"
-             (fmt {:s s-sick :n ill :total confirmed :diff di :desc ""
-                   :calc-rate true})
-             (fmt {:s s-recovered :n recovered :total confirmed :diff dr :desc ""
-                   :calc-rate true})
-             (fmt {:s s-deaths :n deaths :total confirmed :diff dd
-                   :calc-rate true
-                   :desc (format " See %s"
-                                 (link "mortality rate" ref-mortality-rate prm))
-                   #_(format " See %s and %s"
-                             (link "mortality rate" ref-mortality-rate prm)
-                             (encode-cmd s-references))})
-             (fmt {:s s-closed :n closed :total confirmed :diff dclosed
-                   :calc-rate true
-                   :desc (format "= %s + %s"
-                                 (s/lower-case s-recovered )
-                                 (s/lower-case s-deaths))}))))))
-     (footer prm))))
+        "  "
+        (com/country-name country-code) " "
+        (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
+               (map (fn [s] (->> s s/lower-case encode-cmd))
+                    [country-code
+                     (cr/country-code-3-letter country-code)])))
+       (str "Day " (count (data/raw-dates)))
+
+       (let [{confirmed :c} last-day
+             rpad-len (count s-recovered)
+             lpad-len (->> confirmed str count)
+             {dc :c} delta]
+         (str
+          (fmt {:s s-confirmed :n confirmed :diff dc
+                :desc "" :calc-rate false}) "\n"
+          (if (pos? confirmed)
+            (let [{deaths :d recovered :r ill :i} last-day
+                  closed (+ deaths recovered)
+                  {dd :d dr :r di :i} delta
+                  dclosed (+ dd dr)]
+              (format
+               "%s\n%s\n%s\n%s\n"
+               (fmt {:s s-sick :n ill :total confirmed :diff di :desc ""
+                     :calc-rate true})
+               (fmt {:s s-recovered :n recovered :total confirmed :diff dr :desc ""
+                     :calc-rate true})
+               (fmt {:s s-deaths :n deaths :total confirmed :diff dd
+                     :calc-rate true
+                     :desc (format " See %s"
+                                   (link "mortality rate" ref-mortality-rate prm))
+                     #_(format " See %s and %s"
+                               (link "mortality rate" ref-mortality-rate prm)
+                               (encode-cmd s-references))})
+               (fmt {:s s-closed :n closed :total confirmed :diff dclosed
+                     :calc-rate true
+                     :desc (format "= %s + %s"
+                                   (s/lower-case s-recovered )
+                                   (s/lower-case s-deaths))})))))))
+   (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread

@@ -2,17 +2,22 @@
   (:require [corona.countries :as cr]
             [corona.continents :as cn]
             [corona.api :as data]
+            [corona.defs :as d]
             [clojure.string :as s]
             [corona.core :as c :refer [in? dbg]]))
 
 (def continent-countries-hm
   "https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
+  Kosovo doesn't have any numeric code assigned; XKX is just pseudo-defined by the Worldbank
   TODO verify this hm against other sources"
   [
+   ["ASI"      "AF" "AFG" "004" "Afghanistan"]
+   ["EUR"      "XK" "XKX"  nil  "Kosovo"]
+
    ["EUR"      "AL" "ALB" "008" "Albania, Republic of"]
    ["ANA"      "AQ" "ATA" "010" "Antarctica (the territory South of 60 deg S)"]
    ["AFR"      "DZ" "DZA" "012" "Algeria, People's Democratic Republic of"]
-   ["OCE"      "ASI" "ASIM" "016" "American Samoa"]
+   ["OCE"      "AS" "ASM" "016" "American Samoa"]  ;;;
    ["EUR"      "AD" "AND" "020" "Andorra, Principality of"]
    ["AFR"      "AO" "AGO" "024" "Angola, Republic of"]
    ["NAC"      "AG" "ATG" "028" "Antigua and Barbuda"]
@@ -49,7 +54,7 @@
    ["NAC"      "CA" "CAN" "124" "Canada"]
    ["AFR"      "CV" "CPV" "132" "Cape Verde, Republic of"]
    ["NAC"      "KY" "CYM" "136" "Cayman Islands"]
-   ["AFR"      "CF" "CAFR" "140" "Central African Republic"]
+   ["AFR"      "CF" "CAF" "140" "Central African Republic"]
    ["ASI"      "LK" "LKA" "144" "Sri Lanka, Democratic Socialist Republic of"]
    ["AFR"      "TD" "TCD" "148" "Chad, Republic of"]
    ["SAC"      "CL" "CHL" "152" "Chile, Republic of"]
@@ -159,7 +164,7 @@
    ["AFR"      "MA" "MAR" "504" "Morocco, Kingdom of"]
    ["AFR"      "MZ" "MOZ" "508" "Mozambique, Republic of"]
    ["ASI"      "OM" "OMN" "512" "Oman, Sultanate of"]
-   ["AFR"      "NAC" "NACM" "516" "Namibia, Republic of"]
+   ["AFR"      "NA" "NAM" "516" "Namibia, Republic of"]
    ["OCE"      "NR" "NRU" "520" "Nauru, Republic of"]
    ["ASI"      "NP" "NPL" "524" "Nepal, State of"]
    ["EUR"      "NL" "NLD" "528" "Netherlands, Kingdom of the"]
@@ -204,15 +209,15 @@
    ["AFR"      "RW" "RWA" "646" "Rwanda, Republic of"]
    ["NAC"      "BL" "BLM" "652" "Saint Barthelemy"]
    ["AFR"      "SH" "SHN" "654" "Saint Helena"]
-   ["NAC"      "KN" "KNAC" "659" "Saint Kitts and Nevis, Federation of"]
+   ["NAC"      "KN" "KNA" "659" "Saint Kitts and Nevis, Federation of"]
    ["NAC"      "AI" "AIA" "660" "Anguilla"]
    ["NAC"      "LC" "LCA" "662" "Saint Lucia"]
-   ["NAC"      "MF" "MAFR" "663" "Saint Martin"]
+   ["NAC"      "MF" "MAF" "663" "Saint Martin"]
    ["NAC"      "PM" "SPM" "666" "Saint Pierre and Miquelon"]
    ["NAC"      "VC" "VCT" "670" "Saint Vincent and the Grenadines"]
    ["EUR"      "SM" "SMR" "674" "San Marino, Republic of"]
    ["AFR"      "ST" "STP" "678" "São Tomé and Príncipe, Democratic Republic of"]
-   ["ASI"      "SAC" "SACU" "682" "Saudi Arabia, Kingdom of"]
+   ["ASI"      "SA" "SAU" "682" "Saudi Arabia, Kingdom of"]
    ["AFR"      "SN" "SEN" "686" "Senegal, Republic of"]
    ["EUR"      "RS" "SRB" "688" "Serbia, Republic of"]
    ["AFR"      "SC" "SYC" "690" "Seychelles, Republic of"]
@@ -222,7 +227,7 @@
    ["ASI"      "VN" "VNM" "704" "Vietnam, Socialist Republic of"]
    ["EUR"      "SI" "SVN" "705" "Slovenia, Republic of"]
    ["AFR"      "SO" "SOM" "706" "Somalia, Somali Republic"]
-   ["AFR"      "ZA" "ZAFR" "710" "South Africa, Republic of"]
+   ["AFR"      "ZA" "ZAF" "710" "South Africa, Republic of"]
    ["AFR"      "ZW" "ZWE" "716" "Zimbabwe, Republic of"]
    ["EUR"      "ES" "ESP" "724" "Spain, Kingdom of"]
    ["AFR"      "SS" "SSD" "728" "South Sudan"]
@@ -256,7 +261,7 @@
    ["EUR"      "JE" "JEY" "832" "Jersey, Bailiwick of"]
    ["EUR"      "IM" "IMN" "833" "Isle of Man"]
    ["AFR"      "TZ" "TZA" "834" "Tanzania, United Republic of"]
-   ["NAC"      "US" "USAC" "840" "United States of America"]
+   ["NAC"      "US" "USA" "840" "United States of America"]
    ["NAC"      "VI" "VIR" "850" "United States Virgin Islands"]
    ["AFR"      "BF" "BFA" "854" "Burkina Faso"]
    ["SAC"      "UY" "URY" "858" "Uruguay, Eastern Republic of"]
@@ -270,10 +275,22 @@
    ["ASI"      "XE"  nil   nil  "Iraq-Saudi Arabia Neutral Zone"]
    ["ASI"      "XS"  nil   nil  "Spratly Islands"]
    ["OCE"      "XX"  nil   nil  "Disputed Territory"]
-   [cn/default-continent-code
-    cr/default-2-country-code
-    cr/default-3-country-code
-    nil   nil  "Cruise Ship"]
+
+   [d/cruise-ship-country-code
+    d/cruise-ship-2-country-code
+    d/cruise-ship-3-country-code
+    nil   nil  d/others]
+
+   [d/default-continent-code
+    d/default-2-country-code
+    d/default-3-country-code
+    nil   nil  d/others]
+
+   [d/default-continent-code
+    d/worldwide-2-country-code
+    d/worldwide-3-country-code
+    nil   nil  d/worldwide]
+
    ])
 
 (defn continent-code [continent]
@@ -288,7 +305,7 @@
        (map (fn [[k v]] [(s/lower-case k) v]))
        (into {})))
 
-(defn country_code
+(defn country-code
   "Return two letter country code (Alpha-2) according to
   https://en.wikipedia.org/wiki/ISO_3166-1
   Defaults to `default-2-country-code`."
@@ -300,13 +317,13 @@
       (if-let [country-alias (get (lower-case cr/aliases-hm) country)]
         (get cr/country--country-code country-alias)
         (or
-         (get cr/default-mappings country-name)
+         (get d/cruise-ship-country-code country-name)
          (do (println (format
                        "No country code found for \"%s\". Using \"%s\""
                        country-name
-                       cr/default-2-country-code
+                       d/default-2-country-code
                        ))
-             cr/default-2-country-code))))))
+             d/default-2-country-code))))))
 
 (defn country-name
   "Country name from 2-letter country code: \"DE\" -> \"Germany\" "
@@ -371,6 +388,8 @@
   []
   (->> (all-affected-country-codes)
        #_(take 1)
+       #_(map (fn [cc] [cc (country-code--continet-code cc)]))
+       #_(filter (fn [[cc ccc]] (nil? ccc)))
        (map country-code--continet-code)
        distinct))
 

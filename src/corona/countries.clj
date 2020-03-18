@@ -1,26 +1,5 @@
-(ns corona.countries)
-
-(def worldwide-2-country-code
-  "\"ZZ\" can be user-assigned."
-  "ZZ")
-(def worldwide-country-codes
-  "\"ZZZ\" can be user-assigned."
-  {worldwide-2-country-code "ZZZ"})
-
-(def default-2-country-code
-  "\"QQ\" can be user-assigned."
-  "QQ")
-
-(def default-3-country-code
-  "\"QQQ\" can be user-assigned."
-  "QQQ")
-
-(def default-country-codes
-  "\"QQQ\" can be user-assigned."
-  {default-2-country-code default-3-country-code})
-
-(def country-code-worldwide {worldwide-2-country-code "Worldwide"})
-(def country-code-others    {default-2-country-code    "Others"})
+(ns corona.countries
+  (:require [corona.defs :as d]))
 
 (def country-code-2-to-3-hm
   "Mapping of country codes 2 -> 3 letters"
@@ -65,8 +44,8 @@
     ;; See https://github.com/covid19-data/covid19-data/issues/16
     "XK" "XKX"
     "ZM" "ZMB" "ZW" "ZWE"}
-   default-country-codes
-   worldwide-country-codes))
+   d/default-country-codes
+   d/worldwide-country-codes))
 
 (defn country-code-3-letter
   "3-letter country code from 2-letter country code: \"DE\" -> \"DEU\" "
@@ -75,7 +54,8 @@
 (defn all-country-codes [] (keys country-code-2-to-3-hm))
 
 (def default-affected-country-codes
-  (->> [country-code-worldwide country-code-others]
+  (->> [d/country-code-worldwide
+        d/country-code-others]
        (reduce into)
        (mapv (fn [[k v]] k))))
 
@@ -332,8 +312,8 @@
      "ZM" "Zambia"
      "ZW" "Zimbabwe"
      }
-    country-code-worldwide
-    country-code-others))
+    d/country-code-worldwide
+    d/country-code-others))
 
 (def country--country-code
   "Mapping of country names to alpha-2 codes.
@@ -355,7 +335,7 @@
   TODO \"Macau\" is probably just misspelled \"Macao\". Report it to CSSEGISandData/COVID-19.
   "
   {
-   "World"           (->> country-code-worldwide vals first)
+   "World"            d/worldwide
    "Czechia"          "Czech Republic"
    "Mainland China"   "China"
    "South Korea"      "Korea, Republic of"
@@ -468,7 +448,3 @@
          "Taiwan, Province of China"             "Taiwan"
          "Saint Vincent and the Grenadines"      "Saint Vincent"
          }))
-
-(def default-mappings
-  {"Cruise Ship" default-2-country-code})
-
