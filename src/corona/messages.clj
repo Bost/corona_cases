@@ -69,13 +69,16 @@
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
 
+(defn stats-per-country [{:keys [cc] :as prm}]
+  (->> (assoc prm :pred (data/pred-fn cc))
+       (data/last-day)
+       (conj {:cn (com/country-name-aliased cc)
+              :cc cc})))
+
 (defn all-affected-country-codes [prm]
   (->> (com/all-affected-country-codes)
        (map (fn [cc]
-              (->> (assoc prm :pred (data/pred-fn cc))
-                   (data/last-day)
-                   (conj {:cn (com/country-name-aliased cc)
-                          :cc cc}))))))
+              (stats-per-country (assoc prm :cc cc))))))
 
 (def options {:parse_mode "Markdown" :disable_web_page_preview true})
 
@@ -194,24 +197,6 @@
           #_"https://www.who.int/gpsc/clean_hands_protection/en/"
           "https://www.who.int/gpsc/media/how_to_handwash_lge.gif"))
 
-(defn fmt-continents
-  "Examples (fmt-continents {})
-  TODO show counts for every continent"
-  [prm]
-  (format
-   "Continent(s) hit:\n%s"
-   ;; "Countries hit:\n\n<pre>%s</pre>\n\n%s"
-   (->> (com/all-affected-continent-codes)
-        (map (fn [continent-code]
-               continent-code
-               (format "<code>%s</code>          %s\n"
-                       (c/right-pad (com/continent-name continent-code)
-                                    com/max-affected-continent-name-len)
-                       (->> continent-code
-                            encode-cmd
-                            s/lower-case))))
-        (apply str))))
-
 (defn format-last-day [prm]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                 (t/default-time-zone))
@@ -231,32 +216,153 @@
      ;; i.e. "Markdown"
      (s/replace c/bot-name #"_" "\\\\_"))))
 
-(defn list-continents [prm]
-  (format
-   "%s\n%s\n\n%s\n%s"
-   (header prm)
-   (str "Day " (count (data/raw-dates)))
-   (fmt-continents prm)
-   (footer prm)))
-
-(defn list-countries [{:keys [data] :as prm}]
+(defn fmt-continents
+  [{:keys [data] :as prm}]
   (let [separator " "]
     (format
-     (format (str "%s\n" ;; header
-                  "%s "  ;; sick
-                  "%s"   ;; separator
-                  "%s "  ;; recovered
-                  "%s"   ;; separator
-                  "%s\n" ;; deaths
-                  "%s")
-             (header prm)
+     (format (str
+              ;; "%s\n" ;; header
+              ;; "%s\n" ;; day
+              "%s "  ;; sick
+              "%s"   ;; separator
+              "%s "  ;; recovered
+              "%s"   ;; separator
+              "%s\n" ;; deaths
+              "%s"   ;; listing
+                  )
+             ;; (header prm)
+             ;; (str "Day " (count (data/raw-dates)))
              s-sick
              separator
              s-recovered
              separator
              s-deaths
-             "%s\n\nTotal countries hit: %s\n\n%s")
-     #_(cr/continent-name continent-code)
+             (str "%s\n\n"
+                  "Total countries hit: %s"))
+     (s/join
+      "\n"
+      (->> data
+           #_(take-last 11)
+           (map (fn [data-continent]
+                  (let [{ill :i recovered :r deaths :d
+                         name :cn code :cc} data-continent]
+                    (format "<code>%s%s%s%s%s %s</code>  %s"
+                            (c/right-pad (str ill) 6)
+                            separator
+                            (c/right-pad (str recovered) 6)
+                            separator
+                            (c/right-pad (str deaths) 5)
+                            (c/right-pad name 17)
+                            (->> code encode-cmd s/lower-case)
+                            ))))
+           #_(partition-all 2)
+           #_(map (fn [part] (s/join "       " part)))))
+     (count (com/all-affected-country-codes)))))
+
+(defn fmt-worldwide
+  "TODO show counts for every continent"
+  [{:keys [data] :as prm}]
+  (let [separator " "]
+    (format
+     (format (str
+              ;; "%s\n" ;; header
+              ;; "%s\n" ;; day
+              "%s "  ;; sick
+              "%s"   ;; separator
+              "%s "  ;; recovered
+              "%s"   ;; separator
+              "%s\n" ;; deaths
+              "%s"   ;; listing
+                  )
+             ;; (header prm)
+             ;; (str "Day " (count (data/raw-dates)))
+             s-sick
+             separator
+             s-recovered
+             separator
+             s-deaths
+             (str "%s\n\n"
+                  "Total countries hit: %s"))
+     (s/join
+      "\n"
+      #_"listing..."
+      (->> data
+           #_(take-last 11)
+           (map (fn [data-continent]
+                  (let [{ill :i recovered :r deaths :d
+                         name :cn code :cc} data-continent]
+                    (format "<code>%s%s%s%s%s %s</code>  %s"
+                            (c/right-pad (str ill) 6)
+                            separator
+                            (c/right-pad (str recovered) 6)
+                            separator
+                            (c/right-pad (str deaths) 5)
+                            (c/right-pad name 17)
+                            (->> code encode-cmd s/lower-case)
+                            ))))
+           #_(partition-all 2)
+           #_(map (fn [part] (s/join "       " part)))))
+     (count (com/all-affected-country-codes)))))
+
+(defn list-continents [prm]
+  (format
+   (str
+    "%s\n" ; header
+    "%s\n" ; day
+    "%s\n\n" ; continents
+    "%s\n\n" ; worldwide
+    "%s" ; footer
+    )
+   (header prm)
+   (str "Day " (count (data/raw-dates)))
+   (->> (com/all-affected-continent-codes)
+        (map (fn [country-code]
+               (let [hms (->> (com/continent-code--country-codes country-code)
+                              (map (fn [cc]
+                                     (stats-per-country (assoc prm :cc cc)))))]
+                 {:i (reduce + (map :i hms))
+                  :r (reduce + (map :d hms))
+                  :d (reduce + (map :d hms))
+                  :cc country-code
+                  :cn (com/continent-name country-code)
+                  })))
+        (sort-by :i <)
+        (assoc prm :data)
+        fmt-continents
+        )
+
+   (->> [d/country-code-worldwide
+         ;; TODO verify it Others is listed among countries
+         #_d/country-code-others]
+        (reduce into)
+        (mapv (fn [[k v]] k))
+        (map (fn [cc]
+               (stats-per-country (assoc prm :cc cc))))
+        (sort-by :i <)
+        (assoc prm :data)
+        fmt-worldwide
+        )
+   (footer prm)))
+
+(defn list-countries [{:keys [data] :as prm}]
+  (let [separator " "]
+    (format
+     (format (str "%s\n" ; header
+                  "%s\n" ; day
+                  "%s "  ; sick
+                  "%s"   ; separator
+                  "%s "  ; recovered
+                  "%s"   ; separator
+                  "%s\n" ; deaths
+                  "%s")
+             (header prm)
+             (str "Day " (count (data/raw-dates)))
+             s-sick
+             separator
+             s-recovered
+             separator
+             s-deaths
+             "%s\n\n%s")
      (s/join
       "\n"
       (->> data
@@ -275,17 +381,18 @@
                             ))))
            #_(partition-all 2)
            #_(map (fn [part] (s/join "       " part)))))
-     (count (com/all-affected-country-codes))
      (footer prm))))
 
-(defn info [{:keys [country-code] :as prm}]
+(defn info
+  "TODO analyze negative diffs for /usa"
+  [{:keys [country-code] :as prm}]
   (format
    (str
-    "%s\n"  ;; header
-    "%s\n"  ;; day
-    "%s\n"  ;; data
-    ;; "%s\n"  ;; fmt-continents
-    "%s\n"  ;; footer
+    "%s\n"  ; header
+    "%s\n"  ; day
+    "%s\n"  ; data
+    ;; "%s\n"  ; fmt-continents
+    "%s\n"  ; footer
     )
    (str
     (header prm)
@@ -329,7 +436,6 @@
                  :desc (format "= %s + %s"
                                (s/lower-case s-recovered )
                                (s/lower-case s-deaths))}))))))
-   #_(fmt-continents prm)
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to

@@ -288,10 +288,10 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
     d/default-3-country-code
     nil   nil  d/others]
 
-   [d/default-continent-code
-    d/worldwide-2-country-code
-    d/worldwide-3-country-code
-    nil   nil  d/worldwide]
+   ;; [d/default-continent-code
+   ;;  d/worldwide-2-country-code
+   ;;  d/worldwide-3-country-code
+   ;;  nil   nil  d/worldwide]
    ])
 
 (defn continent-code [continent]
@@ -338,9 +338,9 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
     (get cr/aliases-inverted country country)))
 
 (defn country-name-aliased [cc]
-  (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK"
-            #_"CZ" "BA" "CD" "BO" "MD" "BN" "VE" "VC" "KP"
-            "TZ" "VC"] cc)
+  (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
+            "MD" "BN" "VE" "VC" "KP" "TZ" "VC" "XK" #_"CZ"]
+           cc)
     (country-alias cc)
     (country-name cc)))
 

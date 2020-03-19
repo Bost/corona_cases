@@ -117,7 +117,8 @@
 
 (defn webapp [& [port]]
   (log/info (str "Starting " bot-type " webapp..."))
-  (let [port (Integer. (or port (env :port) 5000))]
+  (let [port (Integer. (or port (env :port)
+                           (if (= c/bot-type "PROD") 5000 5050)))]
     (jetty/run-jetty (site #'app) {:port port :join? false})))
 
 (defn -main [& [port]]

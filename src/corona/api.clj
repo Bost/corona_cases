@@ -48,7 +48,7 @@
        (reduce clojure.set/union)
        sort
        vec
-       (into cr/default-affected-country-codes)
+       #_(into cr/default-affected-country-codes)
        (mapv (fn [cc] (if (= "XX" cc)
                        d/default-2-country-code
                        cc)))

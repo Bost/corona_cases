@@ -14,7 +14,8 @@
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
 
-    (if (in? (com/all-affected-country-codes) country-code)
+    (if (in? (->> (com/all-affected-country-codes)
+                  (into cr/default-affected-country-codes)) country-code)
       (morse/send-photo c/token chat-id (msg/absolute-vals prm)))))
 
 (defn partition-in-chunks
@@ -23,27 +24,27 @@
   (partition-all (/ (count col) 7) col))
 
 (defn list-countries [{:keys [chat-id] :as prm}]
-  (let [prm (assoc prm :parse_mode "HTML")]
-    (->> (msg/all-affected-country-codes prm)
-         (sort-by :i <)
-         partition-in-chunks
-         #_(take 3)
-         #_(take-last 1)
-         (map (fn [chunk]
-                (morse/send-text
-                 c/token chat-id (select-keys prm (keys msg/options))
-                 (msg/list-countries (assoc prm :data chunk)))))
-         doall)))
+  (->> (msg/all-affected-country-codes prm)
+       (sort-by :i <)
+       partition-in-chunks
+       #_(take 3)
+       #_(take-last 1)
+       (map (fn [chunk]
+              (->> (assoc prm :data chunk)
+                   msg/list-countries
+                   (morse/send-text c/token chat-id
+                                    (select-keys prm (keys msg/options))))))
+       doall))
 
 (defn list-continents [{:keys [chat-id] :as prm}]
-  (let [prm (assoc prm :parse_mode "HTML")]
-    (->> (msg/list-continents prm)
-         (morse/send-text c/token
-                          chat-id (select-keys prm (keys msg/options))))))
+  (->> (msg/list-continents prm)
+       (morse/send-text c/token
+                        chat-id (select-keys prm (keys msg/options)))))
 
 (defn list-stuff [{:keys [chat-id] :as prm}]
-  (list-countries prm)
-  #_(list-continents prm))
+  (let [prm (assoc prm :parse_mode "HTML")]
+    #_(list-countries prm)
+    (list-continents prm)))
 
 (defn snapshot [{:keys [chat-id] :as prm}]
   (morse/send-text
