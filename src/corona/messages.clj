@@ -326,7 +326,7 @@
                               (map (fn [cc]
                                      (stats-per-country (assoc prm :cc cc)))))]
                  {:i (reduce + (map :i hms))
-                  :r (reduce + (map :d hms))
+                  :r (reduce + (map :r hms))
                   :d (reduce + (map :d hms))
                   :cc country-code
                   :cn (com/continent-name country-code)})))
