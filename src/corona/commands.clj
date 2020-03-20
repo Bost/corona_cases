@@ -43,7 +43,7 @@
 
 (defn list-stuff [{:keys [chat-id] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
-    #_(list-countries prm)
+    (list-countries prm)
     (list-continents prm)))
 
 (defn snapshot [{:keys [chat-id] :as prm}]
@@ -159,7 +159,8 @@
       :desc "Knowledge is power - educate yourself"}]))
 
 (defn cmds []
-  (->> (cr/all-country-codes)
+  (->> (into (cr/all-country-codes)
+             #_(com/all-affected-continent-codes))
        (mapv cmds-country-code)
        flatten
        (into (cmds-general))))

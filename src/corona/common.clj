@@ -337,13 +337,6 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
   (let [country (get cr/country-code--country (s/upper-case cc))]
     (get cr/aliases-inverted country country)))
 
-(defn country-name-aliased [cc]
-  (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
-            "MD" "BN" "VE" "VC" "KP" "TZ" "VC" "XK" #_"CZ"]
-           cc)
-    (country-alias cc)
-    (country-name cc)))
-
 (defn continent-code--country-codes [continent-code]
   (->> continent-countries-hm
        (filter (fn [[continent-c country-c & rest]]
@@ -384,19 +377,12 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
   (->> (all-affected-country-codes)
        (map country-name)))
 
-(def max-affected-country-name-len
-  (->> (all-affected-country-codes)
-       (map (fn [cc]
-              (country-name-aliased cc )
-              #_(cr/country-name cc)))
-       (sort-by count)
-       last
-       count))
-
 (defn all-affected-continent-codes
-  "TODO worldwide"
+  "All continents except Antarctica are affected now.
+  TODO implement quick checking for Antarctica"
   []
-  (->> (all-affected-country-codes)
+  ["EUR" "ASI" "NAC" "SAC" "OCE" "AFR" "CCC"]
+  #_(->> (all-affected-country-codes)
        #_(take 1)
        #_(map (fn [cc] [cc (country-code--continet-code cc)]))
        #_(filter (fn [[cc ccc]] (nil? ccc)))
@@ -411,6 +397,24 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
 
 (def max-affected-continent-name-len
   (->> (all-affected-continent-names)
+       (sort-by count)
+       last
+       count))
+
+(defn country-name-aliased [cc]
+  (if (in? (all-affected-continent-codes) cc)
+    (continent-name cc)
+    (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
+              "MD" "BN" "VE" "VC" "KP" "TZ" "VC" "XK" #_"CZ"]
+             cc)
+      (country-alias cc)
+      (country-name cc))))
+
+(def max-affected-country-name-len
+  (->> (all-affected-country-codes)
+       (map (fn [cc]
+              (country-name-aliased cc )
+              #_(cr/country-name cc)))
        (sort-by count)
        last
        count))

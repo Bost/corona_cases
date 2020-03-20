@@ -246,14 +246,18 @@
            (map (fn [data-continent]
                   (let [{ill :i recovered :r deaths :d
                          name :cn code :cc} data-continent]
-                    (format "<code>%s%s%s%s%s %s</code>  %s"
+                    (format (str
+                             "<code>%s%s%s%s%s %s</code>"
+                             ;; "  %s" ; continent commands
+                             )
                             (c/right-pad (str ill) 6)
                             separator
                             (c/right-pad (str recovered) 6)
                             separator
                             (c/right-pad (str deaths) 5)
                             (c/right-pad name 17)
-                            (->> code encode-cmd s/lower-case)
+                            ;; TODO implement continent commands
+                            #_(->> code encode-cmd s/lower-case)
                             ))))
            #_(partition-all 2)
            #_(map (fn [part] (s/join "       " part)))))
@@ -324,12 +328,10 @@
                   :r (reduce + (map :d hms))
                   :d (reduce + (map :d hms))
                   :cc country-code
-                  :cn (com/continent-name country-code)
-                  })))
+                  :cn (com/continent-name country-code)})))
         (sort-by :i <)
         (assoc prm :data)
-        fmt-continents
-        )
+        fmt-continents)
 
    (->> [d/country-code-worldwide
          ;; TODO verify it Others is listed among countries
@@ -340,8 +342,7 @@
                (stats-per-country (assoc prm :cc cc))))
         (sort-by :i <)
         (assoc prm :data)
-        fmt-worldwide
-        )
+        fmt-worldwide)
    (footer prm)))
 
 (defn list-countries [{:keys [data] :as prm}]
@@ -388,16 +389,18 @@
   [{:keys [country-code] :as prm}]
   (format
    (str
-    "%s\n"  ; header
+    "%s\n"  ; extended header
     "%s\n"  ; day
     "%s\n"  ; data
-    ;; "%s\n"  ; fmt-continents
     "%s\n"  ; footer
     )
-   (str
+   (format
+    (str "%s  " ; header
+         "%s "  ; country
+         "%s"   ; country commands
+         )
     (header prm)
-    "  "
-    (com/country-name-aliased country-code) " "
+    (com/country-name-aliased country-code)
     (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
            (map (fn [s] (->> s s/lower-case encode-cmd))
                 [country-code
