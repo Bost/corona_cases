@@ -1,6 +1,7 @@
 (ns corona.messages
   (:require [clj-time.coerce :as tc]
             [clj-time.core :as t]
+            [clojure.core.memoize :as memo]
             [clj-time.format :as tf]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
@@ -383,6 +384,11 @@
            #_(partition-all 2)
            #_(map (fn [part] (s/join "       " part)))))
      (footer prm))))
+
+(def list-continents-memo
+  (memo/ttl list-continents {} :ttl/threshold (* 60 60 1000)))
+(def list-countries-memo
+  (memo/ttl list-countries {} :ttl/threshold (* 60 60 1000)))
 
 (defn info
   "TODO analyze negative diffs for /usa"

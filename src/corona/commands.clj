@@ -31,13 +31,13 @@
        #_(take-last 1)
        (map (fn [chunk]
               (->> (assoc prm :data chunk)
-                   msg/list-countries
+                   msg/list-countries-memo
                    (morse/send-text c/token chat-id
                                     (select-keys prm (keys msg/options))))))
        doall))
 
 (defn list-continents [{:keys [chat-id] :as prm}]
-  (->> (msg/list-continents prm)
+  (->> (msg/list-continents-memo prm)
        (morse/send-text c/token
                         chat-id (select-keys prm (keys msg/options)))))
 
