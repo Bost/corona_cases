@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # A list of web services providing JSON data
+# see also https://github.com/soroushchehresa/awesome-coronavirus
 webServices = (
     # https://github.com/ExpDev07/coronavirus-tracker-api
     coronavirus-tracker-api.herokuapp.com
@@ -26,6 +27,37 @@ webServices = (
 
     # https://github.com/Omaroid/Covid-19-API
     covid19api.herokuapp.com
+
+    # https://github.com/mathdroid/covid-19-api
+    covid19.mathdro.id
+
+    # https://github.com/NovelCOVID/API
+    corona.lmao.ninja
+
+    # https://github.com/amodm/api-covid19-in
+    api.rootnet.in
+
+    # https://github.com/rlindskog/covid19-graphql
+    # GraphQL
+    covid19-graphql.now.sh
+
+    # https://github.com/isjeffcom/coronvirusFigureUK
+    coronauk.isjeff.com
+
+    # https://github.com/COVID19Tracking/website
+    covidtracking.com
+
+    # https://github.com/andreagrandi/covid-api
+    # localhosting
+
+    # https://micro-work.net/covid/jhutsconfirmedjson4.php/Swi/d:15
+    # https://micro-work.net/covid/jhutsconfirmedjson4.php/US/d:15
+    # TODO repo not found; see
+    # https://github.com/CSSEGISandData/COVID-19/issues/492#issuecomment-601827214
+    # wget --no-verbose https://github.com/matjung/covid
+    # https://github.com/matjung/covid:
+    # 2020-03-20 18:36:59 ERROR 404: Not Found.
+    micro-work.net
 )
 
 for srvc in "${webServices[@]}"; do
