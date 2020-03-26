@@ -31,7 +31,7 @@
 
 (defn raw-dates-unsorted []
   #_[(keyword "2/22/20") (keyword "2/2/20")]
-  (->> (data-memo) :recovered :locations last :history keys))
+  (->> (data-memo) :confirmed :locations last :history keys))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
@@ -72,14 +72,17 @@
                    (apply str)
                    (keyword))))))
 
-(defn sums-for-date [locations raw-date]
-  (->> locations
-       (map (fn [loc]
-              (->> loc :history raw-date
-                   ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
-                   ;; str read-number
-                   )))
-       (reduce + 0)))
+(defn sums-for-date [case locations raw-date]
+  (if (and (empty? locations)
+           (= :recovered case))
+    0
+    (->> locations
+         (map (fn [loc]
+                (->> loc :history raw-date
+                     ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
+                     ;; str read-number
+                     )))
+         (reduce + 0))))
 
 (defn pred-fn [country-code]
   (fn [loc]
@@ -99,7 +102,7 @@
     (->> (raw-dates)
          #_(take 4)
          #_(take-last 1)
-         (map (fn [raw-date] (sums-for-date locations raw-date))))))
+         (map (fn [raw-date] (sums-for-date case locations raw-date))))))
 
 (defn get-counts [prm]
   (let [crd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
