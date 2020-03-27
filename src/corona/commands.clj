@@ -18,7 +18,7 @@
                   (into cr/default-affected-country-codes)) country-code)
       (do
         (morse/send-photo c/token chat-id (msg/absolute-vals prm))
-        (morse/send-text
+        #_(morse/send-text
          c/token chat-id (select-keys prm (keys msg/options))
          (format
           (str
