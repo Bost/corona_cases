@@ -338,7 +338,7 @@
          ;; TODO verify it Others is listed among countries
          #_d/country-code-others]
         (reduce into)
-        (mapv (fn [[k v]] k))
+        (mapv (fn [[k _]] k))
         (map (fn [cc]
                (stats-per-country (assoc prm :cc cc))))
         (sort-by :i <)
@@ -416,8 +416,6 @@
    (let [last-day (data/last-day prm)
          delta (data/delta prm)
          {confirmed :c} last-day
-         rpad-len (count s-recovered)
-         lpad-len (->> confirmed str count)
          {dc :c} delta]
      (str
       (fmt {:s s-confirmed :n confirmed :diff dc

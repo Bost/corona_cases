@@ -1,5 +1,6 @@
 (ns corona.common
-  (:require [clojure.string :as s]
+  (:require [clojure.set :as cset]
+            [clojure.string :as s]
             [corona.api :as data]
             [corona.continents :as cn]
             [corona.core :as c :refer [in?]]
@@ -298,7 +299,7 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
   (get cn/continent-names--continent-codes-hm continent))
 
 (defn continent-name [continent-code]
-  (get (clojure.set/map-invert cn/continent-names--continent-codes-hm)
+  (get (cset/map-invert cn/continent-names--continent-codes-hm)
        continent-code))
 
 (defn lower-case [hm]
@@ -339,9 +340,9 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
 
 (defn continent-code--country-codes [continent-code]
   (->> continent-countries-hm
-       (filter (fn [[continent-c country-c & rest]]
+       (filter (fn [[continent-c _ & _]]
                  (= continent-code continent-c)))
-       (mapv (fn [[_ country-c & rest]] country-c))))
+       (mapv (fn [[_ country-c & _]] country-c))))
 
 (defn all-continent-codes--country-codes
   "Turkey and Russia are in Asia and Europe. Assigned to Europe.

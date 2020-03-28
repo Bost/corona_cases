@@ -1,5 +1,6 @@
 (ns corona.api
   (:require [clojure.core.memoize :as memo]
+            [clojure.set :as cset]
             [corona.core :as c :refer [read-number]]
             [corona.defs :as d])
   (:import java.text.SimpleDateFormat))
@@ -41,7 +42,7 @@
                             case :locations
                             (map :country_code)
                             set)))
-       (reduce clojure.set/union)
+       (reduce cset/union)
        sort
        vec
        #_(into cr/default-affected-country-codes)

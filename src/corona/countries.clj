@@ -1,5 +1,6 @@
 (ns corona.countries
-  (:require [corona.defs :as d])
+  (:require [corona.defs :as d]
+            [clojure.set :as cset])
   (:import com.neovisionaries.i18n.CountryCode))
 
 (def country-code-2-to-3-hm
@@ -62,7 +63,7 @@
 (def default-affected-country-codes
   (->> default-affected
        (reduce into)
-       (mapv (fn [[k v]] k))))
+       (mapv (fn [[k _]] k))))
 
 ;; Continent code
 (def default-affected-continent-codes [])
@@ -100,7 +101,7 @@
 (def country--country-code
   "Mapping of country names to alpha-2 codes.
   https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
-  (clojure.set/map-invert country-code--country))
+  (cset/map-invert country-code--country))
 
 (defn cn [country-code] (get country-code--country country-code))
 

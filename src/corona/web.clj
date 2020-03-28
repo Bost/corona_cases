@@ -82,22 +82,22 @@
 
 (defroutes app
   (let [hook telegram-hook]
-    (POST (str "/" hook "/" token) req ;; {{input :input} :params}
-          {:status 200
-           :headers {"Content-Type" "text/plain"}
-           :body
-           (do
-             (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
-                                   {:text (str "Hello from " hook " webhook")})))}))
+    (POST
+     (str "/" hook "/" token) req ;; {{input :input} :params}
+     {:status 200
+      :headers {"Content-Type" "text/plain"}
+      :body
+      (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
+                            {:text (str "Hello from " hook " webhook")}))}))
 
   (let [hook google-hook]
-    (POST (str "/" hook "/" token) req ;; {{input :input} :params}
-          {:status 200
-           :headers {"Content-Type" "text/plain"}
-           :body
-           (do
-             (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
-                                   {:text (str "Hello from " hook " webhook")})))}))
+    (POST
+     (str "/" hook "/" token) req ;; {{input :input} :params}
+     {:status 200
+      :headers {"Content-Type" "text/plain"}
+      :body
+      (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
+                            {:text (str "Hello from " hook " webhook")}))}))
   (GET "/camel" {{input :input} :params}
        {:status 200
         :headers {"Content-Type" "text/plain"}

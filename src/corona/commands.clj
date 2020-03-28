@@ -59,7 +59,7 @@
        (morse/send-text c/token
                         chat-id (select-keys prm (keys msg/options)))))
 
-(defn list-stuff [{:keys [chat-id] :as prm}]
+(defn list-stuff [prm]
   (let [prm (assoc prm :parse_mode "HTML")]
     (list-countries prm)
     (list-continents prm)))
@@ -122,9 +122,9 @@
     (fn [c] (->> c cr/country-code-3-letter s/upper-case)) ;; /DEU
     (fn [c] (->> c cr/country-code-3-letter s/capitalize)) ;; /Deu
 
-    (fn [c] (->> (normalize) s/lower-case))   ;; /unitedstates
-    (fn [c] (->> (normalize) s/upper-case))   ;; /UNITEDSTATES
-    (fn [c] (->> (normalize)))]
+    (fn [_] (->> (normalize) s/lower-case))   ;; /unitedstates
+    (fn [_] (->> (normalize) s/upper-case))   ;; /UNITEDSTATES
+    (fn [_] (->> (normalize)))]
    (mapv
     (fn [fun]
       {:name (fun country-code)
