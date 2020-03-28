@@ -12,10 +12,9 @@
 (def others                 "Others")
 (def country-code-others    {default-2-country-code others})
 
-(def cruise-ship              "Cruise Ship")
-(def cruise-ship-country-code {cruise-ship default-2-country-code})
-(def cruise-ship-2-country-code (-> cruise-ship-country-code keys first))
-(def cruise-ship-3-country-code (-> cruise-ship-country-code vals first))
+(def cruise-ship-2-country-code default-2-country-code)
+(def cruise-ship-3-country-code default-3-country-code)
+(def cruise-ship                "Cruise Ship")
 (def country-code-cruise-ship   {cruise-ship-2-country-code cruise-ship})
 
 (def default-continent-code "CCC")

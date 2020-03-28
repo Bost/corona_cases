@@ -3,6 +3,13 @@
 # A list of web services providing JSON data
 # see also https://github.com/soroushchehresa/awesome-coronavirus
 webServices = (
+
+    # https://corona-api-landingpage.netlify.com/
+    # https://github.com/CoronaAPI
+    # https://github.com/CSSEGISandData/COVID-19/issues/1250
+    # https://corona.ndo.dev/api/timespan?country=deu&time=year
+    corona.ndo.dev
+
     # https://github.com/ExpDev07/coronavirus-tracker-api
     coronavirus-tracker-api.herokuapp.com
 
@@ -58,6 +65,8 @@ webServices = (
     # https://github.com/matjung/covid:
     # 2020-03-20 18:36:59 ERROR 404: Not Found.
     micro-work.net
+
+    # coronavirus-19-api.herokuapp.com
 )
 
 for srvc in "${webServices[@]}"; do

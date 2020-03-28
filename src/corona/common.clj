@@ -13,7 +13,7 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
 https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent
 
   Kosovo doesn't have any numeric code assigned; XKX is just pseudo-defined by the Worldbank
-  TODO verify this hm against other sources"
+  "
   [
    ["ASI"      "AF" "AFG" "004" "Afghanistan"]
    ["EUR"      "XK" "XKX"  nil  "Kosovo"]
@@ -279,7 +279,7 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
    ["ASI"      "XS"  nil   nil  "Spratly Islands"]
    ["OCE"      "XX"  nil   nil  "Disputed Territory"]
 
-   [d/cruise-ship-country-code
+   [d/default-continent-code
     d/cruise-ship-2-country-code
     d/cruise-ship-3-country-code
     nil   nil  d/others]
@@ -318,14 +318,11 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
       cc
       (if-let [country-alias (get (lower-case cr/aliases-hm) country)]
         (get cr/country--country-code country-alias)
-        (or
-         (get d/cruise-ship-country-code country-name)
-         (do (println (format
-                       "No country code found for \"%s\". Using \"%s\""
-                       country-name
-                       d/default-2-country-code
-                       ))
-             d/default-2-country-code))))))
+        (do (println (format
+                      "No country code found for \"%s\". Using \"%s\""
+                      country-name
+                      d/default-2-country-code))
+            d/default-2-country-code)))))
 
 (defn country-name
   "Country name from 2-letter country code: \"DE\" -> \"Germany\" "
