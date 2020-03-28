@@ -405,7 +405,8 @@ https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories
   (if (in? (all-affected-continent-codes) cc)
     (continent-name cc)
     (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
-              "MD" "BN" "VE" "VC" "KP" "TZ" "VC" "XK" #_"CZ"]
+              "MD" "BN" "VE" "VC" "KP" "TZ" "VC" "XK" "LA" "SY" "KN"
+              "TT" "AG" "CF" #_"CZ"]
              cc)
       (country-alias cc)
       (country-name cc))))

@@ -104,6 +104,7 @@
   (clojure.set/map-invert country-code--country))
 
 (defn cn [country-code] (get country-code--country country-code))
+
 (def aliases-hm
   "Mapping of alternative names, spelling, typos to the names of countries used by
   the ISO 3166-1 norm.
@@ -162,7 +163,7 @@
    "Laos"                             (cn "LA") ; "Lao People's Democratic Republic"
    "Moldova"                          (cn "MD") ; "Moldova, Republic of"
    "Republic of Moldova"              (cn "MD") ; "Moldova, Republic of"
-   "Eswatini"                         (cn "SZ") ; "Swaziland"
+   "Swaziland"                        (cn "SZ") ; "Eswatini"
    "Cabo Verde"                       (cn "CV") ; "Cape Verde"
    "Brunei"                           (cn "BN") ; "Brunei Darussalam"
    "Sao Tome & Principe"              (cn "ST") ; "Sao Tome and Principe"
@@ -176,6 +177,7 @@
    "U.S. Virgin Islands"              (cn "VI") ; "Virgin Islands, U.S."
    "British Virgin Islands"           (cn "VG") ; "Virgin Islands, British"
    "Saint Kitts & Nevis"              (cn "KN") ; "Saint Kitts and Nevis"
+   "St. Kitts & Nevis"                (cn "KN") ; "Saint Kitts and Nevis"
    "Faeroe Islands"                   (cn "FO") ; "Faroe Islands"
    "Sint Maarten"                     (cn "SX") ; "Sint Maarten (Dutch part)"
    "Turks and Caicos"                 (cn "TC") ; "Turks and Caicos Islands"
@@ -213,6 +215,9 @@
    "Republic of the Congo"            (cn "CG") ; "Congo"
    "The Bahamas"                      (cn "BS") ; "Bahamas"
    "Kosovo"                           (cn "XK") ; "Kosovo, Republic of"
+   "Trinidad & Tobago"                (cn "TT") ; "Trinidad and Tobago"
+   "Antigua & Barbuda"                (cn "AG") ; "Antigua and Barbuda"
+   "Central African Rep"              (cn "CF") ; "Central African Republic"
    ;; "Others" has no mapping
    ;; "Cruise Ship" is mapped to the default val
    })
@@ -229,4 +234,8 @@
          "Taiwan, Province of China"             "Taiwan"
          "Saint Vincent and the Grenadines"      "Saint Vincent"
          "North Macedonia, Republic of"          "Macedonia"
+         "Saint Kitts and Nevis"                 "St. Kitts & Nevis"
+         "Trinidad and Tobago"                   "Trinidad & Tobago"
+         "Antigua and Barbuda"                   "Antigua & Barbuda"
+         "Central African Republic"              "Central African Rep"
          }))
