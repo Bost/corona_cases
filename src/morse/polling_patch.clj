@@ -1,11 +1,8 @@
 (ns morse.polling-patch
-  (:require [morse.polling :as p]
+  (:require [clojure.core.async :as a :refer [>! close! go-loop]]
             [clojure.tools.logging :as log]
-            [clojure.core.async :as a
-             :refer [chan go go-loop thread
-                     >!! >! <! close! alts!]]
             [morse.api :as api]
-            ))
+            [morse.polling :as p]))
 
 (defn create-producer-with-handle
   "Passed channel should be always empty.

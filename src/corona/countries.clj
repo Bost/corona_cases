@@ -1,7 +1,6 @@
 (ns corona.countries
-  (:require [corona.defs :as d]
-            [clojure.string :as s])
-  (:import (com.neovisionaries.i18n CountryCode)))
+  (:require [corona.defs :as d])
+  (:import com.neovisionaries.i18n.CountryCode))
 
 (def country-code-2-to-3-hm
   "Mapping of country codes 2 -> 3 letters"

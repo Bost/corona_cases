@@ -1,10 +1,10 @@
 (ns corona.common
-  (:require [corona.countries :as cr]
-            [corona.continents :as cn]
+  (:require [clojure.string :as s]
             [corona.api :as data]
-            [corona.defs :as d]
-            [clojure.string :as s]
-            [corona.core :as c :refer [in? dbg]]))
+            [corona.continents :as cn]
+            [corona.core :as c :refer [in?]]
+            [corona.countries :as cr]
+            [corona.defs :as d]))
 
 (def continent-countries-hm
   "

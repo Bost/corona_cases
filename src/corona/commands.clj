@@ -1,12 +1,12 @@
 (ns corona.commands
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
-            [corona.core :as c :refer [in? dbg]]
-            [corona.messages :as msg]
-            [morse.api :as morse]
             [corona.common :as com]
+            [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
-            [corona.defs :as d]))
+            [corona.defs :as d]
+            [corona.messages :as msg]
+            [morse.api :as morse]))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]

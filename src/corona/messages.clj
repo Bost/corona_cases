@@ -1,15 +1,15 @@
 (ns corona.messages
   (:require [clj-time.coerce :as tc]
             [clj-time.core :as t]
-            [clojure.core.memoize :as memo]
             [clj-time.format :as tf]
+            [clojure.core.memoize :as memo]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
-            [corona.common :as com]
             [corona.api :as data]
-            [corona.defs :as d]
+            [corona.common :as com]
+            [corona.core :as c]
             [corona.countries :as cr]
-            [corona.core :as c :refer [in? dbg]]))
+            [corona.defs :as d]))
 
 (def lang-strings
   {

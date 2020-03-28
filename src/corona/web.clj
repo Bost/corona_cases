@@ -1,18 +1,16 @@
 (ns corona.web
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
+            [clojure.string :as s]
             [clojure.tools.logging :as log]
             [compojure.core :refer [ANY defroutes GET POST]]
             [compojure.handler :refer [site]]
             [compojure.route :as route]
-            [clojure.string :as s]
-            [corona.core :refer [bot-type chat-id token]]
+            [corona.common :as com]
+            [corona.core :as c :refer [bot-type chat-id token]]
             [corona.telegram :as telegram]
             [environ.core :refer [env]]
-            [ring.adapter.jetty :as jetty]
-            [corona.common :as com]
-            [corona.core :as c]
-            [corona.defs :as d]))
+            [ring.adapter.jetty :as jetty]))
 
 (def telegram-hook "telegram")
 (def google-hook "google")

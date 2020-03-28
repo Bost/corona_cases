@@ -1,11 +1,7 @@
 (ns corona.api
-  (:require [clj-time-ext.core :as te]
-            [clojure.core.memoize :as memo]
-            [clojure.string :as s]
-            [corona.core :refer [bot-ver read-number dbg]]
-            [corona.countries :as cr]
-            [corona.defs :as d]
-            [corona.core :as c])
+  (:require [clojure.core.memoize :as memo]
+            [corona.core :as c :refer [read-number]]
+            [corona.defs :as d])
   (:import java.text.SimpleDateFormat))
 
 ;; TODO evaluate web services

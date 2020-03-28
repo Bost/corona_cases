@@ -1,12 +1,11 @@
 (ns corona.csv
   (:require [clojure.data.csv :as dcsv]
-            #_[clojure-csv.core :as ccsv]
             [clojure.java.io :as io]
             [clojure.string :as s]
-            [corona.countries :as cr]
-            [corona.defs :as d]
             [corona.common :as com]
-            [corona.core :as c :refer [dbg]])
+            [corona.core :as c]
+            [corona.countries :as cr]
+            [corona.defs :as d])
   (:import java.text.SimpleDateFormat))
 
 ;; get all the file names in one directory
