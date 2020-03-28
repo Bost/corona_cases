@@ -14,7 +14,14 @@
    [morse                   "0.4.3"]
    [org.clojure/data.json   "0.2.7"]
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
+
+   ;; TODO use  instead of com.hypirion/clj-xchart
+   ;; https://github.com/generateme/cljplot
+   #_[cljplot "0.0.2-SNAPSHOT"]
+   ;; See also https://github.com/jsa-aerial/hanami
+   #_[aerial.hanami "0.12.1"]
    [com.hypirion/clj-xchart "0.2.0"]
+
    ;; internationalization, ISO 3166-1 country codes etc.
    [com.neovisionaries/nv-i18n "1.27"]
    ]

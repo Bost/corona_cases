@@ -5,7 +5,7 @@
             [clojure.core.memoize :as memo]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
-            [corona.api :as data]
+            [corona.api.expdev06 :as data]
             [corona.common :as com]
             [corona.core :as c]
             [corona.countries :as cr]
@@ -536,7 +536,7 @@
     " of the Hubei province.\n")
 
    #_(str
-    "- Data retrieved *CONTINUOUSLY* every " corona.api/time-to-live
+    "- Data retrieved *CONTINUOUSLY* every " data/time-to-live
     " minutes from " (link data/host data/url prm) ".\n")
 
    (str

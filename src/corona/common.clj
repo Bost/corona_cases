@@ -1,7 +1,7 @@
 (ns corona.common
   (:require [clojure.set :as cset]
             [clojure.string :as s]
-            [corona.api :as data]
+            [corona.api.expdev06 :as data]
             [corona.continents :as cn]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
