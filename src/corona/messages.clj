@@ -5,7 +5,7 @@
             [clojure.core.memoize :as memo]
             [clojure.string :as s]
             [com.hypirion.clj-xchart :as chart]
-            [corona.api.expdev06 :as data]
+            [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.core :as c]
             [corona.countries :as cr]

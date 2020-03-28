@@ -17,5 +17,5 @@
 (def cruise-ship                "Cruise Ship")
 (def country-code-cruise-ship   {cruise-ship-2-country-code cruise-ship})
 
-(def default-continent-code "CCC")
+(def default-continent-codes ["CCC"])
 

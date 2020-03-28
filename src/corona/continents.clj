@@ -9,22 +9,22 @@
 (def continent-names--continent-codes-hm
   "
   2-letter alpha code:
-  NA clashes for \"Namibia\" and \"North America\".
+  NA would clashes with the codes of Namibia and North America.
   https://datahub.io/core/continent-codes#resource-continent-codes
 
   3-letter alpha codes:
-  \"NAM\" would clash with \"Namibia\" - grr, again!
-  \"ANT\" clashes with \"Netherlands Antilles\"
+  NAM would clash with the code for Namibia
+  ANT would clash with the code for Netherlands Antilles
 
   (clojure.set/map-invert continent-names--continent-codes-hm)
   "
   {
    "Africa"        "AFR"
-   "North America" "NAC"  ;; NAM clashes with \"Namibia\"
+   "North America" "NAC"  ;; NAM would clash with the code for Namibia
    "Oceania"       "OCE"
-   "Antarctica"    "ANA"  ;; ANT clashes with \"Netherlands Antilles\"
+   "Antarctica"    "ANA"  ;; ANT would clash with the code for Netherlands Antilles
    "Asia"          "ASI"
    "Europe"        "EUR"
    "South America" "SAC"
-   d/others        d/default-continent-code
+   d/others        d/default-2-country-code
    })
