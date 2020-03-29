@@ -26,5 +26,5 @@
    "Asia"          "ASI"
    "Europe"        "EUR"
    "South America" "SAC"
-   d/others        d/default-2-country-code
+   d/others        d/default-continent-code
    })

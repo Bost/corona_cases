@@ -309,6 +309,24 @@
            #_(map (fn [part] (s/join "       " part)))))
      (count (com/all-affected-country-codes)))))
 
+;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
+;; https://clojuredocs.org/clojure.core/merge-with
+(defn continent-data [prm]
+  (->>
+   (com/all-affected-continent-codes)
+   #_(take 1)
+   #_["OCE"]
+   (map (fn [continent-codes]
+          (->> continent-codes
+               (->> (com/continent-codes--country-codes continent-codes)
+                    #_(take 2)
+                    (map (fn [country-c]
+                           (-> (stats-per-country (assoc prm :cc country-c))
+                               (select-keys [:c :d :r :i])
+                               #_(conj {(com/country-code--continet-code country-c) 0}))))
+                    #_(apply merge-with +)
+                    #_(conj {:continent-code continent-codes})))))))
+
 (defn list-continents [prm]
   (format
    (str
@@ -320,16 +338,7 @@
     )
    (header prm)
    (str "Day " (count (data/raw-dates)))
-   (->> (com/all-affected-continent-codes)
-        (map (fn [country-code]
-               (let [hms (->> (com/continent-code--country-codes country-code)
-                              (map (fn [cc]
-                                     (stats-per-country (assoc prm :cc cc)))))]
-                 {:i (reduce + (map :i hms))
-                  :r (reduce + (map :r hms))
-                  :d (reduce + (map :d hms))
-                  :cc country-code
-                  :cn (com/continent-name country-code)})))
+   (->> (continent-data prm)
         (sort-by :i <)
         (assoc prm :data)
         fmt-continents)
