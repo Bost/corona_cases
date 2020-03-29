@@ -7,6 +7,7 @@
             [compojure.handler :refer [site]]
             [compojure.route :as route]
             [corona.common :as com]
+            [corona.api.beds :as beds]
             [corona.core :as c :refer [bot-type chat-id token]]
             [corona.telegram :as telegram]
             [environ.core :refer [env]]
@@ -34,18 +35,21 @@
    :headers {"Content-Type" "application/json"}
    :body
    (json/write-str
-    (->> (condp = type
-           :names (conj #_{"desc" ""}
-                        (com/all-continent-names--country-names))
-           :codes (conj {"desc" "continent-code -> country-codes"}
-                        (com/all-continent-codes--country-codes))
-           (format "Error. Wrong type %s" type))
-         (conj (if (= "dev" project-ver)
-                 {"warn" "Under construction. Don't use it in PROD env"}
-                 #_{}))
-         (conj {"source" "https://github.com/Bost/corona_cases"})
-         ;; swapped order x y -> y x
-         (into (sorted-map-by (fn [x y] (compare y x))))))})
+    (->>
+     (condp = type
+         :beds (conj #_{"desc" ""}
+                     {:beds (beds/h)})
+         :names (conj #_{"desc" ""}
+                      (beds/h))
+         :codes (conj {"desc" "continent-code -> country-codes"}
+                      (com/all-continent-codes--country-codes))
+         (format "Error. Wrong type %s" type))
+     (conj (if (= "dev" project-ver)
+             {"warn" "Under construction. Don't use it in PROD env"}
+             #_{}))
+     (conj {"source" "https://github.com/Bost/corona_cases"})
+     ;; swapped order x y -> y x
+     (into (sorted-map-by (fn [x y] (compare y x))))))})
 
 (defn links []
   {:status 200
@@ -106,6 +110,8 @@
        (home-page))
   (GET "/links" []
        (links))
+  (GET (format "/%s/beds" ws-path) []
+       (web-service {:type :beds}))
   (GET (format "/%s/names" ws-path) []
        (web-service {:type :names}))
   (GET (format "/%s/codes" ws-path) []

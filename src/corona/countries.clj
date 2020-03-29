@@ -218,6 +218,10 @@
    "Trinidad & Tobago"                (cn "TT") ; "Trinidad and Tobago"
    "Antigua & Barbuda"                (cn "AG") ; "Antigua and Barbuda"
    "Central African Rep"              (cn "CF") ; "Central African Republic"
+
+   "Burma"                            (cn "MM") ; Myanmar
+
+
    ;; "Others" has no mapping
    ;; "Cruise Ship" is mapped to the default val
    })

@@ -24,7 +24,8 @@
 
    ;; internationalization, ISO 3166-1 country codes etc.
    [com.neovisionaries/nv-i18n "1.27"]
-   ]
+
+   [hickory "0.7.1"]]
   :min-lein-version "2.0.0"
   :plugins
   [
