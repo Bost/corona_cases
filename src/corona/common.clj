@@ -11,6 +11,7 @@
   "
   https//en.wikipedia.org/wiki/List-of-sovereign-states-and-dependent-territories-by-continent-(data-file)
   https//en.wikipedia.org/wiki/List-of-sovereign-states-and-dependent-territories-by-continent
+  https://en.wikipedia.org/wiki/List_of_transcontinental_countries
   "
   {
    "AF" #{"ASI"}

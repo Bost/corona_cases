@@ -12,6 +12,8 @@
   NA would clashes with the codes of Namibia and North America.
   https://datahub.io/core/continent-codes#resource-continent-codes
 
+  See also https://en.wikipedia.org/wiki/List_of_transcontinental_countries
+
   3-letter alpha codes:
   NAM would clash with the code for Namibia
   ANT would clash with the code for Netherlands Antilles
@@ -26,5 +28,9 @@
    "Asia"          "ASI"
    "Europe"        "EUR"
    "South America" "SAC"
+   "Eurasia"       "EASI"
+   "Afroasia"      "AASI"
+   "Americas"      "AMER"
+   ;; etc.
    d/others        d/default-continent-code
    })
