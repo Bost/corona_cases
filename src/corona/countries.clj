@@ -241,5 +241,5 @@
          "Saint Kitts and Nevis"                 "St. Kitts & Nevis"
          "Trinidad and Tobago"                   "Trinidad & Tobago"
          "Antigua and Barbuda"                   "Antigua & Barbuda"
-         "Central African Republic"              "Central African Rep"
+         "Central African Republic"              "Central Afri Rep"
          }))
