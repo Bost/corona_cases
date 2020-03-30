@@ -55,7 +55,14 @@
        doall))
 
 (defn list-continents [{:keys [chat-id] :as prm}]
-  (->> (msg/list-continents-memo prm)
+  (morse/send-text
+   c/token
+   chat-id
+   (str
+    "Just found out: quite many countries are located on more than one "
+    "continent. That makes displaying statistics for continents meaningless. "
+    "Apologies for serving you misleading information previously."))
+  #_(->> (msg/list-continents-memo prm)
        (morse/send-text c/token
                         chat-id (select-keys prm (keys msg/options)))))
 

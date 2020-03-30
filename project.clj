@@ -1,5 +1,5 @@
 (defproject corona_cases
-  "1.7.7"
+  "1.7.8"
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"
   :license {:name "Eclipse Public License v1.0"
