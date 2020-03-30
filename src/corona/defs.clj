@@ -16,6 +16,3 @@
 (def cruise-ship-3-country-code default-3-country-code)
 (def cruise-ship                "Cruise Ship")
 (def country-code-cruise-ship   {cruise-ship-2-country-code cruise-ship})
-
-(def default-continent-code "CCC")
-

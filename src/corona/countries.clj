@@ -66,9 +66,6 @@
        (reduce into)
        (mapv (fn [[k _]] k))))
 
-;; Continent code
-(def default-affected-continent-codes [])
-
 (defn country-code--country-nv-i18n []
   (->> (CountryCode/values)
        (map (fn [cc] [(str cc)

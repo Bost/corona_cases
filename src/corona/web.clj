@@ -39,11 +39,8 @@
      (condp = type
          :beds (conj #_{"desc" ""}
                      {(name type) (beds/h)})
-         :names (conj #_{"desc" ""}
-                      {(name type)
-                       (com/all-continent-codes--country-codes)})
-         :codes (conj {"desc" "continent-code -> country-codes"}
-                      {(name type) (com/all-continent-codes--country-codes)})
+         :names (conj {"desc" com/sorry-ws})
+         :codes (conj {"desc" com/sorry-ws})
          (format "Error. Wrong type %s" type))
      (conj (when (= "dev" project-ver)
              {"warn" "Under construction. Don't use it in PROD env"}))

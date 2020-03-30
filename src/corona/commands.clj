@@ -53,22 +53,10 @@
                                     (select-keys prm (keys msg/options))))))
        doall))
 
-(defn list-continents [{:keys [chat-id] :as prm}]
-  (morse/send-text
-   c/token
-   chat-id
-   (str
-    "Just found out: quite many countries are located on more than one "
-    "continent. That makes displaying statistics for continents meaningless. "
-    "Apologies for serving you misleading information previously."))
-  #_(->> (msg/list-continents-memo prm)
-       (morse/send-text c/token
-                        chat-id (select-keys prm (keys msg/options)))))
-
-(defn list-stuff [prm]
+(defn list-stuff [{:keys [chat-id] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
     (list-countries prm)
-    (list-continents prm)))
+    (morse/send-text c/token chat-id com/sorry)))
 
 (defn snapshot [{:keys [chat-id] :as prm}]
   (morse/send-text
@@ -176,8 +164,7 @@
       :desc "Knowledge is power - educate yourself"}]))
 
 (defn cmds []
-  (->> (into (cr/all-country-codes)
-             #_(com/all-affected-continent-codes))
+  (->> (into (cr/all-country-codes))
        (mapv cmds-country-code)
        flatten
        (into (cmds-general))))
