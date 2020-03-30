@@ -322,55 +322,30 @@
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
 (defn absolute-vals [{:keys [country-code] :as prm}]
-  (let [confirmed (data/confirmed prm)
-        deaths    (data/deaths    prm)
-        recovered (data/recovered prm)
-        ill       (data/ill       prm)
-        dates     (data/dates)]
+  (let [line-style {:marker-type :none :render-style :line}
+        dates {:x (data/dates)}]
     (-> (chart/xy-chart
-         (conj {}
-               {s-sick
-                {:x dates :y ill
-                 :style (conj {}
-                              {:marker-type :none}
-                              #_{:render-style :line}
-                              #_{:marker-color :blue}
-                              #_{:line-color :blue})}}
-               {s-confirmed
-                {:x dates :y confirmed
-                 :style (conj {}
-                              {:marker-type :none}
-                              {:render-style :line}
-                              {:line-color :black}
-                              #_{:fill-color :orange})}}
-               {s-deaths
-                {:x dates :y deaths
-                 :style (conj {}
-                              {:marker-type :none}
-                              {:render-style :line}
-                              {:line-color :red})}}
-               {s-recovered
-                {:x dates :y recovered
-                 :style (conj {}
-                              {:marker-type :none}
-                              {:render-style :line}
-                              {:line-color :green})}}
-               )
-         (conj {}
-               {:title
-                (format "%s; %s: %s; see %s"
-                        (format-last-day prm)
-                        c/bot-name
-                        (com/country-name-aliased country-code)
-                        (encode-cmd s-about))
-                :render-style :area
-                :legend {:position :inside-nw}
-                :x-axis {:title "Day"}
-                :y-axis {:title "Cases"}}
-               #_{:theme :matlab}
-               #_{:width 640 :height 500}
-               {:width 800 :height 600}
-               {:date-pattern "MMMd"}))
+         {s-sick      (assoc dates :y (data/ill prm)
+                             :style {:marker-type :none})
+          s-confirmed (assoc dates :y (data/confirmed prm)
+                             :style (assoc line-style :line-color :black))
+          s-deaths    (assoc dates :y (data/deaths prm)
+                             :style (assoc line-style :line-color :red))
+          s-recovered (assoc dates :y (data/recovered prm)
+                             :style (assoc line-style :line-color :green))}
+         {:title (format "%s; %s: %s; see %s"
+                         (format-last-day prm)
+                         c/bot-name
+                         (com/country-name-aliased country-code)
+                         (encode-cmd s-about))
+          :render-style :area
+          :legend {:position :inside-nw}
+          :x-axis {:title "Day"}
+          :y-axis {:title "Cases"}
+          ;; :theme :matlab
+          ;; :width 640 :height 500
+          :width 800 :height 600
+          :date-pattern "MMMd"})
         #_(chart/view)
         (chart/to-bytes :png))))
 
