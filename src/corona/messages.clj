@@ -8,8 +8,7 @@
             [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.core :as c]
-            [corona.countries :as cr]
-            [corona.defs :as d]))
+            [corona.countries :as cr]))
 
 (def lang-strings
   {
@@ -76,7 +75,7 @@
        (conj {:cn (com/country-name-aliased cc)
               :cc cc})))
 
-(defn all-affected-country-codes [prm]
+(defn stats-all-affected-countries [prm]
   (->> (com/all-affected-country-codes)
        (map (fn [cc]
               (stats-per-country (assoc prm :cc cc))))))

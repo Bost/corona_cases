@@ -98,7 +98,9 @@
 
       (= country-code (:country_code loc)))))
 
-(defn sums-for-case [{:keys [case pred]}]
+(defn sums-for-case
+  "Return sums for a given `case` calculated for every single day"
+  [{:keys [case pred]}]
   (let [locations (->> (data-memo) case :locations
                        (filter pred))]
     (->> (raw-dates)
@@ -106,7 +108,12 @@
          #_(take-last 1)
          (map (fn [raw-date] (sums-for-date case locations raw-date))))))
 
-(defn get-counts [prm]
+(defn get-counts
+  "Examples:
+  (get-counts {:pred (fn [_] true)})
+  (get-counts {:pred (pred-fn \"SK\")})
+  "
+  [prm]
   (let [crd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
                   [:confirmed :recovered :deaths])]
     (zipmap [:c :r :d :i] (conj crd (apply mapv c/calculate-ill crd)))))

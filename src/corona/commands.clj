@@ -41,7 +41,7 @@
   (partition-all (/ (count col) 7) col))
 
 (defn list-countries [{:keys [chat-id] :as prm}]
-  (->> (msg/all-affected-country-codes prm)
+  (->> (msg/stats-all-affected-countries prm)
        (sort-by :i <)
        partition-in-chunks
        #_(take 3)
