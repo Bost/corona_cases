@@ -20,6 +20,7 @@
             [clj-time.format :as tf]
             [clj-time.local :as tl]
             [corona.core :refer [in?]]
+            [clojure.set :as cset]
 
             [clojure.core.memoize :as memo]
             [fastmath.random :as rnd]
@@ -83,7 +84,7 @@
   "
   []
   (->> (data/dates
-        #_{:limit-fn (fn [coll] (take 20 coll))})
+        #_{:limit-fn (fn [coll] (take 10 coll))})
        #_(sort)
        #_(reverse)
        #_(drop 3)))
@@ -115,49 +116,13 @@
                                     (as-> {:fun (fn [coll] (nth coll idx))
                                            :pred (data/pred-fn cc)} $
                                       (data/eval-fun $)
-                                      (select-keys $ [:f :i])
-                                      (into {:cc cc} $)))))))
+                                      {:cc cc :f (:f $) :i (:i $)}
+                                      #_(select-keys $ [:f :i])
+                                      #_(into {:cc cc} $)))))))
          (reduce into [])
-         (sort-by :f))))
+         #_(sort-by :f))))
 
 (def data-memo (memo/memo data))
-
-(def json
-  {:$schema "https://vega.github.io/schema/vega-lite/v4.json"
-   :width 300 :height 200
-   :data {:url "data/unemployment-across-industries.json"}
-   :mark "area"
-   :encoding
-   {:x     {:timeUnit "yearmonth" :field "date" :type "temporal" :axis {:format "%Y"}}
-    :y     {:aggregate "sum" :field "count" :type "quantitative"}
-    :color {:field "series" :type "nominal" :scale {:scheme "category20b"}}}})
-
-#_(def unemployment (read-json "resources/unemployment-across-industries.json"))
-
-#_(def unemployment-area (->>
-                        (data)
-                        (group-by :cc)
-                        (map-kv (fn [entry]
-                                  (map (fn [{:keys [f i]}]
-                                         #_(println "type " (type (dt/local-date year month)))
-                                         [(to-java-time-local-date f) i])
-                                       entry)))
-                        (sort-by first (comp - compare))))
-
-(defn normalize-by-f [f hms]
-  #_hms
-  [{:cc d/default-2-country-code :f f
-    :i (->> hms
-            (map (fn [hm] (select-keys hm [:i])))
-            (apply merge-with +)
-            :i)}])
-
-(defn normalize-by-cc [hms]
-  #_hms
-  (->> hms
-       (map (fn [hm] (select-keys hm [:i])))
-       (apply merge-with +)
-       :i))
 
 (defn add-up [coll]
   (loop [vs coll
@@ -173,60 +138,57 @@
                new-last-max
                (conj acc new-last-max))))))
 
-(defn below [treshold hms]
+(defn below [threshold hms]
   (->> hms
-       (map (fn [{:keys [i] :as hm}] (if (< i treshold)
+       (map (fn [{:keys [i] :as hm}] (if (< i threshold)
                                        (assoc hm :cc d/default-2-country-code)
                                        hm)))))
 
-(defn sum-below [treshold]
+(defn sum-below [threshold]
   ;; the previous day maximum must be checked; make sure the default mapping of ships wont' get lost
-  (->> (data-memo)
-       (below treshold)
-       #_(drop (* 3 4))
-       (group-by :f)
-       (mapv (fn [[f hms]]
-               (->> (group-by :cc hms)
-                    (mapv (fn [[cc hms]]
-                            #_(normalize-by-cc hms)
-                            {:cc cc :f f :i (normalize-by-cc hms)})))))
-       flatten
-       (sort-by :f)
-       (group-by :cc)
-       (mapv (fn [[cc hms]]
-               (map (fn [orig-hm i]
-                      (assoc orig-hm :i i))
-                    hms
-                    (->> hms (map :i) add-up))))
-       flatten
-       ))
+  (let [data (data-memo)]
+    (println "Splitting according to threshold")
+    (let [below-threshold (below threshold data)]
+      (println "Grouping below threshold")
+      (->> below-threshold
+           (group-by :f)
+           (map (fn [[f hms]]
+                  (->> (group-by :cc hms)
+                       (map (fn [[cc hms]]
+                              {:cc cc :f f :i (reduce + (map :i hms))})))))
+           ;; flatten
+           ;; ;; (sort-by :f)
+           ;; (group-by :cc)
+           ;; (mapv (fn [[_ hms]]
+           ;;         (map (fn [orig-hm i] (assoc orig-hm :i i))
+           ;;              hms
+           ;;              (add-up (map :i hms)))))
+           flatten
+           #_(sort-by :f)
+       ))))
 
-(defn countries [treshold]
-  (->> (sum-below treshold)
-       (map (fn [hm] (select-keys hm [:cc])))
-       distinct
-       (map vals)
-       (reduce into [])))
-
-(defn fill-rest [treshold]
-  (let [dates (dates)
-        sum-below-treshold (sum-below treshold)
-        countries-treshold (countries treshold)]
-    (->> (group-by :f sum-below-treshold)
-         (map (fn [[k hms]]
-                (->>
-                 (clojure.set/difference (set countries-treshold) (->> (group-by :cc hms)
-                                                                       keys
-                                                                       set))
-                 (mapv (fn [cc] {:cc cc :f k :i 0}))
-                 set
-                 (clojure.set/union (set hms)))))
+(defn fill-rest [threshold]
+  (let [sum-below-threshold (sum-below threshold)
+        countries-threshold (->> sum-below-threshold
+                                 (map :cc)
+                                 distinct
+                                 set)]
+    (->> (group-by :f sum-below-threshold)
+         (map (fn [[f hms]]
+                (->> (group-by :cc hms) keys
+                     (cset/difference countries-threshold)
+                     (map (fn [cc] {:cc cc :f f :i 0}))
+                     (cset/union hms))))
          (reduce into [])
-         (sort-by :f))))
+         #_(sort-by :f))))
 
-(defn calc-json-data [treshold]
-  (->> (fill-rest treshold)
+(defn calc-json-data [threshold]
+  (->> (fill-rest threshold)
+       #_(do
+         (println "Aliasing"))
        (map (fn [{:keys [cc] :as hm}] (assoc hm :cn (com/country-alias cc))))
+       #_(do
+         (println "Formatting"))
        (group-by :cn)
        (map-kv (fn [entry]
                  (->> entry
@@ -235,20 +197,18 @@
                       (sort-by first))))
        (sort-by first (comp - compare))))
 
-#_(def unemployment-area (->>
-                        unemployment
-                        #_(take 300)
-                        (group-by :series)
-                        (map-kv (fn [entry]
-                                  (map (fn [{:keys [year month count]}]
-                                         #_(println "type " (type (dt/local-date year month)))
-                                         [(dt/local-date year month) count])
-                                       entry)))
-                        (sort-by first (comp - compare))))
-#_(def json-data unemployment-area)
+#_(def json
+  {:$schema "https://vega.github.io/schema/vega-lite/v4.json"
+   :width 300 :height 200
+   :data {:url "data/unemployment-across-industries.json"}
+   :mark "area"
+   :encoding
+   {:x     {:timeUnit "yearmonth" :field "date" :type "temporal" :axis {:format "%Y"}}
+    :y     {:aggregate "sum" :field "count" :type "quantitative"}
+    :color {:field "series" :type "nominal" :scale {:scheme "category20b"}}}})
 
-(defn show-pic [treshold]
-  (let [json-data (calc-json-data treshold)
+(defn show-pic [threshold]
+  (let [json-data (calc-json-data threshold)
         pal (cycle (c/palette-presets :category20b))
         legend (reverse (map #(vector :rect %2 {:color %1}) pal (keys json-data)))]
     (-> (b/series [:grid] [:sarea json-data])
@@ -258,7 +218,7 @@
         (b/add-axes :left)
         (b/add-label :bottom "date")
         (b/add-label :left "Cases")
-        (b/add-legend (str "Country > " treshold)
+        (b/add-legend (str "Country > " threshold)
                       legend)
         (r/render-lattice {:width 800 :height 600})
         (save "results/vega/stacked-area.jpg")
