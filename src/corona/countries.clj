@@ -219,25 +219,40 @@
 
    "Burma"                            (cn "MM") ; Myanmar
 
-
    ;; "Others" has no mapping
    ;; "Cruise Ship" is mapped to the default val
    })
 
 (def aliases-inverted
   "See also `country-name-aliased`"
-  (conj (clojure.set/map-invert aliases-hm)
-        ;; select desired aliases
-        {
-         "Moldova, Republic of"                  "Moldova"
-         "Congo, the Democratic Republic of the" "DR Congo"
-         "Palestine, State of"                   "Palestine"
-         "Micronesia, Federated States of"       "Micronesia"
-         "Taiwan, Province of China"             "Taiwan"
-         "Saint Vincent and the Grenadines"      "Saint Vincent"
-         "North Macedonia, Republic of"          "Macedonia"
-         "Saint Kitts and Nevis"                 "St. Kitts & Nevis"
-         "Trinidad and Tobago"                   "Trinidad & Tobago"
-         "Antigua and Barbuda"                   "Antigua & Barbuda"
-         "Central African Republic"              "Central Afri Rep"
-         }))
+  (conj
+   ;; (clojure.set/map-invert aliases-hm)
+   ;; select desired aliases
+   {
+    "VA" "Vatican"
+    "TW" "Taiwan"
+    "DO" "Dominican Rep"
+    "IR" "Iran"
+    "RU" "Russia"
+    "PS" "Palestine"
+    "AE" "UA Emirates"
+    "KR" "South Korea"
+    "MK" "Macedonia"
+    "BA" "Bosnia"
+    "CD" "DR Congo"
+    "BO" "Bolivia"
+    "MD" "Moldova"
+    "BN" "Brunei"
+    "VE" "Venezuela"
+    "VC" "St Vincent"
+    "KP" "North Korea"
+    "TZ" "Tanzania"
+    "XK" "Kosovo"
+    "LA" "Laos"
+    "SY" "Syria"
+    "KN" "St Kitts & Nevis"
+    "TT" "Trinidad & Tobago"
+    "AG" "Antigua & Barbuda"
+    "CF" "Central Afri Rep"
+    #_"CZ"
+    }))

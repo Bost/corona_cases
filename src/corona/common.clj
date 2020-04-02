@@ -50,8 +50,9 @@
 (defn country-alias
   "Get a country alias or the normal name if an alias doesn't exist"
   [cc]
-  (let [country (get cr/country-code--country (s/upper-case cc))]
-    (get cr/aliases-inverted country country)))
+  (let [up-cc (s/upper-case cc)
+        country (get cr/country-code--country up-cc)]
+    (get cr/aliases-inverted up-cc country)))
 
 (defn all-affected-country-codes []
   (data/all-affected-country-codes))
@@ -63,9 +64,11 @@
        (map country-name)))
 
 (defn country-name-aliased [cc]
-  (if (in? ["VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
-            "MD" "BN" "VE" "VC" "KP" "TZ" "VC" "XK" "LA" "SY" "KN"
-            "TT" "AG" "CF" #_"CZ"]
+  (if (in? [
+            "VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
+            "MD" "BN" "VE" "VC" "KP" "TZ" "XK" "LA" "SY" "KN" "TT" "AG"
+            "CF" #_"CZ"
+            ]
            cc)
     (country-alias cc)
     (country-name cc)))
