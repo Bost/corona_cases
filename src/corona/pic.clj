@@ -36,29 +36,6 @@
                                                     "UTC"
                                                     #_"Europe/Berlin")))
 
-(defn partition-in-chunks
-  [col]
-  (let [[grouped separate] (partition-all (- (count col) 7) col)]
-    (into [grouped] (partition-all 1 separate))))
-
-(defn group [prm]
-(let [total (data/last-day {:pred (fn [_] true)})
-      total-i (:i total)]
-    (let [[head & tail] (->> (msg/stats-all-affected-countries {})
-                             (sort-by :i <)
-                             partition-in-chunks)]
-      (->> (into [(->> head
-                       (map (fn [country] (select-keys country [:c :d :r :i])))
-                       (apply merge-with +)
-                       (into {:cc d/default-2-country-code :cn d/others
-                              :f (->> head first :f)}))]
-                 tail)
-           (map (fn [hm]
-                  (assoc hm :rate (/ total-i (:i hm)))))))))
-
-(def group-memo
-  (memo/ttl group {} :ttl/threshold (* 60 60 1000)))
-
 (defn fmt
   "
   2020-01-23T23:00:00.000-00:00
@@ -162,14 +139,16 @@
                  (group-by :f sum-below-threshold)))))
 
 (defn calc-json-data [threshold]
-  (->> (group-by :cn
-                 (map (fn [{:keys [cc] :as hm}] (assoc hm :cn (com/country-alias cc)))
-                      (fill-rest threshold)))
-       (map-kv (fn [entry]
-                 (->> entry
-                      (map (fn [{:keys [f i]}] [(to-java-time-local-date f) i]))
-                      (sort-by first))))
-       (sort-by first (comp - compare))))
+  (let [hm (group-by :cn
+                     (map (fn [{:keys [cc] :as hm}] (assoc hm :cn (com/country-alias cc)))
+                          (fill-rest threshold)))
+        mapped-hm (map-kv (fn [entry]
+                            (sort-by first
+                                     (map (fn [{:keys [f i]}] [(to-java-time-local-date f) i])
+                                          entry)))
+                          hm)]
+    (sort-by first (comp - compare)
+             mapped-hm)))
 
 #_(def json
   {:$schema "https://vega.github.io/schema/vega-lite/v4.json"
