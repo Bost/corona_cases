@@ -153,4 +153,4 @@
                       legend)
         (r/render-lattice {:width 800 :height 600})
         (save "results/vega/stacked-area.jpg")
-        (show))))
+        #_(show))))
