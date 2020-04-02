@@ -132,33 +132,17 @@
                (conj acc new-last-max))))))
 
 (defn below [threshold hms]
-  (->> hms
-       (map (fn [{:keys [i] :as hm}] (if (< i threshold)
-                                       (assoc hm :cc d/default-2-country-code)
-                                       hm)))))
+  (map (fn [{:keys [i] :as hm}] (if (< i threshold)
+                                  (assoc hm :cc d/default-2-country-code)
+                                  hm))
+       hms))
 
 (defn sum-below [threshold]
-  ;; the previous day maximum must be checked; make sure the default mapping of ships wont' get lost
-  (let [data (data-memo)]
-    (println "Splitting according to threshold")
-    (let [below-threshold (below threshold data)]
-      (println "Grouping below threshold")
-      (->> below-threshold
-           (group-by :f)
-           (map (fn [[f hms]]
-                  (->> (group-by :cc hms)
-                       (map (fn [[cc hms]]
-                              {:cc cc :f f :i (reduce + (map :i hms))})))))
-           ;; flatten
-           ;; ;; (sort-by :f)
-           ;; (group-by :cc)
-           ;; (mapv (fn [[_ hms]]
-           ;;         (map (fn [orig-hm i] (assoc orig-hm :i i))
-           ;;              hms
-           ;;              (add-up (map :i hms)))))
-           flatten
-           #_(sort-by :f)
-       ))))
+  (flatten (map (fn [[f hms]]
+                  (map (fn [[cc hms]]
+                         {:cc cc :f f :i (reduce + (map :i hms))})
+                       (group-by :cc hms)))
+            (group-by :f (below threshold (data-memo))))))
 
 (defn fill-rest [threshold]
   (let [sum-below-threshold (sum-below threshold)
@@ -166,14 +150,13 @@
                                  (map :cc)
                                  distinct
                                  set)]
-    (->> (group-by :f sum-below-threshold)
-         (map (fn [[f hms]]
-                (->> (group-by :cc hms) keys
-                     (cset/difference countries-threshold)
-                     (map (fn [cc] {:cc cc :f f :i 0}))
-                     (cset/union hms))))
-         (reduce into [])
-         #_(sort-by :f))))
+    (reduce into [] (map (fn [[f hms]]
+                           (->> (group-by :cc hms)
+                                keys
+                                (cset/difference countries-threshold)
+                                (map (fn [cc] {:cc cc :f f :i 0}))
+                                (cset/union hms)))
+                         (group-by :f sum-below-threshold)))))
 
 (defn calc-json-data [threshold]
   (->> (fill-rest threshold)
