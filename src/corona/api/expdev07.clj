@@ -47,9 +47,6 @@
                             (map :country_code)
                             set)))
         (reduce cset/union)
-        sort
-        vec
-        #_(into cr/default-affected-country-codes)
         (mapv (fn [cc] (if (= "XX" cc)
                         d/default-2-country-code
                         cc)))
@@ -78,13 +75,13 @@
   (if (and (empty? locations)
            (= :recovered case))
     0
-    (->> locations
-         (map (fn [loc]
-                (->> loc :history raw-date
+    (transduce (map (comp
                      ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
                      ;; str read-number
-                     )))
-         (reduce + 0))))
+                     raw-date
+                     :history))
+               + 0
+               locations)))
 
 (defn pred-fn [country-code]
   (fn [loc]
@@ -99,14 +96,19 @@
       (= country-code (:country_code loc)))))
 
 (defn sums-for-case
-  "Return sums for a given `case` calculated for every single day"
+  "Return sums for a given `case` calculated for every single day
+  E.g.
+  (sums-for-case {:case :confirmed :pred (pred-fn \"SK\")})
+  "
   [{:keys [case pred]}]
-  (let [locations (->> (data-memo) case :locations
-                       (filter pred))]
-    (->> (raw-dates)
-         #_(take 4)
-         #_(take-last 1)
-         (map (fn [raw-date] (sums-for-date case locations raw-date))))))
+  (let [locations
+        (filter pred (:locations (case (data-memo))))
+        #_((comp (filter pred) :locations case) (data-memo))
+        #_(->> (data-memo) case :locations (filter pred))
+        ]
+    (map (fn [raw-date]
+           (sums-for-date case locations raw-date))
+         (raw-dates))))
 
 (defn get-counts
   "Examples:
@@ -127,29 +129,25 @@
   ([] (dates {:limit-fn identity}))
   ([{:keys [limit-fn] :as prm}]
    (let [sdf (new SimpleDateFormat "MM/dd/yy")]
-     (->> (raw-dates)
-          limit-fn
-          ;; :2/24/20
-          (map keyname)
-          (map (fn [rd] (.parse sdf rd)))))))
+     (map (fn [rd] (.parse sdf (keyname rd)))
+          (limit-fn (raw-dates))))))
 
-(defn get-last [coll]
-  (->> coll
-       (take-last 1)
-       (first)))
+#_(def dates-memo (memo/memo dates))
 
-(defn get-prev [coll]
-  (->> coll
-       (take-last 2)
-       (first)))
+(defn get-last [coll] (first (take-last 1 coll)))
+
+(defn get-prev [coll] (first (take-last 2 coll)))
 
 (defn eval-fun [{:keys [fun] :as prm}]
   (conj {:f (fun (dates))}
         (zipmap [:c :d :r :i]
-                (map fun [(confirmed prm)
-                          (deaths    prm)
-                          (recovered prm)
-                          (ill       prm)]))))
+                (let [case-counts (get-counts prm)]
+                  (map fun
+                       ;; TODO use select-keys or something similar
+                       [(:c case-counts)
+                        (:d case-counts)
+                        (:r case-counts)
+                        (:i case-counts)])))))
 
 (defn delta
   "Example (delta {:pred (pred-fn \"CN\")})"
