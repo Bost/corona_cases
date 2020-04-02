@@ -72,25 +72,6 @@
               #_(tf/formatters :date-time)
               (->> date tc/from-date)))
 
-(defn dates
-  "
-  (
-  #inst \"2020-01-21T23:00:00.000-00:00\"
-  #inst \"2020-01-22T23:00:00.000-00:00\"
-  #inst \"2020-01-23T23:00:00.000-00:00\"
-  #inst \"2020-01-24T23:00:00.000-00:00\"
-  #inst \"2020-01-25T23:00:00.000-00:00\"
-  #inst \"2020-01-26T23:00:00.000-00:00\")
-  "
-  []
-  (->> (data/dates
-        #_{:limit-fn (fn [coll] (take 10 coll))})
-       #_(sort)
-       #_(reverse)
-       #_(drop 3)))
-
-(def dates-memo (memo/memo dates))
-
 (defn data
   "
   [
@@ -103,13 +84,25 @@
   {:cc \"AE\", :f #inst \"2020-01-26T23:00:00.000-00:00\", :i 0}]
   "
   []
-  (let [dates (dates-memo)
-        country-codes
+  (let [country-codes
         #_["AU" "AT" "AE"]
         (data/all-affected-country-codes
          #_{:limit-fn (fn [coll] (take 10 coll))})]
 
-    (->> dates
+    (transduce
+     (map-indexed (fn [idx _]
+                    (map (fn [cc]
+                           (let [$2 (data/eval-fun {:fun (fn [coll] (nth coll idx))
+                                                    :pred (data/pred-fn cc)})]
+                             #_{:cc cc :f (:f $2) :i (:i $2)}
+                             (into {:cc cc} (select-keys $2 [:f :i]))))
+                         country-codes)))
+     into []
+     (data/dates-memo
+      #_{:limit-fn (fn [coll] (take 10 coll))}))
+
+    #_(->> (data/dates-memo
+          #_{:limit-fn (fn [coll] (take 10 coll))})
          (map-indexed (fn [idx _]
                         (->> country-codes
                              (map (fn [cc]
@@ -184,11 +177,7 @@
 
 (defn calc-json-data [threshold]
   (->> (fill-rest threshold)
-       #_(do
-         (println "Aliasing"))
        (map (fn [{:keys [cc] :as hm}] (assoc hm :cn (com/country-alias cc))))
-       #_(do
-         (println "Formatting"))
        (group-by :cn)
        (map-kv (fn [entry]
                  (->> entry
