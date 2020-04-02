@@ -17,7 +17,7 @@
 
    ;; TODO use  instead of com.hypirion/clj-xchart
    ;; https://github.com/generateme/cljplot
-   #_[cljplot "0.0.2-SNAPSHOT"]
+   [cljplot "0.0.2-SNAPSHOT"]
    ;; See also https://github.com/jsa-aerial/hanami
    #_[aerial.hanami "0.12.1"]
    [com.hypirion/clj-xchart "0.2.0"]
