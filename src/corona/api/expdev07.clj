@@ -10,7 +10,10 @@
 
 ;; https://github.com/iceweasel1/COVID-19-Germany
 (def web-service
-  {:host "coronavirus-tracker-api.herokuapp.com" :route "/all"})
+  {:host
+   "covid-tracker-us.herokuapp.com"
+   #_"coronavirus-tracker-api.herokuapp.com"
+   :route "/all"})
 
 (def api-service web-service)
 (def host (:host api-service))
@@ -142,7 +145,7 @@
   (->> [get-prev get-last]
        (map (fn [fun] (eval-fun (assoc prm :fun fun))))
        (apply (fn [prv lst]
-                (map (fn [k] k
+                (map (fn [k]
                        {k (- (k lst) (k prv))})
                      [:c :d :r :i])
                 ))
