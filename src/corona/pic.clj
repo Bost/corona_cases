@@ -66,47 +66,20 @@
         (data/all-affected-country-codes
          #_{:limit-fn (fn [coll] (take 10 coll))})]
 
-    (transduce
-     (map-indexed (fn [idx _]
-                    (map (fn [cc]
-                           (let [$2 (data/eval-fun {:fun (fn [coll] (nth coll idx))
-                                                    :pred (data/pred-fn cc)})]
-                             #_{:cc cc :f (:f $2) :i (:i $2)}
-                             (into {:cc cc} (select-keys $2 [:f :i]))))
-                         country-codes)))
+    (reduce
      into []
-     (data/dates-memo
-      #_{:limit-fn (fn [coll] (take 10 coll))}))
-
-    #_(->> (data/dates-memo
-          #_{:limit-fn (fn [coll] (take 10 coll))})
-         (map-indexed (fn [idx _]
-                        (->> country-codes
-                             (map (fn [cc]
-                                    (as-> {:fun (fn [coll] (nth coll idx))
-                                           :pred (data/pred-fn cc)} $
-                                      (data/eval-fun $)
-                                      {:cc cc :f (:f $) :i (:i $)}
-                                      #_(select-keys $ [:f :i])
-                                      #_(into {:cc cc} $)))))))
-         (reduce into [])
-         #_(sort-by :f))))
+     (map-indexed
+      (fn [idx _]
+        (map (fn [cc]
+               (let [$2 (data/eval-fun {:fun (fn [coll] (nth coll idx))
+                                        :pred (data/pred-fn cc)})]
+                 #_{:cc cc :f (:f $2) :i (:i $2)}
+                 (into {:cc cc} (select-keys $2 [:f :i]))))
+             country-codes))
+      (data/dates-memo
+       #_{:limit-fn (fn [coll] (take 10 coll))})))))
 
 (def data-memo (memo/memo data))
-
-(defn add-up [coll]
-  (loop [vs coll
-         last-max 0
-         acc []]
-    (if (empty? vs)
-      acc
-      (let [new-last-max
-            (first vs)
-            #_last-max
-            #_(max last-max (first vs))]
-        (recur (rest vs)
-               new-last-max
-               (conj acc new-last-max))))))
 
 (defn below [threshold hms]
   (map (fn [{:keys [i] :as hm}] (if (< i threshold)
@@ -169,9 +142,10 @@
         (b/update-scale :y :fmt int)
         (b/add-axes :bottom)
         (b/add-axes :left)
-        (b/add-label :bottom "date")
-        (b/add-label :left "Cases")
-        (b/add-legend (str "Country > " threshold)
+        (b/add-label :bottom "Date")
+        (b/add-label :left "Sick")
+        (b/add-legend ""
+                      #_(str "Country > " threshold)
                       legend)
         (r/render-lattice {:width 800 :height 600})
         (save "results/vega/stacked-area.jpg")
