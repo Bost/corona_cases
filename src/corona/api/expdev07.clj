@@ -101,14 +101,12 @@
   (sums-for-case {:case :confirmed :pred (pred-fn \"SK\")})
   "
   [{:keys [case pred]}]
-  (let [locations
-        (filter pred (:locations (case (data-memo))))
-        #_((comp (filter pred) :locations case) (data-memo))
-        #_(->> (data-memo) case :locations (filter pred))
-        ]
-    (map (fn [raw-date]
-           (sums-for-date case locations raw-date))
-         (raw-dates))))
+  (let [locations (filter pred
+                          ((comp :locations case) (data-memo)))]
+    (transduce (map (fn [raw-date]
+                      (sums-for-date case locations raw-date)))
+               conj []
+               (raw-dates))))
 
 (defn get-counts
   "Examples:
