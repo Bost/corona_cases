@@ -39,20 +39,22 @@
 
 (defn all-affected-country-codes
   "Countries with some confirmed, deaths or recovered cases"
-  []
-  (->> [:confirmed :deaths :recovered]
-       (map (fn [case] (->> (data-memo)
+  ([] (all-affected-country-codes {:limit-fn identity}))
+  ([{:keys [limit-fn] :as prm}]
+   (->> [:confirmed :deaths :recovered]
+        (map (fn [case] (->> (data-memo)
                             case :locations
                             (map :country_code)
                             set)))
-       (reduce cset/union)
-       sort
-       vec
-       #_(into cr/default-affected-country-codes)
-       (mapv (fn [cc] (if (= "XX" cc)
-                       d/default-2-country-code
-                       cc)))
-       distinct))
+        (reduce cset/union)
+        sort
+        vec
+        #_(into cr/default-affected-country-codes)
+        (mapv (fn [cc] (if (= "XX" cc)
+                        d/default-2-country-code
+                        cc)))
+        distinct
+        limit-fn)))
 
 (defn raw-dates []
   (->> (raw-dates-unsorted)
@@ -114,12 +116,15 @@
 (defn recovered [prm] (:r (get-counts prm)))
 (defn ill       [prm] (:i (get-counts prm)))
 
-(defn dates []
-  (let [sdf (new SimpleDateFormat "MM/dd/yy")]
-    (->> (raw-dates)
-         ;; :2/24/20
-         (map keyname)
-         (map (fn [rd] (.parse sdf rd))))))
+(defn dates
+  ([] (dates {:limit-fn identity}))
+  ([{:keys [limit-fn] :as prm}]
+   (let [sdf (new SimpleDateFormat "MM/dd/yy")]
+     (->> (raw-dates)
+          limit-fn
+          ;; :2/24/20
+          (map keyname)
+          (map (fn [rd] (.parse sdf rd)))))))
 
 (defn get-last [coll]
   (->> coll
