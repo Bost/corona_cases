@@ -254,5 +254,7 @@
     "TT" "Trinidad & Tobago"
     "AG" "Antigua & Barbuda"
     "CF" "Central Afri Rep"
+    "US" "USA"
+    "GB" "UK"
     #_"CZ"
     }))

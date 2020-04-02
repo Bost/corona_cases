@@ -33,4 +33,24 @@
                           0
                           (read-string s-nr))))
                     $))) $)
-    (reduce into [] $)))
+                    (reduce into [] $)))
+
+;; (def wiki-page
+;;   "We want this data, but it's only published as HTML."
+;;   (slurp "https://en.wikipedia.org/wiki/List_of_countries_by_hospital_beds"))
+
+;; (defn deepest-text
+;;   "Drill down to the deepest text node(s) and return them as a string."
+;;   [node]
+;;   (cond (vector? node) (apply str (mapcat deepest-text node))
+;;         (map? node) (deepest-text (:content node))
+;;         :else node))
+
+;; (defn extract-tables [html]
+;;   (mapv (fn [table]
+;;           (mapv #(mapv deepest-text
+;;                        (s/select (s/or (s/tag :th) (s/tag :td)) %))
+;;                 (s/select (s/tag :tr) table)))
+;;         (->> html hick/parse hick/as-hickory (s/select (s/tag :table)))))
+
+;; (drop 3 (first (extract-tables wiki-page)))

@@ -140,10 +140,9 @@
   [{:keys [case pred]}]
   (let [locations (filter pred
                           ((comp :locations case) (data-memo)))]
-    (transduce (map (fn [raw-date]
-                      (sums-for-date case locations raw-date)))
-               conj []
-               (raw-dates))))
+    (map (fn [raw-date]
+           (sums-for-date case locations raw-date))
+         (raw-dates))))
 
 (defn get-counts
   "Examples:
@@ -155,10 +154,12 @@
                   [:confirmed :recovered :deaths])]
     (zipmap [:c :r :d :i] (conj crd (apply mapv c/calculate-ill crd)))))
 
-(defn confirmed [prm] (:c (get-counts prm)))
-(defn deaths    [prm] (:d (get-counts prm)))
-(defn recovered [prm] (:r (get-counts prm)))
-(defn ill       [prm] (:i (get-counts prm)))
+(def get-counts-memo (memo/ttl get-counts {} :ttl/threshold (* time-to-live 60 1000)))
+
+(defn confirmed [prm] (:c (get-counts-memo prm)))
+(defn deaths    [prm] (:d (get-counts-memo prm)))
+(defn recovered [prm] (:r (get-counts-memo prm)))
+(defn ill       [prm] (:i (get-counts-memo prm)))
 
 (defn dates
   ([] (dates {:limit-fn identity}))
@@ -167,7 +168,7 @@
      (map (fn [rd] (.parse sdf (keyname rd)))
           (limit-fn (raw-dates))))))
 
-(def dates-memo (memo/memo dates))
+(def dates-memo (memo/ttl dates {} :ttl/threshold (* time-to-live 60 1000)))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -177,10 +178,10 @@
   "
   (eval-fun {:fun get-last :pred (pred-fn \"SK\")})
   "
-  [{:keys [fun] :as prm}]
+  [{:keys [fun date] :as prm}]
   (into {:f (fun (dates-memo))}
         (map (fn [[k v]] {k (fun v)})
-             (get-counts prm))))
+             (get-counts-memo prm))))
 
 (defn delta
   "Example (delta {:pred (pred-fn \"CN\")})"

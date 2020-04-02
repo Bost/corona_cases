@@ -5,6 +5,7 @@
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
             [corona.defs :as d]
+            [corona.pic :as pic]
             [corona.messages :as msg]
             [morse.api :as morse]))
 
@@ -17,6 +18,14 @@
     (when (in? (->> (com/all-affected-country-codes)
                   (into cr/default-affected-country-codes)) country-code)
       (morse/send-photo c/token chat-id (msg/absolute-vals prm))
+      (when (in? [d/worldwide-2-country-code
+                  d/worldwide-3-country-code
+                  d/worldwide]
+                 country-code)
+        (pic/show-pic 20000)
+        (morse/send-photo c/token chat-id
+                          (io/input-stream
+                           "results/vega/stacked-area.jpg")))
       #_(morse/send-text
          c/token chat-id (select-keys prm (keys msg/options))
          (format
@@ -33,7 +42,7 @@
            )
           (msg/link "We will no longer provide recovered cases."
                     "https://github.com/CSSEGISandData/COVID-19/issues/1250" prm))
-         ))))
+         )))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
