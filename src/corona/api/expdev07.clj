@@ -37,11 +37,44 @@
 
 (defn left-pad [s] (c/left-pad s 2))
 
+(defn xf-sort
+  "A sorting transducer. Mostly a syntactic improvement to allow composition of
+  sorting with the standard transducers, but also provides a slight performance
+  increase over transducing, sorting, and then continuing to transduce."
+  ([]
+   (xf-sort compare))
+  ([cmp]
+   (fn [rf]
+     (let [temp-list (java.util.ArrayList.)]
+       (fn
+         ([]
+          (rf))
+         ([xs]
+          (reduce rf xs (sort cmp (vec (.toArray temp-list)))))
+         ([xs x]
+          (.add temp-list x)
+          xs))))))
+
 (defn all-affected-country-codes
   "Countries with some confirmed, deaths or recovered cases"
   ([] (all-affected-country-codes {:limit-fn identity}))
-  ([{:keys [limit-fn] :as prm}]
-   (->> [:confirmed :deaths :recovered]
+  ([{:keys [limit limit-fn] :as prm}]
+   (let [coll (transduce (map (fn [case]
+                                #_(set (map :country_code (:locations (case (data-memo)))))
+                                (transduce (map :country_code)
+                                           conj #{}
+                                           ((comp :locations case) (data-memo)))))
+                         cset/union #{}
+                         [:confirmed :deaths :recovered])]
+     (transduce (comp (map (fn [cc] (if (= "XX" cc)
+                                     d/default-2-country-code
+                                     cc)))
+                      (distinct)
+                      limit-fn)
+                conj []
+                coll))
+
+   #_(->> [:confirmed :deaths :recovered]
         (map (fn [case] (->> (data-memo)
                             case :locations
                             (map :country_code)
@@ -50,26 +83,30 @@
         (mapv (fn [cc] (if (= "XX" cc)
                         d/default-2-country-code
                         cc)))
-        distinct
-        limit-fn)))
+        (distinct)
+        (limit-fn)
+        )))
 
 (defn raw-dates []
-  (->> (raw-dates-unsorted)
-       (map keyname)
-       (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
-       (map (fn [[_ m d y]]
-              (->> [y m d]
-                   (map left-pad)
-                   (interpose "/")
-                   (apply str))))
-       sort
-       (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
-       (map (fn [[_ y m d]]
-              (->> [m d y]
-                   (map read-number)
-                   (interpose "/")
-                   (apply str)
-                   (keyword))))))
+  (transduce
+   (comp
+    (map keyname)
+    (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
+    (map (fn [[_ m d y]]
+           (transduce (comp (map left-pad)
+                            (interpose "/"))
+                      str
+                      [y m d])))
+    (xf-sort)
+    (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
+    (map (fn [[_ y m d]]
+           (keyword
+            (transduce (comp (map read-number)
+                             (interpose "/"))
+                       str
+                       [m d y])))))
+   conj []
+   (raw-dates-unsorted)))
 
 (defn sums-for-date [case locations raw-date]
   (if (and (empty? locations)
@@ -130,22 +167,20 @@
      (map (fn [rd] (.parse sdf (keyname rd)))
           (limit-fn (raw-dates))))))
 
-#_(def dates-memo (memo/memo dates))
+(def dates-memo (memo/memo dates))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
 (defn get-prev [coll] (first (take-last 2 coll)))
 
-(defn eval-fun [{:keys [fun] :as prm}]
-  (conj {:f (fun (dates))}
-        (zipmap [:c :d :r :i]
-                (let [case-counts (get-counts prm)]
-                  (map fun
-                       ;; TODO use select-keys or something similar
-                       [(:c case-counts)
-                        (:d case-counts)
-                        (:r case-counts)
-                        (:i case-counts)])))))
+(defn eval-fun
+  "
+  (eval-fun {:fun get-last :pred (pred-fn \"SK\")})
+  "
+  [{:keys [fun] :as prm}]
+  (into {:f (fun (dates-memo))}
+        (map (fn [[k v]] {k (fun v)})
+             (get-counts prm))))
 
 (defn delta
   "Example (delta {:pred (pred-fn \"CN\")})"
