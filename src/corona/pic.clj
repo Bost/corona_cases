@@ -146,17 +146,20 @@
 
 (defn fill-rest [threshold]
   (let [sum-below-threshold (sum-below threshold)
-        countries-threshold (->> sum-below-threshold
-                                 (map :cc)
-                                 distinct
-                                 set)]
-    (reduce into [] (map (fn [[f hms]]
-                           (->> (group-by :cc hms)
-                                keys
-                                (cset/difference countries-threshold)
-                                (map (fn [cc] {:cc cc :f f :i 0}))
-                                (cset/union hms)))
-                         (group-by :f sum-below-threshold)))))
+        countries-threshold (set (map :cc sum-below-threshold))]
+    (reduce into []
+            (map (fn [[f hms]]
+                   (cset/union
+                    hms
+                    (map (fn [cc] {:cc cc :f f :i 0})
+                         (cset/difference countries-threshold
+                                          (keys (group-by :cc hms)))))
+                   #_(->> (group-by :cc hms)
+                          keys
+                          (cset/difference countries-threshold)
+                          (map (fn [cc] {:cc cc :f f :i 0}))
+                          (cset/union hms)))
+                 (group-by :f sum-below-threshold)))))
 
 (defn calc-json-data [threshold]
   (->> (fill-rest threshold)
