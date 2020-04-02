@@ -18,8 +18,8 @@
 (def api-service web-service)
 (def host (:host api-service))
 (def url
-  #_"http://127.0.0.1:5000/all"
-  (str "https://" host (:route api-service)))
+  "http://127.0.0.1:8000/all"
+  #_(str "https://" host (:route api-service)))
 
 (def time-to-live "In minutes" 15)
 (defn data [] (c/get-json url))
