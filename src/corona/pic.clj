@@ -162,13 +162,12 @@
                  (group-by :f sum-below-threshold)))))
 
 (defn calc-json-data [threshold]
-  (->> (fill-rest threshold)
-       (map (fn [{:keys [cc] :as hm}] (assoc hm :cn (com/country-alias cc))))
-       (group-by :cn)
+  (->> (group-by :cn
+                 (map (fn [{:keys [cc] :as hm}] (assoc hm :cn (com/country-alias cc)))
+                      (fill-rest threshold)))
        (map-kv (fn [entry]
                  (->> entry
-                      (map (fn [{:keys [f i]}]
-                             [(to-java-time-local-date f) i]))
+                      (map (fn [{:keys [f i]}] [(to-java-time-local-date f) i]))
                       (sort-by first))))
        (sort-by first (comp - compare))))
 
