@@ -58,10 +58,7 @@
 
 (def default-affected-country-codes
   {d/country-code-worldwide d/country-code-others})
-
-;; Continent code
-(def default-affected-continent-codes [])
-
+g
 (defn country-code--country-nv-i18n []
   (->> (CountryCode/values)
        (map (fn [cc] [(str cc)
