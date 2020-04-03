@@ -45,9 +45,8 @@
          :codes (conj {"desc" "continent-code -> country-codes"}
                       {(name type) (com/all-continent-codes--country-codes)})
          (format "Error. Wrong type %s" type))
-     (conj (if (= "dev" project-ver)
-             {"warn" "Under construction. Don't use it in PROD env"}
-             #_{}))
+     (conj (when (= "dev" project-ver)
+             {"warn" "Under construction. Don't use it in PROD env"}))
      (conj {"source" "https://github.com/Bost/corona_cases"})
      ;; swapped order x y -> y x
      (into (sorted-map-by (fn [x y] (compare y x))))))})
@@ -134,5 +133,5 @@
 (defn start [] (swap! test-obj (fn [_] (webapp))))
 (defn stop []  (.stop @test-obj))
 (defn restart []
-  (if @test-obj (stop))
+  (when @test-obj (stop))
   (start))

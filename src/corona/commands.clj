@@ -14,11 +14,10 @@
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
 
-    (if (in? (->> (com/all-affected-country-codes)
+    (when (in? (->> (com/all-affected-country-codes)
                   (into cr/default-affected-country-codes)) country-code)
-      (do
-        (morse/send-photo c/token chat-id (msg/absolute-vals prm))
-        #_(morse/send-text
+      (morse/send-photo c/token chat-id (msg/absolute-vals prm))
+      #_(morse/send-text
          c/token chat-id (select-keys prm (keys msg/options))
          (format
           (str
@@ -34,7 +33,7 @@
            )
           (msg/link "We will no longer provide recovered cases."
                     "https://github.com/CSSEGISandData/COVID-19/issues/1250" prm))
-         )))))
+         ))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

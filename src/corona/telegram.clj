@@ -61,7 +61,7 @@
 (defn start   [] (swap! test-obj (fn [_] (start-polling token handler))))
 (defn stop    [] (swap! test-obj (fn [_] (p/stop @test-obj))))
 (defn restart []
-  (if @test-obj
-    (do (stop)
-        (Thread/sleep 400)))
+  (when @test-obj
+    (stop)
+    (Thread/sleep 400))
   (start))
