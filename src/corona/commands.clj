@@ -107,7 +107,7 @@
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
-  []
+  [country-code]
   (-> (com/country-name country-code)
       (s/replace " " "")))
 
@@ -121,9 +121,9 @@
     (fn [c] (->> c cr/country-code-3-letter s/upper-case)) ;; /DEU
     (fn [c] (->> c cr/country-code-3-letter s/capitalize)) ;; /Deu
 
-    (fn [_] (->> (normalize) s/lower-case))   ;; /unitedstates
-    (fn [_] (->> (normalize) s/upper-case))   ;; /UNITEDSTATES
-    (fn [_] (->> (normalize)))]
+    (fn [c] (->> c (normalize) s/lower-case))   ;; /unitedstates
+    (fn [c] (->> c (normalize) s/upper-case))   ;; /UNITEDSTATES
+    (fn [c] (->> c (normalize)))]
    (mapv
     (fn [fun]
       {:name (fun country-code)
