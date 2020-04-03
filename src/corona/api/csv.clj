@@ -26,7 +26,7 @@
 (defn sum-up-file-de [{:keys [sum-up-fn pred file] :as prm}]
   (->> file take-csv rest
        #_(take-last 1)
-       (filter (fn [[_ country-name _ c _ _]]
+       (filter (fn [[_ country-name _ _ _ _]]
                  (->> country-name
                       com/country-code
                       pred)))))
