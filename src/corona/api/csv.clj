@@ -78,9 +78,7 @@
        first))
 
 (defn delta [prm]
-  (let [last-d (last-day prm)
-        prev-d (prev-day prm)]
-    (map (fn [l p])) last-d prev-d))
+  '((last-day prm) (prev-day prm)))
 
 (defn all-affected-country-codes
   []
