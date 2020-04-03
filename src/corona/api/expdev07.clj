@@ -1,5 +1,7 @@
 (ns corona.api.expdev07
-  (:require [clojure.core.memoize :as memo]
+  (:require [clj-http.client :as client]
+            [clojure.core.memoize :as memo]
+            [clojure.data.json :as json]
             [clojure.set :as cset]
             [corona.core :as c :refer [read-number]]
             [corona.defs :as d])
@@ -9,19 +11,18 @@
 ;; https://sheets.googleapis.com/v4/spreadsheets/1jxkZpw2XjQzG04VTwChsqRnWn4-FsHH6a7UHVxvO95c/values/Dati?majorDimension=ROWS&key=AIzaSyAy6NFBLKa42yB9KMkFNucI4NLyXxlJ6jQ
 
 ;; https://github.com/iceweasel1/COVID-19-Germany
-(def web-service
-  {:host "coronavirus-tracker-api.herokuapp.com" :route "/all"})
-
-(def api-service web-service)
-(def host (:host api-service))
-(def url
+#_(def api-service {:host "coronavirus-tracker-api.herokuapp.com" :route "/all"})
+#_(def host (:host api-service))
+#_(def url
   #_"http://127.0.0.1:5000/all"
   (str "https://" host (:route api-service)))
 
-(def time-to-live "In minutes" 15)
-(defn data [] (c/get-json url))
+(defn data []
+  (json/read-json (:body (client/get "https://coronavirus-tracker-api.herokuapp.com/all" {:accept :json}))))
 
-(def data-memo (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
+(def data-memo (memo/ttl data {}
+                         ;; 15 minutes:
+                         :ttl/threshold (* 15 60 1000)))
 
 #_(require '[ clojure.inspector :as i])
 #_(i/inspect (data-memo))
@@ -50,6 +51,14 @@
                        d/default-2-country-code
                        cc)))
        distinct))
+
+(comment
+  (data-memo)
+  
+  (all-affected-country-codes)
+
+  )
+
 
 (defn raw-dates []
   (->> (raw-dates-unsorted)

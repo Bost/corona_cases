@@ -4,7 +4,8 @@
             [clojure.data.json :as json]
             [clj-time-ext.core :as te]
             [clj-http.client :as client]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as string]))
 
 (defmacro dbg [body]
   `(let [x# ~body]
@@ -23,18 +24,11 @@
 
 (defn calculate-ill [c r d] (- c (+ r d)))
 
-(defn telegram-token-suffix []
-  (let [suffix (.substring token (- (count token) 3))]
-    (if (or (= suffix "Fq8") (= suffix "MR8"))
-      suffix
-      (throw (Exception.
-              (format "Unrecognized TELEGRAM_TOKEN suffix: %s" suffix))))))
-
 (def bot-type
-  (let [suffix (telegram-token-suffix)]
-    (case suffix
-      "Fq8" "PROD"
-      "MR8" "TEST")))
+  (if (and token
+           (string/ends-with? token "Fq8")) "PROD"
+      ;; otherwise expect (string/ends-with? token "MR8")
+      "TEST"))
 
 (def project-ver
   (let [pom-props

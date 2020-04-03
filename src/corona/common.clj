@@ -2,7 +2,6 @@
   (:require [clojure.set :as cset]
             [clojure.string :as s]
             [corona.api.expdev07 :as data]
-            [corona.continents :as cn]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
             [corona.defs :as d]))
@@ -301,10 +300,10 @@
    })
 
 (defn continent-code [continent]
-  (get cn/continent-names--continent-codes-hm continent))
+  (get continent-names--continent-codes-hm continent))
 
 (defn continent-name [continent-code]
-  (get (cset/map-invert cn/continent-names--continent-codes-hm)
+  (get (cset/map-invert continent-names--continent-codes-hm)
        continent-code))
 
 (defn lower-case [hm]
@@ -358,7 +357,7 @@
 
 (defn all-continent-names--country-names
   []
-  (->> cn/continent-names--continent-codes-hm
+  (->> continent-names--continent-codes-hm
        (take 1)
        (map (fn [[cname ccode]]
               
@@ -369,28 +368,24 @@
 (defn country-code--continet-codes [country-code]
   (get country-code--continent-codes country-code))
 
-(defn all-affected-country-codes []
-  (data/all-affected-country-codes))
-
 (defn all-affected-country-names
   "TODO remove worldwide"
   []
-  (->> (all-affected-country-codes)
-       (map country-name)))
+  (map country-name (data/all-affected-country-codes)))
 
 (defn all-affected-continent-codes
   "All continents except Antarctica are affected now."
   []
-  (->> (all-affected-country-codes)
+  (->> (data/all-affected-country-codes)
        (map country-code--continet-codes)
        distinct))
 
 (defn all-affected-continent-names
   "TODO worldwide"
   []
-  (->> (all-affected-continent-codes)
-       (mapv (fn [continents]
-              (mapv continent-name continents)))))
+  (mapv (fn [continents]
+          (mapv continent-name continents))
+        (all-affected-continent-codes)))
 
 (def max-affected-continent-name-len
   (->> (all-affected-continent-names)
@@ -409,7 +404,7 @@
       (country-name cc))))
 
 (def max-affected-country-name-len
-  (->> (all-affected-country-codes)
+  (->> (data/all-affected-country-codes)
        (map (fn [cc]
               (country-name-aliased cc )
               #_(cr/country-name cc)))

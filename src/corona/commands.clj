@@ -105,34 +105,23 @@
    c/token chat-id msg/options
    (msg/contributors prm)))
 
-(defn- normalize
-  "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
-  []
-  (-> (com/country-name country-code)
-      (s/replace " " "")))
-
 (defn cmds-country-code [country-code]
-  (->>
-   [(fn [c] (->> c s/lower-case))  ;; /de
-    (fn [c] (->> c s/upper-case))  ;; /DE
-    (fn [c] (->> c s/capitalize))  ;; /De
-
-    (fn [c] (->> c cr/country-code-3-letter s/lower-case)) ;; /deu
-    (fn [c] (->> c cr/country-code-3-letter s/upper-case)) ;; /DEU
-    (fn [c] (->> c cr/country-code-3-letter s/capitalize)) ;; /Deu
-
-    (fn [_] (->> (normalize) s/lower-case))   ;; /unitedstates
-    (fn [_] (->> (normalize) s/upper-case))   ;; /UNITEDSTATES
-    (fn [_] (->> (normalize)))]
-   (mapv
-    (fn [fun]
-      {:name (fun country-code)
-       :f
-       (fn [chat-id]
-         (world {:cmd-names msg/cmd-names
-                 :chat-id chat-id
-                 :country-code country-code
-                 :pred (msg/pred-fn country-code)}))}))))
+  (mapv (fn [fun]
+          {:name (fun country-code)
+           :f (fn [chat-id]
+                (world {:cmd-names msg/cmd-names
+                        :chat-id chat-id
+                        :country-code country-code
+                        :pred (msg/pred-fn country-code)}))})
+        [(fn [c] (s/lower-case c))  ;; /de
+         (fn [c] (s/upper-case c))  ;; /DE
+         (fn [c] (s/capitalize c))  ;; /De
+         (fn [c] (-> c cr/country-code-3-letter s/lower-case)) ;; /deu
+         (fn [c] (-> c cr/country-code-3-letter s/upper-case)) ;; /DEU
+         (fn [c] (-> c cr/country-code-3-letter s/capitalize)) ;; /Deu
+         (fn [c] (-> c com/country-name (s/replace " " "") s/lower-case))   ;; /unitedstates
+         (fn [c] (-> c com/country-name (s/replace " " "") s/upper-case))   ;; /UNITEDSTATES
+         (fn [c] (-> c com/country-name (s/replace " " "")))]))
 
 (defn cmds-general []
   (let [prm
@@ -176,8 +165,7 @@
       :desc "Knowledge is power - educate yourself"}]))
 
 (defn cmds []
-  (->> (into (cr/all-country-codes)
-             #_(com/all-affected-continent-codes))
+  (->> (cr/all-country-codes)
        (mapv cmds-country-code)
        flatten
        (into (cmds-general))))

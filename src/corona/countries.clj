@@ -58,7 +58,7 @@
 
 (def default-affected-country-codes
   {d/country-code-worldwide d/country-code-others})
-g
+
 (defn country-code--country-nv-i18n []
   (->> (CountryCode/values)
        (map (fn [cc] [(str cc)
