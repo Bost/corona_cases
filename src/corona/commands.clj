@@ -106,20 +106,13 @@
    c/token chat-id msg/options
    (msg/contributors prm)))
 
-#_(defn normalize
+(defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
-  [country-code]
-  (-> (cr/country-name country-code)
+  []
+  (-> (com/country-name country-code)
       (s/replace " " "")))
 
 (defn cmds-country-code [country-code]
-
-  (defn- normalize
-    "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
-    []
-    (-> (com/country-name country-code)
-        (s/replace " " "")))
-
   (->>
    [(fn [c] (->> c s/lower-case))  ;; /de
     (fn [c] (->> c s/upper-case))  ;; /DE

@@ -1,17 +1,7 @@
 (ns corona.api.hackathon
-  (:require
-   [corona.core :as c]
-   [corona.countries :as cr]))
+  (:require [corona.core :as c]
+            [corona.countries :as cr]))
 
-(def web-service
-  {:host "corona.ndo.dev/api" :route "/countries?country=deu"})
-
-(def api-service web-service)
-(def host (:host api-service))
-(def url
-  "https://corona.ndo.dev/api/countries?country=deu")
-
-(def time-to-live "In minutes" 15)
 (defn data
   "Iterate over all countries and
   {
