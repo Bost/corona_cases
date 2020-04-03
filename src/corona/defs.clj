@@ -6,7 +6,7 @@
 (def worldwide              "Worldwide")
 (def country-code-worldwide {worldwide-2-country-code worldwide})
 
-(def default-country-codes   {"QQ" "QQQ"})
+(def default-country-codes   {"QQ" "QQQ"}) ;: FIXME
 (def default-2-country-code (-> default-country-codes keys first))
 (def default-3-country-code (-> default-country-codes vals first))
 (def others                 "Others")
@@ -16,6 +16,3 @@
 (def cruise-ship-3-country-code default-3-country-code)
 (def cruise-ship                "Cruise Ship")
 (def country-code-cruise-ship   {cruise-ship-2-country-code cruise-ship})
-
-(def default-continent-code "CCC")
-
