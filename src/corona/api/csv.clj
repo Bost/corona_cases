@@ -66,6 +66,20 @@
 (defn ill       [prm] (map :i (get-counts prm)))
 (defn dates     []    (map :f (get-counts {:pred (fn [_] true)})))
 
+(defn last-day  [prm]
+  #_(last (get-counts prm))
+  (->> (get-counts prm)
+       (take-last 1)
+       first))
+
+(defn prev-day  [prm]
+  (->> (get-counts prm)
+       (take-last 2)
+       first))
+
+(defn delta [prm]
+  '((last-day prm) (prev-day prm)))
+
 (defn all-affected-country-codes
   []
   (->> csv-files
