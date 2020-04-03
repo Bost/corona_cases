@@ -50,10 +50,8 @@
         + 0)))
 
 (defn sum-up [prm]
-  (->> csv-files
-       #_(take 4)
-       #_(take-last 1)  ;; TODO deactivate this
-       (map (fn [file] (sum-up-file (assoc prm :file file))))))
+  (map (fn [file] (sum-up-file (assoc prm :file file)))
+       csv-files))
 
 (defn get-counts [{:keys [pred] :as prm}]
   (map (fn [f c d r i] {:f
@@ -65,8 +63,7 @@
        (sum-up (assoc prm :sum-up-fn getc))
        (sum-up (assoc prm :sum-up-fn getd))
        (sum-up (assoc prm :sum-up-fn getr))
-       (sum-up (assoc prm :sum-up-fn geti))
-       ))
+       (sum-up (assoc prm :sum-up-fn geti))))
 
 ;; http://blog.cognitect.com/blog/2017/6/5/repl-debugging-no-stacktrace-required
 (defn confirmed [prm] (map :c (get-counts prm)))
@@ -90,8 +87,6 @@
   (let [last-d (last-day prm)
         prev-d (prev-day prm)]
     (map (fn [l p])) last-d prev-d))
-
-(def url "https://github.com/CSSEGISandData/COVID-19")
 
 (defn all-affected-country-codes
   []
