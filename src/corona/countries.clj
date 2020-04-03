@@ -55,15 +55,8 @@
 
 (defn all-country-codes [] (keys country-code-2-to-3-hm))
 
-
-;; nothing should be default affected!!!
-(def default-affected [d/country-code-worldwide
-                       d/country-code-others])
-
 (def default-affected-country-codes
-  (->> default-affected
-       (reduce into)
-       (mapv (fn [[k _]] k))))
+  {d/country-code-worldwide d/country-code-others})
 
 ;; Continent code
 (def default-affected-continent-codes [])
