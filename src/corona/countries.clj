@@ -51,7 +51,8 @@
 
 (defn country-code-3-letter
   "3-letter country code from 2-letter country code: \"DE\" -> \"DEU\" "
-  [cc] (get country-code-2-to-3-hm cc))
+  [cc]
+  (get country-code-2-to-3-hm cc))
 
 (defn all-country-codes [] (keys country-code-2-to-3-hm))
 
