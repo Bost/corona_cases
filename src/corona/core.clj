@@ -21,7 +21,14 @@
 (def chat-id "112885364")
 (def bot-name (str "@" project-name "_bot"))
 
-(defn calculate-ill [c r d] (- c (+ r d)))
+(defn calculate-ill
+  ([{:keys [cc f c r d] :as prm}]
+   (let [ret (- c (+ r d))]
+     (when (neg? ret)
+       (println cc f "ret" ret "[c r d]" [c r d]))
+     ret))
+  ([c r d]
+   (- c (+ r d))))
 
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]

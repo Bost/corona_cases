@@ -1,36 +1,13 @@
 (ns corona.pic
-  (:require [cljplot.render :as r]
-            [cljplot.build :as b]
+  (:require [cljplot.build :as b]
             [cljplot.common :refer :all]
-            [fastmath.interpolation :as in]
-            [fastmath.stats :as stats]
-
-            [corona.api.expdev07 :as data]
-            [corona.api.v2 :as v2]
-
-            [corona.messages :as msg]
-            [corona.common :as com]
-
-            [clojure2d.color :as c]
-            [cljplot.scale :as s]
-            [fastmath.core :as m]
             [cljplot.core :refer :all]
-            [java-time :as dt]
-
-            [clj-time.coerce :as tc]
-            [clj-time.core :as t]
-            [clj-time.format :as tf]
-            [clj-time.local :as tl]
-            [corona.core :refer [in?]]
+            [cljplot.render :as r]
             [clojure.set :as cset]
-
-            [clojure.core.memoize :as memo]
-            [fastmath.random :as rnd]
-            [corona.defs :as d]
-            )
-  (:import
-   [java.time LocalDate]
-   [java.time ZoneId]))
+            [clojure2d.color :as c]
+            [corona.common :as com]
+            [corona.defs :as d])
+  (:import [java.time LocalDate ZoneId]))
 
 (defn to-java-time-local-date [java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date) (ZoneId/of
@@ -38,52 +15,9 @@
                                                     "UTC"
                                                     #_"Europe/Berlin")))
 
-(defn fmt
-  "
-  2020-01-23T23:00:00.000-00:00
-  2006-10-01T07:00:00.000Z
-  "
-  [date]
-  (tf/unparse (tf/with-zone
-                (tf/formatter "dd MMM")
-                #_(tf/formatters :date-time)
-                (t/default-time-zone))
-              #_(tf/formatters :date-time)
-              (->> date tc/from-date)))
-
-(defn data
-  "
-  [
-  {:cc \"AU\", :f #inst \"2020-01-21T23:00:00.000-00:00\", :i 0}
-  {:cc \"AT\", :f #inst \"2020-01-21T23:00:00.000-00:00\", :i 0}
-  {:cc \"AE\", :f #inst \"2020-01-21T23:00:00.000-00:00\", :i 0}
-  ...
-  {:cc \"AU\", :f #inst \"2020-01-26T23:00:00.000-00:00\", :i 5}
-  {:cc \"AT\", :f #inst \"2020-01-26T23:00:00.000-00:00\", :i 0}
-  {:cc \"AE\", :f #inst \"2020-01-26T23:00:00.000-00:00\", :i 0}]
-  "
-  []
-  (v2/pic-data)
-  #_(let [country-codes
-        #_["AU" "AT" "AE"]
-        (data/all-affected-country-codes
-         #_{:limit-fn (fn [coll] (take 10 coll))})]
-
-    (reduce
-     into []
-     (map-indexed
-      (fn [idx _]
-        (map (fn [cc]
-               (let [$2 (data/eval-fun {:fun (fn [coll] (nth coll idx))
-                                        :pred (data/pred-fn cc)})]
-                 #_{:cc cc :f (:f $2) :i (:i $2)}
-                 (into {:cc cc} (select-keys $2 [:f :i]))))
-             country-codes))
-      (data/dates-memo
-       #_{:limit-fn (fn [coll] (take 10 coll))})))))
-
 (def data-memo
-  data
+  #_corona.api.v2/pic-data
+  corona.api.v1/pic-data
   #_(memo/memo data))
 
 (defn below [threshold hms]
@@ -120,10 +54,11 @@
   (let [hm (group-by :cn
                      (map (fn [{:keys [cc] :as hm}] (assoc hm :cn (com/country-alias cc)))
                           (fill-rest threshold)))
-        mapped-hm (map-kv (fn [entry]
-                            (sort-by first
-                                     (map (fn [{:keys [f i]}] [(to-java-time-local-date f) i])
-                                          entry)))
+        mapped-hm
+        (map-kv (fn [entry]
+                  (sort-by first
+                           (map (fn [{:keys [f i]}] [(to-java-time-local-date f) i])
+                                entry)))
                           hm)]
     (sort-by first (comp - compare)
              mapped-hm)))
@@ -142,6 +77,7 @@
   (let [json-data (calc-json-data threshold)
         pal (cycle (c/palette-presets :category20b))
         legend (reverse (map #(vector :rect %2 {:color %1}) pal (keys json-data)))]
+    #_(println (pr-str json-data))
     (-> (b/series [:grid] [:sarea json-data])
         (b/preprocess-series)
         (b/update-scale :y :fmt int)
@@ -154,4 +90,4 @@
                       legend)
         (r/render-lattice {:width 800 :height 600})
         (save "results/vega/stacked-area.jpg")
-        #_(show))))
+        (show))))

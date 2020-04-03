@@ -65,7 +65,8 @@
                        {:cc cc :f (tc/to-date (tl/to-local-date-time (name f)))
                         :i (c/calculate-ill c r d)})
                      (->> c-timeline (take cnt-days))
-                     (if (empty? (->> r-timeline (take cnt-days)))
+                     (if-let [norm-timeline (seq (->> r-timeline (take cnt-days)))]
+                       norm-timeline
                        (repeat cnt-days [nil 0]))
                      (->> d-timeline (take cnt-days)))
                 )))
