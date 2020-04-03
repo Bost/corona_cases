@@ -429,7 +429,7 @@
      (str
       (fmt {:s s-confirmed :n confirmed :diff dc
             :desc "" :calc-rate false}) "\n"
-      (if (pos? confirmed)
+      (when (pos? confirmed)
         (let [{deaths :d recovered :r ill :i} last-day
               closed (+ deaths recovered)
               {dd :d dr :r di :i} delta

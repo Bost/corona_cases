@@ -4,8 +4,7 @@
             [clojure.string :as s]
             [corona.common :as com]
             [corona.core :as c]
-            [corona.countries :as cr]
-            [corona.defs :as d])
+            [corona.countries :as cr])
   (:import java.text.SimpleDateFormat))
 
 ;; get all the file names in one directory
@@ -28,21 +27,9 @@
 (defn getc [[_ _ _ c _ _]] c)
 (defn getd [[_ _ _ _ d _]] d)
 (defn getr [[_ _ _ _ _ r]] r)
-(defn geti [[_ _ u c d r]]
+(defn geti [[_ _ _ c d r]]
   (let [[nc nd nr] (map c/read-number [c d r])]
     (c/calculate-ill nc nr nd)))
-
-(defn pred-fn [country-code]
-  (fn [country-code]
-    (condp = country-code
-      d/worldwide-2-country-code
-      true
-
-      d/default-2-country-code
-      ;; XX comes from the service
-      (= "XX" country-code)
-
-      true)))
 
 (defn sum-up-file-de [{:keys [sum-up-fn pred file] :as prm}]
   (->> file take-csv rest
