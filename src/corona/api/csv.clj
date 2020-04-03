@@ -7,14 +7,13 @@
             [corona.countries :as cr])
   (:import java.text.SimpleDateFormat))
 
-;; get all the file names in one directory
-(def directory (io/file "resources/csv"))
-(def files (filter #(.isFile %) (file-seq directory)))
-(def filestr (map str files))
-;; find all the xls files in the directory
-(def csv-files (->> filestr
-                    (filter #(re-find #".csv" %))
-                    sort))
+;; find all the CSV files in the directory
+(def csv-files
+  (->> (file-seq (io/file "resources/csv"))
+       (filter #(.isFile %))
+       (map str)
+       (filter #(re-find #".csv" %))
+       sort))
 
 ;; TODO read the resources/COVID-19/master.zip + delete the csv-files
 (defn take-csv
