@@ -5,6 +5,7 @@
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
             [corona.defs :as d]
+            [corona.api.expdev07 :as data]
             [corona.messages :as msg]
             [morse.api :as morse]))
 
@@ -14,7 +15,7 @@
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
 
-    (when (in? (->> (com/all-affected-country-codes)
+    (when (in? (->> (data/all-affected-country-codes)
                   (into cr/default-affected-country-codes)) country-code)
       (morse/send-photo c/token chat-id (msg/absolute-vals prm))
       #_(morse/send-text

@@ -12,8 +12,7 @@
             [corona.defs :as d]))
 
 (def lang-strings
-  {
-   :world        "world"
+  {:world        "world"
    :world-desc   "Start here"
    :start        "start"
    :list         "list"
@@ -30,8 +29,7 @@
    ;; A文 doesn't get displayed blue as a telegram command. Hmm
    :language     "lang"
    :country      "country"
-   :snapshot     "snapshot"
-   })
+   :snapshot     "snapshot"})
 
 (def s-world        (:world        lang-strings))
 (def s-world-desc   (:world-desc   lang-strings))
@@ -77,9 +75,9 @@
               :cc cc})))
 
 (defn all-affected-country-codes [prm]
-  (->> (com/all-affected-country-codes)
-       (map (fn [cc]
-              (stats-per-country (assoc prm :cc cc))))))
+  (map (fn [cc]
+         (stats-per-country (assoc prm :cc cc)))
+       (data/all-affected-country-codes)))
 
 (def options {:parse_mode "Markdown" :disable_web_page_preview true})
 
@@ -262,7 +260,7 @@
                             ))))
            #_(partition-all 2)
            #_(map (fn [part] (s/join "       " part)))))
-     (count (com/all-affected-country-codes)))))
+     (count (data/all-affected-country-codes)))))
 
 (defn fmt-worldwide
   "TODO show counts for every continent"
@@ -307,7 +305,7 @@
                             ))))
            #_(partition-all 2)
            #_(map (fn [part] (s/join "       " part)))))
-     (count (com/all-affected-country-codes)))))
+     (count (data/all-affected-country-codes)))))
 
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 ;; https://clojuredocs.org/clojure.core/merge-with

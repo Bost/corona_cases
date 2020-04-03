@@ -24,27 +24,15 @@
 (def project-ver "See also `c/project-ver`" "dev" #_"1.7.2")
 (def ws-path (format "ws/%s" project-ver))
 
-(defn web-service [{:keys [type] :as prm}]
-  (println "web-service" prm) ;; TODO better logging
+(defn json-ok-response [body]
   {:status 200
    :headers {"Content-Type" "application/json"}
-   :body
-   (json/write-str
-    (->>
-     (condp = type
-         :beds (conj #_{"desc" ""}
-                     {(name type) (beds/h)})
-         :names (conj #_{"desc" ""}
-                      {(name type)
-                       (com/all-continent-codes--country-codes)})
-         :codes (conj {"desc" "continent-code -> country-codes"}
-                      {(name type) (com/all-continent-codes--country-codes)})
-         (format "Error. Wrong type %s" type))
-     (conj (when (= "dev" project-ver)
-             {"warn" "Under construction. Don't use it in PROD env"}))
-     (conj {"source" "https://github.com/Bost/corona_cases"})
-     ;; swapped order x y -> y x
-     (into (sorted-map-by (fn [x y] (compare y x))))))})
+   :body (->> body
+              (conj (when (= "dev" project-ver)
+                      {"warn" "Under construction. Don't use it in PROD env"})) 
+              (conj {"source" "https://github.com/Bost/corona_cases"})
+              (into (sorted-map-by (fn [x y] (compare y x))))
+              json/write-str)})
 
 (defn links []
   {:status 200
@@ -80,39 +68,22 @@
      ])})
 
 (defroutes app
-  (let [hook telegram-hook]
-    (POST
-     (str "/" hook "/" token) req ;; {{input :input} :params}
-     {:status 200
-      :headers {"Content-Type" "text/plain"}
-      :body
-      (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
-                            {:text (str "Hello from " hook " webhook")}))}))
-
-  (let [hook google-hook]
-    (POST
-     (str "/" hook "/" token) req ;; {{input :input} :params}
-     {:status 200
-      :headers {"Content-Type" "text/plain"}
-      :body
-      (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
-                            {:text (str "Hello from " hook " webhook")}))}))
+  (POST (str "/telegram/" token) req
+   (json-ok-response (conj {:chat_id (->> req :params :message :chat :id)}
+                           {:text "Hello from telegram webhook"})))
+  (POST (str "/google/" token) req
+        (json-ok-response (conj {:chat_id (->> req :params :message :chat :id)}
+                                {:text "Hello from google webhook"})))
   (GET "/camel" {{input :input} :params}
        {:status 200
         :headers {"Content-Type" "text/plain"}
         :body (str "input was " input)})
-  (GET "/" []
-       (home-page))
-  (GET "/links" []
-       (links))
-  (GET (format "/%s/beds" ws-path) []
-       (web-service {:type :beds}))
-  (GET (format "/%s/names" ws-path) []
-       (web-service {:type :names}))
-  (GET (format "/%s/codes" ws-path) []
-       (web-service {:type :codes}))
-  (ANY "*" []
-       (route/not-found (slurp (io/resource "404.html")))))
+  (GET "/" [] (home-page))
+  (GET "/links" [] (links))
+  (GET (format "/%s/beds" ws-path) [] (json-ok-response {:beds (beds/h)}))
+  (GET (format "/%s/names" ws-path) [] (json-ok-response {:type :names}))
+  (GET (format "/%s/codes" ws-path) [] (json-ok-response {:type :codes}))
+  (ANY "*" [] (route/not-found (slurp (io/resource "404.html")))))
 
 (defn webapp [& [port]]
   (log/info (str "Starting " bot-type " webapp..."))
