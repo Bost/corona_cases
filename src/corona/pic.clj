@@ -29,7 +29,6 @@
             [corona.defs :as d]
             )
   (:import
-   #_[java.util Date]
    [java.time LocalDate]
    [java.time ZoneId]))
 
@@ -83,7 +82,9 @@
       (data/dates-memo
        #_{:limit-fn (fn [coll] (take 10 coll))})))))
 
-(def data-memo (memo/memo data))
+(def data-memo
+  data
+  #_(memo/memo data))
 
 (defn below [threshold hms]
   (map (fn [{:keys [i] :as hm}] (if (< i threshold)
