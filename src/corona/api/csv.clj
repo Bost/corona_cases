@@ -23,13 +23,6 @@
     #_(-> file (slurp) (ccsv/parse-csv))
     (-> file (dcsv/read-csv) (doall))))
 
-(defn getc [[_ _ _ c _ _]] c)
-(defn getd [[_ _ _ _ d _]] d)
-(defn getr [[_ _ _ _ _ r]] r)
-(defn geti [[_ _ _ c d r]]
-  (let [[nc nd nr] (map c/read-number [c d r])]
-    (c/calculate-ill nc nr nd)))
-
 (defn sum-up-file-de [{:keys [sum-up-fn pred file] :as prm}]
   (->> file take-csv rest
        #_(take-last 1)
@@ -60,10 +53,11 @@
                          (.parse sdf date))
                        :c c :d d :r r :i i})
        csv-files
-       (sum-up (assoc prm :sum-up-fn getc))
-       (sum-up (assoc prm :sum-up-fn getd))
-       (sum-up (assoc prm :sum-up-fn getr))
-       (sum-up (assoc prm :sum-up-fn geti))))
+       (sum-up (assoc prm :sum-up-fn #(nth % 3)))
+       (sum-up (assoc prm :sum-up-fn #(nth % 4)))
+       (sum-up (assoc prm :sum-up-fn #(nth % 5)))
+       (sum-up (assoc prm :sum-up-fn #(let [[_ _ _ c d r] %]
+                                        (apply c/calculate-ill (map c/read-number [c d r])))))))
 
 ;; http://blog.cognitect.com/blog/2017/6/5/repl-debugging-no-stacktrace-required
 (defn confirmed [prm] (map :c (get-counts prm)))
