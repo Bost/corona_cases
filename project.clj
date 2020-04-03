@@ -12,7 +12,8 @@
    [ring/ring-jetty-adapter "1.8.0"]
    [environ                 "1.1.0"]
    [morse                   "0.4.3"]
-   [org.clojure/data.json   "0.2.7"]
+   [org.clojure/data.json   "1.0.0"]
+   [clojure.java-time       "0.3.2"]
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
 
    ;; TODO use  instead of com.hypirion/clj-xchart

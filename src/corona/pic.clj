@@ -6,6 +6,8 @@
             [fastmath.stats :as stats]
 
             [corona.api.expdev07 :as data]
+            [corona.api.v2 :as v2]
+
             [corona.messages :as msg]
             [corona.common :as com]
 
@@ -24,7 +26,8 @@
 
             [clojure.core.memoize :as memo]
             [fastmath.random :as rnd]
-            [corona.defs :as d])
+            [corona.defs :as d]
+            )
   (:import
    #_[java.util Date]
    [java.time LocalDate]
@@ -61,7 +64,8 @@
   {:cc \"AE\", :f #inst \"2020-01-26T23:00:00.000-00:00\", :i 0}]
   "
   []
-  (let [country-codes
+  (v2/pic-data)
+  #_(let [country-codes
         #_["AU" "AT" "AE"]
         (data/all-affected-country-codes
          #_{:limit-fn (fn [coll] (take 10 coll))})]
@@ -149,4 +153,4 @@
                       legend)
         (r/render-lattice {:width 800 :height 600})
         (save "results/vega/stacked-area.jpg")
-        #_(show))))
+        (show))))
