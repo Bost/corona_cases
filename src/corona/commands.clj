@@ -23,10 +23,12 @@
                   d/worldwide-3-country-code
                   d/worldwide]
                  country-code)
+        #_(morse/send-photo c/token chat-id (pic/show-pic 20000))
         (pic/show-pic 20000)
         (morse/send-photo c/token chat-id
                           (io/input-stream
-                           "results/vega/stacked-area.jpg")))
+                           #_"stacked-area.jpg"
+                           (io/file "stacked-area.jpg"))))
       #_(morse/send-text
          c/token chat-id (select-keys prm (keys msg/options))
          (format
