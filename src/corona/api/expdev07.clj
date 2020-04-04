@@ -26,7 +26,10 @@
 (defn xf-sort
   "A sorting transducer. Mostly a syntactic improvement to allow composition of
   sorting with the standard transducers, but also provides a slight performance
-  increase over transducing, sorting, and then continuing to transduce."
+  increase over transducing, sorting, and then continuing to transduce.
+
+  Thanx to https://gist.github.com/matthewdowney/380dd28c1046d4919a8c59a523f804fd.js
+  "
   ([]
    (xf-sort compare))
   ([cmp]

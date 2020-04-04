@@ -52,6 +52,21 @@
                           (cset/union hms)))
                  (group-by :f sum-below-threshold)))))
 
+(defn sort-by-country-name [mapped-hm]
+  (sort-by first (comp - compare)
+           mapped-hm))
+
+(defn sort-by-last-val [mapped-hm]
+  (let [order (->> mapped-hm
+                   (map (fn [[country hms]] [country (second (last hms))]))
+                   (sort-by second)
+                   (reverse)
+                   (map first))]
+    (->> order
+         (map (fn [country]
+                {country (get mapped-hm country)}))
+         (reduce into []))))
+
 (defn calc-json-data [threshold]
   (let [hm (group-by :cn
                      (map (fn [{:keys [cc] :as hm}] (assoc hm :cn (com/country-alias cc)))
@@ -61,9 +76,9 @@
                   (sort-by first
                            (map (fn [{:keys [f i]}] [(to-java-time-local-date f) i])
                                 entry)))
-                          hm)]
-    (sort-by first (comp - compare)
-             mapped-hm)))
+                hm)]
+    #_(sort-by-country-name mapped-hm)
+    (sort-by-last-val mapped-hm)))
 
 #_(def json
   {:$schema "https://vega.github.io/schema/vega-lite/v4.json"
@@ -91,8 +106,6 @@
                                 #_(str "Country > " threshold)
                                 legend)
                   (r/render-lattice {:width 800 :height 600})
-                  #_(c2d/get-image)
-                  (save "stacked-area.jpg")
+                  (save com/temp-file)
                   #_(show))]
-      (println "show-pic (type res)" (type res))
       res)))

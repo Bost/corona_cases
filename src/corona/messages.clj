@@ -73,6 +73,7 @@
 (defn pred-fn [country-code] (data/pred-fn country-code))
 
 (defn encode-cmd [s] (str "/" s))
+
 (defn encode-pseudo-cmd [s parse_mode]
   (if (= parse_mode "HTML")
     (let [s (s/replace s "<" "&lt;")

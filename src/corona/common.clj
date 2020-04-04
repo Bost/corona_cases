@@ -4,11 +4,8 @@
             [corona.countries :as cr]
             [corona.defs :as d]))
 
-(def sorry
-  (str
-   "Just found out: quite many countries are located on more than one "
-   "continent. That makes displaying statistics for continents meaningless. "
-   "Apologies for serving you misleading information previously."))
+(def temp-file "/tmp/stacked-area.png")
+(def threshold 15000)
 
 (def sorry-ws
   (str

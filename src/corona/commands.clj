@@ -24,28 +24,10 @@
                   d/worldwide]
                  country-code)
         #_(morse/send-photo c/token chat-id (pic/show-pic 20000))
-        (pic/show-pic 20000)
+        (pic/show-pic com/threshold)
         (morse/send-photo c/token chat-id
                           (io/input-stream
-                           #_"stacked-area.jpg"
-                           (io/file "stacked-area.jpg"))))
-      #_(morse/send-text
-         c/token chat-id (select-keys prm (keys msg/options))
-         (format
-          (str
-           "<code>"
-           "ATTENTION PLEASE! THE DATA PROVIDER 'JHU CSSE' DECIDED:"
-           "\n\n"
-           "</code>"
-           "\"%s No reliable data source reporting recovered cases for many countries, such as the US.\""
-           "\n\n"
-           "Hence, the bot will be showing 0 until an alternative "
-           "information source is found.\n\n"
-           "Sorry about that."
-           )
-          (msg/link "We will no longer provide recovered cases."
-                    "https://github.com/CSSEGISandData/COVID-19/issues/1250" prm))
-         ))))
+                           (io/file com/temp-file)))))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
@@ -67,8 +49,7 @@
 
 (defn list-stuff [{:keys [chat-id] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
-    (list-countries prm)
-    #_(morse/send-text c/token chat-id com/sorry)))
+    (list-countries prm)))
 
 (defn about [{:keys [chat-id] :as prm}]
   (morse/send-text c/token chat-id msg/options (msg/about prm)))
