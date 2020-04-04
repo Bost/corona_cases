@@ -104,27 +104,24 @@
       (s/replace " " "")))
 
 (defn cmds-country-code [country-code]
-  (->>
-   [(fn [c] (->> c s/lower-case))  ;; /de
-    (fn [c] (->> c s/upper-case))  ;; /DE
-    (fn [c] (->> c s/capitalize))  ;; /De
-
-    (fn [c] (->> c cr/country-code-3-letter s/lower-case)) ;; /deu
-    (fn [c] (->> c cr/country-code-3-letter s/upper-case)) ;; /DEU
-    (fn [c] (->> c cr/country-code-3-letter s/capitalize)) ;; /Deu
-
-    (fn [c] (->> c (normalize) s/lower-case))   ;; /unitedstates
-    (fn [c] (->> c (normalize) s/upper-case))   ;; /UNITEDSTATES
-    (fn [c] (->> c (normalize)))]
-   (mapv
-    (fn [fun]
-      {:name (fun country-code)
-       :f
-       (fn [chat-id]
-         (world {:cmd-names msg/cmd-names
-                 :chat-id chat-id
-                 :country-code country-code
-                 :pred (msg/pred-fn country-code)}))}))))
+  (mapv
+   (fn [fun]
+     {:name (fun country-code)
+      :f
+      (fn [chat-id]
+        (world {:cmd-names msg/cmd-names
+                :chat-id chat-id
+                :country-code country-code
+                :pred (msg/pred-fn country-code)}))})
+   [#(s/lower-case %)  ;; /de
+    #(s/upper-case %)  ;; /DE
+    #(s/capitalize %)  ;; /De
+    #(s/lower-case (cr/country-code-3-letter %)) ;; /deu
+    #(s/upper-case (cr/country-code-3-letter %)) ;; /DEU
+    #(s/capitalize (cr/country-code-3-letter %)) ;; /Deu
+    #(s/lower-case (normalize %))   ;; /unitedstates
+    #(s/upper-case (normalize %))   ;; /UNITEDSTATES
+    #(normalize %)]))
 
 (defn cmds-general []
   (let [prm
@@ -138,16 +135,16 @@
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
      {:name msg/s-world
-      :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
-                                 (conj prm-country-code))))
+      :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
+                                   prm-country-code)))
       :desc msg/s-world-desc}
      {:name msg/s-list
-      :f (fn [chat-id] (list-stuff (-> (assoc prm :chat-id chat-id)
-                                      (conj prm-country-code))))
+      :f (fn [chat-id] (list-stuff (conj (assoc prm :chat-id chat-id)
+                                        prm-country-code)))
       :desc msg/s-list-desc}
      {:name msg/s-start
-      :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
-                                 (conj prm-country-code))))
+      :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
+                                   prm-country-code)))
       :desc msg/s-world-desc}
      {:name msg/s-about
       :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
@@ -163,10 +160,9 @@
       :desc "Knowledge is power - educate yourself"}]))
 
 (defn cmds []
-  (->> (into (cr/all-country-codes))
-       (mapv cmds-country-code)
-       flatten
-       (into (cmds-general))))
+  (transduce (map cmds-country-code)
+             into (cmds-general)
+             (cr/all-country-codes)))
 
 (defn bot-father-edit-cmds []
   (->> (cmds-general)
