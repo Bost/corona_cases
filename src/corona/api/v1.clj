@@ -105,8 +105,7 @@
                      (map (fn [[f v]] {:cc cc :f (fmt f) case v}))
                      (sort-by :f)
                      #_(take (count (raw-dates)))
-                     #_(take-last 6)
-                     ))))
+                     #_(take-last 6)))))
        (flatten)
        (group-by :f)
        (map (fn [[f hms]]
@@ -125,20 +124,13 @@
       acc)))
 
 (defn pic-data []
-  (->>
-   #_[:deaths]
-   [:confirmed :recovered :deaths]
-   (map for-case)
-   (apply map
-            (fn [{:keys [cc f confirmed] :as cm}
-                {:keys [recovered] :as rm}
-                {:keys [deaths] :as dm}]
-              {:cc cc
-               :f f
-               :i (c/calculate-ill
-                   {:cc cc :f f :c confirmed :r recovered :d deaths})}))
-   #_(flatten)
-   #_(sort-by :f)
-   ))
-
-#_(corona.pic/show-pic 64718)
+  (->> [:confirmed :recovered :deaths]
+       (map for-case)
+       (apply map
+              (fn [{:keys [cc f confirmed] :as cm}
+                  {:keys [recovered] :as rm}
+                  {:keys [deaths] :as dm}]
+                {:cc cc
+                 :f f
+                 :i (c/calculate-ill
+                     {:cc cc :f f :c confirmed :r recovered :d deaths})}))))

@@ -12,15 +12,12 @@
   (:import [java.time LocalDate ZoneId]))
 
 (defn to-java-time-local-date [java-util-date]
-  (LocalDate/ofInstant (.toInstant java-util-date) (ZoneId/of
-                                                    #_"Brazil/East"
-                                                    "UTC"
-                                                    #_"Europe/Berlin")))
-
-(def data-memo
-  #_corona.api.v2/pic-data
-  corona.api.v1/pic-data
-  #_(memo/memo data))
+  (LocalDate/ofInstant (.toInstant java-util-date)
+                       (ZoneId/systemDefault)
+                       #_(ZoneId/of
+                        #_"Brazil/East"
+                        "UTC"
+                        #_"Europe/Berlin")))
 
 (defn below [threshold hms]
   (map (fn [{:keys [i] :as hm}] (if (< i threshold)
@@ -33,7 +30,9 @@
                   (map (fn [[cc hms]]
                          {:cc cc :f f :i (reduce + (map :i hms))})
                        (group-by :cc hms)))
-            (group-by :f (below threshold (data-memo))))))
+                (group-by :f (below threshold
+                                    #_(corona.api.v2/pic-data)
+                                    (corona.api.v1/pic-data))))))
 
 (defn fill-rest [threshold]
   (let [sum-below-threshold (sum-below threshold)
@@ -92,4 +91,4 @@
                       legend)
         (r/render-lattice {:width 800 :height 600})
         (save "results/vega/stacked-area.jpg")
-        (show))))
+        #_(show))))
