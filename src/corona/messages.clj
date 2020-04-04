@@ -29,7 +29,6 @@
    ;; A文 doesn't get displayed blue as a telegram command. Hmm
    :language     "lang"
    :country      "country"
-   :snapshot     "snapshot"
    })
 
 (def s-world        (:world        lang-strings))
@@ -47,7 +46,6 @@
 (def s-sick         (:sick         lang-strings))
 (def s-closed       (:closed       lang-strings))
 (def s-language     (:language     lang-strings))
-(def s-snapshot     (:snapshot     lang-strings))
 (def cmd-s-country  (format "<%s>" (:country lang-strings)))
 
 (def lang-de "lang:de")
@@ -358,49 +356,22 @@
   (str
    ;; escape underscores for the markdown parsing
    (bot-name-formatted)
-   " version: " c/bot-ver " :  "
+   " " c/bot-ver " "
    (str
     (link "GitHub" "https://github.com/Bost/corona_cases" prm) ", "
-    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" prm))
-   "\n"
-   "Percentage calculation: <cases> / confirmed\n"
-
-   #_(str
-    "- Feb12-spike caused mainly by a change in the diagnosis classification"
-    " of the Hubei province.\n")
-
-   #_(str
-    "- Data retrieved *CONTINUOUSLY* every " data/time-to-live
-    " minutes from " (link data/host data/url prm) ".\n")
-
-   (str
-    "Useful visualizations: " (link "JHU CSSE" "https://arcg.is/0fHmTX" prm) ", "
-    (link "Worldometer"
-          "https://www.worldometers.info/coronavirus/coronavirus-cases/" prm)
+    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" prm)
     "\n")
+   "\n"
+   "- Percentage calculation: <cases> / confirmed\n"
 
-   (format "%s master branch %s\n"
+   (format (str "- %s master branch snapshot download deactivated. "
+                "Send a %s if you need this feature.\n")
            (link "CSSEGISandData/COVID-19"
                  "https://github.com/CSSEGISandData/COVID-19.git" prm)
-           (encode-cmd s-snapshot))
+           (encode-cmd s-feedback))
 
-   (format "The %s\n" (encode-cmd s-contributors))
-
-   (format "Statistics per single %s - see the %s\n"
-           (encode-cmd
-            (encode-pseudo-cmd cmd-s-country parse_mode))
-           (encode-cmd s-list))
-
+   (format "- %s\n" (encode-cmd s-contributors))
    "\n"
-
-   #_(format
-    (str
-     "- Country *specific* information using %s country codes & names. "
-     "Examples:\n"
-     "/fr    /fra      /France\n"
-     "/us    /usa    /UnitedStates   (without spaces)\n\n")
-    (link "ISO 3166"
-          "https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes" prm))
 
    ;; TODO home page; average recovery time
    #_(str

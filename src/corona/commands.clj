@@ -70,14 +70,6 @@
     (list-countries prm)
     #_(morse/send-text c/token chat-id com/sorry)))
 
-(defn snapshot [{:keys [chat-id] :as prm}]
-  (morse/send-text
-   c/token chat-id msg/options
-   "I'm sending you ~40MB file. Patience please...")
-  (morse/send-document
-   c/token chat-id
-   (io/input-stream "resources/COVID-19/master.zip")))
-
 (defn about [{:keys [chat-id] :as prm}]
   #_(morse/send-photo c/token chat-id
                       (io/input-stream "resources/pics/keepcalm.jpg"))
@@ -145,15 +137,10 @@
     [{:name msg/s-contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
-     {:name msg/s-snapshot
-      :f (fn [chat-id] (snapshot (assoc prm :chat-id chat-id)))
-      :desc
-      "Get a snapshot of https://github.com/CSSEGISandData/COVID-19.git master branch"}
      {:name msg/s-world
       :f (fn [chat-id] (world (-> (assoc prm :chat-id chat-id)
                                  (conj prm-country-code))))
       :desc msg/s-world-desc}
-
      {:name msg/s-list
       :f (fn [chat-id] (list-stuff (-> (assoc prm :chat-id chat-id)
                                       (conj prm-country-code))))
