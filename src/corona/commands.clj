@@ -42,7 +42,7 @@
            )
           (msg/link "We will no longer provide recovered cases."
                     "https://github.com/CSSEGISandData/COVID-19/issues/1250" prm))
-         )))
+         ))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

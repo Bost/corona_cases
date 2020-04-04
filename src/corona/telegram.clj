@@ -5,11 +5,15 @@
             [clojure.string :as s]
             [clojure.tools.logging :as log]
             [corona.commands :as cmds]
-            [corona.core :refer [bot-type bot-ver token]]
+            [corona.core :as c]
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
             [morse.polling-patch :as p-patch]))
+
+(def bot-type c/bot-type)
+(def bot-ver c/bot-ver)
+(def token c/token)
 
 (def chats (atom #{}))
 

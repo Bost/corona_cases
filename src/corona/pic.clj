@@ -6,7 +6,9 @@
             [clojure.set :as cset]
             [clojure2d.color :as c]
             [corona.common :as com]
-            [corona.defs :as d])
+            [corona.defs :as d]
+            [corona.api.v1]
+            [corona.api.v2])
   (:import [java.time LocalDate ZoneId]))
 
 (defn to-java-time-local-date [java-util-date]
