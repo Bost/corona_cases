@@ -71,17 +71,7 @@
     #_(morse/send-text c/token chat-id com/sorry)))
 
 (defn about [{:keys [chat-id] :as prm}]
-  #_(morse/send-photo c/token chat-id
-                      (io/input-stream "resources/pics/keepcalm.jpg"))
-  (morse/send-text c/token chat-id msg/options (msg/about prm))
-  (morse/send-text c/token chat-id
-                   #_msg/options
-                   (-> msg/options
-                       (dissoc :parse_mode)
-                       (assoc :disable_web_page_preview false))
-                   (msg/remember-20-seconds prm))
-  #_(morse/send-photo
-   c/token chat-id (io/input-stream "resources/pics/how_to_handwash_lge.gif")))
+  (morse/send-text c/token chat-id msg/options (msg/about prm)))
 
 (defn feedback [{:keys [chat-id] :as prm}]
   (morse/send-text c/token chat-id msg/options (msg/feedback prm)))

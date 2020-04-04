@@ -179,12 +179,6 @@
 ;;    "en"
 ;;    (footer prm)))
 
-(defn remember-20-seconds [prm]
-  (format "%s\n%s"
-          "Remember, at least *20* seconds!"
-          #_"https://www.who.int/gpsc/clean_hands_protection/en/"
-          "https://www.who.int/gpsc/media/how_to_handwash_lge.gif"))
-
 (defn format-last-day [prm]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                 (t/default-time-zone))
