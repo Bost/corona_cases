@@ -2,7 +2,15 @@
   (:require [clojure.string :as s]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
+            [clj-time.coerce :as tc]
+            [clj-time.core :as t]
+            [clj-time.format :as tf]
             [corona.defs :as d]))
+
+(defn fmt-date [date]
+  (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
+                (t/default-time-zone))
+              (tc/from-date date)))
 
 (def temp-file "/tmp/stacked-area.png")
 (def threshold 15000)

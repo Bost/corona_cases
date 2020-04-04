@@ -180,10 +180,7 @@
 ;;    "en"
 ;;    (footer prm)))
 
-(defn format-last-day [prm]
-  (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
-                (t/default-time-zone))
-              (->> prm data/last-day :f tc/from-date)))
+(defn format-last-day [prm] (com/fmt-date (:f (data/last-day prm))))
 
 (defn header [{:keys [parse_mode] :as prm}]
   (format
@@ -322,8 +319,8 @@
                          (encode-cmd s-about))
           :render-style :area
           :legend {:position :inside-nw}
-          :x-axis {:title "Day"}
-          :y-axis {:title "Cases"}
+          ;; :x-axis {:title "Date"}
+          ;; :y-axis {:title "Cases"}
           ;; :theme :matlab
           ;; :width 640 :height 500
           :width 800 :height 600
