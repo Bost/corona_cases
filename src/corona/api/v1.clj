@@ -17,7 +17,7 @@
 
 (defn url [] (str url-all))
 
-(def time-to-live "In minutes" (* 24 60)) ;; the whole day - I'm deving...
+(def time-to-live "In minutes" 15)
 
 (defn data [] (c/get-json (url)))
 
@@ -28,7 +28,7 @@
 
 (defn raw-dates-unsorted []
   #_[(keyword "2/22/20") (keyword "2/2/20")]
-  (->> (data-memo) :confirmed :locations last :history keys))
+  ((comp keys :history last :locations :confirmed) (data-memo)))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
@@ -94,43 +94,31 @@
     })
 
 (defn for-case [case]
-  (->> (get-in (data-memo) [case :locations])
-       (filter (fn [loc]
-                 true
-                 #_(corona.core/in? ccs (:country_code loc))))
-
-       (map (fn [loc]
-              (let [cc (:country_code loc)]
-                (->> (:history loc)
-                     (map (fn [[f v]] {:cc cc :f (fmt f) case v}))
-                     (sort-by :f)
-                     #_(take (count (raw-dates)))
-                     #_(take-last 6)))))
-       (flatten)
-       (group-by :f)
-       (map (fn [[f hms]]
-              (->> (group-by :cc hms)
-                   (map (fn [[cc hms]]
-                          {:cc cc :f f case (reduce + (map case hms))})))))
-       (flatten)))
-
-(defn sum-up [init-xs]
-  (loop [xs init-xs
-         last-sum 0
-         acc []]
-    (if (seq xs)
-      (let [new-last-sum (+ last-sum (first xs))]
-        (recur (rest xs) new-last-sum (conj acc new-last-sum)))
-      acc)))
+  (flatten
+   (map (fn [[f hms]]
+          (map (fn [[cc hms]]
+                 {:cc cc :f f case (reduce + (map case hms))})
+               (group-by :cc hms)))
+        (group-by :f (flatten
+                      (map (fn [loc]
+                             (let [cc (:country_code loc)]
+                               (sort-by
+                                :f
+                                (map (fn [[f v]] {:cc cc :f (fmt f) case v})
+                                     (:history loc)))))
+                           (filter
+                            (fn [loc]
+                              true
+                              #_(corona.core/in? ccs (:country_code loc)))
+                            (get-in (data-memo) [case :locations]))))))))
 
 (defn pic-data []
-  (->> [:confirmed :recovered :deaths]
-       (map for-case)
-       (apply map
-              (fn [{:keys [cc f confirmed] :as cm}
-                  {:keys [recovered] :as rm}
-                  {:keys [deaths] :as dm}]
-                {:cc cc
-                 :f f
-                 :i (c/calculate-ill
-                     {:cc cc :f f :c confirmed :r recovered :d deaths})}))))
+  (apply map
+         (fn [{:keys [cc f confirmed] :as cm}
+             {:keys [recovered] :as rm}
+             {:keys [deaths] :as dm}]
+           {:cc cc
+            :f f
+            :i (c/calculate-ill
+                {:cc cc :f f :c confirmed :r recovered :d deaths})})
+         (map for-case [:confirmed :recovered :deaths])))

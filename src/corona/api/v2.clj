@@ -24,7 +24,7 @@
 (defn url [] (str url-all
                     #_"&country_code=US"))
 
-(def time-to-live "In minutes" (* 24 60)) ;; the whole day - I'm deving...
+(def time-to-live "In minutes" 15)
 
 (defn data [] (c/get-json (url)))
 
