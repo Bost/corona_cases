@@ -13,6 +13,10 @@ echo "APP" $APP
 echo "REMOTE" $REMOTE
 echo ""
 
+# need to define LEIN_SNAPSHOTS_IN_RELEASE=true because of
+# cljplot "0.0.2-SNAPSHOT"
+heroku config:set LEIN_SNAPSHOTS_IN_RELEASE=true --app $APP
+
 # set dataSoure COVID-19_repo
 set dataSoure coronavirus-tracker-api
 
