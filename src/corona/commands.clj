@@ -66,7 +66,7 @@
 (defn list-stuff [{:keys [chat-id] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
     (list-countries prm)
-    (morse/send-text c/token chat-id com/sorry)))
+    #_(morse/send-text c/token chat-id com/sorry)))
 
 (defn snapshot [{:keys [chat-id] :as prm}]
   (morse/send-text
