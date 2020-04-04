@@ -89,8 +89,8 @@
 (defn references [{:keys [chat-id] :as prm}]
   (morse/send-text c/token chat-id msg/options (msg/references prm)))
 
-(defn language [{:keys [chat-id] :as prm}]
-  (morse/send-text c/token chat-id msg/options (msg/language prm)))
+;; (defn language [{:keys [chat-id] :as prm}]
+;;   (morse/send-text c/token chat-id msg/options (msg/language prm)))
 
 (defn contributors [{:keys [chat-id] :as prm}]
   (morse/send-text
@@ -155,9 +155,9 @@
      {:name msg/s-feedback
       :f (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}
-     {:name msg/s-language
-      :f (fn [chat-id] (language (assoc prm :chat-id chat-id)))
-      :desc "Change language"}
+     ;; {:name msg/s-language
+     ;;  :f (fn [chat-id] (language (assoc prm :chat-id chat-id)))
+     ;;  :desc "Change language"}
      {:name msg/s-references
       :f (fn [chat-id] (references (assoc prm :chat-id chat-id)))
       :desc "Knowledge is power - educate yourself"}]))

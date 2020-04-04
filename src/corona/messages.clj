@@ -27,7 +27,7 @@
    :sick         "Sick"
    :closed       "Closed"
    ;; A文 doesn't get displayed blue as a telegram command. Hmm
-   :language     "lang"
+   ;; :language     "lang"
    :country      "country"
    })
 
@@ -45,21 +45,22 @@
 (def s-recovered    (:recovered    lang-strings))
 (def s-sick         (:sick         lang-strings))
 (def s-closed       (:closed       lang-strings))
-(def s-language     (:language     lang-strings))
-(def cmd-s-country  (format "<%s>" (:country lang-strings)))
+;; (def s-language     (:language     lang-strings))
+;; (def cmd-s-country  (format "<%s>" (:country lang-strings)))
 
-(def lang-de "lang:de")
+;; (def lang-de "lang:de")
 
 (def cmd-names [s-world
                 s-about
                 s-references
-                cmd-s-country
+                #_cmd-s-country
                 s-list
                 s-feedback
 
-                #_s-language
-                #_lang-de
+                ;; s-language
+                ;; lang-de
                 ])
+
 (defn bot-name-formatted []
   (s/replace c/bot-name #"_" "\\\\_"))
 
@@ -170,13 +171,13 @@
 
    (footer prm)))
 
-(defn language [prm]
-  (format
-   "/lang:%s\n/lang:%s\n/lang:%s\n"
-   "sk"
-   "de"
-   "en"
-   (footer prm)))
+;; (defn language [prm]
+;;   (format
+;;    "/lang:%s\n/lang:%s\n/lang:%s\n"
+;;    "sk"
+;;    "de"
+;;    "en"
+;;    (footer prm)))
 
 (defn remember-20-seconds [prm]
   (format "%s\n%s"
