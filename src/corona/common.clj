@@ -1,7 +1,5 @@
 (ns corona.common
-  (:require [clojure.set :as cset]
-            [clojure.string :as s]
-            [corona.api.expdev07 :as data]
+  (:require [clojure.string :as s]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
             [corona.defs :as d]))
@@ -20,10 +18,28 @@
    "Apologies for serving you misleading information previously."
    ""))
 
+;; TODO evaluate web services
+;; https://sheets.googleapis.com/v4/spreadsheets/1jxkZpw2XjQzG04VTwChsqRnWn4-FsHH6a7UHVxvO95c/values/Dati?majorDimension=ROWS&key=AIzaSyAy6NFBLKa42yB9KMkFNucI4NLyXxlJ6jQ
+
+;; https://github.com/iceweasel1/COVID-19-Germany
+
+(def api-data-source
+  "jhu"
+
+  ;; csbs throws:
+  ;; Execution error (ArityException) at cljplot.impl.line/eval34748$fn (line.clj:155).
+  ;; Wrong number of args (0) passed to: cljplot.common/fast-max
+  #_"csbs")
+
+(def api-server
+  #_"localhost:8000"
+  "covid-tracker-us.herokuapp.com"
+  #_"coronavirus-tracker-api.herokuapp.com")
+
+(def time-to-live "In minutes" 15)
+
 (defn lower-case [hm]
-  (->> hm
-       (map (fn [[k v]] [(s/lower-case k) v]))
-       (into {})))
+  (into {} (map (fn [[k v]] [(s/lower-case k) v]) hm)))
 
 (defn country-code
   "Return two letter country code (Alpha-2) according to
@@ -54,15 +70,6 @@
         country (get cr/country-code--country up-cc)]
     (get cr/aliases-inverted up-cc country)))
 
-(defn all-affected-country-codes []
-  (data/all-affected-country-codes))
-
-(defn all-affected-country-names
-  "TODO remove worldwide"
-  []
-  (->> (all-affected-country-codes)
-       (map country-name)))
-
 (defn country-name-aliased [cc]
   (if (in? [
             "VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
@@ -73,11 +80,3 @@
     (country-alias cc)
     (country-name cc)))
 
-(def max-affected-country-name-len
-  (->> (all-affected-country-codes)
-       (map (fn [cc]
-              (country-name-aliased cc )
-              #_(cr/country-name cc)))
-       (sort-by count)
-       last
-       count))

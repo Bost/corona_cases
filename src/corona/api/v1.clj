@@ -1,25 +1,14 @@
 (ns corona.api.v1
   (:require [clojure.core.memoize :as memo]
-            [clojure.set :as cset]
-            [corona.core :as c :refer [read-number]]
-            [corona.defs :as d]
-            [clj-time.coerce :as tc]
-            [clj-time.core :as t]
-            [clj-time.format :as tf]
-            [clj-time.local :as tl]
-
-            )
+            [corona.common :refer [api-server time-to-live]]
+            [corona.core :as c :refer [read-number]])
   (:import java.text.SimpleDateFormat))
 
-(def url-all
-  "http://127.0.0.1:8000/all"
-  #_(str "https://" host (:route api-service)))
+;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true
 
-(defn url [] (str url-all))
+(def url (format "http://%s/all" api-server))
 
-(def time-to-live "In minutes" 15)
-
-(defn data [] (c/get-json (url)))
+(defn data [] (c/get-json url))
 
 (def data-memo (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
 

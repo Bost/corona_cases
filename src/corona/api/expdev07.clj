@@ -1,27 +1,13 @@
 (ns corona.api.expdev07
   (:require [clojure.core.memoize :as memo]
             [clojure.set :as cset]
+            [corona.common :as com :refer [api-server time-to-live]]
             [corona.core :as c :refer [read-number]]
             [corona.defs :as d])
   (:import java.text.SimpleDateFormat))
 
-;; TODO evaluate web services
-;; https://sheets.googleapis.com/v4/spreadsheets/1jxkZpw2XjQzG04VTwChsqRnWn4-FsHH6a7UHVxvO95c/values/Dati?majorDimension=ROWS&key=AIzaSyAy6NFBLKa42yB9KMkFNucI4NLyXxlJ6jQ
+(def url (format "http://%s/all" api-server))
 
-;; https://github.com/iceweasel1/COVID-19-Germany
-(def web-service
-  {:host
-   "covid-tracker-us.herokuapp.com"
-   #_"coronavirus-tracker-api.herokuapp.com"
-   :route "/all"})
-
-(def api-service web-service)
-(def host (:host api-service))
-(def url
-  "http://127.0.0.1:8000/all"
-  #_(str "https://" host (:route api-service)))
-
-(def time-to-live "In minutes" 15)
 (defn data [] (c/get-json url))
 
 (def data-memo (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
@@ -55,6 +41,27 @@
           (.add temp-list x)
           xs))))))
 
+(defn raw-dates []
+  (transduce
+   (comp
+    (map keyname)
+    (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
+    (map (fn [[_ m d y]]
+           (transduce (comp (map left-pad)
+                            (interpose "/"))
+                      str
+                      [y m d])))
+    (xf-sort)
+    (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
+    (map (fn [[_ y m d]]
+           (keyword
+            (transduce (comp (map read-number)
+                             (interpose "/"))
+                       str
+                       [m d y])))))
+   conj []
+   (raw-dates-unsorted)))
+
 (defn all-affected-country-codes
   "Countries with some confirmed, deaths or recovered cases"
   ([] (all-affected-country-codes {:limit-fn identity}))
@@ -87,26 +94,18 @@
         (limit-fn)
         )))
 
-(defn raw-dates []
-  (transduce
-   (comp
-    (map keyname)
-    (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
-    (map (fn [[_ m d y]]
-           (transduce (comp (map left-pad)
-                            (interpose "/"))
-                      str
-                      [y m d])))
-    (xf-sort)
-    (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
-    (map (fn [[_ y m d]]
-           (keyword
-            (transduce (comp (map read-number)
-                             (interpose "/"))
-                       str
-                       [m d y])))))
-   conj []
-   (raw-dates-unsorted)))
+(defn dates
+  ([] (dates {:limit-fn identity}))
+  ([{:keys [limit-fn] :as prm}]
+   (let [sdf (new SimpleDateFormat "MM/dd/yy")]
+     (map (fn [rd] (.parse sdf (keyname rd)))
+          (limit-fn (raw-dates))))))
+
+(def dates-memo (memo/ttl dates {} :ttl/threshold (* time-to-live 60 1000)))
+
+(defn get-last [coll] (first (take-last 1 coll)))
+
+(defn get-prev [coll] (first (take-last 2 coll)))
 
 (defn sums-for-date [case locations raw-date]
   (if (and (empty? locations)
@@ -119,18 +118,6 @@
                      :history))
                + 0
                locations)))
-
-(defn pred-fn [country-code]
-  (fn [loc]
-    (condp = country-code
-      d/worldwide-2-country-code
-      true
-
-      d/default-2-country-code
-      ;; XX comes from the service
-      (= "XX" (:country_code loc))
-
-      (= country-code (:country_code loc)))))
 
 (defn sums-for-case
   "Return sums for a given `case` calculated for every single day
@@ -161,19 +148,6 @@
 (defn recovered [prm] (:r (get-counts-memo prm)))
 (defn ill       [prm] (:i (get-counts-memo prm)))
 
-(defn dates
-  ([] (dates {:limit-fn identity}))
-  ([{:keys [limit-fn] :as prm}]
-   (let [sdf (new SimpleDateFormat "MM/dd/yy")]
-     (map (fn [rd] (.parse sdf (keyname rd)))
-          (limit-fn (raw-dates))))))
-
-(def dates-memo (memo/ttl dates {} :ttl/threshold (* time-to-live 60 1000)))
-
-(defn get-last [coll] (first (take-last 1 coll)))
-
-(defn get-prev [coll] (first (take-last 2 coll)))
-
 (defn eval-fun
   "
   (eval-fun {:fun get-last :pred (pred-fn \"SK\")})
@@ -198,3 +172,33 @@
 (defn last-day
   "Example (last-day {:pred (fn [_] true)})"
   [prm] (eval-fun (assoc prm :fun get-last)))
+
+(defn pred-fn [country-code]
+  (fn [loc]
+    (condp = country-code
+      d/worldwide-2-country-code
+      true
+
+      d/default-2-country-code
+      ;; XX comes from the service
+      (= "XX" (:country_code loc))
+
+      (= country-code (:country_code loc)))))
+
+(defn all-affected-country-names
+  "TODO remove worldwide"
+  []
+  (->> (all-affected-country-codes)
+       (map com/country-name)))
+
+(defn stats-per-country [{:keys [cc] :as prm}]
+  (->> (assoc prm :pred (pred-fn cc))
+       (last-day)
+       (conj {:cn (com/country-name-aliased cc)
+              :cc cc})))
+
+(defn stats-all-affected-countries [prm]
+  (->> (all-affected-country-codes)
+       (map (fn [cc]
+              (stats-per-country (assoc prm :cc cc))))))
+

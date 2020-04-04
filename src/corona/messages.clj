@@ -69,17 +69,6 @@
   ;; TODO (env :home-page)
   "https://corona-cases-bot.herokuapp.com/")
 
-(defn stats-per-country [{:keys [cc] :as prm}]
-  (->> (assoc prm :pred (data/pred-fn cc))
-       (data/last-day)
-       (conj {:cn (com/country-name-aliased cc)
-              :cc cc})))
-
-(defn stats-all-affected-countries [prm]
-  (->> (com/all-affected-country-codes)
-       (map (fn [cc]
-              (stats-per-country (assoc prm :cc cc))))))
-
 (def options {:parse_mode "Markdown" :disable_web_page_preview true})
 
 (defn pred-fn [country-code] (data/pred-fn country-code))

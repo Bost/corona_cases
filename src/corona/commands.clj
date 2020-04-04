@@ -1,12 +1,13 @@
 (ns corona.commands
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
+            [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
             [corona.defs :as d]
-            [corona.pic :as pic]
             [corona.messages :as msg]
+            [corona.pic :as pic]
             [morse.api :as morse]))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
@@ -15,7 +16,7 @@
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
 
-    (when (in? (->> (com/all-affected-country-codes)
+    (when (in? (->> (data/all-affected-country-codes)
                   (into cr/default-affected-country-codes)) country-code)
       (morse/send-photo c/token chat-id (msg/absolute-vals prm))
       (when (in? [d/worldwide-2-country-code
@@ -50,7 +51,7 @@
   (partition-all (/ (count col) 7) col))
 
 (defn list-countries [{:keys [chat-id] :as prm}]
-  (->> (msg/stats-all-affected-countries prm)
+  (->> (data/stats-all-affected-countries prm)
        (sort-by :i <)
        partition-in-chunks
        #_(take 3)

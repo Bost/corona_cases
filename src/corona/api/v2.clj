@@ -2,31 +2,15 @@
   (:require [clj-time.coerce :as tc]
             [clj-time.local :as tl]
             [clojure.core.memoize :as memo]
+            [corona.common :refer [api-data-source api-server time-to-live]]
             [corona.core :as c]))
-
-(def source
-  "jhu"
-
-  ;; csbs throws:
-  ;; Execution error (ArityException) at cljplot.impl.line/eval34748$fn (line.clj:155).
-  ;; Wrong number of args (0) passed to: cljplot.common/fast-max
-  #_"csbs"
-  )
-(def url-all
-  (format "http://%s/v2/locations?source=%s&timelines=true"
-          "localhost:8000"
-          #_"covid-tracker-us.herokuapp.com"
-          #_"coronavirus-tracker-api.herokuapp.com"
-          source))
 
 ;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true
 
-(defn url [] (str url-all
-                    #_"&country_code=US"))
+(def url (format "http://%s/v2/locations?source=%s&timelines=true"
+                 api-server api-data-source))
 
-(def time-to-live "In minutes" 15)
-
-(defn data [] (c/get-json (url)))
+(defn data [] (c/get-json url))
 
 (def data-memo
   #_data
