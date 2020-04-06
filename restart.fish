@@ -1,9 +1,5 @@
 #!/usr/bin/env fish
 
-# examples:
-# ./restart --prod
-# ./restart --test
-
 # set up environment
 set botEnvs $botEnvs --test
 set botEnvs $botEnvs --prod
@@ -17,6 +13,10 @@ else if test $prmEnvName = $botEnvs[2]
 else
     echo "ERROR: Unknown parameter:" $prmEnvName
     echo "Possible values:" $botEnvs
+    echo ""
+    echo "Examples:"
+    echo (status --current-filename) "--prod"
+    echo (status --current-filename) "--test"
     exit 1
 end
 

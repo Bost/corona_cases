@@ -1,12 +1,29 @@
 #!/usr/bin/env fish
 
 # set up environment
-set --local envName corona-cases  # prod
-# set --local envName hokuspokus    # test
+set botEnvs $botEnvs --test
+set botEnvs $botEnvs --prod
+
+set prmEnvName $argv[1]
+
+if test $prmEnvName = $botEnvs[1]
+    set envName hokuspokus
+else if test $prmEnvName = $botEnvs[2]
+    set envName corona-cases
+else
+    echo "ERROR: Unknown parameter:" $prmEnvName
+    echo "Possible values:" $botEnvs
+    echo ""
+    echo "Examples:"
+    echo (status --current-filename) "--prod"
+    echo (status --current-filename) "--test"
+    exit 1
+end
 
 set --local APP $envName"-bot"
 set --local REMOTE "heroku-"$APP
 
+# TODO accept --force from the command line
 # set --local pushFlags "--force"
 
 echo "APP" $APP
