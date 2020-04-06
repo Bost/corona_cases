@@ -12,8 +12,14 @@
                 (t/default-time-zone))
               (tc/from-date date)))
 
-(def temp-file "/tmp/stacked-area.png")
-(def threshold 15000)
+(def temp-file
+  "TODO the picture should not be saved to and read from a file on a filesystem"
+  "/tmp/stacked-area.png")
+
+(def threshold
+  "Country w/ the number of cases less than the threshold are grouped into
+  \"Others\"."
+  15000)
 
 (def sorry-ws
   (str
@@ -37,13 +43,15 @@
   #_"csbs")
 
 (def api-server
-  #_"localhost:8000"
-  "covid-tracker-us.herokuapp.com"
+  "localhost:8000"
+  #_"covid-tracker-us.herokuapp.com"
   #_"coronavirus-tracker-api.herokuapp.com")
 
 (def time-to-live "In minutes" 15)
 
-(defn lower-case [hm]
+(defn lower-case
+  "ABC -> abc"
+  [hm]
   (into {} (map (fn [[k v]] [(s/lower-case k) v]) hm)))
 
 (defn country-code
@@ -75,7 +83,9 @@
         country (get cr/country-code--country up-cc)]
     (get cr/aliases-inverted up-cc country)))
 
-(defn country-name-aliased [cc]
+(defn country-name-aliased
+  "Use an alias; typically a shorter name for some countries"
+  [cc]
   (if (in? [
             "VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
             "MD" "BN" "VE" "VC" "KP" "TZ" "XK" "LA" "SY" "KN" "TT" "AG"
