@@ -1,7 +1,8 @@
 (ns corona.api.v1
   (:require [clojure.core.memoize :as memo]
             [corona.common :refer [api-server time-to-live]]
-            [corona.core :as c])
+            [corona.core :as c]
+            [net.cgrand.xforms :as x])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
@@ -47,20 +48,43 @@
     ;; "IN" "ES" "CO" "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"
     })
 
+
+(defn xf-for-case
+  "TODO
+  'transducer' for flatten - see https://clojuredocs.org/clojure.core/mapcat"
+  [case]
+  (let [xform (comp (filter (fn [loc]
+                              true
+                              #_(corona.core/in? ccs (:country_code loc))))
+                    (map (fn [loc]
+                           (let [cc (:country_code loc)]
+                             (->> (sort-by
+                                   :f
+                                   (map (fn [[f v]] {:cc cc :f (fmt f) case v})
+                                        (:history loc)))
+                                  #_(take-last 3))))))
+        coll (transduce xform into []
+                        (get-in (data-memo) [case :locations]))]
+    (let [xform (comp (x/by-key :f (x/into []))
+                      (map (fn [[f hms]]
+                             (map (fn [[cc hms]]
+                                    {:cc cc :f f case (reduce + (map case hms))})
+                                  (group-by :cc hms)))))]
+      (sort-by :cc
+               (transduce xform into [] coll)))))
+
 (defn for-case [case]
   (->> (get-in (data-memo) [case :locations])
        (filter (fn [loc]
                  true
-                 #_(corona.core/in? ccs (:country_code loc))))
+                 (corona.core/in? ccs (:country_code loc))))
        (map (fn [loc]
               (let [cc (:country_code loc)]
                 (->> (sort-by
                       :f
-                      (map (fn [[f v]] {:cc cc :rf f :f (fmt f) case v})
+                      (map (fn [[f v]] {:cc cc :f (fmt f) case v})
                            (:history loc)))
-                     #_(take-last
-                      #_2
-                      2)))))
+                     (take-last 3)))))
        (flatten)
        (group-by :f)
        (map (fn [[f hms]]
@@ -80,4 +104,4 @@
               #_prm
               (dissoc prm :c)
               :i (c/calculate-ill prm))))
-         (map for-case [:confirmed :recovered :deaths])))
+         (map xf-for-case [:confirmed :recovered :deaths])))
