@@ -23,26 +23,22 @@
 
 (defn sort-by-last-val [mapped-hm]
   (let [order (->> mapped-hm
-                   (map (fn [[country hms]] [country (second (last hms))]))
+                   (map (fn [[cc hms]] [cc (second (last hms))]))
                    (sort-by second)
                    (reverse)
                    (map first))]
-    (->> order
-         (map (fn [country]
-                {country (get mapped-hm country)}))
-         (reduce into []))))
-
+    (transduce (map (fn [cc] {cc (get mapped-hm cc)}))
+               into []
+               order)))
 
 (def data
   (v1/pic-data)
   #_(v2/pic-data))
 
 (defn sum-for-pred [{:keys [cc]}]
-  (let [pred-fn (fn [hm] (if cc
-                          (= cc (:cc hm))
-                          true))]
-    (->> #_data
-         (v1/pic-data)
+  (let [pred-fn (fn [hm] (if cc (= cc (:cc hm)) true))]
+    (->> data
+         #_(v1/pic-data)
          (filter pred-fn)
          (group-by :f)
          (map (fn [[f hms]]
@@ -51,21 +47,11 @@
                    ;; {:cc cc :f f :case :c :cnt (reduce + (map :c hms))}
                    {:cc cc :f f :case :r :cnt (reduce + (map :r hms))}
                    {:cc cc :f f :case :d :cnt (reduce + (map :d hms))}
-                   {:cc cc :f f :case :i :cnt (reduce + (map :i hms))}
-                   ]))
+                   {:cc cc :f f :case :i :cnt (reduce + (map :i hms))}]))
          flatten)))
 
 (defn calc-json-data-for-pred [prm]
-  (let [hm-kw (group-by :case (sum-for-pred prm))
-        hm    (reduce into {}
-                      (map (fn [[case-kw case-vals]]
-                             {(get {
-                                    ;; :c "Confirmed"
-                                    :r "Recovered"
-                                    :d "Deaths"
-                                    :i "Sick"} case-kw)
-                                     case-vals})
-                           hm-kw))
+  (let [hm (group-by :case (sum-for-pred prm))
         mapped-hm
         (map-kv (fn [entry]
                   (sort-by first
@@ -73,9 +59,15 @@
                                   [(to-java-time-local-date f) cnt])
                                 entry)))
                 hm)]
-    #_(sort-by-country-name mapped-hm)
-    (reverse
-     (sort-by-last-val mapped-hm))))
+    (transduce (map (fn [[case-kw v]]
+                      {(get {:i "Sick" :d "Deaths" :r "Recovered"
+                             #_#_:c "Confirmed"} case-kw) v}))
+               into []
+               ;; sort - keep the "color order" of cases fixed; don't
+               ;; recalculate it
+               (reverse (transduce (map (fn [case] {case (get mapped-hm case)}))
+                                   into []
+                                   [:i :r :d #_:c])))))
 
 (defn label [cc]
   (format
@@ -121,8 +113,7 @@
               (b/add-label :top (label cc)
                            {:color (c/darken :steelblue) :font-size 14})
               (b/add-legend "" legend)
-              (r/render-lattice {:width 800 :height 600}))
-          ]
+              (r/render-lattice {:width 800 :height 600}))]
       #_(-> render-res
             (save "/tmp/stacked-area.png")
             #_(show))
@@ -162,7 +153,9 @@
 (defn calc-json-data [threshold]
   (let [hm (group-by :cn
                      (map (fn [{:keys [cc] :as hm}]
-                            (assoc hm :cn (com/country-alias cc)))
+                            #_hm
+                            (assoc hm :cn cc)
+                            #_(assoc hm :cn (com/country-alias cc)))
                           (fill-rest threshold)))
         mapped-hm
         (map-kv (fn [entry]
@@ -171,8 +164,12 @@
                                   [(to-java-time-local-date f) i])
                                 entry)))
                 hm)]
-    #_(sort-by-country-name mapped-hm)
-    (sort-by-last-val mapped-hm)))
+    (sort-by-last-val
+     #_sort-by-country-name
+     (transduce
+      (map (fn [[cc v]] {(com/country-alias cc) v}))
+      into {}
+      mapped-hm))))
 
 (defn show-pic [threshold]
   (let [json-data (calc-json-data threshold)
