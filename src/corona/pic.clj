@@ -77,6 +77,19 @@
     (reverse
      (sort-by-last-val mapped-hm))))
 
+(defn label [cc]
+  (format
+   "%s; %s: %s"
+   ((comp com/fmt-date :f last) data)
+   cc/bot-name
+   (if cc
+     (format "Stats for %s %s"
+             (com/country-name-aliased cc)
+             (com/encode-cmd cc))
+     (format "Stats %s %s"
+             (com/country-name-aliased d/worldwide-2-country-code)
+             (com/encode-cmd d/worldwide-2-country-code)))))
+
 (defn show-pic-for-pred [{:keys [cc] :as prm}]
   (let [json-data (calc-json-data-for-pred prm)
         palette (cycle
@@ -105,13 +118,7 @@
               (b/add-axes :left)
               #_(b/add-label :bottom "Date")
               #_(b/add-label :left "Sick")
-              (b/add-label :top (format
-                                 "%s; %s: %s"
-                                 ((comp com/fmt-date :f last) data)
-                                 cc/bot-name
-                                 (if cc
-                                   (str "Stats for " cc)
-                                   (str "Stats wordlwide")))
+              (b/add-label :top (label cc)
                            {:color (c/darken :steelblue) :font-size 14})
               (b/add-legend "" legend)
               (r/render-lattice {:width 800 :height 600}))

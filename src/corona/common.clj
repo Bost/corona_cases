@@ -7,6 +7,15 @@
             [clj-time.format :as tf]
             [corona.defs :as d]))
 
+(defn encode-cmd [s] (str "/" s))
+
+(defn encode-pseudo-cmd [s parse_mode]
+  (if (= parse_mode "HTML")
+    (let [s (s/replace s "<" "&lt;")
+          s (s/replace s ">" "&gt;")]
+      s)
+    s))
+
 (defn fmt-date [date]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                 (t/default-time-zone))

@@ -72,15 +72,6 @@
 
 (defn pred-fn [country-code] (data/pred-fn country-code))
 
-(defn encode-cmd [s] (str "/" s))
-
-(defn encode-pseudo-cmd [s parse_mode]
-  (if (= parse_mode "HTML")
-    (let [s (s/replace s "<" "&lt;")
-          s (s/replace s ">" "&gt;")]
-      s)
-    s))
-
 (defn get-percentage
   ([place total-count] (get-percentage :normal place total-count))
   ([mode place total-count]
@@ -145,8 +136,8 @@
     (str
      ;; "Try" spacer
      (->> cmd-names
-          (map encode-cmd)
-          (map (fn [cmd] (encode-pseudo-cmd cmd parse_mode)))
+          (map com/encode-cmd)
+          (map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer)))))
 
 (defn references [prm]
@@ -231,7 +222,7 @@
                             separator
                             (c/right-pad (str deaths) 5)
                             (c/right-pad country-name 17)
-                            (->> country-code encode-cmd s/lower-case)
+                            (->> country-code com/encode-cmd s/lower-case)
                             ))))
            #_(partition-all 2)
            #_(map (fn [part] (s/join "       " part)))))
@@ -258,7 +249,7 @@
     (header prm)
     (com/country-name-aliased country-code)
     (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
-           (map (fn [s] (->> s s/lower-case encode-cmd))
+           (map (fn [s] (->> s s/lower-case com/encode-cmd))
                 [country-code
                  (cr/country-code-3-letter country-code)])))
    (str "Day " (count (data/raw-dates)))
@@ -287,7 +278,7 @@
                                (link "mortality rate" ref-mortality-rate prm))
                  #_(format " See %s and %s"
                            (link "mortality rate" ref-mortality-rate prm)
-                           (encode-cmd s-references))})
+                           (com/encode-cmd s-references))})
            (fmt {:s s-closed :n closed :total confirmed :diff dclosed
                  :calc-rate true
                  :desc (format "= %s + %s"
@@ -316,7 +307,7 @@
                          (format-last-day prm)
                          c/bot-name
                          (com/country-name-aliased country-code)
-                         (encode-cmd s-about))
+                         (com/encode-cmd s-about))
           :render-style :area
           :legend {:position :inside-nw}
           ;; :x-axis {:title "Date"}
@@ -361,9 +352,9 @@
                 "Send a %s if you need this feature.\n")
            (link "CSSEGISandData/COVID-19"
                  "https://github.com/CSSEGISandData/COVID-19.git" prm)
-           (encode-cmd s-feedback))
+           (com/encode-cmd s-feedback))
 
-   (format "- %s\n" (encode-cmd s-contributors))
+   (format "- %s\n" (com/encode-cmd s-contributors))
    "\n"
 
    ;; TODO home page; average recovery time
