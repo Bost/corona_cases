@@ -1,8 +1,9 @@
 (ns corona.api.v1
   (:require [clojure.core.memoize :as memo]
             [corona.common :refer [api-server time-to-live]]
-            [corona.core :as c :refer [read-number]])
-  (:import java.text.SimpleDateFormat))
+            [corona.core :as c])
+  (:import java.text.SimpleDateFormat
+           java.util.TimeZone))
 
 ;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true
 
@@ -22,10 +23,13 @@
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
 ;; avoid creating new class each time the `fmt` function is called
-(defonce sdf (new SimpleDateFormat "MM/dd/yy"))
-(defn fmt [raw-date] (.parse sdf (keyname raw-date)))
+(def sdf (let [sdf (new SimpleDateFormat "MM/dd/yy")]
+           (.setTimeZone sdf (TimeZone/getTimeZone
+                              #_"America/New_York"
+                              "UTC"))
+           sdf))
 
-(defn left-pad [s] (c/left-pad s 2))
+(defn fmt [raw-date] (.parse sdf (keyname raw-date)))
 
 (def ccs
   #{
@@ -44,32 +48,36 @@
     })
 
 (defn for-case [case]
-  (flatten
-   (map (fn [[f hms]]
-          (map (fn [[cc hms]]
-                 {:cc cc :f f case (reduce + (map case hms))})
-               (group-by :cc hms)))
-        (group-by :f (flatten
-                      (map (fn [loc]
-                             (let [cc (:country_code loc)]
-                               (->> (sort-by
-                                     :f
-                                     (map (fn [[f v]] {:cc cc :f (fmt f) case v})
-                                          (:history loc)))
-                                    #_(take-last 20))))
-                           (filter
-                            (fn [loc]
-                              true
-                              #_(corona.core/in? ccs (:country_code loc)))
-                            (get-in (data-memo) [case :locations]))))))))
+  (->> (get-in (data-memo) [case :locations])
+       (filter (fn [loc]
+                 true
+                 #_(corona.core/in? ccs (:country_code loc))))
+       (map (fn [loc]
+              (let [cc (:country_code loc)]
+                (->> (sort-by
+                      :f
+                      (map (fn [[f v]] {:cc cc :rf f :f (fmt f) case v})
+                           (:history loc)))
+                     #_(take-last
+                      #_2
+                      2)))))
+       (flatten)
+       (group-by :f)
+       (map (fn [[f hms]]
+              (map (fn [[cc hms]]
+                     {:cc cc :f f case (reduce + (map case hms))})
+                   (group-by :cc hms))))
+       (flatten)
+       (sort-by :cc)))
 
 (defn pic-data []
   (apply map
          (fn [{:keys [cc f confirmed] :as cm}
              {:keys [recovered] :as rm}
              {:keys [deaths] :as dm}]
-           {:cc cc
-            :f f
-            :i (c/calculate-ill
-                {:cc cc :f f :c confirmed :r recovered :d deaths})})
+           (let [prm {:cc cc :f f :c confirmed :r recovered :d deaths}]
+             (assoc
+              #_prm
+              (dissoc prm :c)
+              :i (c/calculate-ill prm))))
          (map for-case [:confirmed :recovered :deaths])))

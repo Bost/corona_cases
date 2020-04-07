@@ -39,8 +39,8 @@
   #_"csbs")
 
 (def api-server
-  "localhost:8000"
-  #_"covid-tracker-us.herokuapp.com"
+  ;; "localhost:8000"
+  "covid-tracker-us.herokuapp.com"
   #_"coronavirus-tracker-api.herokuapp.com")
 
 (def time-to-live "In minutes" 15)

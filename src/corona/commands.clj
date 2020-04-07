@@ -30,6 +30,14 @@
     (when (in? (->> (data/all-affected-country-codes)
                   (into cr/default-affected-country-codes)) country-code)
       (morse/send-photo c/token chat-id (msg/absolute-vals prm))
+      (morse/send-photo c/token chat-id
+                        (toByteArrayAutoClosable
+                         (if (in? [d/worldwide-2-country-code
+                                   d/worldwide-3-country-code
+                                   d/worldwide]
+                                    country-code)
+                           (pic/show-pic-for-pred {})
+                           (pic/show-pic-for-pred {:cc country-code}))))
       (when (in? [d/worldwide-2-country-code
                   d/worldwide-3-country-code
                   d/worldwide]
