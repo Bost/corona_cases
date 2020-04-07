@@ -5,6 +5,7 @@
             [cljplot.render :as r]
             [clojure.set :as cset]
             [clojure2d.color :as c]
+            [clojure2d.core :as c2d]
             [corona.api.v1 :as v1]
             [corona.common :as com]
             [corona.core :as cc]
@@ -97,21 +98,24 @@
         legend (reverse (map #(vector :rect %2 {:color %1}) pal
                              (keys json-data)))]
     #_(println (pr-str json-data))
-    (let [res (-> (b/series [:grid] [:sarea json-data])
-                  (b/preprocess-series)
-                  (b/update-scale :y :fmt int)
-                  (b/add-axes :bottom)
-                  (b/add-axes :left)
-                  #_(b/add-label :bottom "Date")
-                  #_(b/add-label :left "Sick")
-                  (b/add-label :top (format
-                                     "%s; %s: Sic cases > %s"
-                                     ((comp com/fmt-date :f last) data)
-                                     cc/bot-name
-                                     threshold)
-                               {:color (c/darken :steelblue) :font-size 14})
-                  (b/add-legend "" legend)
-                  (r/render-lattice {:width 800 :height 600})
-                  (save com/temp-file)
-                  #_(show))]
-      res)))
+    (let [render-res
+          (-> (b/series [:grid] [:sarea json-data])
+              (b/preprocess-series)
+              (b/update-scale :y :fmt int)
+              (b/add-axes :bottom)
+              (b/add-axes :left)
+              #_(b/add-label :bottom "Date")
+              #_(b/add-label :left "Sick")
+              (b/add-label :top (format
+                                 "%s; %s: Sic cases > %s"
+                                 ((comp com/fmt-date :f last) data)
+                                 cc/bot-name
+                                 threshold)
+                           {:color (c/darken :steelblue) :font-size 14})
+              (b/add-legend "" legend)
+              (r/render-lattice {:width 800 :height 600}))
+          ]
+      #_(-> render-res
+            (save "/tmp/stacked-area.png")
+            #_(show))
+      (-> render-res (c2d/get-image)))))

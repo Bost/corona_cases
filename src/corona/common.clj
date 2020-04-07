@@ -12,10 +12,6 @@
                 (t/default-time-zone))
               (tc/from-date date)))
 
-(def temp-file
-  "TODO the picture should not be saved to and read from a file on a filesystem"
-  "/tmp/stacked-area.png")
-
 (def threshold
   "Country w/ the number of cases less than the threshold are grouped into
   \"Others\"."

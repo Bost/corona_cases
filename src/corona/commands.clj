@@ -1,6 +1,7 @@
 (ns corona.commands
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
+            [clojure2d.core :as c2d]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.core :as c :refer [in?]]
@@ -8,7 +9,17 @@
             [corona.defs :as d]
             [corona.messages :as msg]
             [corona.pic :as pic]
-            [morse.api :as morse]))
+            [morse.api :as morse])
+  (:import [java.io ByteArrayOutputStream]
+           [java.awt.image BufferedImage]
+           [javax.imageio ImageIO]))
+
+(defn toByteArrayAutoClosable
+  "Thanks to https://stackoverflow.com/a/15414490"
+  [^BufferedImage image]
+  (with-open [out (new ByteArrayOutputStream)]
+    (ImageIO/write image "png" out)
+    (.toByteArray out)))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
@@ -23,11 +34,9 @@
                   d/worldwide-3-country-code
                   d/worldwide]
                  country-code)
-        #_(morse/send-photo c/token chat-id (pic/show-pic 20000))
-        (pic/show-pic com/threshold)
         (morse/send-photo c/token chat-id
-                          (io/input-stream
-                           (io/file com/temp-file)))))))
+                          (toByteArrayAutoClosable
+                           (pic/show-pic com/threshold)))))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
