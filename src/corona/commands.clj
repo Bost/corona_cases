@@ -21,27 +21,25 @@
     (ImageIO/write image "png" out)
     (.toByteArray out)))
 
+(defn worldwide? [country-code]
+  (in? [d/worldwide-2-country-code
+        d/worldwide-3-country-code
+        d/worldwide]
+       country-code))
+
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
     (morse/send-text
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
-
-    (when (in? (->> (data/all-affected-country-codes)
-                  (into cr/default-affected-country-codes)) country-code)
-      (morse/send-photo c/token chat-id (msg/absolute-vals prm))
+    #_(morse/send-photo c/token chat-id (msg/absolute-vals prm))
+    (let [worldwide? (worldwide? country-code)]
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
-                         (if (in? [d/worldwide-2-country-code
-                                   d/worldwide-3-country-code
-                                   d/worldwide]
-                                    country-code)
+                         (if worldwide?
                            (pic/show-pic-for-pred {})
                            (pic/show-pic-for-pred {:cc country-code}))))
-      (when (in? [d/worldwide-2-country-code
-                  d/worldwide-3-country-code
-                  d/worldwide]
-                 country-code)
+      (when worldwide?
         (morse/send-photo c/token chat-id
                           (toByteArrayAutoClosable
                            (pic/show-pic com/threshold)))))))
