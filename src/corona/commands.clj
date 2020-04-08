@@ -32,7 +32,7 @@
     (morse/send-text
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
-    #_(morse/send-photo c/token chat-id (msg/absolute-vals prm))
+    (morse/send-photo c/token chat-id (msg/absolute-vals prm))
     (let [worldwide? (worldwide? country-code)]
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
