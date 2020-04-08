@@ -4,7 +4,7 @@
             [clj-time.format :as tf]
             [clojure.core.memoize :as memo]
             [clojure.string :as s]
-            [com.hypirion.clj-xchart :as chart]
+            #_[com.hypirion.clj-xchart :as chart]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.core :as c]
@@ -291,7 +291,7 @@
 ;; they obey a stack discipline:
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 
-(defn absolute-vals [{:keys [country-code] :as prm}]
+#_(defn absolute-vals [{:keys [country-code] :as prm}]
   (let [line-style {:marker-type :none :render-style :line}
         dates {:x (data/dates)}]
     (-> (chart/xy-chart

@@ -1,10 +1,10 @@
 (ns corona.common
-  (:require [clojure.string :as s]
-            [corona.core :as c :refer [in?]]
-            [corona.countries :as cr]
-            [clj-time.coerce :as tc]
+  (:require [clj-time.coerce :as tc]
             [clj-time.core :as t]
             [clj-time.format :as tf]
+            [clojure.string :as s]
+            [corona.core :as c :refer [in?]]
+            [corona.countries :as cr]
             [corona.defs :as d]))
 
 (defn encode-cmd [s] (str "/" s))

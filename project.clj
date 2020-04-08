@@ -1,5 +1,5 @@
 (defproject corona_cases
-  "1.8.5"
+  "1.8.6"
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"
   :license {:name "Eclipse Public License v1.0"
@@ -17,12 +17,13 @@
    [net.cgrand/xforms       "0.19.2"]
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
 
-   ;; TODO use  instead of com.hypirion/clj-xchart
    ;; https://github.com/generateme/cljplot
-   [cljplot "0.0.2-SNAPSHOT"]
+   [org.clojars.bost/cljplot "0.0.2"]
+
    ;; See also https://github.com/jsa-aerial/hanami
    #_[aerial.hanami "0.12.1"]
-   [com.hypirion/clj-xchart "0.2.0"]
+
+   #_[com.hypirion/clj-xchart "0.2.0"]
 
    ;; internationalization, ISO 3166-1 country codes etc.
    [com.neovisionaries/nv-i18n "1.27"]

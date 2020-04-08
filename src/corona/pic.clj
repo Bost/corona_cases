@@ -1,7 +1,6 @@
 (ns corona.pic
   (:require [cljplot.build :as b]
-            [cljplot.common :refer :all]
-            [cljplot.core :refer :all]
+            [cljplot.common :as plotcom]
             [cljplot.render :as r]
             [clojure.set :as cset]
             [clojure2d.color :as c]
@@ -35,7 +34,10 @@
   (v1/pic-data)
   #_(v2/pic-data))
 
-(defn sum-for-pred [{:keys [cc]}]
+(defn sum-for-pred
+  "Calculate sums for a given country code or all countries if the country code
+  is unspecified"
+  [{:keys [cc]}]
   (let [pred-fn (fn [hm] (if cc (= cc (:cc hm)) true))]
     (->> data
          #_(v1/pic-data)
@@ -52,22 +54,18 @@
 
 (defn calc-json-data-for-pred [prm]
   (let [hm (group-by :case (sum-for-pred prm))
-        mapped-hm
-        (map-kv (fn [entry]
-                  (sort-by first
-                           (map (fn [{:keys [f cnt]}]
-                                  [(to-java-time-local-date f) cnt])
-                                entry)))
-                hm)]
-    (transduce (map (fn [[case-kw v]]
-                      {(get {:i "Sick" :d "Deaths" :r "Recovered"
-                             #_#_:c "Confirmed"} case-kw) v}))
-               into []
-               ;; sort - keep the "color order" of cases fixed; don't
-               ;; recalculate it
-               (reverse (transduce (map (fn [case] {case (get mapped-hm case)}))
-                                   into []
-                                   [:i :r :d #_:c])))))
+        mapped-hm (plotcom/map-kv
+                   (fn [entry]
+                     (sort-by first
+                              (map (fn [{:keys [f cnt]}]
+                                     [(to-java-time-local-date f) cnt])
+                                   entry)))
+                   hm)]
+    ;; sort - keep the "color order" of cases fixed; don't
+    ;; recalculate it
+    (reverse (transduce (map (fn [case] {case (get mapped-hm case)}))
+                        into []
+                        [:i :r :d #_:c]))))
 
 (defn fmt-last-date []
   ((comp com/fmt-date :f last) (sort-by :f data)))
@@ -102,10 +100,21 @@
                          #_:brbg-3
                          #_:ylgnbu-3
                          #_:category20b))))
-        legend (reverse (map #(vector :rect %2 {:color %1}) palette
-                             (keys json-data)))]
-    (let [render-res
-          (-> (b/series [:grid] [:sarea json-data {:palette palette}])
+        legend
+        (reverse
+         (conj (reverse (map #(vector :rect %2 {:color %1}) palette
+                             (map (fn [k] (get {:i "Sick" :d "Deaths" :r "Recovered"
+                                               #_#_:c "Confirmed"} k))
+                                  (keys json-data))))
+               [:line "Sick absolute" {:color :black :stroke {:size 2}}]))]
+    (let [sick-line-data (->> json-data
+                              (filter (fn [[case vs]] (= :i case)))
+                              (reduce into [])
+                              (second))
+          render-res
+          (-> (b/series [:grid]
+                        [:sarea json-data {:palette palette}]
+                        [:line sick-line-data {:color :black :stroke {:size 2}}])
               (b/preprocess-series)
               (b/update-scale :y :fmt int)
               (b/add-axes :bottom)
@@ -159,13 +168,13 @@
                             (assoc hm :cn cc)
                             #_(assoc hm :cn (com/country-alias cc)))
                           (fill-rest threshold)))
-        mapped-hm
-        (map-kv (fn [entry]
-                  (sort-by first
-                           (map (fn [{:keys [f i]}]
-                                  [(to-java-time-local-date f) i])
-                                entry)))
-                hm)]
+        mapped-hm (plotcom/map-kv
+                   (fn [entry]
+                     (sort-by first
+                              (map (fn [{:keys [f i]}]
+                                     [(to-java-time-local-date f) i])
+                                   entry)))
+                   hm)]
     (sort-by-last-val
      #_sort-by-country-name
      (transduce
@@ -177,26 +186,25 @@
   (let [json-data (calc-json-data threshold)
         pal (cycle (c/palette-presets :category20b))
         legend (reverse (map #(vector :rect %2 {:color %1}) pal
-                             (keys json-data)))]
-    #_(println (pr-str json-data))
-    (let [render-res
-          (-> (b/series [:grid] [:sarea json-data])
-              (b/preprocess-series)
-              (b/update-scale :y :fmt int)
-              (b/add-axes :bottom)
-              (b/add-axes :left)
-              #_(b/add-label :bottom "Date")
-              #_(b/add-label :left "Sick")
-              (b/add-label :top (format
-                                 "%s; %s: Sic cases > %s"
-                                 (fmt-last-date)
-                                 cc/bot-name
-                                 threshold)
-                           {:color (c/darken :steelblue) :font-size 14})
-              (b/add-legend "" legend)
-              (r/render-lattice {:width 800 :height 600}))
-          ]
-      #_(-> render-res
-            (save "/tmp/stacked-area.png")
-            #_(show))
-      (-> render-res (c2d/get-image)))))
+                             (keys json-data)))
+        render-res
+        (-> (b/series [:grid]
+                      [:sarea json-data])
+            (b/preprocess-series)
+            (b/update-scale :y :fmt int)
+            (b/add-axes :bottom)
+            (b/add-axes :left)
+            #_(b/add-label :bottom "Date")
+            #_(b/add-label :left "Sick")
+            (b/add-label :top (format
+                               "%s; %s: Sic cases > %s"
+                               (fmt-last-date)
+                               cc/bot-name
+                               threshold)
+                         {:color (c/darken :steelblue) :font-size 14})
+            (b/add-legend "" legend)
+            (r/render-lattice {:width 800 :height 600}))]
+    #_(-> render-res
+          (save "/tmp/stacked-area.png")
+          #_(show))
+    (-> render-res (c2d/get-image))))

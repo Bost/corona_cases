@@ -1,7 +1,5 @@
 (ns corona.commands
-  (:require [clojure.java.io :as io]
-            [clojure.string :as s]
-            [clojure2d.core :as c2d]
+  (:require [clojure.string :as s]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.core :as c :refer [in?]]
@@ -10,9 +8,9 @@
             [corona.messages :as msg]
             [corona.pic :as pic]
             [morse.api :as morse])
-  (:import [java.io ByteArrayOutputStream]
-           [java.awt.image BufferedImage]
-           [javax.imageio ImageIO]))
+  (:import java.awt.image.BufferedImage
+           java.io.ByteArrayOutputStream
+           javax.imageio.ImageIO))
 
 (defn toByteArrayAutoClosable
   "Thanks to https://stackoverflow.com/a/15414490"
@@ -32,7 +30,7 @@
     (morse/send-text
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
-    (morse/send-photo c/token chat-id (msg/absolute-vals prm))
+    #_(morse/send-photo c/token chat-id (msg/absolute-vals prm))
     (let [worldwide? (worldwide? country-code)]
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
