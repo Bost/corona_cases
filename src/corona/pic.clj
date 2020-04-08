@@ -69,10 +69,13 @@
                                    into []
                                    [:i :r :d #_:c])))))
 
+(defn fmt-last-date []
+  ((comp com/fmt-date :f last) (sort-by :f data)))
+
 (defn label [cc]
   (format
    "%s; %s: %s"
-   ((comp com/fmt-date :f last) data)
+   (fmt-last-date)
    cc/bot-name
    (if cc
      (format "Stats for %s %s"
@@ -101,7 +104,6 @@
                          #_:category20b))))
         legend (reverse (map #(vector :rect %2 {:color %1}) palette
                              (keys json-data)))]
-    #_(println (pr-str json-data))
     (let [render-res
           (-> (b/series [:grid] [:sarea json-data {:palette palette}])
               (b/preprocess-series)
@@ -187,7 +189,7 @@
               #_(b/add-label :left "Sick")
               (b/add-label :top (format
                                  "%s; %s: Sic cases > %s"
-                                 ((comp com/fmt-date :f last) data)
+                                 (fmt-last-date)
                                  cc/bot-name
                                  threshold)
                            {:color (c/darken :steelblue) :font-size 14})
