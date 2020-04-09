@@ -100,7 +100,7 @@
              {:keys [deaths] :as dm}]
            (let [prm {:cc cc :f f :c confirmed :r recovered :d deaths}]
              (assoc
-              #_prm
-              (dissoc prm :c)
+              prm
+              #_(dissoc prm :c)
               :i (c/calculate-ill prm))))
          (map xf-for-case [:confirmed :recovered :deaths])))

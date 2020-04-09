@@ -46,7 +46,7 @@
          (map (fn [[f hms]]
                   [
                    ;; confirmed cases is the sum of all others
-                   ;; {:cc cc :f f :case :c :cnt (reduce + (map :c hms))}
+                   {:cc cc :f f :case :c :cnt (reduce + (map :c hms))}
                    {:cc cc :f f :case :r :cnt (reduce + (map :r hms))}
                    {:cc cc :f f :case :d :cnt (reduce + (map :d hms))}
                    {:cc cc :f f :case :i :cnt (reduce + (map :i hms))}]))
@@ -65,7 +65,7 @@
     ;; recalculate it
     (reverse (transduce (map (fn [case] {case (get mapped-hm case)}))
                         into []
-                        [:i :r :d #_:c]))))
+                        [:i :r :d :c]))))
 
 (defn fmt-last-date []
   ((comp com/fmt-date :f last) (sort-by :f data)))
@@ -83,8 +83,13 @@
              (com/country-name-aliased d/worldwide-2-country-code)
              (com/encode-cmd d/worldwide-2-country-code)))))
 
-(defn show-pic-for-pred [{:keys [cc] :as prm}]
+(defn show-pic-for-pred
+  "Colors: https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
+  [{:keys [cc] :as prm}]
   (let [json-data (calc-json-data-for-pred prm)
+        sarea-data (->> json-data
+                        (remove (fn [[case vs]] (= :c case))))
+
         palette (cycle
                  (
                   #_identity
@@ -100,21 +105,35 @@
                          #_:brbg-3
                          #_:ylgnbu-3
                          #_:category20b))))
+        stroke-size 1.5
+        stroke-confirmed {:color (last (c/palette-presets :ylgn-6)) :stroke {:size stroke-size}}
+        stroke-sick {:color :black #_(last (c/palette-presets :gnbu-9))
+                     :stroke {:size stroke-size
+                              :dash [4.0] :dash-phase 2.0
+                              ;; :dash [20.0] :dash-phase 10
+                              ;; :dash [5.0 2.0 2.0 2.0]
+                              ;; :dash [10.0 5.0] :join :miter
+                              }}
         legend
         (reverse
          (conj (reverse (map #(vector :rect %2 {:color %1}) palette
-                             (map (fn [k] (get {:i "Sick" :d "Deaths" :r "Recovered"
-                                               #_#_:c "Confirmed"} k))
-                                  (keys json-data))))
-               [:line "Sick absolute" {:color :black :stroke {:size 2}}]))]
+                             (map (fn [k] (get {:i "Sick" :d "Deaths" :r "Recovered"} k))
+                                  (keys sarea-data))))
+               [:line "Confirmed"     stroke-confirmed]
+               [:line "Sick absolute" stroke-sick]))]
     (let [sick-line-data (->> json-data
                               (filter (fn [[case vs]] (= :i case)))
                               (reduce into [])
                               (second))
+          confirmed-line-data (->> json-data
+                                   (filter (fn [[case vs]] (= :c case)))
+                                   (reduce into [])
+                                   (second))
           render-res
           (-> (b/series [:grid]
-                        [:sarea json-data {:palette palette}]
-                        [:line sick-line-data {:color :black :stroke {:size 2}}])
+                        [:sarea sarea-data {:palette palette}]
+                        [:line confirmed-line-data stroke-confirmed]
+                        [:line sick-line-data stroke-sick])
               (b/preprocess-series)
               (b/update-scale :y :fmt int)
               (b/add-axes :bottom)
