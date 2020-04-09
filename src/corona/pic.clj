@@ -2,6 +2,9 @@
   (:require [cljplot.build :as b]
             [cljplot.common :as plotcom]
             [cljplot.render :as r]
+            ;; XXX cljplot.core must be required otherwise an empty plot is
+            ;; shown. WTF?
+            [cljplot.core]
             [clojure.set :as cset]
             [clojure2d.color :as c]
             [clojure2d.core :as c2d]
@@ -144,6 +147,8 @@
                            {:color (c/darken :steelblue) :font-size 14})
               (b/add-legend "" legend)
               (r/render-lattice {:width 800 :height 600}))]
+      #_(def sick-line sick-line-data)
+      #_(def sarea sarea-data)
       #_(-> render-res
             (save "/tmp/stacked-area.png")
             #_(show))
