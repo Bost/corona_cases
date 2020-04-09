@@ -14,6 +14,14 @@
             [corona.defs :as d])
   (:import [java.time LocalDate ZoneId]))
 
+(defn metrix-prefix-unit
+  "Show 1K instead of 1000; i.e. kilo, mega etc.
+  See https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes"
+  [v]
+  #_(int v)
+  #_(str (int (/ v 1000)) "k")
+  (str (/ v (* 1000 1000)) "M"))
+
 (defn to-java-time-local-date [java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date)
                        (ZoneId/systemDefault)
@@ -138,7 +146,7 @@
                         [:line confirmed-line-data stroke-confirmed]
                         [:line sick-line-data stroke-sick])
               (b/preprocess-series)
-              (b/update-scale :y :fmt int)
+              (b/update-scale :y :fmt metrix-prefix-unit)
               (b/add-axes :bottom)
               (b/add-axes :left)
               #_(b/add-label :bottom "Date")
@@ -215,7 +223,7 @@
         (-> (b/series [:grid]
                       [:sarea json-data])
             (b/preprocess-series)
-            (b/update-scale :y :fmt int)
+            (b/update-scale :y :fmt metrix-prefix-unit)
             (b/add-axes :bottom)
             (b/add-axes :left)
             #_(b/add-label :bottom "Date")
