@@ -24,7 +24,7 @@
 (def threshold
   "Country w/ the number of cases less than the threshold are grouped into
   \"Others\"."
-  15000)
+  20000)
 
 (def sorry-ws
   (str
