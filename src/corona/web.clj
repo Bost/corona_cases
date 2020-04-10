@@ -8,7 +8,7 @@
             [compojure.route :as route]
             [corona.common :as com]
             [corona.api.beds :as beds]
-            [corona.core :as c :refer [bot-type chat-id token]]
+            [corona.core :as c :refer [chat-id token]]
             [corona.telegram :as telegram]
             [environ.core :refer [env]]
             [ring.adapter.jetty :as jetty]))
@@ -117,9 +117,11 @@
        (route/not-found (slurp (io/resource "404.html")))))
 
 (defn webapp [& [port]]
-  (log/info (str "Starting " bot-type " webapp..."))
+  (log/info (str "Starting " c/env-type " webapp..."))
   (let [port (Integer. (or port (env :port)
-                           (if (= c/bot-type "PROD") 5000 5050)))]
+                           (cond c/env-prod? 5000
+                                 ;; keep port-nr in sync with README.md
+                                 :else 5050)))]
     (jetty/run-jetty (site #'app) {:port port :join? false})))
 
 (defn -main [& [port]]

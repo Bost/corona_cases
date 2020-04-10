@@ -64,10 +64,6 @@
 (defn bot-name-formatted []
   (s/replace c/bot-name #"_" "\\\\_"))
 
-(def home-page
-  ;; TODO (env :home-page)
-  "https://corona-cases-bot.herokuapp.com/")
-
 (def options {:parse_mode "Markdown" :disable_web_page_preview true})
 
 (defn pred-fn [country-code] (data/pred-fn country-code))
@@ -357,10 +353,15 @@
    (format "- %s\n" (com/encode-cmd s-contributors))
    "\n"
 
-   ;; TODO home page; average recovery time
    #_(str
       "\n"
-      " - " (link "Home page" home-page prm))
+      " - " (link "Home page"
+                  (def home-page
+                    (cond
+                      c/env-prod? "https://corona-cases-bot.herokuapp.com/"
+                      c/env-test? "https://hokuspokus-bot.herokuapp.com/"
+                      :else "http://localhost:5050"))
+                  prm))
    (footer prm)))
 
 (def bot-description

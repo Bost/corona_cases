@@ -5,15 +5,11 @@
             [clojure.string :as s]
             [clojure.tools.logging :as log]
             [corona.commands :as cmds]
-            [corona.core :as c]
+            [corona.core :as c :refer [bot-ver token env-type]]
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
             [morse.polling-patch :as p-patch]))
-
-(def bot-type c/bot-type)
-(def bot-ver c/bot-ver)
-(def token c/token)
 
 (def chats (atom #{}))
 
@@ -45,15 +41,14 @@
    (let [running (async/chan)
          updates (p-patch/create-producer-with-handle
                   running token opts (fn []
-                                       (when (= bot-type "PROD")
-                                         (System/exit 2))))]
+                                       (when c/env-prod? (System/exit 2))))]
      (println "Polling on handler" handler "...")
      (p/create-consumer updates handler)
      running)))
 
 (defn -main [& args]
   (log/info (str "[" (te/tnow) " " bot-ver "]")
-            (str "Starting " bot-type " Telegram Chatbot..."))
+            (str "Starting " env-type " Telegram Chatbot..."))
   (let [blank-prms (filter #(-> % env s/blank?) [:telegram-token])]
     (when (not-empty blank-prms)
       (log/fatal (str "Undef environment var(s): " blank-prms))

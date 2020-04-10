@@ -17,7 +17,14 @@
   (boolean (some (fn [e] (= elm e)) seq)))
 
 (def project-name "corona_cases") ;; see project.clj: defproject
+
 (def token (env :telegram-token))
+
+(def env-type (env :corona-env-type))
+(def env-prod?  (= env-type "PROD"))
+(def env-test?  (= env-type "TEST"))
+(def env-devel? (= env-type "DEVEL"))
+
 (def chat-id "112885364")
 (def bot-name (str "@" project-name "_bot"))
 
@@ -31,12 +38,6 @@
       suffix
       (throw (Exception.
               (format "Unrecognized TELEGRAM_TOKEN suffix: %s" suffix))))))
-
-(def bot-type
-  (let [suffix (telegram-token-suffix)]
-    (case suffix
-      "Fq8" "PROD"
-      "MR8" "TEST")))
 
 (def project-ver
   (let [pom-props
@@ -53,7 +54,7 @@
 (def bot-ver
   (format "%s-%s" project-ver (env :bot-ver)))
 
-(def bot (str bot-ver ":" bot-type))
+(def bot (str bot-ver ":" env-type))
 
 (defn fix-octal-val
   "(read-string s-day \"08\") produces a NumberFormatException

@@ -34,6 +34,11 @@ echo ""
 # cljplot "0.0.2-SNAPSHOT"
 # heroku config:set LEIN_SNAPSHOTS_IN_RELEASE=true --app $APP
 # heroku config:unset LEIN_SNAPSHOTS_IN_RELEASE --app $APP
+# heroku config:set CORONA_ENV_TYPE="PROD"  --app $APP
+# heroku config:set CORONA_ENV_TYPE="TEST"  --app $APP
+# heroku config:set CORONA_ENV_TYPE="DEVEL" --app $APP
+# heroku config:set PORT="..."              --app $APP # optional
+# heroku config:set HOME_PAGE="..."         --app $APP
 
 # set dataSoure COVID-19_repo
 set dataSoure coronavirus-tracker-api

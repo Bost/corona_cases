@@ -47,10 +47,12 @@
   ;; Wrong number of args (0) passed to: cljplot.common/fast-max
   #_"csbs")
 
-(def api-server
-  ;; "localhost:8000"
+(def heroku-host-api-server
   "covid-tracker-us.herokuapp.com"
   #_"coronavirus-tracker-api.herokuapp.com")
+
+(def api-server  (cond (or c/env-prod? c/env-test?) heroku-host-api-server
+                       :else                        "localhost:8000"))
 
 (def time-to-live "In minutes" 15)
 

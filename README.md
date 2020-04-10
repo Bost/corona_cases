@@ -9,22 +9,22 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 
 ![Screenshot](/resources/pics/screenshot_40-percents.jpg)
 
-## API web services
-
 ## Running locally
+Start Clojure REPL:
 ```fish
 lein repl
 ```
-
+Start telegram chatbot:
 ```clojure
-(require 'corona.web)
-(def server (corona.web/-main))
-
 (require '[corona.telegram])
 (corona.telegram/-main)
 ```
-
-See [localhost:5000](http://localhost:5000/).
+Start web server:
+```clojure
+(require 'corona.web)
+(corona.web/-main)
+```
+Then check the [http://localhost:5050/](http://localhost:5050/)
 
 ## Deploy to Heroku
 Using fish-shell: see [deploy.fish](./deploy.fish).
@@ -39,5 +39,7 @@ Using fish-shell: see [deploy.fish](./deploy.fish).
 - Use buttons instead of `/<command-name>`
 - Don't panic: Compare data: Corona vs. Flu vs. World population and Show deaths
   rates distribution by age / age-groups; probability calculator
-- Create web-service under https://corona-cases-bot.herokuapp.com/ even for own
-  use
+- Create API web service(s) even for own use
+- Create home page providing extensive information
+- Tables - show: average recovery time, cases in % of population
+
