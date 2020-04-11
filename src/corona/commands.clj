@@ -6,7 +6,7 @@
             [corona.countries :as cr]
             [corona.defs :as d]
             [corona.messages :as msg]
-            [corona.pic :as pic]
+            [corona.plot :as p]
             [morse.api :as morse])
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
@@ -35,12 +35,12 @@
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
                          (if worldwide?
-                           (pic/show-pic-for-pred {})
-                           (pic/show-pic-for-pred {:cc country-code}))))
+                           (p/plot-country {})
+                           (p/plot-country {:cc country-code}))))
       (when worldwide?
         (morse/send-photo c/token chat-id
                           (toByteArrayAutoClosable
-                           (pic/show-pic com/threshold)))))))
+                           (p/plot-all-countries-ill com/threshold)))))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

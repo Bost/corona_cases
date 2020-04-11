@@ -1,4 +1,4 @@
-(ns corona.pic
+(ns corona.plot
   (:require [cljplot.build :as b]
             [cljplot.common :as plotcom]
             [cljplot.render :as r]
@@ -63,7 +63,7 @@
                    {:cc cc :f f :case :i :cnt (reduce + (map :i hms))}]))
          flatten)))
 
-(defn calc-json-data-for-pred [prm]
+(defn stats-for-country [prm]
   (let [hm (group-by :case (sum-for-pred prm))
         mapped-hm (plotcom/map-kv
                    (fn [entry]
@@ -94,10 +94,10 @@
              (com/country-name-aliased d/worldwide-2-country-code)
              (com/encode-cmd d/worldwide-2-country-code)))))
 
-(defn show-pic-for-pred
+(defn plot-country
   "Colors: https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
   [{:keys [cc] :as prm}]
-  (let [json-data (calc-json-data-for-pred prm)
+  (let [json-data (stats-for-country prm)
         sarea-data (->> json-data
                         (remove (fn [[case vs]] (= :c case))))
 
@@ -120,11 +120,10 @@
         stroke-confirmed {:color (last (c/palette-presets :ylgn-6)) :stroke {:size stroke-size}}
         stroke-sick {:color :black #_(last (c/palette-presets :gnbu-9))
                      :stroke {:size stroke-size
-                              :dash [4.0] :dash-phase 2.0
                               ;; :dash [20.0] :dash-phase 10
                               ;; :dash [5.0 2.0 2.0 2.0]
                               ;; :dash [10.0 5.0] :join :miter
-                              }}
+                              :dash [4.0] :dash-phase 2.0}}
         legend
         (reverse
          (conj (map #(vector :rect %2 {:color %1}) palette
@@ -193,7 +192,7 @@
                           (cset/union hms)))
                  (group-by :f sum-below-threshold)))))
 
-(defn calc-json-data [threshold]
+(defn stats-all-countries-ill [threshold]
   (let [hm (group-by :cn
                      (map (fn [{:keys [cc] :as hm}]
                             #_hm
@@ -214,8 +213,8 @@
       into {}
       mapped-hm))))
 
-(defn show-pic [threshold]
-  (let [json-data (calc-json-data threshold)
+(defn plot-all-countries-ill [threshold]
+  (let [json-data (stats-all-countries-ill threshold)
         pal (cycle (c/palette-presets :category20b))
         ;; TODO add country codes (on a new line)
         ;; TODO rename Others -> Rest

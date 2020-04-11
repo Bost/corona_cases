@@ -34,6 +34,7 @@ Using fish-shell: see [deploy.fish](./deploy.fish).
   -- better user experience - show:
      only interpolated graphs
      relative numbers (e.g. percentage)
+     doubling time as in the spiegel.de
      logarithmic scale
 - Prediction - extrapolate graphs
 - Use buttons instead of `/<command-name>`
@@ -42,4 +43,3 @@ Using fish-shell: see [deploy.fish](./deploy.fish).
 - Create API web service(s) even for own use
 - Create home page providing extensive information
 - Tables - show: average recovery time, cases in % of population
-
