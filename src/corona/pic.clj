@@ -127,9 +127,9 @@
                               }}
         legend
         (reverse
-         (conj (reverse (map #(vector :rect %2 {:color %1}) palette
-                             (map (fn [k] (get {:i "Sick" :d "Deaths" :r "Recovered"} k))
-                                  (keys sarea-data))))
+         (conj (map #(vector :rect %2 {:color %1}) palette
+                    (map (fn [k] (get {:i "Sick" :d "Deaths" :r "Recovered"} k))
+                         (keys sarea-data)))
                [:line "Confirmed"     stroke-confirmed]
                [:line "Sick absolute" stroke-sick]))]
     (let [sick-line-data (->> json-data
