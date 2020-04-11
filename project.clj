@@ -1,5 +1,11 @@
 (defproject corona_cases
-  "1.8.6"
+  ;; see:
+  ;; https://github.com/roomkey/lein-v
+  ;; "Example of Clojure source code version output"
+  ;; and:
+  ;; https://github.com/arrdem/lein-git-version
+  "1.8.7"
+
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"
   :license {:name "Eclipse Public License v1.0"
@@ -10,7 +16,10 @@
    [org.clojure/data.csv    "1.0.0"]
    [compojure               "1.6.1"]
    [ring/ring-jetty-adapter "1.8.0"]
+
+   ;; managing environment variables
    [environ                 "1.1.0"]
+
    [morse                   "0.4.3"]
    [org.clojure/data.json   "1.0.0"]
    [clojure.java-time       "0.3.2"]
@@ -28,12 +37,8 @@
    ;; internationalization, ISO 3166-1 country codes etc.
    [com.neovisionaries/nv-i18n "1.27"]
 
+   ;; parse HTML into Clojure data structures
    [hickory "0.7.1"]]
   :min-lein-version "2.0.0"
-  :plugins
-  [
-   [environ/environ.lein "0.3.1"]
-   ]
-  :hooks [environ.leiningen.hooks]
   :uberjar-name "corona_cases-standalone.jar"
   :profiles {:production {:env {:production true}}})
