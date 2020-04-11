@@ -226,6 +226,7 @@
      (footer prm))))
 
 (def list-countries-memo
+  #_list-countries
   (memo/ttl list-countries {} :ttl/threshold (* 60 60 1000)))
 
 (defn info
