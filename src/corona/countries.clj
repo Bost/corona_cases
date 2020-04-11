@@ -114,8 +114,6 @@
   \"Jersey\" has higher population.
 
   \"Others\" has no mapping.
-
-  TODO \"Macau\" is probably just misspelled \"Macao\". Report it to CSSEGISandData/COVID-19.
   "
   {
    "World"                            (cn d/worldwide-2-country-code)
@@ -131,7 +129,6 @@
 
    "US"                               (cn "US") ; "United States"
 
-   ;; TODO Macau is probably just misspelled Macao. Report it to CSSEGISandData/COVID-19
    "Macau"                            (cn "MO")
    "Macao SAR"                        (cn "MO") ; "Macao"
 
