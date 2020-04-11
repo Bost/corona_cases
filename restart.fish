@@ -1,31 +1,37 @@
 #!/usr/bin/env fish
 
-# set up environment
-set botEnvs --test --prod
+# set up the environment
+set hostEnvs --test --prod
 
 set prmEnvName $argv[1]
+set restArgs   $argv[2..-1]
 
 # TODO see https://github.com/jorgebucaran/fish-getopts
 switch $prmEnvName
-    case $botEnvs[1]
+    case $hostEnvs[1]
         set envName hokuspokus
-    case $botEnvs[2]
+    case $hostEnvs[2]
         set envName corona-cases
     case \*
-        printf "ERROR: Unknown parameter: %s\n" $prmEnvName
+        printf "ERR: Unknown parameter: %s\n" $prmEnvName
         # w/o the '--' every list element gets printed on a separate line
         # as if invoked in a for-loop. WTF?
-        printf "Possible values: %s\n" (string join -- ", " $botEnvs)
+        printf "Possible values: %s\n" (string join -- ", " $hostEnvs)
         printf "\n"
         printf "Examples:\n"
-        for botEnv in $botEnvs
-            printf "%s %s\n" (status --current-filename) $botEnv
+        for hostEnv in $hostEnvs
+            printf "%s %s\n" (status --current-filename) $hostEnv
         end
         exit 1
 end
 
 set APP $envName"-bot"
 set REMOTE "heroku-"$APP
+
+printf "DBG: APP: %s\n"    $APP
+printf "DBG: REMOTE: %s\n" $REMOTE
+printf "DBG: restArgs: %s\n" (string join -- " " $restArgs)
+printf "\n"
 
 set cmd heroku ps:scale web=0 --app $APP
 echo $cmd
