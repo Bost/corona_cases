@@ -99,18 +99,15 @@
    " " max-diff-order-of-magnitude))
 
 (defn fmt-to-cols
-  "Print the numbers aligned to columns for better readability"
+  "Info-message numbers of aligned to columns for better readability"
   [{:keys [s n total diff desc calc-rate]}]
   (format "<code>%s %s %s %s</code> %s"
           (c/right-pad s " " 9) ; stays constant
           ;; count of digits to display. Increase it when the number of cases
           ;; increases by an order of magnitude
           (c/left-pad n " " 7)
-          (c/left-pad
-           (if calc-rate
-             (str (get-percentage n total) "%")
-             " ")
-             " " 4)
+          (c/left-pad (if calc-rate (str (get-percentage n total) "%") " ")
+                      " " 4)
           (plus-minus diff)
           desc))
 
@@ -190,44 +187,42 @@
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 
 (defn list-countries [{:keys [data] :as prm}]
-  (let [separator " "
-        omag-ill       6 ;; order of magnitude i.e. number of digits
-        omag-recovered omag-ill
-        omag-deaths    (dec omag-ill)]
+  (let [spacer " "
+        omag-ill    6 ;; order of magnitude i.e. number of digits
+        omag-recov  omag-ill
+        omag-deaths (dec omag-ill)]
     (format
      (format (str "%s\n" ; header
                   "%s\n" ; Day
                   "    %s "  ; Sick
-                  "%s"   ; separator
+                  "%s"   ; spacer
                   "%s "  ; Recovered
-                  "%s"   ; separator
+                  "%s"   ; spacer
                   "%s\n" ; Deaths
                   "%s")
              (header prm)
              (str "Day " (count (data/raw-dates)))
              s-sick
-             separator
+             spacer
              s-recovered
-             separator
+             spacer
              s-deaths
              "%s\n\n%s")
      (s/join
       "\n"
-      (->> data
-           #_(take-last 11)
-           (map (fn [data-country]
-                  (let [{ill :i recovered :r deaths :d
-                         country-name :cn country-code :cc} data-country]
-                    (format "<code>%s%s%s%s%s %s</code>  %s"
-                            (c/left-pad (str ill)       " " omag-ill)
-                            separator
-                            (c/left-pad (str recovered) " " omag-recovered)
-                            separator
-                            (c/left-pad (str deaths)    " " omag-deaths)
-                            (c/right-pad country-name 17)
-                            (s/lower-case (com/encode-cmd country-code))))))
-           #_(partition-all 2)
-           #_(map (fn [part] (s/join "       " part)))))
+      (map (fn [stats]
+             (format "<code>%s%s%s%s%s %s</code>  %s"
+                     (c/left-pad (:i stats) " " omag-ill)
+                     spacer
+                     (c/left-pad (:r stats) " " omag-recov)
+                     spacer
+                     (c/left-pad (:d stats) " " omag-deaths)
+                     (c/right-pad (:cn stats) 17)
+                     (s/lower-case (com/encode-cmd (:cc stats)))))
+           (->> data
+                #_(take-last 11)
+                #_(partition-all 2)
+                #_(map (fn [part] (s/join "       " part))))))
      (footer prm))))
 
 (def list-countries-memo
