@@ -18,9 +18,9 @@
   "Show 1K instead of 1000; i.e. kilo, mega etc.
   See https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes"
   [v]
-  #_(int v)
-  #_(str (int (/ v 1000)) "k")
-  (str (/ v (* 1000 1000)) "M"))
+  (int v)
+  #_(str (/ v 1000) "k")
+  #_(str (/ v (* 1000 1000)) "M"))
 
 (defn to-java-time-local-date [java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date)
