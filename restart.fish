@@ -1,23 +1,27 @@
 #!/usr/bin/env fish
 
 # set up environment
-set botEnvs $botEnvs --test
-set botEnvs $botEnvs --prod
+set botEnvs --test --prod
 
 set prmEnvName $argv[1]
 
-if test $prmEnvName = $botEnvs[1]
-    set envName hokuspokus
-else if test $prmEnvName = $botEnvs[2]
-    set envName corona-cases
-else
-    echo "ERROR: Unknown parameter:" $prmEnvName
-    echo "Possible values:" $botEnvs
-    echo ""
-    echo "Examples:"
-    echo (status --current-filename) "--prod"
-    echo (status --current-filename) "--test"
-    exit 1
+# TODO see https://github.com/jorgebucaran/fish-getopts
+switch $prmEnvName
+    case $botEnvs[1]
+        set envName hokuspokus
+    case $botEnvs[2]
+        set envName corona-cases
+    case \*
+        printf "ERROR: Unknown parameter: %s\n" $prmEnvName
+        # w/o the '--' every list element gets printed on a separate line
+        # as if invoked in a for-loop. WTF?
+        printf "Possible values: %s\n" (string join -- ", " $botEnvs)
+        printf "\n"
+        printf "Examples:\n"
+        for botEnv in $botEnvs
+            printf "%s %s\n" (status --current-filename) $botEnv
+        end
+        exit 1
 end
 
 set APP $envName"-bot"
