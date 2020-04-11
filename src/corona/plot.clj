@@ -116,7 +116,11 @@
                          #_:ylgnbu-3
                          #_:category20b))))
 
-        ;; by default line-margins are 5%
+        ;; By default line-margins are 5%. Setting them to [0 0] may not make up
+        ;; for 100% alignment with the axes. There is also some margin in
+        ;; canvas, or some other factors as rounding, aligning, java2d rendering
+        ;; and aligning etc. See
+        ;; https://clojurians.zulipchat.com/#narrow/stream/197967-cljplot-dev/topic/using.20cljplot.20for.20work/near/193681905
         line-cfg {:margins {:y [0 0]}}
 
         stroke-confirmed
