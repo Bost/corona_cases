@@ -102,9 +102,8 @@
                         (remove (fn [[case vs]] (= :c case))))
 
         palette (cycle
-                 (
+                 (reverse
                   #_identity
-                  reverse
                   (take-last 3
                         (c/palette-presets
                          :gnbu-6
@@ -116,14 +115,22 @@
                          #_:brbg-3
                          #_:ylgnbu-3
                          #_:category20b))))
-        stroke-size 1.5
-        stroke-confirmed {:color (last (c/palette-presets :ylgn-6)) :stroke {:size stroke-size}}
-        stroke-sick {:color :black #_(last (c/palette-presets :gnbu-9))
-                     :stroke {:size stroke-size
-                              ;; :dash [20.0] :dash-phase 10
-                              ;; :dash [5.0 2.0 2.0 2.0]
-                              ;; :dash [10.0 5.0] :join :miter
-                              :dash [4.0] :dash-phase 2.0}}
+
+        ;; by default line-margins are 5%
+        line-cfg {:margins {:y [0 0]}}
+
+        stroke-confirmed
+        (conj line-cfg
+              {:color (last (c/palette-presets :ylgn-6)) })
+
+        stroke-sick
+        (conj line-cfg
+              {:color :black #_(last (c/palette-presets :gnbu-9))
+               :stroke {:size 1.5
+                        ;; :dash [20.0] :dash-phase 10
+                        ;; :dash [5.0 2.0 2.0 2.0]
+                        ;; :dash [10.0 5.0] :join :miter
+                        :dash [4.0] :dash-phase 2.0}})
         legend
         (reverse
          (conj (map #(vector :rect %2 {:color %1}) palette
@@ -140,10 +147,15 @@
                                    (reduce into [])
                                    (second))
           render-res
+
+          ;; every chart/series definition is a vector with three fields:
+          ;; chart type e.g. :grid, :sarea, :line
+          ;; data
+          ;; configuration hash-map
           (-> (b/series [:grid]
                         [:sarea sarea-data {:palette palette}]
-                        [:line confirmed-line-data stroke-confirmed]
-                        [:line sick-line-data stroke-sick])
+                        [:line  confirmed-line-data stroke-confirmed]
+                        [:line  sick-line-data stroke-sick])
               (b/preprocess-series)
               (b/update-scale :y :fmt metrix-prefix-unit)
               (b/add-axes :bottom)
