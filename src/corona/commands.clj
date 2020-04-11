@@ -47,22 +47,24 @@
   [col]
   (partition-all (/ (count col) 7) col))
 
-(defn list-countries [{:keys [chat-id] :as prm}]
+
+(defn- by-case-asc      [case-kw coll] (sort-by case-kw < coll))
+(def  by-ill-asc       (fn [coll] (by-case-asc :i coll)))
+(def  by-recovered-asc (fn [coll] (by-case-asc :r coll)))
+(def  by-deaths-asc    (fn [coll] (by-case-asc :d coll)))
+
+(defn list-countries [{:keys [chat-id sort-fn] :as prm}]
   (->> (data/stats-all-affected-countries prm)
-       (sort-by :i <)
-       partition-in-chunks
+       (sort-fn)
+       (partition-in-chunks)
        #_(take 3)
        #_(take-last 1)
        (map (fn [chunk]
               (->> (assoc prm :data chunk)
-                   msg/list-countries-memo
+                   (msg/list-countries-memo)
                    (morse/send-text c/token chat-id
                                     (select-keys prm (keys msg/options))))))
        doall))
-
-(defn list-stuff [{:keys [chat-id] :as prm}]
-  (let [prm (assoc prm :parse_mode "HTML")]
-    (list-countries prm)))
 
 (defn about [{:keys [chat-id] :as prm}]
   (morse/send-text c/token chat-id msg/options (msg/about prm)))
@@ -123,8 +125,13 @@
                                    prm-country-code)))
       :desc msg/s-world-desc}
      {:name msg/s-list
-      :f (fn [chat-id] (list-stuff (conj (assoc prm :chat-id chat-id)
-                                        prm-country-code)))
+      ;; TODO implement also sort by recovered & deaths
+      :f (fn [chat-id] (list-countries
+                       (conj (assoc prm
+                                    :parse_mode "HTML"
+                                    :chat-id chat-id
+                                    :sort-fn by-ill-asc)
+                             prm-country-code)))
       :desc msg/s-list-desc}
      {:name msg/s-start
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)

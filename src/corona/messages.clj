@@ -98,10 +98,14 @@
       n))
    " " max-diff-order-of-magnitude))
 
-(defn fmt [{:keys [s n total diff desc calc-rate]}]
+(defn fmt-to-cols
+  "Print the numbers aligned to columns for better readability"
+  [{:keys [s n total diff desc calc-rate]}]
   (format "<code>%s %s %s %s</code> %s"
-          (c/right-pad s " " 9)
-          (c/left-pad n " " 6)
+          (c/right-pad s " " 9) ; stays constant
+          ;; count of digits to display. Increase it when the number of cases
+          ;; increases by an order of magnitude
+          (c/left-pad n " " 7)
           (c/left-pad
            (if calc-rate
              (str (get-percentage n total) "%")
@@ -186,15 +190,18 @@
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 
 (defn list-countries [{:keys [data] :as prm}]
-  (let [separator " "]
+  (let [separator " "
+        omag-ill       6 ;; order of magnitude i.e. number of digits
+        omag-recovered omag-ill
+        omag-deaths    (dec omag-ill)]
     (format
      (format (str "%s\n" ; header
-                  "%s\n" ; day
-                  "%s "  ; sick
+                  "%s\n" ; Day
+                  "    %s "  ; Sick
                   "%s"   ; separator
-                  "%s "  ; recovered
+                  "%s "  ; Recovered
                   "%s"   ; separator
-                  "%s\n" ; deaths
+                  "%s\n" ; Deaths
                   "%s")
              (header prm)
              (str "Day " (count (data/raw-dates)))
@@ -212,14 +219,13 @@
                   (let [{ill :i recovered :r deaths :d
                          country-name :cn country-code :cc} data-country]
                     (format "<code>%s%s%s%s%s %s</code>  %s"
-                            (c/right-pad (str ill) 6)
+                            (c/left-pad (str ill)       " " omag-ill)
                             separator
-                            (c/right-pad (str recovered) 6)
+                            (c/left-pad (str recovered) " " omag-recovered)
                             separator
-                            (c/right-pad (str deaths) 5)
+                            (c/left-pad (str deaths)    " " omag-deaths)
                             (c/right-pad country-name 17)
-                            (->> country-code com/encode-cmd s/lower-case)
-                            ))))
+                            (s/lower-case (com/encode-cmd country-code))))))
            #_(partition-all 2)
            #_(map (fn [part] (s/join "       " part)))))
      (footer prm))))
@@ -228,7 +234,7 @@
   (memo/ttl list-countries {} :ttl/threshold (* 60 60 1000)))
 
 (defn info
-  "TODO analyze negative diffs for /usa"
+  "Shows the table with the absolute and %-wise number of cases"
   [{:keys [country-code] :as prm}]
   (format
    (str
@@ -255,31 +261,40 @@
          {confirmed :c} last-day
          {dc :c} delta]
      (str
-      (fmt {:s s-confirmed :n confirmed :diff dc
-            :desc "" :calc-rate false}) "\n"
+      (fmt-to-cols {:s s-confirmed :n confirmed :diff dc
+                    :calc-rate false :desc ""})
+      "\n"
       (when (pos? confirmed)
-        (let [{deaths :d recovered :r ill :i} last-day
+        (let [{deaths :d
+               recovered :r
+               ill :i} last-day
               closed (+ deaths recovered)
               {dd :d dr :r di :i} delta
               dclosed (+ dd dr)]
           (format
            "%s\n%s\n%s\n%s\n"
-           (fmt {:s s-sick :n ill :total confirmed :diff di :desc ""
-                 :calc-rate true})
-           (fmt {:s s-recovered :n recovered :total confirmed :diff dr :desc ""
-                 :calc-rate true})
-           (fmt {:s s-deaths :n deaths :total confirmed :diff dd
-                 :calc-rate true
-                 :desc (format " See %s"
-                               (link "mortality rate" ref-mortality-rate prm))
-                 #_(format " See %s and %s"
-                           (link "mortality rate" ref-mortality-rate prm)
-                           (com/encode-cmd s-references))})
-           (fmt {:s s-closed :n closed :total confirmed :diff dclosed
-                 :calc-rate true
-                 :desc (format "= %s + %s"
-                               (s/lower-case s-recovered )
-                               (s/lower-case s-deaths))}))))))
+           (fmt-to-cols
+            {:s s-sick      :n ill       :total confirmed :diff di
+             :calc-rate true
+             :desc ""})
+           (fmt-to-cols
+            {:s s-recovered :n recovered :total confirmed :diff dr
+             :calc-rate true
+             :desc ""})
+           (fmt-to-cols
+            {:s s-deaths    :n deaths    :total confirmed :diff dd
+             :calc-rate true
+             :desc (format " See %s"
+                           (link "mortality rate" ref-mortality-rate prm))
+             #_(format " See %s and %s"
+                       (link "mortality rate" ref-mortality-rate prm)
+                       (com/encode-cmd s-references))})
+           (fmt-to-cols
+            {:s s-closed :n closed :total confirmed :diff dclosed
+             :calc-rate true
+             :desc (format "= %s + %s"
+                           (s/lower-case s-recovered )
+                           (s/lower-case s-deaths))}))))))
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to

@@ -22,8 +22,11 @@
               (tc/from-date date)))
 
 (def threshold
-  "Country w/ the number of cases less than the threshold are grouped into
-  \"Others\"."
+  " Country w/ the number of cases less than the threshold are grouped into
+  \"Rest\".
+  TODO implement adaptive threshold so that max 10 countries are shown in the
+  graph.
+  "
   20000)
 
 (def sorry-ws

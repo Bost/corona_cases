@@ -217,6 +217,8 @@
 (defn show-pic [threshold]
   (let [json-data (calc-json-data threshold)
         pal (cycle (c/palette-presets :category20b))
+        ;; TODO add country codes (on a new line)
+        ;; TODO rename Others -> Rest
         legend (reverse (map #(vector :rect %2 {:color %1}) pal
                              (keys json-data)))
         render-res
