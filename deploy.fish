@@ -24,15 +24,15 @@ switch $prmEnvName
         exit 1
 end
 
-set --local APP $envName"-bot"
-set --local REMOTE "heroku-"$APP
+set APP $envName"-bot"
+set REMOTE "heroku-"$APP
 
 # TODO accept --force from the command line
 # set --local pushFlags "--force"
 
-echo "APP" $APP
-echo "REMOTE" $REMOTE
-echo ""
+printf "APP: %s\n"    $APP
+printf "REMOTE: %s\n" $REMOTE
+printf "\n"
 
 # need to define LEIN_SNAPSHOTS_IN_RELEASE=true because of
 # cljplot "0.0.2-SNAPSHOT"
