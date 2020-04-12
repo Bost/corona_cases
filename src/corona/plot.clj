@@ -41,7 +41,7 @@
                into []
                order)))
 
-(def data
+(def stats-all-countries
   (v1/pic-data)
   #_(v2/pic-data))
 
@@ -50,7 +50,7 @@
   is unspecified"
   [cc]
   (let [pred-fn (fn [hm] (if cc (= cc (:cc hm)) true))]
-    (->> data
+    (->> stats-all-countries
          #_(v1/pic-data)
          (filter pred-fn)
          (group-by :f)
@@ -79,7 +79,7 @@
                         [:i :r :d :c]))))
 
 (defn fmt-last-date []
-  ((comp com/fmt-date :f last) (sort-by :f data)))
+  ((comp com/fmt-date :f last) (sort-by :f stats-all-countries)))
 
 (defn label [cc]
   (format
@@ -143,9 +143,9 @@
           render-res
 
           ;; every chart/series definition is a vector with three fields:
-          ;; chart type e.g. :grid, :sarea, :line
-          ;; data
-          ;; configuration hash-map
+          ;; 1. chart type e.g. :grid, :sarea, :line
+          ;; 2. data
+          ;; 3. configuration hash-map
           (-> (b/series [:grid]
                         [:sarea sarea-data {:palette palette}]
                         [:line  confirmed-line-data stroke-confirmed]
@@ -179,7 +179,7 @@
                   (map (fn [[cc hms]]
                          {:cc cc :f f :i (reduce + (map :i hms))})
                        (group-by :cc hms)))
-                (group-by :f (below threshold data)))))
+                (group-by :f (below threshold stats-all-countries)))))
 
 (defn fill-rest [threshold]
   (let [sum-below-threshold (sum-below threshold)
