@@ -48,7 +48,7 @@
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
   is unspecified"
-  [stats cc]
+  [cc stats]
   (let [pred-fn (fn [hm] (if cc (= cc (:cc hm)) true))]
     (->> stats
          #_(v1/pic-data)
@@ -63,8 +63,8 @@
                    {:cc cc :f f :case :i :cnt (reduce + (map :i hms))}]))
          flatten)))
 
-(defn stats-for-country [stats cc]
-  (let [hm (group-by :case (sum-for-pred stats cc))
+(defn stats-for-country [cc stats]
+  (let [hm (group-by :case (sum-for-pred cc stats))
         mapped-hm (plotcom/map-kv
                    (fn [entry]
                      (sort-by first
@@ -81,7 +81,7 @@
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :f last) (sort-by :f stats)))
 
-(defn label [stats cc]
+(defn label [cc stats]
   (format
    "%s; %s: %s"
    (fmt-last-date stats)
@@ -122,7 +122,7 @@
 
 (defn plot-country [cc]
   (let [stats stats-all-countries
-        json-data (stats-for-country stats cc)
+        json-data (stats-for-country cc stats)
         sarea-data (->> json-data
                         (remove (fn [[case vs]] (= :c case))))
 
@@ -157,7 +157,7 @@
               (b/add-axes :left)
               #_(b/add-label :bottom "Date")
               #_(b/add-label :left "Sick")
-              (b/add-label :top (label stats cc)
+              (b/add-label :top (label cc stats)
                            {:color (c/darken :steelblue) :font-size 14})
               (b/add-legend "" legend)
               (r/render-lattice {:width 800 :height 600}))]
@@ -169,26 +169,27 @@
       (-> render-res (c2d/get-image)))))
 
 
-(defn group-below-threshol
+(defn group-below-threshold
   "Group all countries w/ the number of ill cases below the threshold under the
   `d/default-2-country-code`"
-  [threshold hms]
+  [threshold stats]
   (map (fn [{:keys [i] :as hm}] (if (< i threshold)
                                   (assoc hm :cc d/default-2-country-code)
                                   hm))
-       hms))
+       stats))
 
 (defn sum-ills-by-date
   "Group the country stats by day and sum up the ill cases"
-  [threshold]
+  [threshold stats]
   (flatten (map (fn [[f hms]]
                   (map (fn [[cc hms]]
                          {:cc cc :f f :i (reduce + (map :i hms))})
                        (group-by :cc hms)))
-                (group-by :f (group-below-threshol threshold stats-all-countries)))))
+                (group-by :f (group-below-threshold threshold stats)))))
 
 (defn fill-rest [threshold]
-  (let [sum-ills-by-date-threshold (sum-ills-by-date threshold)
+  (let [stats stats-all-countries
+        sum-ills-by-date-threshold (sum-ills-by-date threshold stats)
         countries-threshold (set (map :cc sum-ills-by-date-threshold))]
     (reduce into []
             (map (fn [[f hms]]
