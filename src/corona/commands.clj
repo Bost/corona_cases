@@ -35,8 +35,8 @@
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
                          (if worldwide?
-                           (p/plot-country {})
-                           (p/plot-country {:cc country-code}))))
+                           (p/plot-country nil)
+                           (p/plot-country country-code))))
       (when worldwide?
         (morse/send-photo c/token chat-id
                           (toByteArrayAutoClosable
