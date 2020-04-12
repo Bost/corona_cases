@@ -1,6 +1,7 @@
 (ns corona.commands
   (:require [clojure.string :as s]
             [corona.api.expdev07 :as data]
+            [corona.api.v1 :as v1]
             [corona.common :as com]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
@@ -31,16 +32,17 @@
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
     #_(morse/send-photo c/token chat-id (msg/absolute-vals prm))
-    (let [worldwide? (worldwide? country-code)]
+    (let [worldwide? (worldwide? country-code)
+          stats (v1/pic-data)]
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
                          (if worldwide?
-                           (p/plot-country nil)
-                           (p/plot-country country-code))))
+                           (p/plot-country nil          stats)
+                           (p/plot-country country-code stats))))
       (when worldwide?
         (morse/send-photo c/token chat-id
                           (toByteArrayAutoClosable
-                           (p/plot-all-countries-ill com/threshold)))))))
+                           (p/plot-all-countries-ill com/threshold stats)))))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

@@ -8,7 +8,6 @@
             [clojure.set :as cset]
             [clojure2d.color :as c]
             [clojure2d.core :as c2d]
-            [corona.api.v1 :as v1]
             [corona.common :as com]
             [corona.core :as cc]
             [corona.defs :as d])
@@ -40,10 +39,6 @@
     (transduce (map (fn [cc] {cc (get mapped-hm cc)}))
                into []
                order)))
-
-(def stats-all-countries
-  (v1/pic-data)
-  #_(v2/pic-data))
 
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
@@ -120,9 +115,8 @@
                                  ;; :dash [10.0 5.0] :join :miter
                                  :dash [4.0] :dash-phase 2.0}}))
 
-(defn plot-country [cc]
-  (let [stats stats-all-countries
-        json-data (stats-for-country cc stats)
+(defn plot-country [cc stats]
+  (let [json-data (stats-for-country cc stats)
         sarea-data (->> json-data
                         (remove (fn [[case vs]] (= :c case))))
 
@@ -187,9 +181,8 @@
                        (group-by :cc hms)))
                 (group-by :f (group-below-threshold threshold stats)))))
 
-(defn fill-rest [threshold]
-  (let [stats stats-all-countries
-        sum-ills-by-date-threshold (sum-ills-by-date threshold stats)
+(defn fill-rest [threshold stats]
+  (let [sum-ills-by-date-threshold (sum-ills-by-date threshold stats)
         countries-threshold (set (map :cc sum-ills-by-date-threshold))]
     (reduce into []
             (map (fn [[f hms]]
@@ -205,13 +198,13 @@
                           (cset/union hms)))
                  (group-by :f sum-ills-by-date-threshold)))))
 
-(defn stats-all-countries-ill [threshold]
+(defn stats-all-countries-ill [threshold stats]
   (let [hm (group-by :cn
                      (map (fn [{:keys [cc] :as hm}]
                             #_hm
                             (assoc hm :cn cc)
                             #_(assoc hm :cn (com/country-alias cc)))
-                          (fill-rest threshold)))
+                          (fill-rest threshold stats)))
         mapped-hm (plotcom/map-kv
                    (fn [entry]
                      (sort-by first
@@ -226,9 +219,8 @@
       into {}
       mapped-hm))))
 
-(defn plot-all-countries-ill [threshold]
-  (let [stats stats-all-countries
-        json-data (stats-all-countries-ill threshold)
+(defn plot-all-countries-ill [threshold stats]
+  (let [json-data (stats-all-countries-ill threshold stats)
         pal (cycle (c/palette-presets :category20b))
         ;; TODO add country codes (on a new line)
         ;; TODO rename Others -> Rest
