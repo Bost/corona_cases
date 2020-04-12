@@ -169,22 +169,27 @@
       (-> render-res (c2d/get-image)))))
 
 
-(defn below [threshold hms]
+(defn group-below-threshol
+  "Group all countries w/ the number of ill cases below the threshold under the
+  `d/default-2-country-code`"
+  [threshold hms]
   (map (fn [{:keys [i] :as hm}] (if (< i threshold)
                                   (assoc hm :cc d/default-2-country-code)
                                   hm))
        hms))
 
-(defn sum-below [threshold]
+(defn sum-ills-by-date
+  "Group the country stats by day and sum up the ill cases"
+  [threshold]
   (flatten (map (fn [[f hms]]
                   (map (fn [[cc hms]]
                          {:cc cc :f f :i (reduce + (map :i hms))})
                        (group-by :cc hms)))
-                (group-by :f (below threshold stats-all-countries)))))
+                (group-by :f (group-below-threshol threshold stats-all-countries)))))
 
 (defn fill-rest [threshold]
-  (let [sum-below-threshold (sum-below threshold)
-        countries-threshold (set (map :cc sum-below-threshold))]
+  (let [sum-ills-by-date-threshold (sum-ills-by-date threshold)
+        countries-threshold (set (map :cc sum-ills-by-date-threshold))]
     (reduce into []
             (map (fn [[f hms]]
                    (cset/union
@@ -197,7 +202,7 @@
                           (cset/difference countries-threshold)
                           (map (fn [cc] {:cc cc :f f :i 0}))
                           (cset/union hms)))
-                 (group-by :f sum-below-threshold)))))
+                 (group-by :f sum-ills-by-date-threshold)))))
 
 (defn stats-all-countries-ill [threshold]
   (let [hm (group-by :cn
