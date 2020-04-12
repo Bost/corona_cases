@@ -134,34 +134,26 @@
           confirmed-line-data (->> json-data
                                    (filter (fn [[case vs]] (= :c case)))
                                    (reduce into [])
-                                   (second))
-          render-res
-
-          ;; every chart/series definition is a vector with three fields:
-          ;; 1. chart type e.g. :grid, :sarea, :line
-          ;; 2. data
-          ;; 3. configuration hash-map
-          (-> (b/series [:grid]
-                        [:sarea sarea-data {:palette palette}]
-                        [:line  confirmed-line-data stroke-confirmed]
-                        [:line  sick-line-data stroke-sick])
-              (b/preprocess-series)
-              (b/update-scale :y :fmt metrix-prefix-unit)
-              (b/add-axes :bottom)
-              (b/add-axes :left)
-              #_(b/add-label :bottom "Date")
-              #_(b/add-label :left "Sick")
-              (b/add-label :top (label cc stats)
-                           {:color (c/darken :steelblue) :font-size 14})
-              (b/add-legend "" legend)
-              (r/render-lattice {:width 800 :height 600}))]
-      #_(def sick-line sick-line-data)
-      #_(def sarea sarea-data)
-      #_(-> render-res
-            (save "/tmp/stacked-area.png")
-            #_(show))
-      (-> render-res (c2d/get-image)))))
-
+                                   (second))]
+      ;; every chart/series definition is a vector with three fields:
+      ;; 1. chart type e.g. :grid, :sarea, :line
+      ;; 2. data
+      ;; 3. configuration hash-map
+      (-> (b/series [:grid]
+                    [:sarea sarea-data {:palette palette}]
+                    [:line  confirmed-line-data stroke-confirmed]
+                    [:line  sick-line-data stroke-sick])
+          (b/preprocess-series)
+          (b/update-scale :y :fmt metrix-prefix-unit)
+          (b/add-axes :bottom)
+          (b/add-axes :left)
+          #_(b/add-label :bottom "Date")
+          #_(b/add-label :left "Sick")
+          (b/add-label :top (label cc stats)
+                       {:color (c/darken :steelblue) :font-size 14})
+          (b/add-legend "" legend)
+          (r/render-lattice {:width 800 :height 600})
+          (c2d/get-image)))))
 
 (defn group-below-threshold
   "Group all countries w/ the number of ill cases below the threshold under the
@@ -221,29 +213,25 @@
 
 (defn plot-all-countries-ill [threshold stats]
   (let [json-data (stats-all-countries-ill threshold stats)
-        pal (cycle (c/palette-presets :category20b))
+        palette (cycle (c/palette-presets :category20b))
         ;; TODO add country codes (on a new line)
         ;; TODO rename Others -> Rest
-        legend (reverse (map #(vector :rect %2 {:color %1}) pal
-                             (keys json-data)))
-        render-res
-        (-> (b/series [:grid]
-                      [:sarea json-data])
-            (b/preprocess-series)
-            (b/update-scale :y :fmt metrix-prefix-unit)
-            (b/add-axes :bottom)
-            (b/add-axes :left)
-            #_(b/add-label :bottom "Date")
-            #_(b/add-label :left "Sick")
-            (b/add-label :top (format
-                               "%s; %s: Sic cases > %s"
-                               (fmt-last-date stats)
-                               cc/bot-name
-                               threshold)
-                         {:color (c/darken :steelblue) :font-size 14})
-            (b/add-legend "" legend)
-            (r/render-lattice {:width 800 :height 600}))]
-    #_(-> render-res
-          (save "/tmp/stacked-area.png")
-          #_(show))
-    (-> render-res (c2d/get-image))))
+        legend (reverse (map #(vector :rect %2 {:color %1}) palette
+                             (keys json-data)))]
+    (-> (b/series [:grid]
+                  [:sarea json-data])
+        (b/preprocess-series)
+        (b/update-scale :y :fmt metrix-prefix-unit)
+        (b/add-axes :bottom)
+        (b/add-axes :left)
+        #_(b/add-label :bottom "Date")
+        #_(b/add-label :left "Sick")
+        (b/add-label :top (format
+                           "%s; %s: Sic cases > %s"
+                           (fmt-last-date stats)
+                           cc/bot-name
+                           threshold)
+                     {:color (c/darken :steelblue) :font-size 14})
+        (b/add-legend "" legend)
+        (r/render-lattice {:width 800 :height 600})
+        (c2d/get-image))))
