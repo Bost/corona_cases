@@ -78,13 +78,13 @@
                         into []
                         [:i :r :d :c]))))
 
-(defn fmt-last-date []
-  ((comp com/fmt-date :f last) (sort-by :f stats-all-countries)))
+(defn fmt-last-date [stats]
+  ((comp com/fmt-date :f last) (sort-by :f stats)))
 
-(defn label [cc]
+(defn label [stats cc]
   (format
    "%s; %s: %s"
-   (fmt-last-date)
+   (fmt-last-date stats)
    cc/bot-name
    (if cc
      (format "Stats for %s %s"
@@ -121,7 +121,8 @@
                                  :dash [4.0] :dash-phase 2.0}}))
 
 (defn plot-country [cc]
-  (let [json-data (stats-for-country stats-all-countries cc)
+  (let [stats stats-all-countries
+        json-data (stats-for-country stats cc)
         sarea-data (->> json-data
                         (remove (fn [[case vs]] (= :c case))))
 
@@ -156,7 +157,7 @@
               (b/add-axes :left)
               #_(b/add-label :bottom "Date")
               #_(b/add-label :left "Sick")
-              (b/add-label :top (label cc)
+              (b/add-label :top (label stats cc)
                            {:color (c/darken :steelblue) :font-size 14})
               (b/add-legend "" legend)
               (r/render-lattice {:width 800 :height 600}))]
@@ -220,7 +221,8 @@
       mapped-hm))))
 
 (defn plot-all-countries-ill [threshold]
-  (let [json-data (stats-all-countries-ill threshold)
+  (let [stats stats-all-countries
+        json-data (stats-all-countries-ill threshold)
         pal (cycle (c/palette-presets :category20b))
         ;; TODO add country codes (on a new line)
         ;; TODO rename Others -> Rest
@@ -237,7 +239,7 @@
             #_(b/add-label :left "Sick")
             (b/add-label :top (format
                                "%s; %s: Sic cases > %s"
-                               (fmt-last-date)
+                               (fmt-last-date stats)
                                cc/bot-name
                                threshold)
                          {:color (c/darken :steelblue) :font-size 14})
