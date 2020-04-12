@@ -94,47 +94,38 @@
              (com/country-name-aliased d/worldwide-2-country-code)
              (com/encode-cmd d/worldwide-2-country-code)))))
 
+(def palette
+  "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
+  (->> (c/palette-presets :gnbu-6)
+       (take-last 3)
+       (reverse)
+       (cycle)))
+
+(def line-cfg
+  "By default line-margins are 5%. Setting them to [0 0] may not make up
+  for 100% alignment with the axes. There is also some margin in
+  canvas, or some other factors as rounding, aligning, java2d rendering
+  and aligning etc. See
+  https://clojurians.zulipchat.com/#narrow/stream/197967-cljplot-dev/topic/using.20cljplot.20for.20work/near/193681905"
+  {:margins {:y [0 0]}})
+
+(def stroke-confirmed (conj line-cfg
+                            {:color (last (c/palette-presets :ylgn-6)) }))
+
+(def stroke-sick (conj line-cfg
+                       {:color :black #_(last (c/palette-presets :gnbu-9))
+                        :stroke {:size 1.5
+                                 ;; :dash [20.0] :dash-phase 10
+                                 ;; :dash [5.0 2.0 2.0 2.0]
+                                 ;; :dash [10.0 5.0] :join :miter
+                                 :dash [4.0] :dash-phase 2.0}}))
+
 (defn plot-country
-  "Colors: https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
   [{:keys [cc] :as prm}]
   (let [json-data (stats-for-country prm)
         sarea-data (->> json-data
                         (remove (fn [[case vs]] (= :c case))))
 
-        palette (cycle
-                 (reverse
-                  #_identity
-                  (take-last 3
-                        (c/palette-presets
-                         :gnbu-6
-                         #_:accent
-                         #_:pubu-3
-                         #_:set2
-                         #_:rdbu-3
-                         #_:greens-3
-                         #_:brbg-3
-                         #_:ylgnbu-3
-                         #_:category20b))))
-
-        ;; By default line-margins are 5%. Setting them to [0 0] may not make up
-        ;; for 100% alignment with the axes. There is also some margin in
-        ;; canvas, or some other factors as rounding, aligning, java2d rendering
-        ;; and aligning etc. See
-        ;; https://clojurians.zulipchat.com/#narrow/stream/197967-cljplot-dev/topic/using.20cljplot.20for.20work/near/193681905
-        line-cfg {:margins {:y [0 0]}}
-
-        stroke-confirmed
-        (conj line-cfg
-              {:color (last (c/palette-presets :ylgn-6)) })
-
-        stroke-sick
-        (conj line-cfg
-              {:color :black #_(last (c/palette-presets :gnbu-9))
-               :stroke {:size 1.5
-                        ;; :dash [20.0] :dash-phase 10
-                        ;; :dash [5.0 2.0 2.0 2.0]
-                        ;; :dash [10.0 5.0] :join :miter
-                        :dash [4.0] :dash-phase 2.0}})
         legend
         (reverse
          (conj (map #(vector :rect %2 {:color %1}) palette
