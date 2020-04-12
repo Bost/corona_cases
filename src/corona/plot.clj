@@ -48,9 +48,9 @@
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
   is unspecified"
-  [cc]
+  [stats cc]
   (let [pred-fn (fn [hm] (if cc (= cc (:cc hm)) true))]
-    (->> stats-all-countries
+    (->> stats
          #_(v1/pic-data)
          (filter pred-fn)
          (group-by :f)
@@ -63,8 +63,8 @@
                    {:cc cc :f f :case :i :cnt (reduce + (map :i hms))}]))
          flatten)))
 
-(defn stats-for-country [cc]
-  (let [hm (group-by :case (sum-for-pred cc))
+(defn stats-for-country [stats cc]
+  (let [hm (group-by :case (sum-for-pred stats cc))
         mapped-hm (plotcom/map-kv
                    (fn [entry]
                      (sort-by first
@@ -121,7 +121,7 @@
                                  :dash [4.0] :dash-phase 2.0}}))
 
 (defn plot-country [cc]
-  (let [json-data (stats-for-country cc)
+  (let [json-data (stats-for-country stats-all-countries cc)
         sarea-data (->> json-data
                         (remove (fn [[case vs]] (= :c case))))
 
