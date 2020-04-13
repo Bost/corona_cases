@@ -51,9 +51,9 @@
 
 
 (defn- by-case-asc      [case-kw coll] (sort-by case-kw < coll))
-(def  by-ill-asc       (fn [coll] (by-case-asc :i coll)))
-(def  by-recovered-asc (fn [coll] (by-case-asc :r coll)))
-(def  by-deaths-asc    (fn [coll] (by-case-asc :d coll)))
+(def by-ill-asc       (fn [coll] (by-case-asc :i coll)))
+(def by-recovered-asc (fn [coll] (by-case-asc :r coll)))
+(def by-deaths-asc    (fn [coll] (by-case-asc :d coll)))
 
 (defn list-countries [{:keys [chat-id sort-fn] :as prm}]
   (->> (data/stats-all-affected-countries prm)
