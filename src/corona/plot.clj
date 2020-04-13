@@ -231,20 +231,22 @@
                                      [(to-java-time-local-date f) i])
                                    entry)))
                    hm)]
-    (sort-by-last-val
-     #_sort-by-country-name
-     (transduce
-      (map (fn [[cc v]] {(com/country-alias cc) v}))
-      into {}
-      mapped-hm))))
+    #_(sort-by-country-name mapped-hm)
+    (sort-by-last-val mapped-hm)))
 
 (defn plot-all-countries-ill [threshold stats]
   (let [json-data (stats-all-countries-ill threshold stats)
         palette (cycle (c/palette-presets :category20b))
-        ;; TODO add country codes (on a new line)
-        ;; TODO rename Others -> Rest
-        legend (reverse (map #(vector :rect %2 {:color %1}) palette
-                             (keys json-data)))
+        legend (reverse
+                (map #(vector :rect %2 {:color %1})
+                     palette
+                     (map
+                      com/country-alias
+                      ;; XXX b/add-legend doesn't accept newline char \n
+                      #_(fn [cc] (format "%s %s"
+                                       cc
+                                       (com/country-alias cc)))
+                      (keys json-data))))
         y-axis-formatter (metrics-prefix-formatter
                           ;; `+` means: sum up all sick/ill cases
                           (max-y-val + json-data))]
