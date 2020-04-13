@@ -50,9 +50,14 @@
 
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
-  is unspecified"
+  is unspecified
+  TODO should not use nil as d/worldwide-2-country-code"
   [cc stats]
-  (let [pred-fn (fn [hm] (if cc (= cc (:cc hm)) true))]
+  (let [pred-fn (fn [hm] (case cc
+                          nil                        true
+                          d/worldwide-2-country-code true
+                          ;; default case
+                          (= cc (:cc hm))))]
     (->> stats
          #_(v1/pic-data)
          (filter pred-fn)
@@ -84,18 +89,16 @@
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :f last) (sort-by :f stats)))
 
-(defn label [cc stats]
+(defn label
+  "TODO should not use nil as d/worldwide-2-country-code"
+  [cc-raw stats]
   (format
    "%s; %s: %s"
    (fmt-last-date stats)
    cc/bot-name
-   (if cc
-     (format "Stats for %s %s"
-             (com/country-name-aliased cc)
-             (com/encode-cmd cc))
-     (format "Stats %s %s"
-             (com/country-name-aliased d/worldwide-2-country-code)
-             (com/encode-cmd d/worldwide-2-country-code)))))
+   (let [cc (if cc-raw cc-raw d/worldwide-2-country-code)]
+     (format "Stats %s %s" (com/country-name-aliased cc)
+             (com/encode-cmd cc)))))
 
 (def palette
   "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"

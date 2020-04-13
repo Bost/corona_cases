@@ -32,13 +32,10 @@
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
     #_(morse/send-photo c/token chat-id (msg/absolute-vals prm))
-    (let [worldwide? (worldwide? country-code)
-          stats (v1/pic-data)]
+    (let [stats (v1/pic-data)]
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
-                         (if worldwide?
-                           (p/plot-country nil          stats)
-                           (p/plot-country country-code stats))))
+                         (p/plot-country country-code stats)))
       (when worldwide?
         (morse/send-photo c/token chat-id
                           (toByteArrayAutoClosable
