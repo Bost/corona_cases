@@ -95,10 +95,11 @@
     (get cr/aliases-inverted up-cc country)))
 
 (defn country-name-aliased
-  "Use an alias; typically a shorter name for some countries"
+  "Use an alias; typically a shorter name for some countries.
+  See `cr/aliases-inverted`"
   [cc]
   (if (in?
        [va tw do ir ru ps ae kr mk ba cd bo md bn ve vc kp tz xk la sy kn tt ag
-        cf cz st pg gq] cc)
+        cf cz st pg gq qq] cc)
     (country-alias cc)
     (country-name cc)))

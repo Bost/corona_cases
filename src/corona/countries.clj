@@ -471,4 +471,5 @@
     st "St Tome Principe"
     pg "Papua N Guinea"
     gq "Equat Guinea"
+    qq "Rest"
     }))
