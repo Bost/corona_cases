@@ -57,13 +57,10 @@
 
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
-  is unspecified
-  TODO should not use nil as d/worldwide-2-country-code"
+  is unspecified."
   [cc stats]
-  (let [pred-fn (fn [hm] (condp = cc
-                          nil                        true
-                          d/worldwide-2-country-code true
-                          ;; default case
+  (let [pred-fn (fn [hm] (if (= cc d/worldwide-2-country-code)
+                          true
                           (= cc (:cc hm))))]
     (->> stats
          #_(v1/pic-data)
@@ -96,16 +93,15 @@
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :f last) (sort-by :f stats)))
 
-(defn label
-  "TODO should not use nil as d/worldwide-2-country-code"
-  [cc-raw stats]
+(defn plot-label
+  "TODO add day number since the outbreak"
+  [cc stats]
   (format
    "%s; %s: %s"
    (fmt-last-date stats)
    cc/bot-name
-   (let [cc (if cc-raw cc-raw d/worldwide-2-country-code)]
-     (format "Stats %s %s" (com/country-name-aliased cc)
-             (com/encode-cmd cc)))))
+   (format "Stats %s %s" (com/country-name-aliased cc)
+           (com/encode-cmd cc))))
 
 (def palette
   "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
@@ -180,7 +176,7 @@
           (b/add-axes :left)
           #_(b/add-label :bottom "Date")
           #_(b/add-label :left "Sick")
-          (b/add-label :top (label cc stats)
+          (b/add-label :top (plot-label cc stats)
                        {:color (c/darken :steelblue) :font-size 14})
           (b/add-legend "" legend)
           (r/render-lattice {:width 800 :height 600})
