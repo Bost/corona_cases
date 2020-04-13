@@ -6,7 +6,7 @@ set hostEnvs --test --prod
 set prmEnvName $argv[1]
 set restArgs   $argv[2..-1]
 
-# TODO see https://github.com/jorgebucaran/fish-getopts
+# see https://github.com/jorgebucaran/fish-getopts
 switch $prmEnvName
     case $hostEnvs[1]
         set envName hokuspokus

@@ -191,7 +191,6 @@
       (= country-code (:country_code loc)))))
 
 (defn all-affected-country-names
-  "TODO remove worldwide"
   []
   (->> (all-affected-country-codes)
        (map com/country-name)))
