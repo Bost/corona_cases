@@ -1,263 +1,8 @@
 (ns corona.countries
-  (:require [corona.defs :as d]
-            [clojure.set :as cset])
+  (:require [clojure.set :as cset]
+            [corona.country-codes :refer :all]
+            [corona.defs :as d])
   (:import com.neovisionaries.i18n.CountryCode))
-
-;; TODO proper country-code types (created by a macro?) (def de "DE") for every
-;; country
-
-(def cr "CR")
-(def tg "TG")
-(def tj "TJ")
-(def za "ZA")
-(def im "IM")
-(def pe "PE")
-(def lc "LC")
-(def ch "CH")
-(def ru "RU")
-(def mp "MP")
-(def ck "CK")
-(def si "SI")
-(def au "AU")
-(def kr "KR")
-(def it "IT")
-(def fi "FI")
-(def gf "GF")
-(def sc "SC")
-(def sx "SX")
-(def zz "ZZ")
-(def tt "TT")
-(def tk "TK")
-(def my "MY")
-(def sy "SY")
-(def mn "MN")
-(def tf "TF")
-(def kp "KP")
-(def am "AM")
-(def dz "DZ")
-(def uy "UY")
-(def td "TD")
-(def dj "DJ")
-(def bi "BI")
-(def mk "MK")
-(def mu "MU")
-(def li "LI")
-(def nu "NU")
-(def gr "GR")
-(def gy "GY")
-(def cg "CG")
-(def nf "NF")
-(def ml "ML")
-(def ax "AX")
-(def gm "GM")
-(def sa "SA")
-(def cx "CX")
-(def bh "BH")
-(def ne "NE")
-(def bn "BN")
-(def xk "XK")
-(def mf "MF")
-(def cd "CD")
-(def dk "DK")
-(def bj "BJ")
-(def me "ME")
-(def sj "SJ")
-(def bo "BO")
-(def jo "JO")
-(def cv "CV")
-(def ve "VE")
-(def ci "CI")
-(def uz "UZ")
-(def tn "TN")
-(def is "IS")
-(def eh "EH")
-(def tm "TM")
-(def ga "GA")
-(def ls "LS")
-(def tz "TZ")
-(def at "AT")
-(def lt "LT")
-(def np "NP")
-(def bg "BG")
-(def il "IL")
-(def gu "GU")
-(def pk "PK")
-(def pt "PT")
-(def hr "HR")
-(def vu "VU")
-(def pf "PF")
-(def bm "BM")
-(def mr "MR")
-(def ge "GE")
-(def hu "HU")
-(def tw "TW")
-(def mm "MM")
-(def vg "VG")
-(def ye "YE")
-(def sr "SR")
-(def pn "PN")
-(def va "VA")
-(def pr "PR")
-(def kw "KW")
-(def se "SE")
-(def gb "GB")
-(def qq "QQ")
-(def um "UM")
-(def vn "VN")
-(def cf "CF")
-(def pa "PA")
-(def vc "VC")
-(def jp "JP")
-(def ir "IR")
-(def af "AF")
-(def ly "LY")
-(def mz "MZ")
-(def ro "RO")
-(def qa "QA")
-(def cm "CM")
-(def gg "GG")
-(def by "BY")
-(def sd "SD")
-(def bq "BQ")
-(def mo "MO")
-(def ky "KY")
-(def ar "AR")
-(def br "BR")
-(def zw "ZW")
-(def nr "NR")
-(def nz "NZ")
-(def aw "AW")
-(def fj "FJ")
-(def id "ID")
-(def sv "SV")
-(def cn "CN")
-(def fm "FM")
-(def ht "HT")
-(def cc "CC")
-(def rw "RW")
-(def ba "BA")
-(def tl "TL")
-(def jm "JM")
-(def km "KM")
-(def ke "KE")
-(def ws "WS")
-(def to "TO")
-(def py "PY")
-(def sh "SH")
-(def cy "CY")
-(def gh "GH")
-(def ma "MA")
-(def sg "SG")
-(def lk "LK")
-(def ph "PH")
-(def sm "SM")
-(def wf "WF")
-(def tr "TR")
-(def ps "PS")
-(def bz "BZ")
-(def cu "CU")
-(def tv "TV")
-(def ad "AD")
-(def sb "SB")
-(def dm "DM")
-(def lr "LR")
-(def om "OM")
-(def so "SO")
-(def do "DO")
-(def al "AL")
-(def bl "BL")
-(def fr "FR")
-(def gw "GW")
-(def ms "MS")
-(def bb "BB")
-(def ca "CA")
-(def mg "MG")
-(def kh "KH")
-(def la "LA")
-(def gp "GP")
-(def bv "BV")
-(def hn "HN")
-(def th "TH")
-(def de "DE")
-(def lb "LB")
-(def kz "KZ")
-(def as "AS")
-(def ec "EC")
-(def no "NO")
-(def ao "AO")
-(def fk "FK")
-(def et "ET")
-(def gs "GS")
-(def md "MD")
-(def ag "AG")
-(def be "BE")
-(def mv "MV")
-(def sz "SZ")
-(def cz "CZ")
-(def cl "CL")
-(def bt "BT")
-(def nl "NL")
-(def eg "EG")
-(def mq "MQ")
-(def sn "SN")
-(def fo "FO")
-(def ee "EE")
-(def aq "AQ")
-(def st "ST")
-(def kn "KN")
-(def bw "BW")
-(def mh "MH")
-(def ni "NI")
-(def pg "PG")
-(def vi "VI")
-(def iq "IQ")
-(def kg "KG")
-(def us "US")
-(def zm "ZM")
-(def mc "MC")
-(def gi "GI")
-(def nc "NC")
-(def gt "GT")
-(def bf "BF")
-(def yt "YT")
-(def lu "LU")
-(def ua "UA")
-(def ie "IE")
-(def lv "LV")
-(def gd "GD")
-(def mw "MW")
-(def bs "BS")
-(def az "AZ")
-(def sk "SK")
-(def gq "GQ")
-(def tc "TC")
-(def re "RE")
-(def in "IN")
-(def es "ES")
-(def gl "GL")
-(def ki "KI")
-(def hk "HK")
-(def co "CO")
-(def ss "SS")
-(def rs "RS")
-(def io "IO")
-(def ng "NG")
-(def ug "UG")
-(def cw "CW")
-(def sl "SL")
-(def er "ER")
-(def je "JE")
-(def ae "AE")
-(def hm "HM")
-(def pm "PM")
-(def bd "BD")
-(def mt "MT")
-(def ai "AI")
-(def gn "GN")
-(def pw "PW")
-(def na "NA")
-(def mx "MX")
-(def pl "PL")
 
 (def country-code-2-to-3-hm
   "Mapping of country codes 2 -> 3 letters"
@@ -570,7 +315,7 @@
   https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
   (cset/map-invert country-code--country))
 
-(defn cn [country-code] (get country-code--country country-code))
+(defn country-name [country-code] (get country-code--country country-code))
 
 (def aliases-hm
   "Mapping of alternative names, spelling, typos to the names of countries used by
@@ -585,105 +330,105 @@
   \"Others\" has no mapping.
   "
   {
-   "World"                            (cn d/worldwide-2-country-code)
-   "Czechia"                          (cn "CZ") ; "Czech Republic"
-   "Mainland China"                   (cn "CN") ; "China"
-   "South Korea"                      (cn "KR") ; "Korea, Republic of"
-   "Korea, South"                     (cn "KR") ; "Korea, Republic of"
-   "Republic of Korea"                (cn "KR") ; "Korea, Republic of"
+   "World"                            (country-name zz) ; "Worldwide"
+   "Czechia"                          (country-name cz) ; "Czech Republic"
+   "Mainland China"                   (country-name cn) ; "China"
+   "South Korea"                      (country-name kr) ; "Korea, Republic of"
+   "Korea, South"                     (country-name kr) ; "Korea, Republic of"
+   "Republic of Korea"                (country-name kr) ; "Korea, Republic of"
 
-   "Taiwan"                           (cn "TW") ; "Taiwan, Province of China"
-   "Taiwan*"                          (cn "TW") ; "Taiwan, Province of China"
-   "Taipei and environs"              (cn "TW") ; "Taiwan, Province of China"
+   "Taiwan"                           (country-name tw) ; "Taiwan, Province of China"
+   "Taiwan*"                          (country-name tw) ; "Taiwan, Province of China"
+   "Taipei and environs"              (country-name tw) ; "Taiwan, Province of China"
 
-   "US"                               (cn "US") ; "United States"
+   "US"                               (country-name us) ; "United States"
 
-   "Macau"                            (cn "MO")
-   "Macao SAR"                        (cn "MO") ; "Macao"
+   "Macau"                            (country-name mo)
+   "Macao SAR"                        (country-name mo) ; "Macao"
 
-   "Vietnam"                          (cn "GB") ; "Viet Nam"
-   "UK"                               (cn "GB") ; "United Kingdom"
-   "Russia"                           (cn "RU") ; "Russian Federation"
-   "Iran"                             (cn "IR") ; "Iran, Islamic Republic of"
-   "Iran (Islamic Republic of)"       (cn "IR") ; "Iran, Islamic Republic of"
-   "Saint Barthelemy"                 (cn "BL") ; "Saint Barthélemy"
+   "Vietnam"                          (country-name gb) ; "Viet Nam"
+   "UK"                               (country-name gb) ; "United Kingdom"
+   "Russia"                           (country-name ru) ; "Russian Federation"
+   "Iran"                             (country-name ir) ; "Iran, Islamic Republic of"
+   "Iran (Islamic Republic of)"       (country-name ir) ; "Iran, Islamic Republic of"
+   "Saint Barthelemy"                 (country-name bl) ; "Saint Barthélemy"
 
-   "Palestine"                        (cn "PS") ; "Palestine, State of"
-   "State of Palestine"               (cn "PS") ; "Palestine, State of"
-   "occupied Palestinian territory"   (cn "PS") ; "Palestine, State of"
+   "Palestine"                        (country-name ps) ; "Palestine, State of"
+   "State of Palestine"               (country-name ps) ; "Palestine, State of"
+   "occupied Palestinian territory"   (country-name ps) ; "Palestine, State of"
 
-   "Vatican City"                     (cn "VA") ; "Holy See (Vatican City State)"
-   "Holy See"                         (cn "VA") ; "Holy See (Vatican City State)"
+   "Vatican City"                     (country-name va) ; "Holy See (Vatican City State)"
+   "Holy See"                         (country-name va) ; "Holy See (Vatican City State)"
 
-   "DR Congo"                         (cn "CD") ; "Congo, the Democratic Republic of the"
-   "Congo (Kinshasa)"                 (cn "CD") ; "Congo, the Democratic Republic of the"
-   "Democratic Republic of the Congo" (cn "CD") ; "Congo, the Democratic Republic of the"
+   "DR Congo"                         (country-name cd) ; "Congo, the Democratic Republic of the"
+   "Congo (Kinshasa)"                 (country-name cd) ; "Congo, the Democratic Republic of the"
+   "Democratic Republic of the Congo" (country-name cd) ; "Congo, the Democratic Republic of the"
 
-   "Tanzania"                         (cn "TZ") ; "Tanzania, United Republic of"
-   "Venezuela"                        (cn "VE") ; "Venezuela, Bolivarian Republic of"
-   "North Korea"                      (cn "KP") ; "Korea, Democratic People's Republic of"
-   "Syria"                            (cn "SY") ; "Syrian Arab Republic"
-   "Bolivia"                          (cn "BO") ; "Bolivia, Plurinational State of"
-   "Laos"                             (cn "LA") ; "Lao People's Democratic Republic"
-   "Moldova"                          (cn "MD") ; "Moldova, Republic of"
-   "Republic of Moldova"              (cn "MD") ; "Moldova, Republic of"
-   "Swaziland"                        (cn "SZ") ; "Eswatini"
-   "Cabo Verde"                       (cn "CV") ; "Cape Verde"
-   "Brunei"                           (cn "BN") ; "Brunei Darussalam"
-   "Sao Tome & Principe"              (cn "ST") ; "Sao Tome and Principe"
-   "São Tomé and Príncipe"            (cn "ST") ; "Sao Tome and Principe"
-   "Micronesia"                       (cn "FM") ; "Micronesia, Federated States of"
-   "F.S. Micronesia"                  (cn "FM") ; "Micronesia, Federated States of"
-   "Federated States of Micronesia"   (cn "FM") ; "Micronesia, Federated States of"
+   "Tanzania"                         (country-name tz) ; "Tanzania, United Republic of"
+   "Venezuela"                        (country-name ve) ; "Venezuela, Bolivarian Republic of"
+   "North Korea"                      (country-name kp) ; "Korea, Democratic People's Republic of"
+   "Syria"                            (country-name sy) ; "Syrian Arab Republic"
+   "Bolivia"                          (country-name bo) ; "Bolivia, Plurinational State of"
+   "Laos"                             (country-name la) ; "Lao People's Democratic Republic"
+   "Moldova"                          (country-name md) ; "Moldova, Republic of"
+   "Republic of Moldova"              (country-name md) ; "Moldova, Republic of"
+   "Swaziland"                        (country-name sz) ; "Eswatini"
+   "Cabo Verde"                       (country-name cv) ; "Cape Verde"
+   "Brunei"                           (country-name bn) ; "Brunei Darussalam"
+   "Sao Tome & Principe"              (country-name st) ; "Sao Tome and Principe"
+   "São Tomé and Príncipe"            (country-name st) ; "Sao Tome and Principe"
+   "Micronesia"                       (country-name fm) ; "Micronesia, Federated States of"
+   "F.S. Micronesia"                  (country-name fm) ; "Micronesia, Federated States of"
+   "Federated States of Micronesia"   (country-name fm) ; "Micronesia, Federated States of"
 
-   "St. Vincent & Grenadines"         (cn "VC") ; "Saint Vincent and the Grenadines"
-   "Saint Vincent"                    (cn "VC") ; "Saint Vincent and the Grenadines"
-   "U.S. Virgin Islands"              (cn "VI") ; "Virgin Islands, U.S."
-   "British Virgin Islands"           (cn "VG") ; "Virgin Islands, British"
-   "Saint Kitts & Nevis"              (cn "KN") ; "Saint Kitts and Nevis"
-   "St. Kitts & Nevis"                (cn "KN") ; "Saint Kitts and Nevis"
-   "Faeroe Islands"                   (cn "FO") ; "Faroe Islands"
-   "Sint Maarten"                     (cn "SX") ; "Sint Maarten (Dutch part)"
-   "Turks and Caicos"                 (cn "TC") ; "Turks and Caicos Islands"
-   "Wallis & Futuna"                  (cn "WF") ; "Wallis and Futuna"
-   "Saint Helena"                     (cn "SH") ; "Saint Helena, Ascension and Tristan da Cunha"
-   "Saint Pierre & Miquelon"          (cn "PM") ; "Saint Pierre and Miquelon"
-   "Falkland Islands"                 (cn "FK") ; "Falkland Islands (Malvinas)"
-   "Republic of Ireland"              (cn "IE") ; "Ireland"
-   " Azerbaijan"                      (cn "AZ") ; "Azerbaijan"
+   "St. Vincent & Grenadines"         (country-name vc) ; "Saint Vincent and the Grenadines"
+   "Saint Vincent"                    (country-name vc) ; "Saint Vincent and the Grenadines"
+   "U.S. Virgin Islands"              (country-name vi) ; "Virgin Islands, U.S."
+   "British Virgin Islands"           (country-name vg) ; "Virgin Islands, British"
+   "Saint Kitts & Nevis"              (country-name kn) ; "Saint Kitts and Nevis"
+   "St. Kitts & Nevis"                (country-name kn) ; "Saint Kitts and Nevis"
+   "Faeroe Islands"                   (country-name fo) ; "Faroe Islands"
+   "Sint Maarten"                     (country-name sx) ; "Sint Maarten (Dutch part)"
+   "Turks and Caicos"                 (country-name tc) ; "Turks and Caicos Islands"
+   "Wallis & Futuna"                  (country-name wf) ; "Wallis and Futuna"
+   "Saint Helena"                     (country-name sh) ; "Saint Helena, Ascension and Tristan da Cunha"
+   "Saint Pierre & Miquelon"          (country-name pm) ; "Saint Pierre and Miquelon"
+   "Falkland Islands"                 (country-name fk) ; "Falkland Islands (Malvinas)"
+   "Republic of Ireland"              (country-name ie) ; "Ireland"
+   " Azerbaijan"                      (country-name az) ; "Azerbaijan"
 
    ;; Conjoin North Ireland on United Kingdom
-   "North Ireland"                    (cn "GB") ; "United Kingdom"
-   "East Timor"                       (cn "TL") ; "Timor-Leste"
+   "North Ireland"                    (country-name gb) ; "United Kingdom"
+   "East Timor"                       (country-name tl) ; "Timor-Leste"
 
-   ;; Guernsey and Jersey form Channel Islands. Conjoin Guernsey on Jersey.
+   ;; Guernsey and Jersey form Channel Islands. ConjinGuernsey on Jersey.
    ;; Jersey has higher population.
    ;; https://en.wikipedia.org/wiki/Channel_Islands
-   "Guernsey and Jersey"              (cn "JE") ; "Jersey"
-   "Channel Islands"                  (cn "JE") ; "Jersey"
-   "Caribbean Netherlands"            (cn "JE") ; "Bonaire, Sint Eustatius and Saba"
-   "Emirates"                         (cn "AE") ; "United Arab Emirates"
-   ;; "Bosnia–Herzegovina"            (cn "BA") ; "Bosnia and Herzegovina"
-   "Bosnia"                           (cn "BA") ; "Bosnia and Herzegovina"
-   "Dominican Rep"                    (cn "DO") ; "Dominican Republic"
-   "Macedonia"                        (cn "MK") ; "North Macedonia, Republic of"
-   "North Macedonia"                  (cn "MK") ; "North Macedonia, Republic of"
-   "Ivory Coast"                      (cn "CI") ; "Côte d'Ivoire"
-   "Cote d'Ivoire"                    (cn "CI") ; "Côte d'Ivoire"
-   "Saint Martin"                     (cn "MF") ; "Saint Martin (French part)"
-   "St. Martin"                       (cn "MF") ; "Saint Martin (French part)"
-   "Hong Kong SAR"                    (cn "HK") ; "Hong Kong"
-   "Reunion"                          (cn "RE") ; "Réunion"
-   "Curacao"                          (cn "CW") ; "Curaçao"
-   "Congo (Brazzaville)"              (cn "CG") ; "Congo"
-   "Republic of the Congo"            (cn "CG") ; "Congo"
-   "The Bahamas"                      (cn "BS") ; "Bahamas"
-   "Kosovo"                           (cn "XK") ; "Kosovo, Republic of"
-   "Trinidad & Tobago"                (cn "TT") ; "Trinidad and Tobago"
-   "Antigua & Barbuda"                (cn "AG") ; "Antigua and Barbuda"
-   "Central African Rep"              (cn "CF") ; "Central African Republic"
+   "Guernsey and Jersey"              (country-name je) ; "Jersey"
+   "Channel Islands"                  (country-name je) ; "Jersey"
+   "Caribbean Netherlands"            (country-name je) ; "Bonaire, Sint Eustatius and Saba"
+   "Emirates"                         (country-name ae) ; "United Arab Emirates"
+   ;; "Bosnia–Herzegovina"            (country-name ba) ; "Bosnia and Herzegovina"
+   "Bosnia"                           (country-name ba) ; "Bosnia and Herzegovina"
+   "Dominican Rep"                    (country-name do) ; "Dominican Republic"
+   "Macedonia"                        (country-name mk) ; "North Macedonia, Republic of"
+   "North Macedonia"                  (country-name mk) ; "North Macedonia, Republic of"
+   "Ivory Coast"                      (country-name ci) ; "Côte d'Ivoire"
+   "Cote d'Ivoire"                    (country-name ci) ; "Côte d'Ivoire"
+   "Saint Martin"                     (country-name mf) ; "Saint Martin (French part)"
+   "St. Martin"                       (country-name mf) ; "Saint Martin (French part)"
+   "Hong Kong SAR"                    (country-name hk) ; "Hong Kong"
+   "Reunion"                          (country-name re) ; "Réunion"
+   "Curacao"                          (country-name cw) ; "Curaçao"
+   "Congo (Brazzaville)"              (country-name cg) ; "Congo"
+   "Republic of the Congo"            (country-name cg) ; "Congo"
+   "The Bahamas"                      (country-name bs) ; "Bahamas"
+   "Kosovo"                           (country-name xk) ; "Kosovo, Republic of"
+   "Trinidad & Tobago"                (country-name tt) ; "Trinidad and Tobago"
+   "Antigua & Barbuda"                (country-name ag) ; "Antigua and Barbuda"
+   "Central African Rep"              (country-name cf) ; "Central African Republic"
 
-   "Burma"                            (cn "MM") ; Myanmar
+   "Burma"                            (country-name mm) ; Myanmar
 
    ;; "Others" has no mapping
    ;; "Cruise Ship" is mapped to the default val
@@ -695,35 +440,35 @@
    ;; (clojure.set/map-invert aliases-hm)
    ;; select desired aliases
    {
-    "VA" "Vatican"
-    "TW" "Taiwan"
-    "DO" "Dom Rep"
-    "IR" "Iran"
-    "RU" "Russia"
-    "PS" "Palestine"
-    "AE" "UA Emirates"
-    "KR" "South Korea"
-    "MK" "Macedonia"
-    "BA" "Bosnia"
-    "CD" "DR Congo"
-    "BO" "Bolivia"
-    "MD" "Moldova"
-    "BN" "Brunei"
-    "VE" "Venezuela"
-    "VC" "St Vincent"
-    "KP" "North Korea"
-    "TZ" "Tanzania"
-    "XK" "Kosovo"
-    "LA" "Laos"
-    "SY" "Syria"
-    "KN" "St Kitts Nevis"
-    "TT" "Trinidad Tobago"
-    "AG" "Antigua Barbuda"
-    "CF" "Central Africa"
-    "US" "USA"
-    "GB" "UK"
-    "CZ" "Czechia"
-    "ST" "St Tome Principe"
-    "PG" "Papua N Guinea"
-    "GQ" "Equat Guinea"
+    va "Vatican"
+    tw "Taiwan"
+    do "Dom Rep"
+    ir "Iran"
+    ru "Russia"
+    ps "Palestine"
+    ae "UA Emirates"
+    kr "South Korea"
+    mk "Macedonia"
+    ba "Bosnia"
+    cd "DR Congo"
+    bo "Bolivia"
+    md "Moldova"
+    bn "Brunei"
+    ve "Venezuela"
+    vc "St Vincent"
+    kp "North Korea"
+    tz "Tanzania"
+    xk "Kosovo"
+    la "Laos"
+    sy "Syria"
+    kn "St Kitts Nevis"
+    tt "Trinidad Tobago"
+    ag "Antigua Barbuda"
+    cf "Central Africa"
+    us "USA"
+    gb "UK"
+    cz "Czechia"
+    st "St Tome Principe"
+    pg "Papua N Guinea"
+    gq "Equat Guinea"
     }))

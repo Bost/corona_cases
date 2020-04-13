@@ -5,6 +5,7 @@
             [clojure.string :as s]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
+            [corona.country-codes :refer :all]
             [corona.defs :as d]))
 
 (defn encode-cmd [s] (str "/" s))
@@ -96,12 +97,8 @@
 (defn country-name-aliased
   "Use an alias; typically a shorter name for some countries"
   [cc]
-  (if (in? [
-            "VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
-            "MD" "BN" "VE" "VC" "KP" "TZ" "XK" "LA" "SY" "KN" "TT" "AG"
-            "CF" "CZ" "ST" "PG" "GQ"
-            ]
-           cc)
+  (if (in?
+       [va tw do ir ru ps ae kr mk ba cd bo md bn ve vc kp tz xk la sy kn tt ag
+        cf cz st pg gq] cc)
     (country-alias cc)
     (country-name cc)))
-
