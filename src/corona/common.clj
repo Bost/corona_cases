@@ -99,7 +99,7 @@
   (if (in? [
             "VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO"
             "MD" "BN" "VE" "VC" "KP" "TZ" "XK" "LA" "SY" "KN" "TT" "AG"
-            "CF" #_"CZ"
+            "CF" "CZ" "ST" "PG" "GQ"
             ]
            cc)
     (country-alias cc)
