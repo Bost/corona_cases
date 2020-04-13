@@ -2,6 +2,8 @@
   (:require [cljplot.build :as b]
             [cljplot.common :as plotcom]
             [cljplot.render :as r]
+            ;; just for debugging
+            [corona.country-codes :refer :all]
             ;; XXX cljplot.core must be required otherwise an empty plot is
             ;; shown. WTF?
             [cljplot.core]
@@ -12,6 +14,11 @@
             [corona.core :as cc]
             [corona.defs :as d])
   (:import [java.time LocalDate ZoneId]))
+
+(defmacro dbg [body]
+  `(let [x# ~body]
+     (println "dbg:" '~body "=" x#)
+     x#))
 
 (defn metrics-prefix-formatter [max-val]
   "Show 1k instead of 1000; i.e. kilo, mega etc.
@@ -53,7 +60,7 @@
   is unspecified
   TODO should not use nil as d/worldwide-2-country-code"
   [cc stats]
-  (let [pred-fn (fn [hm] (case cc
+  (let [pred-fn (fn [hm] (condp = cc
                           nil                        true
                           d/worldwide-2-country-code true
                           ;; default case
