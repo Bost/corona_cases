@@ -20,12 +20,6 @@
     (ImageIO/write image "png" out)
     (.toByteArray out)))
 
-(defn worldwide? [country-code]
-  (in? [d/worldwide-2-country-code
-        d/worldwide-3-country-code
-        d/worldwide]
-       country-code))
-
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
     (morse/send-text
@@ -36,7 +30,10 @@
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
                          (p/plot-country country-code stats)))
-      (when worldwide?
+      (when (in? [d/worldwide-2-country-code
+                  d/worldwide-3-country-code
+                  d/worldwide]
+                 country-code)
         (morse/send-photo c/token chat-id
                           (toByteArrayAutoClosable
                            (p/plot-all-countries-ill com/threshold stats)))))))
