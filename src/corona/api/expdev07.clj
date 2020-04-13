@@ -3,6 +3,8 @@
             [clojure.set :as cset]
             [corona.common :as com :refer [api-server time-to-live]]
             [corona.core :as c :refer [read-number]]
+            ;; for debugging
+            [corona.country-codes :refer :all]
             [corona.defs :as d])
   (:import java.text.SimpleDateFormat))
 
@@ -125,7 +127,7 @@
 (defn sums-for-case
   "Return sums for a given `case` calculated for every single day
   E.g.
-  (sums-for-case {:case :confirmed :pred (pred-fn \"SK\")})
+  (sums-for-case {:case :confirmed :pred (pred-fn sk})
   "
   [{:keys [case pred]}]
   (let [locations (filter pred
@@ -137,7 +139,7 @@
 (defn get-counts
   "Examples:
   (get-counts {:pred (fn [_] true)})
-  (get-counts {:pred (pred-fn \"SK\")})
+  (get-counts {:pred (pred-fn sk)})
   "
   [prm]
   (let [crd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
@@ -153,7 +155,7 @@
 
 (defn eval-fun
   "
-  (eval-fun {:fun get-last :pred (pred-fn \"SK\")})
+  (eval-fun {:fun get-last :pred (pred-fn SK)})
   "
   [{:keys [fun date] :as prm}]
   (into {:f (fun (dates-memo))}
@@ -161,7 +163,7 @@
              (get-counts-memo prm))))
 
 (defn delta
-  "Example (delta {:pred (pred-fn \"CN\")})"
+  "Example (delta {:pred (pred-fn cn)})"
   [prm]
   (->> [get-prev get-last]
        (map (fn [fun] (eval-fun (assoc prm :fun fun))))

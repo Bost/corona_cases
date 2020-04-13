@@ -1,7 +1,4 @@
-(ns ^{:doc
-      "TODO proper country-code types (created by a macro?) (def de \"DE\") for
-  every country; See also (:import com.neovisionaries.i18n.CountryCode)"}
-  corona.country-codes)
+(ns corona.country-codes)
 
 (def cr "CR")
 (def tg "TG")
