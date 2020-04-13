@@ -13,13 +13,21 @@
             [corona.defs :as d])
   (:import [java.time LocalDate ZoneId]))
 
-(defn metrix-prefix-unit
-  "Show 1K instead of 1000; i.e. kilo, mega etc.
-  See https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes"
-  [v]
-  (int v)
-  #_(str (/ v 1000) "k")
-  #_(str (/ v (* 1000 1000)) "M"))
+(defn metrics-prefix-formatter [max-val]
+  "Show 1k instead of 1000; i.e. kilo, mega etc.
+      1 400 -> 1400
+     14 000 ->   14k
+    140 000 ->  140k
+  1 400 000 -> 1400k
+  See https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes "
+  (cond
+    (< max-val (dec (int 1e4)))  (fn [v] (str (int (/ v 1e0)) ""))
+    (< max-val (dec (int 1e7)))  (fn [v] (str (int (/ v 1e3)) "k"))
+    (< max-val (dec (int 1e10))) (fn [v] (str (int (/ v 1e6)) "M"))
+    (< max-val (dec (int 1e13))) (fn [v] (str (int (/ v 1e9)) "G"))
+    :else (throw
+           (Exception. (format "Value %d must be < max %d)"
+                               (fn [v] (str (/ v (int 1e9)) "G")))))))
 
 (defn to-java-time-local-date [java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date)
@@ -115,6 +123,15 @@
                                  ;; :dash [10.0 5.0] :join :miter
                                  :dash [4.0] :dash-phase 2.0}}))
 
+(defn max-y-val [reducer data]
+  (let [xform (comp
+               (map (fn [[k v]] v))
+               (map (fn [v] (transduce
+                             identity
+                             max 0
+                             (map (fn [[_ n]] n) v)))))]
+    (transduce xform reducer 0 data)))
+
 (defn plot-country [cc stats]
   (let [json-data (stats-for-country cc stats)
         sarea-data (->> json-data
@@ -134,7 +151,11 @@
           confirmed-line-data (->> json-data
                                    (filter (fn [[case vs]] (= :c case)))
                                    (reduce into [])
-                                   (second))]
+                                   (second))
+          y-axis-formatter (metrics-prefix-formatter
+                            ;; confirmed cases have the `max` values, all other
+                            ;; cases are derived from them
+                            (max-y-val max json-data))]
       ;; every chart/series definition is a vector with three fields:
       ;; 1. chart type e.g. :grid, :sarea, :line
       ;; 2. data
@@ -144,7 +165,7 @@
                     [:line  confirmed-line-data stroke-confirmed]
                     [:line  sick-line-data stroke-sick])
           (b/preprocess-series)
-          (b/update-scale :y :fmt metrix-prefix-unit)
+          (b/update-scale :y :fmt y-axis-formatter)
           (b/add-axes :bottom)
           (b/add-axes :left)
           #_(b/add-label :bottom "Date")
@@ -217,11 +238,14 @@
         ;; TODO add country codes (on a new line)
         ;; TODO rename Others -> Rest
         legend (reverse (map #(vector :rect %2 {:color %1}) palette
-                             (keys json-data)))]
+                             (keys json-data)))
+        y-axis-formatter (metrics-prefix-formatter
+                          ;; `+` means: sum up all sick/ill cases
+                          (max-y-val + json-data))]
     (-> (b/series [:grid]
                   [:sarea json-data])
         (b/preprocess-series)
-        (b/update-scale :y :fmt metrix-prefix-unit)
+        (b/update-scale :y :fmt y-axis-formatter)
         (b/add-axes :bottom)
         (b/add-axes :left)
         #_(b/add-label :bottom "Date")
