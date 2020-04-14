@@ -15,7 +15,8 @@
             ;; shown. WTF?
             [cljplot.core]
             [corona.core :refer [in?]]
-            [corona.defs :as d])
+            [corona.defs :as d]
+            [corona.api.v1 :as v1])
   (:import [java.time LocalDate ZoneId]))
 
 (defmacro dbg [body]
@@ -64,7 +65,9 @@
   [cc stats]
   (let [pred-fn (fn [hm] (if (= cc d/worldwide-2-country-code)
                           true
-                          (= cc (:cc hm))))]
+                          (= cc (:cc hm))))
+        ;; population (t/population)
+        ]
     (->> stats
          #_(v1/pic-data)
          (filter pred-fn)
@@ -72,6 +75,10 @@
          (map (fn [[f hms]]
                   [
                    ;; confirmed cases is the sum of all others
+                   {:cc cc :f f :case :p :cnt
+                    (bigint (/ (:p (first hms)) 1e3))
+                    #_(reduce + (map :p hms))
+                    #_(bigint (/ (get population cc) (bigint 1e3)))}
                    {:cc cc :f f :case :c :cnt (reduce + (map :c hms))}
                    {:cc cc :f f :case :r :cnt (reduce + (map :r hms))}
                    {:cc cc :f f :case :d :cnt (reduce + (map :d hms))}
@@ -95,14 +102,19 @@
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :f last) (sort-by :f stats)))
 
+(defn fmt-day [day] (format "%s %s" s-day day))
+
 (defn plot-label
   "TODO add day number since the outbreak"
-  [cc stats]
+  [day cc stats]
   (format
-   "%s; %s: %s"
+   "%s; %s; %s: %s"
+   (fmt-day day)
    (fmt-last-date stats)
    cc/bot-name
-   (format "%s %s %s" s-stats (cr/country-name-aliased cc)
+   (format "%s %s %s"
+           s-stats
+           (cr/country-name-aliased cc)
            (com/encode-cmd cc))))
 
 (defn palette-colors [n]
@@ -118,7 +130,13 @@
   canvas, or some other factors as rounding, aligning, java2d rendering
   and aligning etc. See
   https://clojurians.zulipchat.com/#narrow/stream/197967-cljplot-dev/topic/using.20cljplot.20for.20work/near/193681905"
+  ;; TODO check if there are negative numbers in the line; if not then
+  ;; {:margins {:y [0 0]}} otherwise look for the min and set the :margins
   {:margins {:y [0 0]}})
+
+(def stroke-population (conj line-cfg
+                             {:color :red
+                              #_(last (c/palette-presets :ylgn-6)) }))
 
 (def stroke-confirmed (conj line-cfg
                             {:color (last (c/palette-presets :ylgn-6)) }))
@@ -147,13 +165,13 @@
     into []
     data)))
 
-(defn plot-country [cc stats]
+(defn plot-country [day cc stats]
   (let [json-data (stats-for-country cc stats)
         sarea-data (->> json-data
                         (remove (fn [[case vs]]
                                   (in?
-                                   [:c :i :r :d]
-                                   #_[:c :p]
+                                   #_[:c :i :r :d]
+                                   [:c :p]
                                    case))))
         curves (keys sarea-data)
         palette (palette-colors (count curves))
@@ -166,7 +184,7 @@
                          curves))
                [:line s-confirmed     stroke-confirmed]
                [:line s-sick-absolute stroke-sick]
-               [:line s-population    stroke-population]))]
+               #_[:line s-population    stroke-population]))]
     (let [y-axis-formatter (metrics-prefix-formatter
                             ;; population numbers have the `max` values, all
                             ;; other numbers are derived from them
@@ -179,15 +197,15 @@
            [:grid]
            [:sarea sarea-data {:palette palette}]
            #_[:line (line-data :p json-data) stroke-population]
-           #_[:line  (line-data :c json-data) stroke-confirmed]
-           #_[:line  (line-data :i json-data) stroke-sick])
+           [:line (line-data :c json-data) stroke-confirmed]
+           [:line (line-data :i json-data) stroke-sick])
           (b/preprocess-series)
           (b/update-scale :y :fmt y-axis-formatter)
           (b/add-axes :bottom)
           (b/add-axes :left)
           #_(b/add-label :bottom "Date")
           #_(b/add-label :left "Sick")
-          (b/add-label :top (plot-label cc stats)
+          (b/add-label :top (plot-label day cc stats)
                        {:color (c/darken :steelblue) :font-size 14})
           (b/add-legend "" legend)
           (r/render-lattice {:width 800 :height 600})
@@ -245,7 +263,7 @@
     #_(sort-by-country-name mapped-hm)
     (sort-by-last-val mapped-hm)))
 
-(defn plot-all-countries-ill [threshold stats]
+(defn plot-all-countries-ill [day threshold stats]
   (let [json-data (stats-all-countries-ill threshold stats)
         palette (cycle (c/palette-presets :category20b))
         legend (reverse
@@ -270,7 +288,8 @@
         #_(b/add-label :bottom "Date")
         #_(b/add-label :left "Sick")
         (b/add-label :top (format
-                           "%s; %s: %s > %s"
+                           "%s; %s; %s: %s > %s"
+                           (fmt-day day)
                            (fmt-last-date stats)
                            cc/bot-name
                            s-sick-cases

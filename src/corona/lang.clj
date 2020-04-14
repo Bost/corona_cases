@@ -17,13 +17,12 @@
 (def s-sick          "Sick")
 (def s-closed        "Closed")
 (def s-sick-absolute "country")
-(def s-population    "Day")
+(def s-day           "Day")
 (def s-sick-absolute "Sick absolute")
 (def s-population    "Population")
 (def s-stats         "Stats")
-(def s-sick-cases   "Sic cases")
+(def s-sick-cases    "Sic cases")
 ;; (def s-language     (:language     lang-strings))
 ;; (def cmd-s-country  (format "<%s>" (:country lang-strings)))
 
 ;; (def lang-de "lang:de")
-

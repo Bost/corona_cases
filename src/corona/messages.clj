@@ -162,7 +162,7 @@
                   "%s\n" ; Deaths
                   "%s")
              (header prm)
-             (str s-day (count (data/raw-dates)))
+             (format "%s %s" s-day (count (data/raw-dates)))
              s-sick
              spacer
              s-recovered

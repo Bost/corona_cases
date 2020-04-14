@@ -27,17 +27,18 @@
      c/token chat-id (select-keys prm (keys msg/options))
      (msg/info (assoc prm :disable_web_page_preview true)))
     #_(morse/send-photo c/token chat-id (msg/absolute-vals prm))
-    (let [stats (v1/pic-data)]
+    (let [stats (v1/pic-data)
+          day (count (v1/raw-dates-unsorted))]
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
-                         (p/plot-country country-code stats)))
+                         (p/plot-country day country-code stats)))
       (when (in? [d/worldwide-2-country-code
                   d/worldwide-3-country-code
                   d/worldwide]
                  country-code)
         (morse/send-photo c/token chat-id
                           (toByteArrayAutoClosable
-                           (p/plot-all-countries-ill com/threshold stats)))))))
+                           (p/plot-all-countries-ill day com/threshold stats)))))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
