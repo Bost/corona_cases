@@ -4,6 +4,7 @@
             [clj-time.format :as tf]
             [clojure.string :as s]
             [corona.core :as c :refer [in?]]
+            [corona.lang :refer :all]
             [corona.countries :as cr]
             [corona.country-codes :refer :all]
             [corona.defs :as d]))

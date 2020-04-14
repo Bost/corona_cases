@@ -1,8 +1,11 @@
 (ns corona.api.v1
   (:require [clojure.core.memoize :as memo]
             [corona.common :refer [api-server time-to-live]]
+            [corona.country-codes :refer :all]
             [corona.core :as c]
-            [net.cgrand.xforms :as x])
+            [corona.tables :as t]
+            [net.cgrand.xforms :as x]
+            [corona.countries :as cr])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
@@ -48,6 +51,27 @@
     ;; "IN" "ES" "CO" "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"
     })
 
+;; (defn for-case [case]
+;;   (->> (get-in (data-memo) [case :locations])
+;;        (filter (fn [loc]
+;;                  true
+;;                  #_(corona.core/in? ccs (:country_code loc))))
+;;        (map (fn [loc]
+;;               (let [cc (:country_code loc)]
+;;                 (->> (sort-by
+;;                       :f
+;;                       (map (fn [[f v]] {:cc cc :f (fmt f) case v})
+;;                            (:history loc)))
+;;                      #_(take-last 3)))))
+;;        (flatten)
+;;        (group-by :f)
+;;        (map (fn [[f hms]]
+;;               (map (fn [[cc hms]]
+;;                      {:cc cc :f f case (reduce + (map case hms))})
+;;                    (group-by :cc hms))))
+;;        (flatten)
+;;        (sort-by :cc)))
+
 (defn xf-for-case
   "TODO
   'transducer' for flatten - see https://clojuredocs.org/clojure.core/mapcat"
@@ -72,35 +96,21 @@
       (sort-by :cc
                (transduce xform into [] coll)))))
 
-(defn for-case [case]
-  (->> (get-in (data-memo) [case :locations])
-       (filter (fn [loc]
-                 true
-                 (corona.core/in? ccs (:country_code loc))))
-       (map (fn [loc]
-              (let [cc (:country_code loc)]
-                (->> (sort-by
-                      :f
-                      (map (fn [[f v]] {:cc cc :f (fmt f) case v})
-                           (:history loc)))
-                     (take-last 3)))))
-       (flatten)
-       (group-by :f)
-       (map (fn [[f hms]]
-              (map (fn [[cc hms]]
-                     {:cc cc :f f case (reduce + (map case hms))})
-                   (group-by :cc hms))))
-       (flatten)
-       (sort-by :cc)))
-
 (defn pic-data []
-  (apply map
-         (fn [{:keys [cc f confirmed] :as cm}
-             {:keys [recovered] :as rm}
-             {:keys [deaths] :as dm}]
-           (let [prm {:cc cc :f f :c confirmed :r recovered :d deaths}]
-             (assoc
-              prm
-              #_(dissoc prm :c)
-              :i (c/calculate-ill prm))))
-         (map xf-for-case [:confirmed :recovered :deaths])))
+  (let [population (t/population)]
+    (apply map
+           (fn [{:keys [cc f confirmed] :as cm}
+               {:keys [recovered] :as rm}
+               {:keys [deaths] :as dm}]
+             (let [prm {:cc cc :f f :c confirmed :r recovered :d deaths
+                        :p (if-let [p (get population cc)]
+                             p
+                             (do
+                               (printf "No population found for %s %s; using 0\n"
+                                       (cr/country-name cc) cc)
+                               0))}]
+               (assoc
+                prm
+                #_(dissoc prm :c)
+                :i (c/calculate-ill prm))))
+           (map xf-for-case [:confirmed :recovered :deaths]))))

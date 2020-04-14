@@ -3,15 +3,18 @@
             [cljplot.common :as plotcom]
             [cljplot.render :as r]
             [clojure.set :as cset]
+            [corona.tables :as t]
             [clojure2d.color :as c]
             [clojure2d.core :as c2d]
             [corona.common :as com]
             [corona.core :as cc]
             [corona.countries :as cr]
+            [corona.lang :refer :all]
             [corona.country-codes :refer :all]
             ;; XXX cljplot.core must be required otherwise an empty plot is
             ;; shown. WTF?
             [cljplot.core]
+            [corona.core :refer [in?]]
             [corona.defs :as d])
   (:import [java.time LocalDate ZoneId]))
 
@@ -26,15 +29,15 @@
      14 000 ->   14k
     140 000 ->  140k
   1 400 000 -> 1400k
-  See https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes "
+  See https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes"
   (cond
-    (< max-val (dec (int 1e4)))  (fn [v] (str (int (/ v 1e0)) ""))
-    (< max-val (dec (int 1e7)))  (fn [v] (str (int (/ v 1e3)) "k"))
-    (< max-val (dec (int 1e10))) (fn [v] (str (int (/ v 1e6)) "M"))
-    (< max-val (dec (int 1e13))) (fn [v] (str (int (/ v 1e9)) "G"))
+    (< max-val (dec (bigint 1e4)))  (fn [v] (str (bigint (/ v 1e0)) ""))
+    (< max-val (dec (bigint 1e7)))  (fn [v] (str (bigint (/ v 1e3)) "k"))
+    (< max-val (dec (bigint 1e10))) (fn [v] (str (bigint (/ v 1e6)) "M"))
+    (< max-val (dec (bigint 1e13))) (fn [v] (str (bigint (/ v 1e9)) "G"))
     :else (throw
            (Exception. (format "Value %d must be < max %d)"
-                               (fn [v] (str (/ v (int 1e9)) "G")))))))
+                               (fn [v] (str (/ v (bigint 1e9)) "G")))))))
 
 (defn to-java-time-local-date [java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date)
@@ -76,19 +79,18 @@
          flatten)))
 
 (defn stats-for-country [cc stats]
-  (let [hm (group-by :case (sum-for-pred cc stats))
-        mapped-hm (plotcom/map-kv
+  (let [mapped-hm (plotcom/map-kv
                    (fn [entry]
                      (sort-by first
                               (map (fn [{:keys [f cnt]}]
                                      [(to-java-time-local-date f) cnt])
                                    entry)))
-                   hm)]
+                   (group-by :case (sum-for-pred cc stats)))]
     ;; sort - keep the "color order" of cases fixed; don't
     ;; recalculate it
     (reverse (transduce (map (fn [case] {case (get mapped-hm case)}))
                         into []
-                        [:i :r :d :c]))))
+                        [:i :r :d :c :p]))))
 
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :f last) (sort-by :f stats)))
@@ -100,13 +102,13 @@
    "%s; %s: %s"
    (fmt-last-date stats)
    cc/bot-name
-   (format "Stats %s %s" (cr/country-name-aliased cc)
+   (format "%s %s %s" s-stats (cr/country-name-aliased cc)
            (com/encode-cmd cc))))
 
-(def palette
+(defn palette-colors [n]
   "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
   (->> (c/palette-presets :gnbu-6)
-       (take-last 3)
+       (take-last n)
        (reverse)
        (cycle)))
 
@@ -138,38 +140,47 @@
                              (map (fn [[_ n]] n) v)))))]
     (transduce xform reducer 0 data)))
 
+(defn line-data [kw data]
+  (second
+   (transduce
+    (filter (fn [[case vs]] (= kw case)))
+    into []
+    data)))
+
 (defn plot-country [cc stats]
   (let [json-data (stats-for-country cc stats)
         sarea-data (->> json-data
-                        (remove (fn [[case vs]] (= :c case))))
+                        (remove (fn [[case vs]]
+                                  (in?
+                                   [:c :i :r :d]
+                                   #_[:c :p]
+                                   case))))
+        curves (keys sarea-data)
+        palette (palette-colors (count curves))
 
         legend
         (reverse
-         (conj (map #(vector :rect %2 {:color %1}) palette
-                    (map (fn [k] (get {:i "Sick" :d "Deaths" :r "Recovered"} k))
-                         (keys sarea-data)))
-               [:line "Confirmed"     stroke-confirmed]
-               [:line "Sick absolute" stroke-sick]))]
-    (let [sick-line-data (->> json-data
-                              (filter (fn [[case vs]] (= :i case)))
-                              (reduce into [])
-                              (second))
-          confirmed-line-data (->> json-data
-                                   (filter (fn [[case vs]] (= :c case)))
-                                   (reduce into [])
-                                   (second))
-          y-axis-formatter (metrics-prefix-formatter
-                            ;; confirmed cases have the `max` values, all other
-                            ;; cases are derived from them
+         (conj (map #(vector :rect %2 {:color %1})
+                    palette
+                    (map (fn [k] (get {:i s-sick :d s-deaths :r s-recovered} k))
+                         curves))
+               [:line s-confirmed     stroke-confirmed]
+               [:line s-sick-absolute stroke-sick]
+               [:line s-population    stroke-population]))]
+    (let [y-axis-formatter (metrics-prefix-formatter
+                            ;; population numbers have the `max` values, all
+                            ;; other numbers are derived from them
                             (max-y-val max json-data))]
       ;; every chart/series definition is a vector with three fields:
       ;; 1. chart type e.g. :grid, :sarea, :line
       ;; 2. data
       ;; 3. configuration hash-map
-      (-> (b/series [:grid]
-                    [:sarea sarea-data {:palette palette}]
-                    [:line  confirmed-line-data stroke-confirmed]
-                    [:line  sick-line-data stroke-sick])
+      (-> (b/series
+           [:grid]
+           [:sarea sarea-data {:palette palette}]
+           #_[:line (line-data :p json-data) stroke-population]
+           #_[:line  (line-data :c json-data) stroke-confirmed]
+           #_[:line  (line-data :i json-data) stroke-sick])
           (b/preprocess-series)
           (b/update-scale :y :fmt y-axis-formatter)
           (b/add-axes :bottom)
@@ -259,9 +270,10 @@
         #_(b/add-label :bottom "Date")
         #_(b/add-label :left "Sick")
         (b/add-label :top (format
-                           "%s; %s: Sic cases > %s"
+                           "%s; %s: %s > %s"
                            (fmt-last-date stats)
                            cc/bot-name
+                           s-sick-cases
                            threshold)
                      {:color (c/darken :steelblue) :font-size 14})
         (b/add-legend "" legend)

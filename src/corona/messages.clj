@@ -7,48 +7,9 @@
             #_[com.hypirion.clj-xchart :as chart]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
+            [corona.lang :refer :all]
             [corona.core :as c]
             [corona.countries :as cr]))
-
-(def lang-strings
-  {
-   :world        "world"
-   :world-desc   "Start here"
-   :start        "start"
-   :list         "list"
-   :list-desc    "List of countries"
-   :about        "about"
-   :contributors "contributors"
-   :references   "references"
-   :feedback     "feedback"
-   :confirmed    "Confirmed"
-   :deaths       "Deaths"
-   :recovered    "Recovered"
-   :sick         "Sick"
-   :closed       "Closed"
-   ;; A文 doesn't get displayed blue as a telegram command. Hmm
-   ;; :language     "lang"
-   :country      "country"
-   })
-
-(def s-world        (:world        lang-strings))
-(def s-world-desc   (:world-desc   lang-strings))
-(def s-start        (:start        lang-strings))
-(def s-list         (:list         lang-strings))
-(def s-list-desc    (:list-desc    lang-strings))
-(def s-about        (:about        lang-strings))
-(def s-contributors (:contributors lang-strings))
-(def s-references   (:references   lang-strings))
-(def s-feedback     (:feedback     lang-strings))
-(def s-confirmed    (:confirmed    lang-strings))
-(def s-deaths       (:deaths       lang-strings))
-(def s-recovered    (:recovered    lang-strings))
-(def s-sick         (:sick         lang-strings))
-(def s-closed       (:closed       lang-strings))
-;; (def s-language     (:language     lang-strings))
-;; (def cmd-s-country  (format "<%s>" (:country lang-strings)))
-
-;; (def lang-de "lang:de")
 
 (def cmd-names [s-world
                 s-about
@@ -201,7 +162,7 @@
                   "%s\n" ; Deaths
                   "%s")
              (header prm)
-             (str "Day " (count (data/raw-dates)))
+             (str s-day (count (data/raw-dates)))
              s-sick
              spacer
              s-recovered
@@ -289,7 +250,7 @@
             {:s s-closed :n closed :total confirmed :diff dclosed
              :calc-rate true
              :desc (format "= %s + %s"
-                           (s/lower-case s-recovered )
+                           (s/lower-case s-recovered)
                            (s/lower-case s-deaths))}))))))
    (footer prm)))
 
@@ -313,7 +274,7 @@
          {:title (format "%s; %s: %s; see %s"
                          (format-last-day prm)
                          c/bot-name
-                         (com/country-name-aliased country-code)
+                         (cr/country-name-aliased country-code)
                          (com/encode-cmd s-about))
           :render-style :area
           :legend {:position :inside-nw}

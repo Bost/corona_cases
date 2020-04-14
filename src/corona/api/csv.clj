@@ -28,7 +28,7 @@
        #_(take-last 1)
        (filter (fn [[_ country-name _ _ _ _]]
                  (->> country-name
-                      com/country-code
+                      cr/country-code
                       pred)))))
 
 (defn sum-up-file [{:keys [sum-up-fn pred file] :as prm}]
@@ -89,7 +89,7 @@
        (reduce into [])
        (map second)
        (into #{})
-       (map com/country-code)
+       (map cr/country-code)
        sort
        vec
        (into cr/default-affected-country-codes)))

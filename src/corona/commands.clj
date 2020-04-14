@@ -5,6 +5,7 @@
             [corona.common :as com]
             [corona.core :as c :refer [in?]]
             [corona.countries :as cr]
+            [corona.lang :refer :all]
             [corona.defs :as d]
             [corona.messages :as msg]
             [corona.plot :as p]
@@ -82,7 +83,7 @@
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
   [country-code]
-  (-> (com/country-name country-code)
+  (-> (cr/country-name country-code)
       (s/replace " " "")))
 
 (defn cmds-country-code [country-code]
@@ -112,15 +113,15 @@
           :pred (fn [_] true)}
          msg/options)
 
-        prm-country-code {:country-code (com/country-code d/worldwide)}]
-    [{:name msg/s-contributors
+        prm-country-code {:country-code (cr/country-code d/worldwide)}]
+    [{:name s-contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
-     {:name msg/s-world
+     {:name s-world
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
                                    prm-country-code)))
-      :desc msg/s-world-desc}
-     {:name msg/s-list
+      :desc s-world-desc}
+     {:name s-list
       ;; TODO implement also sort by recovered & deaths
       :f (fn [chat-id] (list-countries
                        (conj (assoc prm
@@ -128,21 +129,21 @@
                                     :chat-id chat-id
                                     :sort-fn by-ill-asc)
                              prm-country-code)))
-      :desc msg/s-list-desc}
-     {:name msg/s-start
+      :desc s-list-desc}
+     {:name s-start
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
                                    prm-country-code)))
-      :desc msg/s-world-desc}
-     {:name msg/s-about
+      :desc s-world-desc}
+     {:name s-about
       :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
       :desc "Bot version & some additional info"}
-     {:name msg/s-feedback
+     {:name s-feedback
       :f (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}
-     ;; {:name msg/s-language
+     ;; {:name s-language
      ;;  :f (fn [chat-id] (language (assoc prm :chat-id chat-id)))
      ;;  :desc "Change language"}
-     {:name msg/s-references
+     {:name s-references
       :f (fn [chat-id] (references (assoc prm :chat-id chat-id)))
       :desc "Knowledge is power - educate yourself"}]))
 
@@ -154,9 +155,9 @@
 (defn bot-father-edit-cmds []
   (->> (cmds-general)
        (remove (fn [hm]
-                 (in? [msg/s-start
+                 (in? [s-start
                        ;; Need to save space it the mobile app. Sorry guys.
-                       msg/s-contributors] (:name hm))))
+                       s-contributors] (:name hm))))
        (sort-by :name)
        (reverse)
        (map (fn [{:keys [name desc]}] (println name "-" desc)))

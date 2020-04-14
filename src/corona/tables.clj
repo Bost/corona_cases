@@ -1,4 +1,5 @@
-(ns corona.tables)
+(ns corona.tables
+  (:require [corona.countries :as cr]))
 
 (def regions
   "
@@ -495,3 +496,22 @@
    ["Tokelau"                  1357 1.27 17 136 10 nil nil 0 0.0]
    ["Holy See"                 801 0.25 2 2003 0 nil nil nil 0.0]
    ])
+
+(defn population []
+  (transduce
+       (map (fn [[Country Population YearlyChangeRate NetChange Density LandArea
+                 Migrants FertilityRate MedianAge UrbanPopulationRate
+                 WorldShareRate]]
+              [(cr/country-code Country) Population]))
+       conj (sorted-map)
+       data))
+
+(defn growth-per-day
+  "Population: number of people at the beginning of the year
+  YearlyChangeRate: in percents
+  E.g.
+  (growth-per-day 83517045 0.3) => 686"
+  [Population YearlyChangeRate]
+  (int
+   (/ (* Population (/ YearlyChangeRate 100))
+      365)))
