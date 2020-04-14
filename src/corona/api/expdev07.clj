@@ -5,6 +5,7 @@
             [corona.core :as c :refer [read-number]]
             ;; for debugging
             [corona.country-codes :refer :all]
+            [corona.countries :as cr]
             [corona.defs :as d])
   (:import java.text.SimpleDateFormat))
 
@@ -190,15 +191,10 @@
 
       (= country-code (:country_code loc)))))
 
-(defn all-affected-country-names
-  []
-  (->> (all-affected-country-codes)
-       (map com/country-name)))
-
 (defn stats-per-country [{:keys [cc] :as prm}]
   (->> (assoc prm :pred (pred-fn cc))
        (last-day)
-       (conj {:cn (com/country-name-aliased cc)
+       (conj {:cn (cr/country-name-aliased cc)
               :cc cc})))
 
 (defn stats-all-affected-countries [prm]

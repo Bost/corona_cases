@@ -245,7 +245,7 @@
          "%s"   ; country commands
          )
     (header prm)
-    (com/country-name-aliased country-code)
+    (cr/country-name-aliased country-code)
     (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
            (map (fn [s] (->> s s/lower-case com/encode-cmd))
                 [country-code

@@ -1,6 +1,8 @@
 (ns corona.countries
   (:require [clojure.set :as cset]
             [corona.country-codes :refer :all]
+            [corona.core :as c :refer [in?]]
+            [clojure.string :as s]
             [corona.defs :as d])
   (:import com.neovisionaries.i18n.CountryCode))
 
@@ -315,7 +317,11 @@
   https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
   (cset/map-invert country-code--country))
 
-(defn country-name [country-code] (get country-code--country country-code))
+(defn country-name
+  "Country name from 2-letter country code: \"DE\" -> \"Germany\" "
+  [cc]
+  (get country-code--country cc))
+
 
 (def aliases-hm
   "Mapping of alternative names, spelling, typos to the names of countries used by
@@ -434,6 +440,28 @@
    ;; "Cruise Ship" is mapped to the default val
    })
 
+(defn- lower-case-keyword
+  "ABC -> abc"
+  [hm]
+  (into {} (map (fn [[k v]] [(s/lower-case k) v]) hm)))
+
+(defn country-code
+  "Return two letter country code (Alpha-2) according to
+  https://en.wikipedia.org/wiki/ISO_3166-1
+  Defaults to `default-2-country-code`."
+  [country-name]
+  (let [country (s/lower-case country-name)
+        lcases-countries (lower-case-keyword country--country-code)]
+    (if-let [cc (get lcases-countries country)]
+      cc
+      (if-let [country-alias (get (lower-case-keyword aliases-hm) country)]
+        (get country--country-code country-alias)
+        (do (println (format
+                      "No country code found for \"%s\". Using \"%s\""
+                      country-name
+                      d/default-2-country-code))
+            d/default-2-country-code)))))
+
 (def aliases-inverted
   "See also `country-name-aliased`"
   (conj
@@ -473,3 +501,20 @@
     gq "Equat Guinea"
     qq "Rest"
     }))
+
+(defn country-alias
+  "Get a country alias or the normal name if an alias doesn't exist"
+  [cc]
+  (let [up-cc (s/upper-case cc)
+        country (get country-code--country up-cc)]
+    (get aliases-inverted up-cc country)))
+
+(defn country-name-aliased
+  "Use an alias; typically a shorter name for some countries.
+  See `aliases-inverted`"
+  [cc]
+  (if (in?
+       [va tw do ir ru ps ae kr mk ba cd bo md bn ve vc kp tz xk la sy kn tt ag
+        cf cz st pg gq qq] cc)
+    (country-alias cc)
+    (country-name cc)))

@@ -2,16 +2,16 @@
   (:require [cljplot.build :as b]
             [cljplot.common :as plotcom]
             [cljplot.render :as r]
-            ;; just for debugging
-            [corona.country-codes :refer :all]
-            ;; XXX cljplot.core must be required otherwise an empty plot is
-            ;; shown. WTF?
-            [cljplot.core]
             [clojure.set :as cset]
             [clojure2d.color :as c]
             [clojure2d.core :as c2d]
             [corona.common :as com]
             [corona.core :as cc]
+            [corona.countries :as cr]
+            [corona.country-codes :refer :all]
+            ;; XXX cljplot.core must be required otherwise an empty plot is
+            ;; shown. WTF?
+            [cljplot.core]
             [corona.defs :as d])
   (:import [java.time LocalDate ZoneId]))
 
@@ -100,7 +100,7 @@
    "%s; %s: %s"
    (fmt-last-date stats)
    cc/bot-name
-   (format "Stats %s %s" (com/country-name-aliased cc)
+   (format "Stats %s %s" (cr/country-name-aliased cc)
            (com/encode-cmd cc))))
 
 (def palette
@@ -241,7 +241,7 @@
                 (map #(vector :rect %2 {:color %1})
                      palette
                      (map
-                      com/country-alias
+                      cr/country-alias
                       ;; XXX b/add-legend doesn't accept newline char \n
                       #_(fn [cc] (format "%s %s"
                                        cc
