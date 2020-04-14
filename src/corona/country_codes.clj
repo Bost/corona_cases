@@ -252,3 +252,8 @@
 (def na "NA")
 (def mx "MX")
 (def pl "PL")
+
+(def xd "XD")
+(def xe "XE")
+(def xs "XS")
+(def xx "XX")

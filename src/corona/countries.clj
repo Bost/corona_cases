@@ -296,12 +296,11 @@
     ;; see
     ;; https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
     {
-     "XD" "United Nations Neutral Zone"
-     "XE" "Iraq-Saudi Arabia Neutral Zone"
-     "XS" "Spratly Islands"
-     "XX" "Disputed Territory"
+     xd "United Nations Neutral Zone"
+     xe "Iraq-Saudi Arabia Neutral Zone"
+     xs "Spratly Islands"
+     xx "Disputed Territory"
      }))
-
 
 ;; java.util.Locale doesn't show country names according to the ISO norm
 ;; (defn country-code--country-locale
