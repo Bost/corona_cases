@@ -37,8 +37,7 @@
     (< max-val (dec (bigint 1e10))) (fn [v] (str (bigint (/ v 1e6)) "M"))
     (< max-val (dec (bigint 1e13))) (fn [v] (str (bigint (/ v 1e9)) "G"))
     :else (throw
-           (Exception. (format "Value %d must be < max %d)"
-                               (fn [v] (str (/ v (bigint 1e9)) "G")))))))
+           (Exception. (format "Value %d must be < max %d" max-val 1e9)))))
 
 (defn to-java-time-local-date [java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date)
@@ -65,9 +64,7 @@
   [cc stats]
   (let [pred-fn (fn [hm] (if (= cc d/worldwide-2-country-code)
                           true
-                          (= cc (:cc hm))))
-        ;; population (t/population)
-        ]
+                          (= cc (:cc hm))))]
     (->> stats
          #_(v1/pic-data)
          (filter pred-fn)
@@ -166,8 +163,8 @@
     data)))
 
 (defn plot-country [day cc stats]
-  (let [json-data (stats-for-country cc stats)
-        sarea-data (->> json-data
+  (let [base-data (stats-for-country cc stats)
+        sarea-data (->> base-data
                         (remove (fn [[case vs]]
                                   (in?
                                    #_[:c :i :r :d]
@@ -188,17 +185,23 @@
     (let [y-axis-formatter (metrics-prefix-formatter
                             ;; population numbers have the `max` values, all
                             ;; other numbers are derived from them
-                            (max-y-val max json-data))]
+                            (max-y-val max base-data))]
       ;; every chart/series definition is a vector with three fields:
       ;; 1. chart type e.g. :grid, :sarea, :line
       ;; 2. data
       ;; 3. configuration hash-map
+
+      ;; TODO annotation by value and labeling doesn't work:
+      ;; :annotate? true
+      ;; :annotate-fmt "%.1f"
+      ;; {:label (plot-label day cc stats)}
+
       (-> (b/series
            [:grid]
            [:sarea sarea-data {:palette palette}]
-           #_[:line (line-data :p json-data) stroke-population]
-           [:line (line-data :c json-data) stroke-confirmed]
-           [:line (line-data :i json-data) stroke-sick])
+           #_[:line (line-data :p base-data) stroke-population]
+           [:line (line-data :c base-data) stroke-confirmed]
+           [:line (line-data :i base-data) stroke-sick])
           (b/preprocess-series)
           (b/update-scale :y :fmt y-axis-formatter)
           (b/add-axes :bottom)
@@ -206,7 +209,8 @@
           #_(b/add-label :bottom "Date")
           #_(b/add-label :left "Sick")
           (b/add-label :top (plot-label day cc stats)
-                       {:color (c/darken :steelblue) :font-size 14})
+                       (conj {:color (c/darken :steelblue)}
+                             #_{:font-size 14}))
           (b/add-legend "" legend)
           (r/render-lattice {:width 800 :height 600})
           (c2d/get-image)))))

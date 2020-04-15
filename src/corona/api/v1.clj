@@ -79,6 +79,10 @@
   (let [xform (comp (filter (fn [loc]
                               true
                               #_(corona.core/in? ccs (:country_code loc))))
+                    ;; TODO try smaller composition steps:
+                    ;; (map :country-code)
+                    ;; (x/by :f )
+                    ;; etc.
                     (map (fn [loc]
                            (let [cc (:country_code loc)]
                              (->> (sort-by
