@@ -35,22 +35,6 @@
 
 (defn fmt [raw-date] (.parse sdf (keyname raw-date)))
 
-(def ccs
-  #{
-    ;; "CR" "TG" "ZA" "PE" "LC" "CH" "RU" "SI" "AU" "KR" "IT" "FI" "SC" "TT" "MY"
-    ;; "SY" "MN" "AM" "DZ" "UY" "TD" "DJ" "BI" "MK" "MU" "LI" "GR" "GY" "CG" "ML"
-    ;; "GM" "SA" "BH" "NE" "BN" "XK" "CD" "DK" "BJ" "ME" "BO" "JO" "CV" "VE" "CI"
-    ;; "UZ" "TN" "IS" "GA" "TZ" "AT" "LT" "NP" "BG" "IL" "PK" "PT" "HR" "MR" "GE"
-    ;; "HU" "TW" "MM" "SR" "VA" "KW" "SE" "GB" "QQ" "VN" "CF" "PA" "VC" "JP" "IR"
-    ;; "AF" "LY" "MZ" "RO" "QA" "CM" "BY" "SD" "AR" "BR" "ZW" "NZ" "FJ" "ID" "SV"
-    ;; "CN" "HT" "RW" "BA" "TL" "JM" "KE" "PY" "CY" "GH" "MA" "SG" "LK" "PH" "SM"
-    ;; "TR" "PS" "BZ" "CU" "AD" "DM" "LR" "OM" "SO" "DO" "AL" "FR" "GW" "BB" "CA"
-    ;; "MG" "KH" "LA" "HN" "TH" "DE" "LB" "KZ" "EC" "NO" "AO" "ET" "MD" "AG" "BE"
-    ;; "MV" "SZ" "CZ" "CL" "BT" "NL" "EG" "SN" "EE" "KN" "BW" "NI" "PG" "IQ" "KG"
-    ;; "US" "ZM" "MC" "GT" "BF" "LU" "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ"
-    ;; "IN" "ES" "CO" "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"
-    })
-
 ;; (defn for-case [case]
 ;;   (->> (get-in (data-memo) [case :locations])
 ;;        (filter (fn [loc]
@@ -72,6 +56,22 @@
 ;;        (flatten)
 ;;        (sort-by :cc)))
 
+(def ccs
+  #{
+    ;; "CR" "TG" "ZA" "PE" "LC" "CH" "RU" "SI" "AU" "KR" "IT" "FI" "SC" "TT" "MY"
+    ;; "SY" "MN" "AM" "DZ" "UY" "TD" "DJ" "BI" "MK" "MU" "LI" "GR" "GY" "CG" "ML"
+    ;; "GM" "SA" "BH" "NE" "BN" "XK" "CD" "DK" "BJ" "ME" "BO" "JO" "CV" "VE" "CI"
+    ;; "UZ" "TN" "IS" "GA" "TZ" "AT" "LT" "NP" "BG" "IL" "PK" "PT" "HR" "MR" "GE"
+    ;; "HU" "TW" "MM" "SR" "VA" "KW" "SE" "GB" "QQ" "VN" "CF" "PA" "VC" "JP" "IR"
+    ;; "AF" "LY" "MZ" "RO" "QA" "CM" "BY" "SD" "AR" "BR" "ZW" "NZ" "FJ" "ID" "SV"
+    ;; "CN" "HT" "RW" "BA" "TL" "JM" "KE" "PY" "CY" "GH" "MA" "SG" "LK" "PH" "SM"
+    ;; "TR" "PS" "BZ" "CU" "AD" "DM" "LR" "OM" "SO" "DO" "AL" "FR" "GW" "BB" "CA"
+    ;; "MG" "KH" "LA" "HN" "TH" "DE" "LB" "KZ" "EC" "NO" "AO" "ET" "MD" "AG" "BE"
+    ;; "MV" "SZ" "CZ" "CL" "BT" "NL" "EG" "SN" "EE" "KN" "BW" "NI" "PG" "IQ" "KG"
+    ;; "US" "ZM" "MC" "GT" "BF" "LU" "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ"
+    ;; "IN" "ES" "CO" "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"
+    })
+
 (defn xf-for-case
   "({:cc \"DE\" :f #inst \"2020-04-14T00:00:00.000-00:00\" :c 131359 :r 68200 :d 3294 :p 83783942 :i 59865}
     {:cc \"DE\" :f #inst \"2020-04-15T00:00:00.000-00:00\" :c 134753 :r 72600 :d 3804 :p 83783942 :i 58349}
@@ -83,27 +83,27 @@
   TODO
   'transducer' for flatten - see https://clojuredocs.org/clojure.core/mapcat"
   [case]
+
+  (defn process-location [{:keys [country_code history]}]
+    (transduce (comp (x/sort-by :f)
+                     (map (fn [[f v]] {:cc country_code :f (fmt f) case v}))
+                     (x/take-last 3))
+               conj [] history))
+
+  (defn process-date [[f hms]]
+    (map (fn [[cc hms]]
+           {:cc cc :f f case (reduce + (map case hms))})
+         (group-by :cc hms)))
+
   (let [xform (comp (filter (fn [loc]
                               true
                               #_(corona.core/in? ccs (:country_code loc))))
-                    ;; TODO try smaller composition steps:
-                    ;; (map :country-code)
-                    ;; (x/by :f )
-                    ;; etc.
-                    (map (fn [loc]
-                           (let [cc (:country_code loc)]
-                             (->> (sort-by
-                                   :f
-                                   (map (fn [[f v]] {:cc cc :f (fmt f) case v})
-                                        (:history loc)))
-                                  #_(take-last 3))))))
+                    (map process-location))
         coll (transduce xform into []
                         (get-in (data-memo) [case :locations]))]
-    (let [xform (comp (x/by-key :f (x/into []))
-                      (map (fn [[f hms]]
-                             (map (fn [[cc hms]]
-                                    {:cc cc :f f case (reduce + (map case hms))})
-                                  (group-by :cc hms)))))]
+    (let [xform (comp
+                 (x/by-key :f (x/into []))
+                 (map process-date))]
       (sort-by :cc
                (transduce xform into [] coll)))))
 
