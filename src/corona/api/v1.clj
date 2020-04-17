@@ -73,7 +73,14 @@
 ;;        (sort-by :cc)))
 
 (defn xf-for-case
-  "TODO
+  "({:cc \"DE\" :f #inst \"2020-04-14T00:00:00.000-00:00\" :c 131359 :r 68200 :d 3294 :p 83783942 :i 59865}
+    {:cc \"DE\" :f #inst \"2020-04-15T00:00:00.000-00:00\" :c 134753 :r 72600 :d 3804 :p 83783942 :i 58349}
+    {:cc \"DE\" :f #inst \"2020-04-16T00:00:00.000-00:00\" :c 137698 :r 77000 :d 4052 :p 83783942 :i 56646}
+    {:cc \"SK\" :f #inst \"2020-04-14T00:00:00.000-00:00\" :c 835    :r 113   :d 2    :p 5459642  :i 720}
+    {:cc \"SK\" :f #inst \"2020-04-15T00:00:00.000-00:00\" :c 863    :r 151   :d 6    :p 5459642  :i 706}
+    {:cc \"SK\" :f #inst \"2020-04-16T00:00:00.000-00:00\" :c 977    :r 167   :d 8    :p 5459642  :i 802})
+
+  TODO
   'transducer' for flatten - see https://clojuredocs.org/clojure.core/mapcat"
   [case]
   (let [xform (comp (filter (fn [loc]

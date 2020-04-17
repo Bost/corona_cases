@@ -38,7 +38,7 @@
                  country-code)
         (morse/send-photo c/token chat-id
                           (toByteArrayAutoClosable
-                           (p/plot-all-countries-ill day com/threshold stats)))))))
+                           (p/plot-all-countries-ill day stats)))))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

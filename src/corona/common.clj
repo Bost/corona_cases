@@ -23,13 +23,10 @@
                 (t/default-time-zone))
               (tc/from-date date)))
 
-(def threshold
+(def min-threshold
   " Country w/ the number of cases less than the threshold are grouped into
-  \"Rest\".
-  TODO implement adaptive threshold so that max 10 countries are shown in the
-  graph.
-  "
-  20000)
+  \"Rest\"."
+  30000)
 
 (def sorry-ws
   (str
