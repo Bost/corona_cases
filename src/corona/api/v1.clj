@@ -153,7 +153,8 @@
                         :p (if-let [p (get population cc)]
                              p
                              (do
-                               (printf "No population found for %s %s; using 0\n"
+                               ;; TODO what it the population of Kosovo XK?
+                               #_(printf "No population found for %s %s; using 0\n"
                                        (cr/country-name cc) cc)
                                0))}]
                (assoc
