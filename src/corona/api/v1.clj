@@ -1,13 +1,18 @@
 (ns corona.api.v1
   (:require [clojure.core.memoize :as memo]
             [corona.common :refer [api-server time-to-live]]
-            [corona.country-codes :refer :all]
             [corona.core :as c]
+            [corona.countries :as cr]
+            [corona.country-codes :refer :all]
             [corona.tables :as t]
-            [net.cgrand.xforms :as x]
-            [corona.countries :as cr])
+            [net.cgrand.xforms :as x])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
+
+(defmacro dbg [body]
+  `(let [x# ~body]
+     (println "dbg:" '~body "=" x#)
+     x#))
 
 ;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true
 
@@ -73,41 +78,72 @@
     })
 
 (defn xf-for-case
-  "({:cc \"DE\" :f #inst \"2020-04-14T00:00:00.000-00:00\" :c 131359 :r 68200 :d 3294 :p 83783942 :i 59865}
-    {:cc \"DE\" :f #inst \"2020-04-15T00:00:00.000-00:00\" :c 134753 :r 72600 :d 3804 :p 83783942 :i 58349}
-    {:cc \"DE\" :f #inst \"2020-04-16T00:00:00.000-00:00\" :c 137698 :r 77000 :d 4052 :p 83783942 :i 56646}
-    {:cc \"SK\" :f #inst \"2020-04-14T00:00:00.000-00:00\" :c 835    :r 113   :d 2    :p 5459642  :i 720}
-    {:cc \"SK\" :f #inst \"2020-04-15T00:00:00.000-00:00\" :c 863    :r 151   :d 6    :p 5459642  :i 706}
-    {:cc \"SK\" :f #inst \"2020-04-16T00:00:00.000-00:00\" :c 977    :r 167   :d 8    :p 5459642  :i 802})
+  "E.g.
+(
+  {:cc \"SK\" :f #inst \"2020-04-04T00:00:00.000-00:00\" :deaths 1}
+  {:cc \"SK\" :f #inst \"2020-03-31T00:00:00.000-00:00\" :deaths 0}
+  {:cc \"US\" :f #inst \"2020-04-04T00:00:00.000-00:00\" :deaths 8407}
+  {:cc \"US\" :f #inst \"2020-03-31T00:00:00.000-00:00\" :deaths 3873})
 
-  TODO
-  'transducer' for flatten - see https://clojuredocs.org/clojure.core/mapcat"
+  TODO see (require '[clojure.core.reducers :as r])
+  "
   [case]
 
   (defn process-location [{:keys [country_code history]}]
-    (transduce (comp (x/sort-by :f)
-                     (map (fn [[f v]] {:cc country_code :f (fmt f) case v}))
-                     (x/take-last 3))
-               conj [] history))
+    ;; (def hms hms)
+    ;; (def case case)
+    ;; (def f f)
+    ;; (def country_code country_code)
+    ;; (def history history)
+
+    #_(->> (sort-by :f history)
+           (map (fn [[f v]] {:cc country_code :f (fmt f) case v}))
+           (take-last 2))
+
+    (into [] (comp (x/sort-by :f)
+                   (map (fn [[f v]] {:cc country_code :f (fmt f) case v}))
+                   #_(x/take-last 2))
+          history))
 
   (defn process-date [[f hms]]
-    (map (fn [[cc hms]]
-           {:cc cc :f f case (reduce + (map case hms))})
-         (group-by :cc hms)))
+    ;; (def hms hms)
+    ;; (def case case)
+    ;; (def f f)
+    (into []
+          ;; the xform for the `into []`
+          (comp
+           ;; group together provinces of the given country
+           (x/by-key :cc (x/reduce conj)) ; (group-by :cc)
+           (map (fn [[cc hms]] {:cc cc :f f case (reduce + (map case hms))})))
+          hms)
 
-  (let [xform (comp (filter (fn [loc]
-                              true
-                              #_(corona.core/in? ccs (:country_code loc))))
-                    (map process-location))
-        coll (transduce xform into []
-                        (get-in (data-memo) [case :locations]))]
-    (let [xform (comp
-                 (x/by-key :f (x/into []))
-                 (map process-date))]
-      (sort-by :cc
-               (transduce xform into [] coll)))))
+    #_(->> (group-by :cc hms) ;; group together provinces of the given country
+           (map (fn [[cc hms]] {:cc cc :f f case (reduce + (map case hms))}))))
 
-(defn pic-data []
+  (->> (get-in (data-memo) [case :locations])
+       (transduce (comp
+                   (filter (fn [loc]
+                             true
+                             #_(corona.core/in? ccs (:country_code loc))))
+                   (map process-location))
+                  ;; works as flatten by 1 level
+                  into [])
+       (transduce (comp
+                   (x/by-key :f (x/reduce conj)) ; (group-by :f)
+                   (map process-date))
+                  ;; works as flatten by 1 level
+                  into [])
+       (sort-by :cc)))
+
+(defn pic-data
+  "
+(
+  {:cc \"SK\" :f #inst \"2020-04-04T00:00:00.000-00:00\" :c 471    :r 10    :d 1    :p 5459642   :i 460}
+  {:cc \"SK\" :f #inst \"2020-03-31T00:00:00.000-00:00\" :c 363    :r 3     :d 0    :p 5459642   :i 360}
+  {:cc \"US\" :f #inst \"2020-04-04T00:00:00.000-00:00\" :c 308853 :r 14652 :d 8407 :p 331002651 :i 285794}
+  {:cc \"US\" :f #inst \"2020-03-31T00:00:00.000-00:00\" :c 188172 :r 7024  :d 3873 :p 331002651 :i 177275}
+)"
+  []
   (let [population (t/population)]
     (apply map
            (fn [{:keys [cc f confirmed] :as cm}
