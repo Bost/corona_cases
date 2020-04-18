@@ -308,6 +308,7 @@
     ;; see
     ;; https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
     {
+     xk "Republic of Kosovo"
      xd "United Nations Neutral Zone"
      xe "Iraq-Saudi Arabia Neutral Zone"
      xs "Spratly Islands"
