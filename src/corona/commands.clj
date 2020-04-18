@@ -14,6 +14,11 @@
            java.io.ByteArrayOutputStream
            javax.imageio.ImageIO))
 
+(defmacro dbg [body]
+  `(let [x# ~body]
+     (println "dbg:" '~body "=" x#)
+     x#))
+
 (defn toByteArrayAutoClosable
   "Thanks to https://stackoverflow.com/a/15414490"
   [^BufferedImage image]
@@ -38,7 +43,7 @@
                  country-code)
         (morse/send-photo c/token chat-id
                           (toByteArrayAutoClosable
-                           (p/plot-all-countries-ill day stats)))))))
+                           (p/plot-all-countries-ill day com/min-threshold stats)))))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

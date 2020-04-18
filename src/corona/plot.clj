@@ -282,41 +282,39 @@
     #_(sort-by-country-name mapped-hm)
     (update prm :data (fn [_] (sort-by-last-val mapped-hm)))))
 
-(defn plot-all-countries-ill
-  ([day stats] (plot-all-countries-ill day com/min-threshold) stats)
-  ([day min-threshold stats]
-   (let [prm (stats-all-countries-ill min-threshold stats)
-         {json-data :data threshold :threshold} prm
-         palette (cycle (c/palette-presets :category20b))
-         legend (reverse
-                 (map #(vector :rect %2 {:color %1})
-                      palette
-                      (map
-                       cr/country-alias
-                       ;; XXX b/add-legend doesn't accept newline char \n
-                       #_(fn [cc] (format "%s %s"
-                                         cc
-                                         (com/country-alias cc)))
-                       (keys json-data))))
-         y-axis-formatter (metrics-prefix-formatter
-                           ;; `+` means: sum up all sick/ill cases
-                           (max-y-val + json-data))]
-     (-> (b/series [:grid]
-                   [:sarea json-data])
-         (b/preprocess-series)
-         (b/update-scale :y :fmt y-axis-formatter)
-         (b/add-axes :bottom)
-         (b/add-axes :left)
-         #_(b/add-label :bottom "Date")
-         #_(b/add-label :left "Sick")
-         (b/add-label :top (format
-                            "%s; %s; %s: %s > %s"
-                            (fmt-day day)
-                            (fmt-last-date stats)
-                            cc/bot-name
-                            s-sick-cases
-                            threshold)
-                      {:color (c/darken :steelblue) :font-size 14})
-         (b/add-legend "" legend)
-         (r/render-lattice {:width 800 :height 600})
-         (c2d/get-image)))))
+(defn plot-all-countries-ill [day min-threshold stats]
+  (let [prm (stats-all-countries-ill min-threshold stats)
+        {json-data :data threshold :threshold} prm
+        palette (cycle (c/palette-presets :category20b))
+        legend (reverse
+                (map #(vector :rect %2 {:color %1})
+                     palette
+                     (map
+                      cr/country-alias
+                      ;; XXX b/add-legend doesn't accept newline char \n
+                      #_(fn [cc] (format "%s %s"
+                                        cc
+                                        (com/country-alias cc)))
+                      (keys json-data))))
+        y-axis-formatter (metrics-prefix-formatter
+                          ;; `+` means: sum up all sick/ill cases
+                          (max-y-val + json-data))]
+    (-> (b/series [:grid]
+                  [:sarea json-data])
+        (b/preprocess-series)
+        (b/update-scale :y :fmt y-axis-formatter)
+        (b/add-axes :bottom)
+        (b/add-axes :left)
+        #_(b/add-label :bottom "Date")
+        #_(b/add-label :left "Sick")
+        (b/add-label :top (format
+                           "%s; %s; %s: %s > %s"
+                           (fmt-day day)
+                           (fmt-last-date stats)
+                           cc/bot-name
+                           s-sick-cases
+                           threshold)
+                     {:color (c/darken :steelblue) :font-size 14})
+        (b/add-legend "" legend)
+        (r/render-lattice {:width 800 :height 600})
+        (c2d/get-image))))
