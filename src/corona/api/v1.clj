@@ -1,4 +1,5 @@
 (ns corona.api.v1
+  "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:require [clojure.core.memoize :as memo]
             [corona.common :refer [api-server time-to-live]]
             [corona.core :as c]
@@ -120,6 +121,20 @@
     #_(->> (group-by :cc hms) ;; group together provinces of the given country
            (map (fn [[cc hms]] {:cc cc :f f case (reduce + (map case hms))}))))
 
+  ;; TODO see: "A transducer for clojure.core.flatten"
+  ;; https://groups.google.com/forum/#!topic/clojure-dev/J442k0GsWoY
+  ;;
+  ;; - `flatten` does not provide a transducer, but `cat` and `mapcat`
+  ;;   transducers cover most cases.
+  ;; - also "remove flatmap in favor of mapcat"
+  ;;   https://clojure.atlassian.net/browse/CLJ-1494
+  ;;
+  ;; Resulting PR `tree-seq` instead of `flatten`:
+  ;; https://github.com/cgrand/xforms/issues/20
+
+  ;; Transducers: how-to
+  ;; https://www.astrecipes.net/blog/2016/11/24/transducers-how-to/
+
   (->> (get-in (data-memo) [case :locations])
        (transduce (comp
                    (filter (fn [loc]
@@ -136,7 +151,7 @@
        (sort-by :cc)))
 
 (defn pic-data
-  "
+  "Returns a collection of hash-maps containing e.g.:
 (
   {:cc \"SK\" :f #inst \"2020-04-04T00:00:00.000-00:00\" :c 471    :r 10    :d 1    :p 5459642   :i 460}
   {:cc \"SK\" :f #inst \"2020-03-31T00:00:00.000-00:00\" :c 363    :r 3     :d 0    :p 5459642   :i 360}
