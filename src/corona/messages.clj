@@ -2,14 +2,22 @@
   (:require [clj-time.coerce :as tc]
             [clj-time.core :as t]
             [clj-time.format :as tf]
+            [corona.api.v1 :as v1]
+            [corona.defs :as d]
+            [utils.core :refer :all]
+            [morse.api :as morse]
             [clojure.core.memoize :as memo]
             [clojure.string :as s]
+            [corona.plot :as p]
             #_[com.hypirion.clj-xchart :as chart]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.lang :refer :all]
             [corona.core :as c]
-            [corona.countries :as cr]))
+            [corona.countries :as cr])
+  (:import java.awt.image.BufferedImage
+           java.io.ByteArrayOutputStream
+           javax.imageio.ImageIO))
 
 (def cmd-names [s-world
                 s-about
@@ -97,6 +105,25 @@
           (map com/encode-cmd)
           (map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer)))))
+
+(defn toByteArrayAutoClosable
+  "Thanks to https://stackoverflow.com/a/15414490"
+  [^BufferedImage image]
+  (with-open [out (new ByteArrayOutputStream)]
+    (ImageIO/write image "png" out)
+    (.toByteArray out)))
+
+(defn callback-handler-fn [{:keys [data] :as prm}]
+  (let [{country-code :cc chat-id :chat-id} (clojure.edn/read-string data)
+        stats (v1/pic-data)
+        day (count (v1/raw-dates-unsorted))]
+    (when (in? [d/worldwide-2-country-code
+                d/worldwide-3-country-code
+                d/worldwide]
+               country-code)
+      (morse/send-photo c/token chat-id
+                        (toByteArrayAutoClosable
+                         (p/plot-all-countries-ill day com/min-threshold stats))))))
 
 (defn references [prm]
   (format
@@ -243,7 +270,7 @@
              :calc-rate true
              :desc ""})
            (fmt-to-cols
-            {:s s-closed :n closed :total confirmed :diff dclosed
+            {:s s-closed    :n closed :total confirmed :diff dclosed
              :calc-rate true
              :desc (format "= %s + %s"
                            (s/lower-case s-recovered)

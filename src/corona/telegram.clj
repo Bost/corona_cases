@@ -9,7 +9,8 @@
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
-            [morse.polling-patch :as p-patch]))
+            [morse.polling-patch :as p-patch]
+            [corona.messages :as msg]))
 
 (def chats (atom #{}))
 
@@ -30,6 +31,7 @@
                     (println (str "[" tbeg "           " " " bot-ver " /" name "]") chat)
                     (f chat-id)
                     (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" name  "]") chat))))))
+       (into [(h/callback-fn msg/callback-handler-fn)])
        (apply h/handlers)))
 
 (defn start-polling

@@ -22,18 +22,32 @@
     (ImageIO/write image "png" out)
     (.toByteArray out)))
 
+(defn cb-data [chat-id text case-k country-code]
+  {:text text :callback_data (pr-str {:chat-id chat-id
+                                      :cc country-code
+                                      :cb case-k})})
+
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
-    (morse/send-text
-     c/token chat-id (select-keys prm (keys msg/options))
-     (msg/info (assoc prm :disable_web_page_preview true)))
-    #_(morse/send-photo c/token chat-id (msg/absolute-vals prm))
+    #_(println "(select-keys prm (keys msg/options))" (select-keys prm (keys msg/options)))
+    (morse/send-text c/token chat-id (select-keys prm (keys msg/options))
+                     (msg/info (assoc prm :disable_web_page_preview true)))
+
     (let [stats (v1/pic-data)
           day (count (v1/raw-dates-unsorted))]
       (morse/send-photo c/token chat-id
+                        ;; TODO fix sending {:reply_markup {...}
                         (toByteArrayAutoClosable
                          (p/plot-country day country-code stats)))
-      (when (in? [d/worldwide-2-country-code
+      (morse/send-text
+       c/token chat-id
+       {:reply_markup
+        {:inline_keyboard [[(cb-data chat-id s-sick      :i country-code)
+                            (cb-data chat-id s-deaths    :d country-code)
+                            (cb-data chat-id s-recovered :r country-code)
+                            (cb-data chat-id s-confirmed :c country-code)]]}}
+       "For sum-up cases - click on one of the buttons below")
+      #_(when (in? [d/worldwide-2-country-code
                   d/worldwide-3-country-code
                   d/worldwide]
                  country-code)
@@ -45,7 +59,6 @@
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   [col]
   (partition-all (/ (count col) 7) col))
-
 
 (defn- by-case-asc      [case-kw coll] (sort-by case-kw < coll))
 (def by-ill-asc       (fn [coll] (by-case-asc :i coll)))

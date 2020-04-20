@@ -7,6 +7,11 @@
 
 ;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true
 
+;; TODO fix provinces of Denmark:
+;; Denmark http://localhost:8000/v2/locations/92
+;; Denmark http://localhost:8000/v2/locations/93
+;; Denmark http://localhost:8000/v2/locations/94
+
 (def url (format "http://%s/v2/locations?source=%s&timelines=true"
                  api-server api-data-source))
 
