@@ -20,7 +20,9 @@
    ;; managing environment variables
    [environ                 "1.1.0"]
 
+   ;; Clojure interface for Telegram Bot API
    [morse                   "0.4.3"]
+
    [org.clojure/data.json   "1.0.0"]
    [clojure.java-time       "0.3.2"]
    [net.cgrand/xforms       "0.19.2"]
@@ -38,7 +40,7 @@
    ;; internationalization, ISO 3166-1 country codes etc.
    [com.neovisionaries/nv-i18n "1.27"]
 
-   ;; parse HTML into Clojure data structures
+   ;; parse HTML into Clojure data structures - scrapping data from HTML tables
    [hickory "0.7.1"]]
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"

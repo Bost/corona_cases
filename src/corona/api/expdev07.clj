@@ -4,7 +4,7 @@
             [corona.common :as com :refer [api-server time-to-live]]
             [corona.core :as c :refer [read-number]]
             ;; for debugging
-            [corona.country-codes :refer :all]
+            [corona.country-codes :refer [xx]]
             [corona.countries :as cr]
             [corona.defs :as d])
   (:import java.text.SimpleDateFormat))
@@ -79,7 +79,7 @@
                                            ((comp :locations case) (data-memo)))))
                          cset/union #{}
                          [:confirmed :deaths :recovered])]
-     (transduce (comp (map (fn [cc] (if (= "XX" cc)
+     (transduce (comp (map (fn [cc] (if (= xx cc)
                                      d/default-2-country-code
                                      cc)))
                       (distinct)
@@ -93,7 +93,7 @@
                             (map :country_code)
                             set)))
         (reduce cset/union)
-        (mapv (fn [cc] (if (= "XX" cc)
+        (mapv (fn [cc] (if (= xx cc)
                         d/default-2-country-code
                         cc)))
         (distinct)
@@ -187,7 +187,7 @@
 
       d/default-2-country-code
       ;; XX comes from the service
-      (= "XX" (:country_code loc))
+      (= xx (:country_code loc))
 
       (= country-code (:country_code loc)))))
 
