@@ -241,11 +241,7 @@
            (fmt-to-cols
             {:s s-deaths    :n deaths    :total confirmed :diff dd
              :calc-rate true
-             :desc (format " See %s"
-                           (link "mortality rate" ref-mortality-rate prm))
-             #_(format " See %s and %s"
-                       (link "mortality rate" ref-mortality-rate prm)
-                       (com/encode-cmd s-references))})
+             :desc ""})
            (fmt-to-cols
             {:s s-closed :n closed :total confirmed :diff dclosed
              :calc-rate true
