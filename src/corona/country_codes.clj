@@ -1,4 +1,5 @@
-(ns corona.country-codes)
+(ns corona.country-codes
+  (:refer-clojure :exclude [pr]))
 
 (def cr "CR")
 (def tg "TG")

@@ -3,10 +3,9 @@
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.string :as s]
-            [corona.core :as c :refer [in?]]
+            [corona.core :as c]
             [corona.lang :refer :all]
             [corona.countries :as cr]
-            [corona.country-codes :refer :all]
             [corona.defs :as d]))
 
 (defn encode-cmd [s] (str "/" s))

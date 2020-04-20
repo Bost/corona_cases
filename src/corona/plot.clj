@@ -10,11 +10,10 @@
             [corona.core :as cc]
             [corona.countries :as cr]
             [corona.lang :refer :all]
-            [corona.country-codes :refer :all]
             ;; XXX cljplot.core must be required otherwise an empty plot is
             ;; shown. WTF?
             [cljplot.core]
-            [corona.core :refer [in?]]
+            [utils.core :refer :all :exclude [id]]
             [corona.defs :as d]
             [corona.api.v1 :as v1])
   (:import [java.time LocalDate ZoneId]))
@@ -182,7 +181,9 @@
     (let [y-axis-formatter (metrics-prefix-formatter
                             ;; population numbers have the `max` values, all
                             ;; other numbers are derived from them
-                            (max-y-val max base-data))]
+
+                            ;; don't display the population data for the moment
+                            (max-y-val + sarea-data))]
       ;; every chart/series definition is a vector with three fields:
       ;; 1. chart type e.g. :grid, :sarea, :line
       ;; 2. data
@@ -225,7 +226,7 @@
     ;; so no less that 6 countries appear in the plot
     (if (> (count (group-by :cc res)) 10)
       (let [raised-threshold (+ 5000 threshold)]
-        (printf (str"%s of countries above threshold. "
+        (printf (str"%s countries above threshold. "
                     "Raising threshold to %s and recalculating...\n")
                 (count (group-by :cc res))
                 raised-threshold)

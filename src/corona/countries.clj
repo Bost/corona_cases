@@ -1,7 +1,7 @@
 (ns corona.countries
   (:require [clojure.set :as cset]
             [corona.country-codes :refer :all]
-            [corona.core :as c :refer [in?]]
+            [utils.core :refer :all :exclude [id]]
             [clojure.string :as s]
             [corona.defs :as d])
   (:import com.neovisionaries.i18n.CountryCode

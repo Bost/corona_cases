@@ -3,18 +3,9 @@
             [clojure.string :as s]
             [clojure.data.json :as json]
             [clj-time-ext.core :as te]
+            [utils.core :refer :all]
             [clj-http.client :as client]
             [clojure.java.io :as io]))
-
-(defmacro dbg [body]
-  `(let [x# ~body]
-     (println "dbg:" '~body "=" x#)
-     x#))
-
-(defn in?
-  "true if seq contains elm"
-  [seq elm]
-  (boolean (some (fn [e] (= elm e)) seq)))
 
 (def project-name "corona_cases") ;; see project.clj: defproject
 

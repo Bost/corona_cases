@@ -1,19 +1,16 @@
 (ns corona.api.v1
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
+  (:refer-clojure :exclude [pr])
   (:require [clojure.core.memoize :as memo]
             [corona.common :refer [api-server time-to-live]]
             [corona.core :as c]
             [corona.countries :as cr]
             [corona.country-codes :refer :all]
+            [utils.core :refer :all :exclude [id]]
             [corona.tables :as t]
             [net.cgrand.xforms :as x])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
-
-(defmacro dbg [body]
-  `(let [x# ~body]
-     (println "dbg:" '~body "=" x#)
-     x#))
 
 ;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true
 
@@ -45,7 +42,7 @@
 ;;   (->> (get-in (data-memo) [case :locations])
 ;;        (filter (fn [loc]
 ;;                  true
-;;                  #_(corona.core/in? ccs (:country_code loc))))
+;;                  #_(in? ccs (:country_code loc))))
 ;;        (map (fn [loc]
 ;;               (let [cc (:country_code loc)]
 ;;                 (->> (sort-by
@@ -139,7 +136,7 @@
        (transduce (comp
                    (filter (fn [loc]
                              true
-                             #_(corona.core/in? ccs (:country_code loc))))
+                             #_(in? ccs (:country_code loc))))
                    (map process-location))
                   ;; works as flatten by 1 level
                   into [])

@@ -3,7 +3,8 @@
             [corona.api.expdev07 :as data]
             [corona.api.v1 :as v1]
             [corona.common :as com]
-            [corona.core :as c :refer [in?]]
+            [utils.core :refer :all]
+            [corona.core :as c]
             [corona.countries :as cr]
             [corona.lang :refer :all]
             [corona.defs :as d]
@@ -13,11 +14,6 @@
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
            javax.imageio.ImageIO))
-
-(defmacro dbg [body]
-  `(let [x# ~body]
-     (println "dbg:" '~body "=" x#)
-     x#))
 
 (defn toByteArrayAutoClosable
   "Thanks to https://stackoverflow.com/a/15414490"

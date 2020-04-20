@@ -38,8 +38,6 @@
   []
   (->> (data-memo)
        :locations
-       #_(filter (fn [loc] (corona.core/in? ["US" "DE" "CN"]
-                                           (:country_code loc))))
        (map (fn [loc]
               (let [cc (:country_code loc)
                     c-timeline (->> loc :timelines :confirmed :timeline)
