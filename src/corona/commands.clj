@@ -11,8 +11,7 @@
             [corona.defs :as d]
             [corona.messages :as msg]
             [corona.plot :as p]
-            [morse.api :as morse]
-            [morse.api-patch :as morse-patch])
+            [morse.api :as morse])
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
            javax.imageio.ImageIO))
@@ -33,13 +32,18 @@
           day (count (v1/raw-dates-unsorted))]
       (morse/send-photo
        c/token chat-id
-       {:reply_markup
-        (json/write-str
-         {:inline_keyboard
-          [[(msg/cb-data chat-id s-confirmed :c country-code)
-            (msg/cb-data chat-id s-sick      :i country-code)
-            (msg/cb-data chat-id s-recovered :r country-code)
-            (msg/cb-data chat-id s-deaths    :d country-code)]]})}
+       (if (in? [d/worldwide-2-country-code
+                 d/worldwide-3-country-code
+                 d/worldwide]
+                country-code)
+         {:reply_markup
+          (json/write-str
+           {:inline_keyboard
+            [[(msg/cb-data chat-id s-confirmed :c country-code)
+              (msg/cb-data chat-id s-sick      :i country-code)
+              (msg/cb-data chat-id s-recovered :r country-code)
+              (msg/cb-data chat-id s-deaths    :d country-code)]]})}
+         {})
 
        (toByteArrayAutoClosable
         (p/plot-country day country-code stats)))
@@ -51,10 +55,10 @@
            #_c/token chat-id
            {:reply_markup
             {:inline_keyboard
-             [[(cb-data-msg chat-id s-confirmed :c country-code)
-               (cb-data-msg chat-id s-sick      :i country-code)
-               (cb-data-msg chat-id s-recovered :r country-code)
-               (cb-data-msg chat-id s-deaths    :d country-code)]]}}
+             [[(cb-data chat-id s-confirmed :c country-code)
+               (cb-data chat-id s-sick      :i country-code)
+               (cb-data chat-id s-recovered :r country-code)
+               (cb-data chat-id s-deaths    :d country-code)]]}}
            "For sum-up cases - click on one of the buttons below")
           #_(morse/send-photo
              c/token chat-id
