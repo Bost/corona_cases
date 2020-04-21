@@ -158,7 +158,10 @@
     into []
     data)))
 
-(defn plot-country [day cc stats]
+(defn plot-country
+  "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
+  cases."
+  [{:keys [day cc stats]}]
   (let [base-data (stats-for-country cc stats)
         sarea-data (->> base-data
                         (remove (fn [[case vs]]
@@ -285,7 +288,9 @@
     #_(sort-by-country-name mapped-hm)
     (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
 
-(defn plot-all-countries-ill [{:keys [day case-k stats] :as prm}]
+(defn plot-all-by-case
+  "Case-specific plot for the sum of all countries."
+  [{:keys [day case-k stats] :as prm}]
   (let [country-stats (stats-all-countries-ill prm)
         {json-data :data threshold :threshold} country-stats
         palette (cycle (c/palette-presets :category20b))

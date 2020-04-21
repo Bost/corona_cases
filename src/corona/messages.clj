@@ -134,7 +134,7 @@
        c/token chat-id
        (buttons chat-id country-code)
        (toByteArrayAutoClosable
-        (p/plot-all-countries-ill
+        (p/plot-all-by-case
          {:day (count (v1/raw-dates-unsorted)) :case-k case-k
           :threshold (com/min-threshold case-k) :stats (v1/pic-data)}))))))
 

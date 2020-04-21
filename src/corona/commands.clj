@@ -15,16 +15,15 @@
   (let [prm (assoc prm :parse_mode "HTML")]
     (morse/send-text c/token chat-id (select-keys prm (keys msg/options))
                      (msg/info (assoc prm :disable_web_page_preview true)))
-
-    (let [stats (v1/pic-data)
-          day (count (v1/raw-dates-unsorted))]
-      (morse/send-photo
-       c/token chat-id
-       (if (msg/worldwide? country-code)
-         (msg/buttons chat-id country-code)
-         {})
-       (msg/toByteArrayAutoClosable
-        (p/plot-country day country-code stats))))))
+    (morse/send-photo
+     c/token chat-id
+     (if (msg/worldwide? country-code)
+       (msg/buttons chat-id country-code)
+       {})
+     (msg/toByteArrayAutoClosable
+      (p/plot-country
+       {:day (count (v1/raw-dates-unsorted)) :cc country-code
+        :stats (v1/pic-data)})))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
