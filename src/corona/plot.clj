@@ -229,8 +229,9 @@
     ;; so no less that 6 countries appear in the plot
     (if (> (count (group-by :cc res)) 10)
       (let [raised-threshold (+ 5000 threshold)]
-        (printf (str"%s countries above threshold. "
-                    "Raising threshold to %s and recalculating...\n")
+        (printf (str "INFO Case %s %s countries above threshold. "
+                     "Raising threshold to %s and recalculating...\n")
+                case
                 (count (group-by :cc res))
                 raised-threshold)
         (group-below-threshold (assoc prm :threshold raised-threshold)))

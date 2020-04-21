@@ -28,7 +28,7 @@
   \"Rest\"."
   [case]
   ;; TODO smaller steps for deaths
-  (case {:c 45000 :i 35000 :r 10000 :d 4000}))
+  (case {:c 50000 :i 35000 :r 10000 :d 4000}))
 
 (def sorry-ws
   (str
