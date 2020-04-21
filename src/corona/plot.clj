@@ -3,19 +3,14 @@
             [cljplot.common :as plotcom]
             [cljplot.render :as r]
             [clojure.set :as cset]
-            [corona.tables :as t]
             [clojure2d.color :as c]
             [clojure2d.core :as c2d]
             [corona.common :as com]
             [corona.core :as cc]
             [corona.countries :as cr]
-            [corona.lang :refer :all]
-            ;; XXX cljplot.core must be required otherwise an empty plot is
-            ;; shown. WTF?
-            [cljplot.core]
-            [utils.core :refer :all :exclude [id]]
             [corona.defs :as d]
-            [corona.api.v1 :as v1])
+            [corona.lang :refer :all]
+            [utils.core :refer :all])
   (:import [java.time LocalDate ZoneId]))
 
 (defn metrics-prefix-formatter [max-val]
