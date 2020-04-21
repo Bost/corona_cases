@@ -1,6 +1,9 @@
 (ns corona.plot
   (:require [cljplot.build :as b]
             [cljplot.common :as plotcom]
+            ;; XXX cljplot.core must be required otherwise an empty plot is
+            ;; shown when released. WTF?
+            [cljplot.core]
             [cljplot.render :as r]
             [clojure.set :as cset]
             [clojure2d.color :as c]
