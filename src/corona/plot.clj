@@ -236,7 +236,7 @@
         (group-below-threshold (assoc prm :threshold raised-threshold)))
       {:data res :threshold threshold})))
 
-(defn sum-ills-by-date
+(defn sum-all-by-date-by-case
   "Group the country stats by day and sum up the ill cases"
   [{:keys [case-k] :as prm}]
   (let [prm (group-below-threshold prm)
@@ -249,9 +249,9 @@
       (update prm :data (fn [_] res)))))
 
 (defn fill-rest [{:keys [case-k] :as prm}]
-  (let [date-sums (sum-ills-by-date prm)
-        {sum-ills-by-date-threshold :data} date-sums
-        countries-threshold (set (map :cc sum-ills-by-date-threshold))
+  (let [date-sums (sum-all-by-date-by-case prm)
+        {sum-all-by-date-by-case-threshold :data} date-sums
+        countries-threshold (set (map :cc sum-all-by-date-by-case-threshold))
         res (reduce into []
                     (map (fn [[f hms]]
                            (cset/union
@@ -264,10 +264,10 @@
                                   (cset/difference countries-threshold)
                                   (map (fn [cc] {:cc cc :f f :i 0}))
                                   (cset/union hms)))
-                         (group-by :f sum-ills-by-date-threshold)))]
+                         (group-by :f sum-all-by-date-by-case-threshold)))]
     (update date-sums :data (fn [_] res))))
 
-(defn stats-all-countries-ill [{:keys [case-k] :as prm}]
+(defn stats-all-by-case [{:keys [case-k] :as prm}]
   (let [fill-rest-stats (fill-rest prm)
         {data :data threshold :threshold} fill-rest-stats
         hm (group-by :cn
@@ -291,7 +291,7 @@
 (defn plot-all-by-case
   "Case-specific plot for the sum of all countries."
   [{:keys [day case-k stats] :as prm}]
-  (let [country-stats (stats-all-countries-ill prm)
+  (let [country-stats (stats-all-by-case prm)
         {json-data :data threshold :threshold} country-stats
         palette (cycle (c/palette-presets :category20b))
         legend (reverse
@@ -329,3 +329,38 @@
         (b/add-legend "" legend)
         (r/render-lattice {:width 800 :height 600})
         (c2d/get-image))))
+
+#_(defn plot-all-absolute
+  [{:keys [day case-k stats] :as prm}]
+  (let [base-data (stats-all-by-case prm)]
+    (let [y-axis-formatter (metrics-prefix-formatter
+                            ;; population numbers have the `max` values, all
+                            ;; other numbers are derived from them
+
+                            ;; don't display the population data for the moment
+                            (max-y-val + sarea-data))]
+      ;; every chart/series definition is a vector with three fields:
+      ;; 1. chart type e.g. :grid, :sarea, :line
+      ;; 2. data
+      ;; 3. configuration hash-map
+
+      ;; TODO annotation by value and labeling doesn't work:
+      ;; :annotate? true
+      ;; :annotate-fmt "%.1f"
+      ;; {:label (plot-label day cc stats)}
+
+      (-> (b/series
+           [:grid]
+           [:line (line-data case-k base-data) stroke-sick])
+          (b/preprocess-series)
+          (b/update-scale :y :fmt y-axis-formatter)
+          (b/add-axes :bottom)
+          (b/add-axes :left)
+          #_(b/add-label :bottom "Date")
+          #_(b/add-label :left "Sick")
+          #_(b/add-label :top (plot-label day cc stats)
+                       (conj {:color (c/darken :steelblue)}
+                             #_{:font-size 14}))
+          (b/add-legend "" legend)
+          (r/render-lattice {:width 800 :height 600})
+          (c2d/get-image)))))
