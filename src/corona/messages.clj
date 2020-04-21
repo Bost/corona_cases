@@ -115,15 +115,17 @@
   {:reply_markup
    (json/write-str
     {:inline_keyboard
-     (mapv (fn [type-k]
-             (mapv (fn [case]
-                     {:text (str (case s-buttons) " "
-                                 (type-k s-type))
-                      :callback_data (pr-str (assoc prm
-                                                    :case case
-                                                    :type type-k))})
-                   [:c :i :r :d]))
-           [:sum :abs])})})
+     [(reduce
+       into
+       (mapv (fn [type]
+               (mapv (fn [case]
+                       {:text (str (case s-buttons)
+                                   (type s-type))
+                        :callback_data (pr-str (assoc prm
+                                                      :case case
+                                                      :type type))})
+                     [:c :i :r :d]))
+             [:sum :abs]))]})})
 
 (defn worldwide? [country-code]
   (in? [d/worldwide-2-country-code d/worldwide-3-country-code d/worldwide]

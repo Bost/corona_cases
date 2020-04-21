@@ -29,17 +29,17 @@
 (def s-buttons
   "Shortened button names"
   {
-   :c s-conf
-   :i s-sick
-   :r s-recov
-   :d s-deaths
+   :c "Co"
+   :i "Si"
+   :r "Re"
+   :d "De"
    })
 
 (def s-type
   "Buttons for plot-types"
   {
-   :sum "sum"
-   :abs "abs"
+   :sum "Σ"
+   :abs "A"
    })
 
 ;; (def s-language     (:language     lang-strings))
