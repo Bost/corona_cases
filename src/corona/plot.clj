@@ -270,12 +270,6 @@
 (defn stats-all-by-case [{:keys [case-k] :as prm}]
   (let [fill-rest-stats (fill-rest prm)
         {data :data threshold :threshold} fill-rest-stats
-        hm (group-by :cn
-                     (map (fn [{:keys [cc] :as hm}]
-                            #_hm
-                            (assoc hm :cn cc)
-                            #_(assoc hm :cn (com/country-alias cc)))
-                          data))
         mapped-hm (plotcom/map-kv
                    (fn [entry]
                      (sort-by first
@@ -284,7 +278,7 @@
                                        (:f fill-rest-stats))
                                       (case-k fill-rest-stats)])
                                    entry)))
-                   hm)]
+                   (group-by :cc data))]
     #_(sort-by-country-name mapped-hm)
     (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
 
