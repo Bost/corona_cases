@@ -18,7 +18,7 @@
     (morse/send-photo
      c/token chat-id
      (if (msg/worldwide? country-code)
-       (msg/buttons chat-id country-code)
+       (msg/buttons {:chat-id chat-id :cc country-code})
        {})
      (msg/toByteArrayAutoClosable
       (p/plot-country

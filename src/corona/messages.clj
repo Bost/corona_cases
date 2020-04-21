@@ -111,32 +111,39 @@
     (ImageIO/write image "png" out)
     (.toByteArray out)))
 
-(defn buttons [chat-id country-code]
+(defn buttons [prm]
   {:reply_markup
    (json/write-str
     {:inline_keyboard
-     [(mapv (fn [text case-k]
-              {:text text
-               :callback_data (pr-str {:chat-id chat-id
-                                       :cc country-code
-                                       :cb case-k})})
-            [s-confirmed s-sick s-recovered s-deaths]
-            [:c :i :r :d])]})})
+     (mapv (fn [type-k]
+             (mapv (fn [case]
+                     {:text (str (case s-buttons) " "
+                                 (type-k s-type))
+                      :callback_data (pr-str (assoc prm
+                                                    :case case
+                                                    :type type-k))})
+                   [:c :i :r :d]))
+           [:sum :abs])})})
 
 (defn worldwide? [country-code]
   (in? [d/worldwide-2-country-code d/worldwide-3-country-code d/worldwide]
        country-code))
 
 (defn callback-handler-fn [{:keys [data] :as prm}]
-  (let [{country-code :cc chat-id :chat-id case-k :cb} (edn/read-string data)]
+  (let [{country-code :cc
+         chat-id :chat-id
+         type :type
+         case :case} (edn/read-string data)]
     (when (worldwide? country-code)
       (morse/send-photo
        c/token chat-id
-       (buttons chat-id country-code)
+       (buttons {:chat-id chat-id :cc country-code})
        (toByteArrayAutoClosable
         (p/plot-all-by-case
-         {:day (count (v1/raw-dates-unsorted)) :case-k case-k
-          :threshold (com/min-threshold case-k) :stats (v1/pic-data)}))))))
+         {:day (count (v1/raw-dates-unsorted))
+          :case case
+          :type type
+          :threshold (com/min-threshold case) :stats (v1/pic-data)}))))))
 
 (defn references [prm]
   (format

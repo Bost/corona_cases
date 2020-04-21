@@ -219,9 +219,9 @@
 (defn group-below-threshold
   "Group all countries w/ the number of ill cases below the threshold under the
   `d/default-2-country-code` so that max 10 countries are displayed in the plot"
-  [{:keys [case-k threshold stats] :as prm}]
+  [{:keys [case threshold stats] :as prm}]
   (let [res (map (fn [hm]
-                   (if (< (case-k hm) threshold)
+                   (if (< (case hm) threshold)
                      (assoc hm :cc d/default-2-country-code)
                      hm))
                  stats)]
@@ -238,17 +238,17 @@
 
 (defn sum-all-by-date-by-case
   "Group the country stats by day and sum up the ill cases"
-  [{:keys [case-k] :as prm}]
+  [{:keys [case] :as prm}]
   (let [prm (group-below-threshold prm)
         {data :data} prm]
     (let [res (flatten (map (fn [[f hms]]
                               (map (fn [[cc hms]]
-                                     {:cc cc :f f case-k (reduce + (map case-k hms))})
+                                     {:cc cc :f f case (reduce + (map case hms))})
                                    (group-by :cc hms)))
                             (group-by :f data)))]
       (update prm :data (fn [_] res)))))
 
-(defn fill-rest [{:keys [case-k] :as prm}]
+(defn fill-rest [{:keys [case] :as prm}]
   (let [date-sums (sum-all-by-date-by-case prm)
         {sum-all-by-date-by-case-threshold :data} date-sums
         countries-threshold (set (map :cc sum-all-by-date-by-case-threshold))
@@ -256,7 +256,7 @@
                     (map (fn [[f hms]]
                            (cset/union
                             hms
-                            (map (fn [cc] {:cc cc :f f case-k 0})
+                            (map (fn [cc] {:cc cc :f f case 0})
                                  (cset/difference countries-threshold
                                                   (keys (group-by :cc hms)))))
                            #_(->> (group-by :cc hms)
@@ -267,7 +267,7 @@
                          (group-by :f sum-all-by-date-by-case-threshold)))]
     (update date-sums :data (fn [_] res))))
 
-(defn stats-all-by-case [{:keys [case-k] :as prm}]
+(defn stats-all-by-case [{:keys [case] :as prm}]
   (let [fill-rest-stats (fill-rest prm)
         {data :data threshold :threshold} fill-rest-stats
         mapped-hm (plotcom/map-kv
@@ -276,7 +276,7 @@
                               (map (fn [fill-rest-stats]
                                      [(to-java-time-local-date
                                        (:f fill-rest-stats))
-                                      (case-k fill-rest-stats)])
+                                      (case fill-rest-stats)])
                                    entry)))
                    (group-by :cc data))]
     #_(sort-by-country-name mapped-hm)
@@ -284,7 +284,7 @@
 
 (defn plot-all-by-case
   "Case-specific plot for the sum of all countries."
-  [{:keys [day case-k stats] :as prm}]
+  [{:keys [day case stats] :as prm}]
   (let [country-stats (stats-all-by-case prm)
         {json-data :data threshold :threshold} country-stats
         palette (cycle (c/palette-presets :category20b))
@@ -314,25 +314,22 @@
                            (fmt-day day)
                            (fmt-last-date stats)
                            cc/bot-name
-                           (case-k {:c s-confirmed
-                                    :i s-sick-cases
-                                    :r s-recovered
-                                    :d s-deaths})
+                           (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
                            threshold)
                      {:color (c/darken :steelblue) :font-size 14})
         (b/add-legend "" legend)
         (r/render-lattice {:width 800 :height 600})
         (c2d/get-image))))
 
-#_(defn plot-all-absolute
-  [{:keys [day case-k stats] :as prm}]
+(defn plot-all-absolute [{:keys [day case stats] :as prm}]
   (let [base-data (stats-all-by-case prm)]
-    (let [y-axis-formatter (metrics-prefix-formatter
+    (spy (group-by :cc base-data))
+    #_(let [y-axis-formatter (metrics-prefix-formatter
                             ;; population numbers have the `max` values, all
                             ;; other numbers are derived from them
 
                             ;; don't display the population data for the moment
-                            (max-y-val + sarea-data))]
+                            (max-y-val + base-data))]
       ;; every chart/series definition is a vector with three fields:
       ;; 1. chart type e.g. :grid, :sarea, :line
       ;; 2. data
@@ -345,7 +342,7 @@
 
       (-> (b/series
            [:grid]
-           [:line (line-data case-k base-data) stroke-sick])
+           [:line (line-data case base-data) stroke-sick])
           (b/preprocess-series)
           (b/update-scale :y :fmt y-axis-formatter)
           (b/add-axes :bottom)

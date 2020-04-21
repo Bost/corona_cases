@@ -26,12 +26,9 @@
 (defn min-threshold
   " Country w/ the number of cases less than the threshold are grouped into
   \"Rest\"."
-  [case-k]
-  (case-k {:c 45000
-           :i 35000
-           :r 10000
-           ;; TODO smaller steps for deaths
-           :d 4000}))
+  [case]
+  ;; TODO smaller steps for deaths
+  (case {:c 45000 :i 35000 :r 10000 :d 4000}))
 
 (def sorry-ws
   (str

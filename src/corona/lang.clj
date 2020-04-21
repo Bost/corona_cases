@@ -12,8 +12,10 @@
 (def s-references    "references")
 (def s-feedback      "feedback")
 (def s-confirmed     "Confirmed")
+(def s-conf          "Conf")
 (def s-deaths        "Deaths")
 (def s-recovered     "Recovered")
+(def s-recov         "Recov")
 (def s-sick          "Sick")
 (def s-closed        "Closed")
 (def s-sick-absolute "country")
@@ -21,7 +23,24 @@
 (def s-sick-absolute "Sick absolute")
 (def s-population    "Population")
 (def s-stats         "Stats")
-(def s-sick-cases    "Sic cases")
+(def s-sick-cases    "Sick cases")
+
+(def s-buttons
+  "Shortened button names"
+  {
+   :c s-conf
+   :i s-sick
+   :r s-recov
+   :d s-deaths
+   })
+
+(def s-type
+  "For the buttons"
+  {
+   :sum "sum"
+   :abs "abs"
+   })
+
 ;; (def s-language     (:language     lang-strings))
 ;; (def cmd-s-country  (format "<%s>" (:country lang-strings)))
 
