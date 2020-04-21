@@ -224,7 +224,7 @@
                  stats)]
     ;; TODO implement also recalculation for when (< (count (group-by :cc res)) 6)
     ;; so no less that 6 countries appear in the plot
-    (if (> (spy (count (group-by :cc res))) 10)
+    (if (> (count (group-by :cc res)) 10)
       (let [raised-threshold (+ 5000 threshold)]
         (printf (str"%s countries above threshold. "
                     "Raising threshold to %s and recalculating...\n")

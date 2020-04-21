@@ -7,10 +7,12 @@
             [corona.core :as c]
             [corona.countries :as cr]
             [corona.lang :refer :all]
+            [clojure.data.json :as json]
             [corona.defs :as d]
             [corona.messages :as msg]
             [corona.plot :as p]
-            [morse.api :as morse])
+            [morse.api :as morse]
+            [morse.api-patch :as morse-patch])
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
            javax.imageio.ImageIO))
@@ -22,11 +24,6 @@
     (ImageIO/write image "png" out)
     (.toByteArray out)))
 
-(defn cb-data [chat-id text case-k country-code]
-  {:text text :callback_data (pr-str {:chat-id chat-id
-                                      :cc country-code
-                                      :cb case-k})})
-
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
     (morse/send-text c/token chat-id (select-keys prm (keys msg/options))
@@ -34,22 +31,30 @@
 
     (let [stats (v1/pic-data)
           day (count (v1/raw-dates-unsorted))]
-      (morse/send-photo c/token chat-id
-                        ;; TODO fix sending {:reply_markup {...}
-                        (toByteArrayAutoClosable
-                         (p/plot-country day country-code stats)))
-      (when (in? [d/worldwide-2-country-code
+      (morse/send-photo
+       c/token chat-id
+       {:reply_markup
+        (json/write-str
+         {:inline_keyboard
+          [[(msg/cb-data chat-id s-confirmed :c country-code)
+            (msg/cb-data chat-id s-sick      :i country-code)
+            (msg/cb-data chat-id s-recovered :r country-code)
+            (msg/cb-data chat-id s-deaths    :d country-code)]]})}
+
+       (toByteArrayAutoClosable
+        (p/plot-country day country-code stats)))
+      #_(when (in? [d/worldwide-2-country-code
                   d/worldwide-3-country-code
                   d/worldwide]
                    country-code)
           (morse/send-text
-           c/token chat-id
+           #_c/token chat-id
            {:reply_markup
             {:inline_keyboard
-             [[(cb-data chat-id s-confirmed :c country-code)
-               (cb-data chat-id s-sick      :i country-code)
-               (cb-data chat-id s-recovered :r country-code)
-               (cb-data chat-id s-deaths    :d country-code)]]}}
+             [[(cb-data-msg chat-id s-confirmed :c country-code)
+               (cb-data-msg chat-id s-sick      :i country-code)
+               (cb-data-msg chat-id s-recovered :r country-code)
+               (cb-data-msg chat-id s-deaths    :d country-code)]]}}
            "For sum-up cases - click on one of the buttons below")
           #_(morse/send-photo
              c/token chat-id

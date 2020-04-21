@@ -27,7 +27,6 @@
   " Country w/ the number of cases less than the threshold are grouped into
   \"Rest\"."
   [case-k]
-  (println "min-threshold case-k" case-k)
   (case-k {:c 45000
            :i 35000
            :r 10000

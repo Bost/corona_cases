@@ -9,7 +9,7 @@
             [clojure.core.memoize :as memo]
             [clojure.string :as s]
             [corona.plot :as p]
-            #_[com.hypirion.clj-xchart :as chart]
+            [clojure.data.json :as json]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.lang :refer :all]
@@ -113,6 +113,12 @@
     (ImageIO/write image "png" out)
     (.toByteArray out)))
 
+(defn cb-data [chat-id text case-k country-code]
+  {:text text :callback_data (pr-str
+                              {:chat-id chat-id
+                               :cc country-code
+                               :cb case-k})})
+
 (defn callback-handler-fn [{:keys [data] :as prm}]
   (let [{country-code :cc chat-id :chat-id case-k :cb}
         (clojure.edn/read-string data)
@@ -122,8 +128,14 @@
                 d/worldwide-3-country-code
                 d/worldwide]
                country-code)
-      (println "callback-handler-fn (com/min-threshold case-k)" (com/min-threshold case-k))
       (morse/send-photo c/token chat-id
+                        {:reply_markup
+                         (json/write-str
+                          {:inline_keyboard
+                           [[(cb-data chat-id s-confirmed :c country-code)
+                             (cb-data chat-id s-sick      :i country-code)
+                             (cb-data chat-id s-recovered :r country-code)
+                             (cb-data chat-id s-deaths    :d country-code)]]})}
                         (toByteArrayAutoClosable
                          (p/plot-all-countries-ill
                           {:day day :case-k case-k
