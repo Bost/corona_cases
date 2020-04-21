@@ -388,3 +388,7 @@
 
 (defn bot-father-edit-description [] bot-description)
 (defn bot-father-edit-about [] bot-description)
+(defn bot-father-edit-inline-placeholder
+  "Appears when a user types: @<botname>
+  See https://core.telegram.org/bots/inline"
+  [] "Coronavirus Information")
