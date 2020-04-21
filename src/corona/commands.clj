@@ -29,7 +29,6 @@
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
-    #_(println "(select-keys prm (keys msg/options))" (select-keys prm (keys msg/options)))
     (morse/send-text c/token chat-id (select-keys prm (keys msg/options))
                      (msg/info (assoc prm :disable_web_page_preview true)))
 
@@ -39,21 +38,25 @@
                         ;; TODO fix sending {:reply_markup {...}
                         (toByteArrayAutoClosable
                          (p/plot-country day country-code stats)))
-      (morse/send-text
-       c/token chat-id
-       {:reply_markup
-        {:inline_keyboard [[(cb-data chat-id s-sick      :i country-code)
-                            (cb-data chat-id s-deaths    :d country-code)
-                            (cb-data chat-id s-recovered :r country-code)
-                            (cb-data chat-id s-confirmed :c country-code)]]}}
-       "For sum-up cases - click on one of the buttons below")
-      #_(when (in? [d/worldwide-2-country-code
+      (when (in? [d/worldwide-2-country-code
                   d/worldwide-3-country-code
                   d/worldwide]
-                 country-code)
-        (morse/send-photo c/token chat-id
-                          (toByteArrayAutoClosable
-                           (p/plot-all-countries-ill day com/min-threshold stats)))))))
+                   country-code)
+          (morse/send-text
+           c/token chat-id
+           {:reply_markup
+            {:inline_keyboard
+             [[(cb-data chat-id s-confirmed :c country-code)
+               (cb-data chat-id s-sick      :i country-code)
+               (cb-data chat-id s-recovered :r country-code)
+               (cb-data chat-id s-deaths    :d country-code)]]}}
+           "For sum-up cases - click on one of the buttons below")
+          #_(morse/send-photo
+             c/token chat-id
+             (toByteArrayAutoClosable
+              (p/plot-all-countries-ill {:day day :case-k case-k
+                                         :threshold (com/min-threshold case-k)
+                                         :stats stats})))))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

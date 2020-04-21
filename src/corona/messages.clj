@@ -114,16 +114,20 @@
     (.toByteArray out)))
 
 (defn callback-handler-fn [{:keys [data] :as prm}]
-  (let [{country-code :cc chat-id :chat-id} (clojure.edn/read-string data)
+  (let [{country-code :cc chat-id :chat-id case-k :cb}
+        (clojure.edn/read-string data)
         stats (v1/pic-data)
         day (count (v1/raw-dates-unsorted))]
     (when (in? [d/worldwide-2-country-code
                 d/worldwide-3-country-code
                 d/worldwide]
                country-code)
+      (println "callback-handler-fn (com/min-threshold case-k)" (com/min-threshold case-k))
       (morse/send-photo c/token chat-id
                         (toByteArrayAutoClosable
-                         (p/plot-all-countries-ill day com/min-threshold stats))))))
+                         (p/plot-all-countries-ill
+                          {:day day :case-k case-k
+                           :threshold (com/min-threshold case-k) :stats stats}))))))
 
 (defn references [prm]
   (format

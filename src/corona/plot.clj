@@ -216,44 +216,44 @@
 (defn group-below-threshold
   "Group all countries w/ the number of ill cases below the threshold under the
   `d/default-2-country-code` so that max 10 countries are displayed in the plot"
-  [threshold stats]
-  (let [res (map (fn [{:keys [i] :as hm}]
-                   (if (< i threshold)
+  [{:keys [case-k threshold stats] :as prm}]
+  (let [res (map (fn [hm]
+                   (if (< (case-k hm) threshold)
                      (assoc hm :cc d/default-2-country-code)
                      hm))
                  stats)]
     ;; TODO implement also recalculation for when (< (count (group-by :cc res)) 6)
     ;; so no less that 6 countries appear in the plot
-    (if (> (count (group-by :cc res)) 10)
+    (if (> (spy (count (group-by :cc res))) 10)
       (let [raised-threshold (+ 5000 threshold)]
         (printf (str"%s countries above threshold. "
                     "Raising threshold to %s and recalculating...\n")
                 (count (group-by :cc res))
                 raised-threshold)
-        (group-below-threshold raised-threshold stats))
+        (group-below-threshold (assoc prm :threshold raised-threshold)))
       {:data res :threshold threshold})))
 
 (defn sum-ills-by-date
   "Group the country stats by day and sum up the ill cases"
-  [threshold stats]
-  (let [prm (group-below-threshold threshold stats)
+  [{:keys [case-k] :as prm}]
+  (let [prm (group-below-threshold prm)
         {data :data} prm]
     (let [res (flatten (map (fn [[f hms]]
                               (map (fn [[cc hms]]
-                                     {:cc cc :f f :i (reduce + (map :i hms))})
+                                     {:cc cc :f f case-k (reduce + (map case-k hms))})
                                    (group-by :cc hms)))
                             (group-by :f data)))]
       (update prm :data (fn [_] res)))))
 
-(defn fill-rest [threshold stats]
-  (let [prm (sum-ills-by-date threshold stats)
-        {sum-ills-by-date-threshold :data} prm
+(defn fill-rest [{:keys [case-k] :as prm}]
+  (let [date-sums (sum-ills-by-date prm)
+        {sum-ills-by-date-threshold :data} date-sums
         countries-threshold (set (map :cc sum-ills-by-date-threshold))
         res (reduce into []
                     (map (fn [[f hms]]
                            (cset/union
                             hms
-                            (map (fn [cc] {:cc cc :f f :i 0})
+                            (map (fn [cc] {:cc cc :f f case-k 0})
                                  (cset/difference countries-threshold
                                                   (keys (group-by :cc hms)))))
                            #_(->> (group-by :cc hms)
@@ -262,11 +262,11 @@
                                   (map (fn [cc] {:cc cc :f f :i 0}))
                                   (cset/union hms)))
                          (group-by :f sum-ills-by-date-threshold)))]
-    (update prm :data (fn [_] res))))
+    (update date-sums :data (fn [_] res))))
 
-(defn stats-all-countries-ill [threshold stats]
-  (let [prm (fill-rest threshold stats)
-        {data :data threshold :threshold} prm
+(defn stats-all-countries-ill [{:keys [case-k] :as prm}]
+  (let [fill-rest-stats (fill-rest prm)
+        {data :data threshold :threshold} fill-rest-stats
         hm (group-by :cn
                      (map (fn [{:keys [cc] :as hm}]
                             #_hm
@@ -276,16 +276,18 @@
         mapped-hm (plotcom/map-kv
                    (fn [entry]
                      (sort-by first
-                              (map (fn [{:keys [f i]}]
-                                     [(to-java-time-local-date f) i])
+                              (map (fn [fill-rest-stats]
+                                     [(to-java-time-local-date
+                                       (:f fill-rest-stats))
+                                      (case-k fill-rest-stats)])
                                    entry)))
                    hm)]
     #_(sort-by-country-name mapped-hm)
-    (update prm :data (fn [_] (sort-by-last-val mapped-hm)))))
+    (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
 
-(defn plot-all-countries-ill [day min-threshold stats]
-  (let [prm (stats-all-countries-ill min-threshold stats)
-        {json-data :data threshold :threshold} prm
+(defn plot-all-countries-ill [{:keys [day case-k stats] :as prm}]
+  (let [country-stats (stats-all-countries-ill prm)
+        {json-data :data threshold :threshold} country-stats
         palette (cycle (c/palette-presets :category20b))
         legend (reverse
                 (map #(vector :rect %2 {:color %1})
@@ -313,7 +315,10 @@
                            (fmt-day day)
                            (fmt-last-date stats)
                            cc/bot-name
-                           s-sick-cases
+                           (case-k {:c s-confirmed
+                                    :i s-sick-cases
+                                    :r s-recovered
+                                    :d s-deaths})
                            threshold)
                      {:color (c/darken :steelblue) :font-size 14})
         (b/add-legend "" legend)

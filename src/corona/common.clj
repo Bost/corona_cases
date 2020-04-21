@@ -22,10 +22,17 @@
                 (t/default-time-zone))
               (tc/from-date date)))
 
-(def min-threshold
+
+(defn min-threshold
   " Country w/ the number of cases less than the threshold are grouped into
   \"Rest\"."
-  30000)
+  [case-k]
+  (println "min-threshold case-k" case-k)
+  (case-k {:c 45000
+           :i 35000
+           :r 10000
+           ;; TODO smaller steps for deaths
+           :d 4000}))
 
 (def sorry-ws
   (str
