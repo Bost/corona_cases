@@ -21,6 +21,7 @@
 (def s-sick-absolute "country")
 (def s-day           "Day")
 (def s-sick-absolute "Sick absolute")
+(def s-absolute      "absolute")
 (def s-population    "Population")
 (def s-stats         "Stats")
 (def s-sick-cases    "Sick cases")
@@ -35,7 +36,7 @@
    })
 
 (def s-type
-  "For the buttons"
+  "Buttons for plot-types"
   {
    :sum "sum"
    :abs "abs"

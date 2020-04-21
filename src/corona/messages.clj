@@ -139,11 +139,12 @@
        c/token chat-id
        (buttons {:chat-id chat-id :cc country-code})
        (toByteArrayAutoClosable
-        (p/plot-all-by-case
-         {:day (count (v1/raw-dates-unsorted))
-          :case case
-          :type type
-          :threshold (com/min-threshold case) :stats (v1/pic-data)}))))))
+        (let [plot-fn (if (= type :sum) p/plot-all-by-case p/plot-all-absolute)]
+          (plot-fn
+           {:day (count (v1/raw-dates-unsorted))
+            :case case
+            :type type
+            :threshold (com/min-threshold case) :stats (v1/pic-data)})))))))
 
 (defn references [prm]
   (format

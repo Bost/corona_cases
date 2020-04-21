@@ -321,37 +321,53 @@
         (r/render-lattice {:width 800 :height 600})
         (c2d/get-image))))
 
+(defn line-stroke [color]
+  (conj line-cfg
+        {:color color
+         :stroke {:size 3
+                  ;; :dash [20.0] :dash-phase 10
+                  ;; :dash [5.0 2.0 2.0 2.0]
+                  ;; :dash [10.0 5.0] :join :miter
+                  ;; :dash [4.0] :dash-phase 2.0
+                  }}))
+
 (defn plot-all-absolute [{:keys [day case stats] :as prm}]
-  (let [base-data (stats-all-by-case prm)]
-    (spy (group-by :cc base-data))
-    #_(let [y-axis-formatter (metrics-prefix-formatter
-                            ;; population numbers have the `max` values, all
-                            ;; other numbers are derived from them
+  (let [base-data (stats-all-by-case prm)
+        {data :data threshold :threshold} base-data
+        y-axis-formatter (metrics-prefix-formatter
+                          ;; population numbers have the `max` values, all
+                          ;; other numbers are derived from them
 
-                            ;; don't display the population data for the moment
-                            (max-y-val + base-data))]
-      ;; every chart/series definition is a vector with three fields:
-      ;; 1. chart type e.g. :grid, :sarea, :line
-      ;; 2. data
-      ;; 3. configuration hash-map
-
-      ;; TODO annotation by value and labeling doesn't work:
-      ;; :annotate? true
-      ;; :annotate-fmt "%.1f"
-      ;; {:label (plot-label day cc stats)}
-
-      (-> (b/series
-           [:grid]
-           [:line (line-data case base-data) stroke-sick])
-          (b/preprocess-series)
-          (b/update-scale :y :fmt y-axis-formatter)
-          (b/add-axes :bottom)
-          (b/add-axes :left)
-          #_(b/add-label :bottom "Date")
-          #_(b/add-label :left "Sick")
-          #_(b/add-label :top (plot-label day cc stats)
-                       (conj {:color (c/darken :steelblue)}
-                             #_{:font-size 14}))
-          (b/add-legend "" legend)
-          (r/render-lattice {:width 800 :height 600})
-          (c2d/get-image)))))
+                          ;; don't display the population data for the moment
+                          (max-y-val + data))
+        palette (cycle (c/palette-presets
+                        #_:tableau-10
+                        #_:tableau-10-2
+                        #_:color-blind-10
+                        #_:category10
+                        :category20b))
+        legend (map #(vector :rect %2 {:color %1})
+                    palette
+                    (map cr/country-alias (keys data)))]
+    (->
+     (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
+                   data
+                   palette)
+             (into [[:grid]])
+             (apply b/series))
+        (b/preprocess-series)
+        (b/update-scale :y :fmt y-axis-formatter)
+        (b/add-axes :bottom)
+        (b/add-axes :left)
+        (b/add-label :top (format
+                           "%s; %s; %s: %s > %s"
+                           (fmt-day day)
+                           (fmt-last-date stats)
+                           cc/bot-name
+                           (str (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
+                                " " s-absolute)
+                           threshold)
+                     {:color (c/darken :steelblue) :font-size 14})
+        (b/add-legend "" legend)
+        (r/render-lattice {:width 800 :height 600})
+        (c2d/get-image))))
