@@ -2,26 +2,14 @@
   (:require [clojure.string :as s]
             [corona.api.expdev07 :as data]
             [corona.api.v1 :as v1]
-            [corona.common :as com]
-            [utils.core :refer :all]
             [corona.core :as c]
             [corona.countries :as cr]
-            [corona.lang :refer :all]
-            [clojure.data.json :as json]
             [corona.defs :as d]
+            [corona.lang :refer :all]
             [corona.messages :as msg]
             [corona.plot :as p]
-            [morse.api :as morse])
-  (:import java.awt.image.BufferedImage
-           java.io.ByteArrayOutputStream
-           javax.imageio.ImageIO))
-
-(defn toByteArrayAutoClosable
-  "Thanks to https://stackoverflow.com/a/15414490"
-  [^BufferedImage image]
-  (with-open [out (new ByteArrayOutputStream)]
-    (ImageIO/write image "png" out)
-    (.toByteArray out)))
+            [morse.api :as morse]
+            [utils.core :refer :all]))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
@@ -32,40 +20,11 @@
           day (count (v1/raw-dates-unsorted))]
       (morse/send-photo
        c/token chat-id
-       (if (in? [d/worldwide-2-country-code
-                 d/worldwide-3-country-code
-                 d/worldwide]
-                country-code)
-         {:reply_markup
-          (json/write-str
-           {:inline_keyboard
-            [[(msg/cb-data chat-id s-confirmed :c country-code)
-              (msg/cb-data chat-id s-sick      :i country-code)
-              (msg/cb-data chat-id s-recovered :r country-code)
-              (msg/cb-data chat-id s-deaths    :d country-code)]]})}
+       (if (msg/worldwide? country-code)
+         (msg/buttons chat-id country-code)
          {})
-
-       (toByteArrayAutoClosable
-        (p/plot-country day country-code stats)))
-      #_(when (in? [d/worldwide-2-country-code
-                  d/worldwide-3-country-code
-                  d/worldwide]
-                   country-code)
-          (morse/send-text
-           #_c/token chat-id
-           {:reply_markup
-            {:inline_keyboard
-             [[(cb-data chat-id s-confirmed :c country-code)
-               (cb-data chat-id s-sick      :i country-code)
-               (cb-data chat-id s-recovered :r country-code)
-               (cb-data chat-id s-deaths    :d country-code)]]}}
-           "For sum-up cases - click on one of the buttons below")
-          #_(morse/send-photo
-             c/token chat-id
-             (toByteArrayAutoClosable
-              (p/plot-all-countries-ill {:day day :case-k case-k
-                                         :threshold (com/min-threshold case-k)
-                                         :stats stats})))))))
+       (msg/toByteArrayAutoClosable
+        (p/plot-country day country-code stats))))))
 
 (defn partition-in-chunks
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
