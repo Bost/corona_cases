@@ -31,12 +31,16 @@
     :else (throw
            (Exception. (format "Value %d must be < max %d" max-val 1e9)))))
 
-(defn- boiler-plate [series]
-    (println "boiler-plate")
+(defn- boiler-plate [series y-axis-formatter legend label label-conf]
   (-> series
       (b/preprocess-series)
       (b/add-axes :bottom)
-      (b/add-axes :left)))
+      (b/add-axes :left)
+      (b/update-scale :y :fmt y-axis-formatter)
+      (b/add-legend "" legend)
+      (b/add-label :top label label-conf)
+      (r/render-lattice {:width 800 :height 600})
+      (c2d/get-image)))
 
 (defn to-java-time-local-date [java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date)
@@ -201,16 +205,10 @@
            #_[:line (line-data :p base-data) stroke-population]
            [:line (line-data :c base-data) stroke-confirmed]
            [:line (line-data :i base-data) stroke-sick])
-          (boiler-plate)
-          (b/update-scale :y :fmt y-axis-formatter)
-          #_(b/add-label :bottom "Date")
-          #_(b/add-label :left "Sick")
-          (b/add-label :top (plot-label day cc stats)
-                       (conj {:color (c/darken :steelblue)}
-                             #_{:font-size 14}))
-          (b/add-legend "" legend)
-          (r/render-lattice {:width 800 :height 600})
-          (c2d/get-image)))))
+          (boiler-plate y-axis-formatter legend
+                        (plot-label day cc stats)
+                        (conj {:color (c/darken :steelblue)}
+                              #_{:font-size 14}))))))
 
 (defn group-below-threshold
   "Group all countries w/ the number of ill cases below the threshold under the
@@ -300,19 +298,15 @@
                           (max-y-val + json-data))]
     (-> (b/series [:grid]
                   [:sarea json-data])
-        (boiler-plate)
-        (b/update-scale :y :fmt y-axis-formatter)
-        (b/add-label :top (format
-                           "%s; %s; %s: %s > %s"
-                           (fmt-day day)
-                           (fmt-last-date stats)
-                           cc/bot-name
-                           (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
-                           threshold)
-                     {:color (c/darken :steelblue) :font-size 14})
-        (b/add-legend "" legend)
-        (r/render-lattice {:width 800 :height 600})
-        (c2d/get-image))))
+        (boiler-plate y-axis-formatter legend
+                      (format
+                       "%s; %s; %s: %s > %s"
+                       (fmt-day day)
+                       (fmt-last-date stats)
+                       cc/bot-name
+                       (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
+                       threshold)
+                      {:color (c/darken :steelblue) :font-size 14}))))
 
 (defn line-stroke [color]
   (conj line-cfg {:color color
@@ -346,17 +340,13 @@
                    palette)
              (into [[:grid]])
              (apply b/series))
-        (boiler-plate)
-        (b/update-scale :y :fmt y-axis-formatter)
-        (b/add-label :top (format
-                           "%s; %s; %s: %s > %s"
-                           (fmt-day day)
-                           (fmt-last-date stats)
-                           cc/bot-name
-                           (str (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
-                                " " s-absolute)
-                           threshold)
-                     {:color (c/darken :steelblue) :font-size 14})
-        (b/add-legend "" legend)
-        (r/render-lattice {:width 800 :height 600})
-        (c2d/get-image))))
+        (boiler-plate y-axis-formatter legend
+                      (format
+                       "%s; %s; %s: %s > %s"
+                       (fmt-day day)
+                       (fmt-last-date stats)
+                       cc/bot-name
+                       (str (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
+                            " " s-absolute)
+                       threshold)
+                      {:color (c/darken :steelblue) :font-size 14}))))
