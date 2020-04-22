@@ -31,6 +31,13 @@
     :else (throw
            (Exception. (format "Value %d must be < max %d" max-val 1e9)))))
 
+(defn- boiler-plate [series]
+    (println "boiler-plate")
+  (-> series
+      (b/preprocess-series)
+      (b/add-axes :bottom)
+      (b/add-axes :left)))
+
 (defn to-java-time-local-date [java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date)
                        (ZoneId/systemDefault)
@@ -98,15 +105,14 @@
   cc - country code
   stats - statistics ill, confirmed, etc. for the given country code"
   [day cc stats]
-  (format
-   "%s; %s; %s: %s"
-   (fmt-day day)
-   (fmt-last-date stats)
-   cc/bot-name
-   (format "%s %s %s"
-           s-stats
-           (cr/country-name-aliased cc)
-           (com/encode-cmd cc))))
+  (format "%s; %s; %s: %s"
+          (fmt-day day)
+          (fmt-last-date stats)
+          cc/bot-name
+          (format "%s %s %s"
+                  s-stats
+                  (cr/country-name-aliased cc)
+                  (com/encode-cmd cc))))
 
 (defn palette-colors [n]
   "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
@@ -125,36 +131,30 @@
   ;; {:margins {:y [0 0]}} otherwise look for the min and set the :margins
   {:margins {:y [0 0]}})
 
-(def stroke-population (conj line-cfg
-                             {:color :red
-                              #_(last (c/palette-presets :ylgn-6)) }))
+(def stroke-population (conj line-cfg {:color :red}))
 
-(def stroke-confirmed (conj line-cfg
-                            {:color (last (c/palette-presets :ylgn-6)) }))
+(def stroke-confirmed (conj line-cfg {:color
+                                      (last (c/palette-presets :ylgn-6))}))
 
-(def stroke-sick (conj line-cfg
-                       {:color :black #_(last (c/palette-presets :gnbu-9))
-                        :stroke {:size 1.5
-                                 ;; :dash [20.0] :dash-phase 10
-                                 ;; :dash [5.0 2.0 2.0 2.0]
-                                 ;; :dash [10.0 5.0] :join :miter
-                                 :dash [4.0] :dash-phase 2.0}}))
+(def stroke-sick (conj line-cfg {:color :black
+                                 :stroke {:size 1.5
+                                          ;; :dash [20.0] :dash-phase 10
+                                          ;; :dash [5.0 2.0 2.0 2.0]
+                                          ;; :dash [10.0 5.0] :join :miter
+                                          :dash [4.0] :dash-phase 2.0}}))
 
 (defn max-y-val [reducer data]
-  (let [xform (comp
-               (map (fn [[k v]] v))
-               (map (fn [v] (transduce
-                             identity
-                             max 0
-                             (map (fn [[_ n]] n) v)))))]
-    (transduce xform reducer 0 data)))
+  (transduce (comp (map (fn [[k v]] v))
+                   (map (fn [v] (transduce
+                                identity
+                                max 0
+                                (map (fn [[_ n]] n) v)))))
+             reducer 0 data))
 
 (defn line-data [kw data]
-  (second
-   (transduce
-    (filter (fn [[case vs]] (= kw case)))
-    into []
-    data)))
+  (second (transduce (filter (fn [[case vs]] (= kw case)))
+                     into []
+                     data)))
 
 (defn plot-country
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
@@ -201,10 +201,8 @@
            #_[:line (line-data :p base-data) stroke-population]
            [:line (line-data :c base-data) stroke-confirmed]
            [:line (line-data :i base-data) stroke-sick])
-          (b/preprocess-series)
+          (boiler-plate)
           (b/update-scale :y :fmt y-axis-formatter)
-          (b/add-axes :bottom)
-          (b/add-axes :left)
           #_(b/add-label :bottom "Date")
           #_(b/add-label :left "Sick")
           (b/add-label :top (plot-label day cc stats)
@@ -302,12 +300,8 @@
                           (max-y-val + json-data))]
     (-> (b/series [:grid]
                   [:sarea json-data])
-        (b/preprocess-series)
+        (boiler-plate)
         (b/update-scale :y :fmt y-axis-formatter)
-        (b/add-axes :bottom)
-        (b/add-axes :left)
-        #_(b/add-label :bottom "Date")
-        #_(b/add-label :left "Sick")
         (b/add-label :top (format
                            "%s; %s; %s: %s > %s"
                            (fmt-day day)
@@ -321,14 +315,13 @@
         (c2d/get-image))))
 
 (defn line-stroke [color]
-  (conj line-cfg
-        {:color color
-         :stroke {:size 3
-                  ;; :dash [20.0] :dash-phase 10
-                  ;; :dash [5.0 2.0 2.0 2.0]
-                  ;; :dash [10.0 5.0] :join :miter
-                  ;; :dash [4.0] :dash-phase 2.0
-                  }}))
+  (conj line-cfg {:color color
+                  :stroke {:size 3
+                           ;; :dash [20.0] :dash-phase 10
+                           ;; :dash [5.0 2.0 2.0 2.0]
+                           ;; :dash [10.0 5.0] :join :miter
+                           ;; :dash [4.0] :dash-phase 2.0
+                           }}))
 
 (defn plot-all-absolute [{:keys [day case stats] :as prm}]
   (let [base-data (stats-all-by-case prm)
@@ -345,19 +338,16 @@
                         #_:color-blind-10
                         #_:category10
                         :category20b))
-        legend (map #(vector :rect %2 {:color %1})
+        legend (map (fn [c r] (vector :rect r {:color c}))
                     palette
                     (map cr/country-alias (keys data)))]
-    (->
-     (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
+    (-> (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
                    data
                    palette)
              (into [[:grid]])
              (apply b/series))
-        (b/preprocess-series)
+        (boiler-plate)
         (b/update-scale :y :fmt y-axis-formatter)
-        (b/add-axes :bottom)
-        (b/add-axes :left)
         (b/add-label :top (format
                            "%s; %s; %s: %s > %s"
                            (fmt-day day)
