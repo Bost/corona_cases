@@ -31,7 +31,7 @@
     :else (throw
            (Exception. (format "Value %d must be < max %d" max-val 1e9)))))
 
-(defn- boiler-plate [series y-axis-formatter legend label label-conf]
+(defn- boiler-plate [{:keys [series y-axis-formatter legend label label-conf]}]
   (-> series
       (b/preprocess-series)
       (b/add-axes :bottom)
@@ -165,59 +165,51 @@
   cases."
   [{:keys [day cc stats]}]
   (let [base-data (stats-for-country cc stats)
-        sarea-data (->> base-data
-                        (remove (fn [[case vs]]
-                                  (in?
-                                   #_[:c :i :r :d]
-                                   [:c :p]
-                                   case))))
+        sarea-data (remove (fn [[case vs]]
+                             (in? #_[:c :i :r :d] [:c :p] case))
+                           base-data)
         curves (keys sarea-data)
-        palette (palette-colors (count curves))
+        palette (palette-colors (count curves))]
+    ;; every chart/series definition is a vector with three fields:
+    ;; 1. chart type e.g. :grid, :sarea, :line
+    ;; 2. data
+    ;; 3. configuration hash-map
 
-        legend
-        (reverse
-         (conj (map #(vector :rect %2 {:color %1})
-                    palette
-                    (map (fn [k] (get {:i s-sick :d s-deaths :r s-recovered} k))
-                         curves))
-               [:line s-confirmed     stroke-confirmed]
-               [:line s-sick-absolute stroke-sick]
-               #_[:line s-population    stroke-population]))]
-    (let [y-axis-formatter (metrics-prefix-formatter
-                            ;; population numbers have the `max` values, all
-                            ;; other numbers are derived from them
+    ;; TODO annotation by value and labeling doesn't work:
+    ;; :annotate? true
+    ;; :annotate-fmt "%.1f"
+    ;; {:label (plot-label day cc stats)}
+    (boiler-plate
+     {:series (b/series
+               [:grid]
+               [:sarea sarea-data {:palette palette}]
+               #_[:line (line-data :p base-data) stroke-population]
+               [:line (line-data :c base-data) stroke-confirmed]
+               [:line (line-data :i base-data) stroke-sick])
+      :y-axis-formatter  (metrics-prefix-formatter
+                          ;; population numbers have the `max` values, all
+                          ;; other numbers are derived from them
 
-                            ;; don't display the population data for the moment
-                            (max-y-val + sarea-data))]
-      ;; every chart/series definition is a vector with three fields:
-      ;; 1. chart type e.g. :grid, :sarea, :line
-      ;; 2. data
-      ;; 3. configuration hash-map
-
-      ;; TODO annotation by value and labeling doesn't work:
-      ;; :annotate? true
-      ;; :annotate-fmt "%.1f"
-      ;; {:label (plot-label day cc stats)}
-
-      (-> (b/series
-           [:grid]
-           [:sarea sarea-data {:palette palette}]
-           #_[:line (line-data :p base-data) stroke-population]
-           [:line (line-data :c base-data) stroke-confirmed]
-           [:line (line-data :i base-data) stroke-sick])
-          (boiler-plate y-axis-formatter legend
-                        (plot-label day cc stats)
-                        (conj {:color (c/darken :steelblue)}
-                              #_{:font-size 14}))))))
+                          ;; don't display the population data for the moment
+                          (max-y-val + sarea-data))
+      :legend (reverse
+               (conj (map #(vector :rect %2 {:color %1})
+                          palette
+                          (map (fn [k] (get {:i s-sick :d s-deaths :r s-recovered} k))
+                               curves))
+                     [:line s-confirmed     stroke-confirmed]
+                     [:line s-sick-absolute stroke-sick]
+                     #_[:line s-population    stroke-population]))
+      :label (plot-label day cc stats)
+      :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})))
 
 (defn group-below-threshold
   "Group all countries w/ the number of ill cases below the threshold under the
   `d/default-2-country-code` so that max 10 countries are displayed in the plot"
   [{:keys [case threshold stats] :as prm}]
-  (let [res (map (fn [hm]
-                   (if (< (case hm) threshold)
-                     (assoc hm :cc d/default-2-country-code)
-                     hm))
+  (let [res (map (fn [hm] (if (< (case hm) threshold)
+                           (assoc hm :cc d/default-2-country-code)
+                           hm))
                  stats)]
     ;; TODO implement also recalculation for when (< (count (group-by :cc res)) 6)
     ;; so no less that 6 countries appear in the plot
@@ -280,33 +272,29 @@
 (defn plot-all-by-case
   "Case-specific plot for the sum of all countries."
   [{:keys [day case stats] :as prm}]
-  (let [country-stats (stats-all-by-case prm)
-        {json-data :data threshold :threshold} country-stats
-        palette (cycle (c/palette-presets :category20b))
-        legend (reverse
-                (map #(vector :rect %2 {:color %1})
-                     palette
-                     (map
-                      cr/country-alias
-                      ;; XXX b/add-legend doesn't accept newline char \n
-                      #_(fn [cc] (format "%s %s"
-                                        cc
-                                        (com/country-alias cc)))
-                      (keys json-data))))
-        y-axis-formatter (metrics-prefix-formatter
-                          ;; `+` means: sum up all sick/ill cases
-                          (max-y-val + json-data))]
-    (-> (b/series [:grid]
-                  [:sarea json-data])
-        (boiler-plate y-axis-formatter legend
-                      (format
-                       "%s; %s; %s: %s > %s"
-                       (fmt-day day)
-                       (fmt-last-date stats)
-                       cc/bot-name
-                       (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
-                       threshold)
-                      {:color (c/darken :steelblue) :font-size 14}))))
+  (let [{json-data :data threshold :threshold} (stats-all-by-case prm)]
+    (boiler-plate
+     {:series (b/series [:grid] [:sarea json-data])
+      :legend (reverse
+               (map #(vector :rect %2 {:color %1})
+                    (cycle (c/palette-presets :category20b))
+                    (map
+                     cr/country-alias
+                     ;; XXX b/add-legend doesn't accept newline char \n
+                     #_(fn [cc] (format "%s %s"
+                                       cc
+                                       (com/country-alias cc)))
+                     (keys json-data))))
+      :y-axis-formatter (metrics-prefix-formatter
+                         ;; `+` means: sum up all sick/ill cases
+                         (max-y-val + json-data))
+      :label (format "%s; %s; %s: %s > %s"
+                     (fmt-day day)
+                     (fmt-last-date stats)
+                     cc/bot-name
+                     (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
+                     threshold)
+      :label-conf {:color (c/darken :steelblue) :font-size 14}})))
 
 (defn line-stroke [color]
   (conj line-cfg {:color color
@@ -318,35 +306,35 @@
                            }}))
 
 (defn plot-all-absolute [{:keys [day case stats] :as prm}]
-  (let [base-data (stats-all-by-case prm)
-        {data :data threshold :threshold} base-data
-        y-axis-formatter (metrics-prefix-formatter
-                          ;; population numbers have the `max` values, all
-                          ;; other numbers are derived from them
-
-                          ;; don't display the population data for the moment
-                          (max-y-val + data))
+  (let [{full-data :data threshold :threshold} (stats-all-by-case prm)
+        data (->> full-data
+                  (remove (fn [[cc _]] (= cc corona.country-codes/qq))))
         palette (cycle (c/palette-presets
                         #_:tableau-10
                         #_:tableau-10-2
                         #_:color-blind-10
                         #_:category10
-                        :category20b))
-        legend (map (fn [c r] (vector :rect r {:color c}))
-                    palette
-                    (map cr/country-alias (keys data)))]
-    (-> (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
-                   data
-                   palette)
-             (into [[:grid]])
-             (apply b/series))
-        (boiler-plate y-axis-formatter legend
-                      (format
-                       "%s; %s; %s: %s > %s"
-                       (fmt-day day)
-                       (fmt-last-date stats)
-                       cc/bot-name
-                       (str (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
-                            " " s-absolute)
-                       threshold)
-                      {:color (c/darken :steelblue) :font-size 14}))))
+                        :category20b))]
+    (boiler-plate
+     {:series (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
+                         data palette)
+                   (into [[:grid]])
+                   (apply b/series))
+      :y-axis-formatter (metrics-prefix-formatter
+                         ;; population numbers have the `max` values, all
+                         ;; other numbers are derived from them
+
+                         ;; don't display the population data for the moment
+                         (max-y-val + data))
+      :legend (map (fn [c r] (vector :rect r {:color c}))
+                   palette
+                   (map cr/country-alias (keys data)))
+      :label (format
+              "%s; %s; %s: %s > %s"
+              (fmt-day day)
+              (fmt-last-date stats)
+              cc/bot-name
+              (str (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
+                   " " s-absolute)
+              threshold)
+      :label-conf {:color (c/darken :steelblue) :font-size 14}})))
