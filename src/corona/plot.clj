@@ -308,7 +308,7 @@
 (defn plot-all-absolute [{:keys [day case stats] :as prm}]
   (let [{full-data :data threshold :threshold} (stats-all-by-case prm)
         data (->> full-data
-                  (remove (fn [[cc _]] (= cc corona.country-codes/qq))))
+                  #_(remove (fn [[cc _]] (= cc corona.country-codes/qq))))
         palette (cycle (c/palette-presets
                         #_:tableau-10
                         #_:tableau-10-2
