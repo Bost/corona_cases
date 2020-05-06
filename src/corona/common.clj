@@ -22,13 +22,16 @@
                 (t/default-time-zone))
               (tc/from-date date)))
 
-
 (defn min-threshold
-  " Country w/ the number of cases less than the threshold are grouped into
-  \"Rest\"."
+  "Countries with the number of cases less than the threshold are grouped into
+  \"Rest\". See also `threshold-increase`."
   [case]
-  ;; TODO smaller steps for deaths
-  (case {:c 50000 :i 35000 :r 10000 :d 4000}))
+  (case {:c (int 1e5) :i 59000 :r 30000 :d 5000}))
+
+(defn threshold-increase
+  "Case-dependent threshold recalculation increase. See also `min-threshold`."
+  [case]
+  (case {:c 5000 :i 1000 :r 1000 :d 500}))
 
 (def sorry-ws
   (str

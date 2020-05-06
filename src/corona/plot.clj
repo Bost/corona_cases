@@ -206,16 +206,16 @@
 (defn group-below-threshold
   "Group all countries w/ the number of ill cases below the threshold under the
   `d/default-2-country-code` so that max 10 countries are displayed in the plot"
-  [{:keys [case threshold stats] :as prm}]
-  (let [res (map (fn [hm] (if (< (case hm) threshold)
+  [{:keys [case threshold threshold-increase stats] :as prm}]
+  (let [max-plot-lines 10
+        res (map (fn [hm] (if (< (case hm) threshold)
                            (assoc hm :cc d/default-2-country-code)
                            hm))
                  stats)]
-    ;; TODO implement also recalculation for when (< (count (group-by :cc res)) 6)
-    ;; so no less that 6 countries appear in the plot
-    (if (> (count (group-by :cc res)) 10)
-      (let [raised-threshold (+ 5000 threshold)]
-        (printf (str "INFO Case %s %s countries above threshold. "
+    ;; TODO implement recalculation for decreasing case numbers (e.g. sics)
+    (if (> (count (group-by :cc res)) max-plot-lines)
+      (let [raised-threshold (+ threshold-increase threshold)]
+        (printf (str "INFO Case %s; %s countries above threshold. "
                      "Raising threshold to %s and recalculating...\n")
                 case
                 (count (group-by :cc res))
