@@ -7,7 +7,8 @@
 Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 [@corona_cases_bot](https://t.me/corona_cases_bot)
 
-![Screenshot](/resources/pics/screenshot_40-percents.jpg)
+![Screenshot](/resources/pics/screenshot_1-50-percents.jpg)
+![Screenshot](/resources/pics/screenshot_2-50-percents.jpg)
 
 ## Running locally
 Start Clojure REPL:
