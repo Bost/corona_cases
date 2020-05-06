@@ -4,7 +4,7 @@
   ;; "Example of Clojure source code version output"
   ;; and:
   ;; https://github.com/arrdem/lein-git-version
-  "1.9.4"
+  "1.9.5"
 
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"
@@ -15,10 +15,10 @@
    [org.clojure/clojure     "1.10.1"]
    [org.clojure/data.csv    "1.0.0"]
    [compojure               "1.6.1"]
-   [ring/ring-jetty-adapter "1.8.0"]
+   [ring/ring-jetty-adapter "1.8.1"]
 
    ;; managing environment variables
-   [environ                 "1.1.0"]
+   [environ                 "1.2.0"]
 
    ;; Clojure interface for Telegram Bot API
    [morse                   "0.4.3"]
