@@ -27,10 +27,11 @@
                       (->> @chats
                            prn-str
                            (spit "chats.edn")))
-                  (let [tbeg (te/tnow)]
-                    (println (str "[" tbeg "           " " " bot-ver " /" name "]") chat)
+                  (let [tbeg (te/tnow)
+                        log-fmt "[%s%s%s %s /%s] %s\n"]
+                    (printf log-fmt tbeg " " "          " bot-ver name chat)
                     (f chat-id)
-                    (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" name  "]") chat))))))
+                    (printf log-fmt tbeg ":" (te/tnow)    bot-ver name chat))))))
        (into [(h/callback-fn msg/callback-handler-fn)])
        (apply h/handlers)))
 
