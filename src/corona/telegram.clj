@@ -5,12 +5,12 @@
             [clojure.string :as s]
             [clojure.tools.logging :as log]
             [corona.commands :as cmds]
-            [corona.core :as c :refer [bot-ver token env-type]]
+            [corona.core :as c :refer [bot-ver env-type token]]
+            [corona.messages :as msg]
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
-            [morse.polling-patch :as p-patch]
-            [corona.messages :as msg]))
+            [morse.polling-patch :as p-patch]))
 
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
