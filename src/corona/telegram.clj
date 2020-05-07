@@ -12,26 +12,40 @@
             [morse.polling-patch :as p-patch]
             [corona.messages :as msg]))
 
-(def chats (atom #{}))
+(defn wrap-fn-pre-post-hooks
+  "Add :pre and :post hooks / advices around `function`
+  Thanks to https://stackoverflow.com/a/10778647/5151982"
+  [{:keys [f pre post]}]
+  (fn [& args]
+    (apply pre args)
+    (let [result (apply f args)]
+      (apply post (cons result args)))))
 
-;; long polling
+;; logging alternatives - see also method advising (using multimethod):
+;; https://github.com/camsaul/methodical
+;; https://github.com/technomancy/robert-hooke
+
+(defn cmd-handler [{:keys [name f] :as prm}]
+  (h/command-fn
+   name
+   (wrap-fn-pre-post-hooks
+    (let [tbeg (te/tnow)
+          log-fmt "[%s%s%s %s /%s] %s\n"]
+      {:f (fn [prm] (f (-> prm :chat :id)))
+       :pre (fn [& args]
+              (let [chat (-> args first :chat)]
+                (printf log-fmt tbeg " " "          " bot-ver name chat)))
+       :post (fn [& args]
+               (let [[fn-result {:keys [chat]}] args]
+                 (printf log-fmt tbeg ":" (te/tnow)    bot-ver name chat)
+                 fn-result))}))))
+
 (def handler
+  "Receiving incoming updates using long polling (getUpdates method)
+  https://en.wikipedia.org/wiki/Push_technology#Long_polling
+  An Array of Update objects is returned."
   (->> (cmds/cmds)
-       ;; TODO use monad for logging
-       (mapv (fn [{:keys [name f] :as prm}]
-               (h/command-fn
-                name
-                (fn [{{chat-id :id :as chat} :chat}]
-                  #_(when (= cmd "start")
-                      (swap! chats clojure.set/union #{chat})
-                      (->> @chats
-                           prn-str
-                           (spit "chats.edn")))
-                  (let [tbeg (te/tnow)
-                        log-fmt "[%s%s%s %s /%s] %s\n"]
-                    (printf log-fmt tbeg " " "          " bot-ver name chat)
-                    (f chat-id)
-                    (printf log-fmt tbeg ":" (te/tnow)    bot-ver name chat))))))
+       (mapv cmd-handler)
        (into [(h/callback-fn msg/callback-handler-fn)])
        (apply h/handlers)))
 
