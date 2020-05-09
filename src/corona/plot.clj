@@ -95,7 +95,7 @@
                    (group-by :case (sum-for-pred cc stats)))]
     ;; sort - keep the "color order" of cases fixed; don't
     ;; recalculate it
-    (reverse (transduce (map (fn [case] {case (get mapped-hm case)}))
+    (reverse (transduce (map (fn [case-kw] {case-kw (get mapped-hm case-kw)}))
                         into []
                         [:i :r :d :c :p]))))
 
@@ -164,9 +164,10 @@
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
   [{:keys [day cc stats]}]
+  (println "plot-country")
   (let [base-data (stats-for-country cc stats)
-        sarea-data (remove (fn [[case vs]]
-                             (in? #_[:c :i :r :d] [:c :p] case))
+        sarea-data (remove (fn [[case-kw vs]]
+                             (in? #_[:c :i :r :d] [:c :p] case-kw))
                            base-data)
         curves (keys sarea-data)
         palette (palette-colors (count curves))]
@@ -292,7 +293,10 @@
                      (fmt-day day)
                      (fmt-last-date stats)
                      cc/bot-name
-                     (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
+                     (->> [s-confirmed s-sick-cases s-recovered s-deaths]
+                          (zipmap com/all-crdi-cases)
+                          case)
+                     #_(case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
                      threshold)
       :label-conf {:color (c/darken :steelblue) :font-size 14}})))
 

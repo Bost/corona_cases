@@ -9,9 +9,11 @@
             [corona.messages :as msg]
             [corona.plot :as p]
             [morse.api :as morse]
-            [utils.core :refer :all]))
+            [utils.core :refer :all]
+            [corona.common :as com]))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
+  (println "world" "msg/worldwide?" (msg/worldwide? country-code))
   (let [prm (assoc prm :parse_mode "HTML")]
     (morse/send-text c/token chat-id (select-keys prm (keys msg/options))
                      (msg/info (assoc prm :disable_web_page_preview true)))
@@ -30,10 +32,7 @@
   [col]
   (partition-all (/ (count col) 7) col))
 
-(defn- by-case-asc      [case-kw coll] (sort-by case-kw < coll))
-(def by-ill-asc       (fn [coll] (by-case-asc :i coll)))
-(def by-recovered-asc (fn [coll] (by-case-asc :r coll)))
-(def by-deaths-asc    (fn [coll] (by-case-asc :d coll)))
+(defn sort-by-asc [case-kw] (fn [coll] (sort-by case-kw < coll)))
 
 (defn list-countries [{:keys [chat-id sort-fn] :as prm}]
   (->> (data/stats-all-affected-countries prm)
@@ -71,7 +70,19 @@
   (-> (cr/country-name country-code)
       (s/replace " " "")))
 
-(defn cmds-country-code [country-code]
+(defn cmds-country-code
+  "E.g.
+  (cmds-country-code \"DE\") =>
+  [{:name \"de\"      :f #function[...]}
+   {:name \"DE\"      :f #function[...]}
+   {:name \"De\"      :f #function[...]}
+   {:name \"deu\"     :f #function[...]}
+   {:name \"DEU\"     :f #function[...]}
+   {:name \"Deu\"     :f #function[...]}
+   {:name \"germany\" :f #function[...]}
+   {:name \"GERMANY\" :f #function[...]}
+   {:name \"Germany\" :f #function[...]}]"
+  [country-code]
   (mapv
    (fn [fun]
      {:name (fun country-code)
@@ -106,15 +117,15 @@
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
                                    prm-country-code)))
       :desc s-world-desc}
-     {:name s-list
-      ;; TODO implement also sort by recovered & deaths
-      :f (fn [chat-id] (list-countries
-                       (conj (assoc prm
-                                    :parse_mode "HTML"
-                                    :chat-id chat-id
-                                    :sort-fn by-ill-asc)
-                             prm-country-code)))
-      :desc s-list-desc}
+     (let [case-kw :i]
+       {:name s-list
+        :f (fn [chat-id] (list-countries
+                         (conj (assoc prm
+                                      :parse_mode "HTML"
+                                      :chat-id chat-id
+                                      :sort-fn (sort-by-asc case-kw))
+                               prm-country-code)))
+        :desc (s-list-sorted-by-desc case-kw)})
      {:name s-start
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
                                    prm-country-code)))
@@ -132,9 +143,28 @@
       :f (fn [chat-id] (references (assoc prm :chat-id chat-id)))
       :desc "Knowledge is power - educate yourself"}]))
 
-(defn cmds []
+(defn cmds-list
+  "Command map for list-sort-by-case
+  TODO do not support the old command for certain transition period.
+  "
+  [case-kw]
+  (let [prm (conj {:cmd-names msg/cmd-names :pred (fn [_] true)} msg/options)
+        prm-country-code {:country-code (cr/country-code d/worldwide)}]
+    {:name (s-list-sorted-by case-kw)
+     :f (fn [chat-id] (list-countries
+                      (conj (assoc prm
+                                   :parse_mode "HTML"
+                                   :chat-id chat-id
+                                   :sort-fn (sort-by-asc case-kw))
+                            prm-country-code)))
+     :desc (s-list-sorted-by-desc case-kw)}))
+
+(defn cmds
+  "Create a vector of hash-maps for all available commands."
+  []
   (transduce (map cmds-country-code)
-             into (cmds-general)
+             into (into (cmds-general)
+                        (map cmds-list com/all-crdi-cases))
              (cr/all-country-codes)))
 
 (defn bot-father-edit-cmds []

@@ -17,6 +17,8 @@
       s)
     s))
 
+(def all-crdi-cases [:c :r :d :i])
+
 (defn fmt-date [date]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                 (t/default-time-zone))
@@ -25,13 +27,13 @@
 (defn min-threshold
   "Countries with the number of cases less than the threshold are grouped into
   \"Rest\". See also `threshold-increase`."
-  [case]
-  (case {:c (int 1e5) :i 59000 :r 30000 :d 5000}))
+  [case-kw]
+  (case-kw (zipmap all-crdi-cases [(int 1e5) 30000 5000 59000])))
 
 (defn threshold-increase
   "Case-dependent threshold recalculation increase. See also `min-threshold`."
-  [case]
-  (case {:c 5000 :i 1000 :r 1000 :d 500}))
+  [case-kw]
+  (case-kw (zipmap all-crdi-cases [5000 1000 500 1000])))
 
 (def sorry-ws
   (str

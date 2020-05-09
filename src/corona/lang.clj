@@ -1,12 +1,11 @@
-(ns corona.lang)
+(ns corona.lang
+  (:require [corona.common :as com]))
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
 (def s-world         "world")
 (def s-world-desc    "Start here")
 (def s-start         "start")
-(def s-list          "list")
-(def s-list-desc     "List of countries")
 (def s-about         "about")
 (def s-contributors  "contributors")
 (def s-references    "references")
@@ -26,21 +25,24 @@
 (def s-stats         "Stats")
 (def s-sick-cases    "Sick cases")
 
-(def s-buttons
-  "Shortened button names"
-  {
-   :c "Co"
-   :i "Si"
-   :r "Re"
-   :d "De"
-   })
+(def s-list          "list")
+(def s-list-desc     "List of countries")
 
-(def s-type
-  "Buttons for plot-types"
-  {
-   :sum "Σ"
-   :abs "A"
-   })
+(defn s-list-sorted-by [case-kw]
+  (->> [s-conf s-recov s-deaths s-sick]
+       (zipmap com/all-crdi-cases)
+       case-kw))
+
+(defn s-list-sorted-by-desc [case-kw]
+  (format "List countries sorted by the number of %s cases"
+          (->> [s-confirmed s-recovered s-deaths s-sick]
+               (zipmap com/all-crdi-cases)
+               case-kw)))
+
+(def s-buttons "Shortened button names"
+  (zipmap com/all-crdi-cases ["Co" "Re" "De" "Si"]))
+
+(def s-type "Buttons for plot-types" {:sum "Σ" :abs "A"})
 
 ;; (def s-language     (:language     lang-strings))
 ;; (def cmd-s-country  (format "<%s>" (:country lang-strings)))

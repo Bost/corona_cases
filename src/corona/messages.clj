@@ -17,16 +17,10 @@
            java.io.ByteArrayOutputStream
            javax.imageio.ImageIO))
 
-(def cmd-names [s-world
-                s-about
-                s-references
-                #_cmd-s-country
-                s-list
-                s-feedback
-
-                ;; s-language
-                ;; lang-de
-                ])
+(def cmd-names
+  "Displayed in the message footer"
+  (into [s-world s-about s-references]
+        (map s-list-sorted-by com/all-crdi-cases)))
 
 (defn bot-name-formatted []
   (s/replace c/bot-name #"_" "\\\\_"))
@@ -118,13 +112,13 @@
      [(reduce
        into
        (mapv (fn [type]
-               (mapv (fn [case]
-                       {:text (str (case s-buttons)
+               (mapv (fn [case-kw]
+                       {:text (str (case-kw s-buttons)
                                    (type s-type))
                         :callback_data (pr-str (assoc prm
-                                                      :case case
+                                                      :case case-kw
                                                       :type type))})
-                     [:c :i :r :d]))
+                     com/all-crdi-cases))
              [:sum :abs]))]})})
 
 (defn worldwide? [country-code]
@@ -199,13 +193,13 @@
 
 (defn list-countries [{:keys [data] :as prm}]
   (let [spacer " "
-        omag-ill    6 ;; order of magnitude i.e. number of digits
+        omag-ill    7 ;; order of magnitude i.e. number of digits
         omag-recov  omag-ill
         omag-deaths (dec omag-ill)]
     (format
      (format (str "%s\n" ; header
                   "%s\n" ; Day
-                  "    %s "  ; Sick
+                  "         %s "  ; Sick
                   "%s"   ; spacer
                   "%s "  ; Recovered
                   "%s"   ; spacer
@@ -218,7 +212,7 @@
              s-recovered
              spacer
              s-deaths
-             "%s\n\n%s")
+             "%s\n\n%s") ;; listing \n\n footer
      (s/join
       "\n"
       (map (fn [stats]

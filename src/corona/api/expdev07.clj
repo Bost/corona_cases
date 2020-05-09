@@ -145,9 +145,11 @@
   [prm]
   (let [crd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
                   [:confirmed :recovered :deaths])]
-    (zipmap [:c :r :d :i] (conj crd (apply mapv c/calculate-ill crd)))))
+    (zipmap com/all-crdi-cases
+            (conj crd (apply mapv c/calculate-ill crd)))))
 
-(def get-counts-memo (memo/ttl get-counts {} :ttl/threshold (* time-to-live 60 1000)))
+(def get-counts-memo
+  (memo/ttl get-counts {} :ttl/threshold (* time-to-live 60 1000)))
 
 (defn confirmed [prm] (:c (get-counts-memo prm)))
 (defn deaths    [prm] (:d (get-counts-memo prm)))
@@ -171,8 +173,7 @@
        (apply (fn [prv lst]
                 (map (fn [k]
                        {k (- (k lst) (k prv))})
-                     [:c :d :r :i])
-                ))
+                     com/all-crdi-cases)))
        (reduce into {})))
 
 (defn last-day

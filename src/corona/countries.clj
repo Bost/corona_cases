@@ -486,6 +486,7 @@
     us "USA"
     gb "UK"
     cz "Czechia"
+    ;; st "St Tome & Prin"
     st "St Tome Principe"
     pg "Papua N Guinea"
     gq "Equat Guinea"

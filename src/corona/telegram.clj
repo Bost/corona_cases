@@ -43,16 +43,18 @@
 (def handler
   "Receiving incoming updates using long polling (getUpdates method)
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
-  An Array of Update objects is returned."
-  (->> (cmds/cmds)
-       (mapv cmd-handler)
-       (into [(h/callback-fn msg/callback-handler-fn)])
-       (apply h/handlers)))
+  An Array of Update-objects is returned."
+  (let [cmds (cmds/cmds)]
+    (println "Registered commands:" (count cmds))
+    (->> cmds
+         (mapv cmd-handler)
+         (into [(h/callback-fn msg/callback-handler-fn)])
+         (apply h/handlers))))
 
 (defn start-polling
   "Starts long-polling process.
-  Handler is supposed to process immediately, as it will
-  be called in a blocking manner."
+  Handler is supposed to process immediately, as it will be called in a blocking
+  manner."
   ([token handler] (start-polling token handler {}))
   ([token handler opts]
    (let [running (async/chan)
