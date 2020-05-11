@@ -17,11 +17,6 @@
            java.io.ByteArrayOutputStream
            javax.imageio.ImageIO))
 
-(def cmd-names
-  "Displayed in the message footer"
-  (into [s-world s-about s-references]
-        (map s-list-sorted-by com/all-crdi-cases)))
-
 (defn bot-name-formatted []
   (s/replace c/bot-name #"_" "\\\\_"))
 
@@ -35,13 +30,13 @@
   "TODO consider using :pre / :hooks. See `wrap-fn-pre-post-hooks`"
   ([x] (round :normal x))
   ([mode x]
-   (let [fn (case mode
+   (let [f (case mode
              :high    (static-fn Math/ceil)
              :low     (static-fn Math/floor)
              :normal  (static-fn Math/round)
              (throw (Exception.
                      "ERROR: round [:high|:low|:normal] <VALUE>")))]
-     (long (fn x)))))
+     (long (f x)))))
 
 (defn percentage
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
@@ -103,14 +98,23 @@
     (format "<a href=\"%s\">%s</a>" url name)
     (format "[%s](%s)" name url)))
 
-(defn footer [{:keys [cmd-names parse_mode]}]
+(defn footer
+  "Listing commands in the message footer correspond to the columns in the listing.
+  See also `list-countries`."
+  [{:keys [parse_mode]}]
   (let [spacer "   "]
     (str
      ;; "Try" spacer
-     (->> cmd-names
+     (->> [s-world s-about]
           (map com/encode-cmd)
           (map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
-          (s/join spacer)))))
+          (s/join spacer))
+     spacer "listings:  "
+     #_spacer
+     (->> (map s-list-sorted-by [:i :r :d])
+          (map com/encode-cmd)
+          (s/join spacer))
+     )))
 
 (defn toByteArrayAutoClosable
   "Thanks to https://stackoverflow.com/a/15414490"
@@ -156,29 +160,6 @@
             :threshold-increase (com/threshold-increase case)
             :stats (v1/pic-data)})))))))
 
-(defn references [prm]
-  (format
-   "%s\n\n%s\n\n%s\n\n%s\n\n%s"
-   (bot-name-formatted) #_(header prm)
-   (format "%s\n%s"
-           "Robert Koch-Institut (in German)"
-           (format "Infektionskrankheiten A-Z: %s"
-                   (link "COVID-19 (Coronavirus SARS-CoV-2)"
-                         ref-rober-koch prm)))
-   (format "%s\n%s"
-           "A bit of 👨‍🏫 math doesn't kill anyone!"
-           (format "3Blue1Brown: %s"
-                   (link "Exponential growth and epidemics"
-                         ref-3blue1brown-exp-growth
-                         prm)))
-
-   (format "%s\n%s\n%s"
-           "Worldometer - COVID-19 Coronavirus"
-           (link "Coronavirus Age Sex Demographics" ref-age-sex prm)
-           (link "Mortality rate" ref-mortality-rate prm))
-
-   (footer prm)))
-
 ;; (defn language [prm]
 ;;   (format
 ;;    "/lang:%s\n/lang:%s\n/lang:%s\n"
@@ -205,8 +186,12 @@
 
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 
-(defn list-countries [{:keys [data] :as prm}]
+(defn list-countries
+  "Listing commands in the message footer correspond to the columns in the listing.
+  See also `footer`."
+  [{:keys [data msg-idx cnt-msgs sort-by-case] :as prm}]
   (let [spacer " "
+        sort-indicator "▴" ;; " " "▲"
         omag-ill    7 ;; order of magnitude i.e. number of digits
         omag-recov  omag-ill
         omag-deaths (dec omag-ill)]
@@ -220,13 +205,18 @@
                   "%s\n" ; Deaths
                   "%s")
              (header prm)
-             (format "%s %s" s-day (count (data/raw-dates)))
-             s-sick
+             (format "%s %s;  %s/%s" s-day (count (data/raw-dates)) msg-idx cnt-msgs)
+             (str s-sick      (if (= :i sort-by-case) sort-indicator " "))
              spacer
-             s-recovered
+             (str s-recovered (if (= :r sort-by-case) sort-indicator " "))
              spacer
-             s-deaths
-             "%s\n\n%s") ;; listing \n\n footer
+             (str s-deaths    (if (= :d sort-by-case) sort-indicator " "))
+             (str
+              "%s"   ; listing table
+              "%s"   ; sorted-by description; has its own new-line
+              "\n\n"
+              "%s"   ; footer
+              ))
      (s/join
       "\n"
       (map (fn [stats]
@@ -242,6 +232,13 @@
                 #_(take-last 11)
                 #_(partition-all 2)
                 #_(map (fn [part] (s/join "       " part))))))
+     ""
+     #_(if (= msg-idx cnt-msgs)
+       (format (str "\n\n"
+                    "Table sorted by %s in ascending order.")
+               "case"
+               #_sort-by-case)
+       "")
      (footer prm))))
 
 (def list-countries-memo
@@ -369,16 +366,6 @@
     "\n")
    "\n"
    "- Percentage calculation: <cases> / confirmed\n"
-
-   (format (str "- %s master branch snapshot download deactivated. "
-                "Send a %s if you need this feature.\n")
-           (link "CSSEGISandData/COVID-19"
-                 "https://github.com/CSSEGISandData/COVID-19.git" prm)
-           (com/encode-cmd s-feedback))
-
-   (format "- %s\n" (com/encode-cmd s-contributors))
-   "\n"
-
    #_(str
       "\n"
       " - " (link "Home page"
@@ -388,6 +375,23 @@
                       c/env-test? "https://hokuspokus-bot.herokuapp.com/"
                       :else "http://localhost:5050"))
                   prm))
+   ;; (abbreviated) content of the former reference message
+   (format "%s %s\n"
+           "- Robert Koch-Institut "
+           (link "COVID-19 (Coronavirus SARS-CoV-2)"
+                 ref-rober-koch prm))
+   (format "- 3Blue1Brown: %s\n"
+           (link "Exponential growth and epidemics"
+                 ref-3blue1brown-exp-growth
+                 prm))
+   (format "%s\n  %s\n  %s\n"
+           "- Worldometer - COVID-19 Coronavirus"
+           (link "Coronavirus Age Sex Demographics" ref-age-sex prm)
+           (link "Mortality rate" ref-mortality-rate prm))
+   (format "- Thanks goes to %s. Send %s \n"
+           (com/encode-cmd s-contributors)
+           (com/encode-cmd s-feedback))
+   "\n"
    (footer prm)))
 
 (def bot-description

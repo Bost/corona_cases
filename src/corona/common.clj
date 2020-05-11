@@ -4,13 +4,14 @@
             [clj-time.format :as tf]
             [clojure.string :as s]
             [corona.core :as c]
-            [corona.lang :refer :all]
             [corona.countries :as cr]
             [corona.defs :as d]))
 
 (defn encode-cmd [s] (str "/" s))
 
-(defn encode-pseudo-cmd [s parse_mode]
+(defn encode-pseudo-cmd
+  "For displaying e.g. /<command-name>"
+  [s parse_mode]
   (if (= parse_mode "HTML")
     (let [s (s/replace s "<" "&lt;")
           s (s/replace s ">" "&gt;")]

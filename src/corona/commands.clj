@@ -27,25 +27,31 @@
        {:day (count (v1/raw-dates-unsorted)) :cc country-code
         :stats (v1/pic-data)})))))
 
-(defn partition-in-chunks
+(def cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
+  7)
+
+(defn partition-in-sub-msgs
   [col]
-  (partition-all (/ (count col) 7) col))
+  (partition-all (/ (count col) cnt-messages-in-listing) col))
 
-(defn sort-by-asc [case-kw] (fn [coll] (sort-by case-kw < coll)))
-
-(defn list-countries [{:keys [chat-id sort-fn] :as prm}]
-  (->> (data/stats-all-affected-countries prm)
-       (sort-fn)
-       (partition-in-chunks)
-       #_(take 3)
-       #_(take-last 1)
-       (map (fn [chunk]
-              (->> (assoc prm :data chunk)
-                   (msg/list-countries-memo)
-                   (morse/send-text c/token chat-id
-                                    (select-keys prm (keys msg/options))))))
-       doall))
+(defn list-countries [{:keys [chat-id sort-by-case] :as prm}]
+  (let [sort-fn (sort-by-asc sort-by-case)
+        sub-msgs (->> (data/stats-all-affected-countries prm)
+                      ;; create and execute sorting function
+                      ((fn [coll] (sort-by sort-by-case < coll)))
+                      (partition-in-sub-msgs))
+        cnt-msgs (count sub-msgs)]
+    (->> sub-msgs
+         #_(take 3)
+         #_(take-last 1)
+         (map-indexed
+          (fn [idx sub-msg]
+            (->> (assoc prm :data sub-msg :msg-idx (inc idx) :cnt-msgs cnt-msgs)
+                 (msg/list-countries-memo)
+                 (morse/send-text c/token chat-id
+                                  (select-keys prm (keys msg/options))))))
+         doall)))
 
 (defn about [{:keys [chat-id] :as prm}]
   (morse/send-text c/token chat-id msg/options (msg/about prm)))
@@ -53,8 +59,11 @@
 (defn feedback [{:keys [chat-id] :as prm}]
   (morse/send-text c/token chat-id msg/options (msg/feedback prm)))
 
-(defn references [{:keys [chat-id] :as prm}]
-  (morse/send-text c/token chat-id msg/options (msg/references prm)))
+(defn references
+  "No standalone message. Show the about message instead and deprecate this
+  function after some deprecation time."
+  [{:keys [chat-id] :as prm}]
+  (morse/send-text c/token chat-id msg/options (msg/about prm)))
 
 ;; (defn language [{:keys [chat-id] :as prm}]
 ;;   (morse/send-text c/token chat-id msg/options (msg/language prm)))
@@ -88,8 +97,7 @@
      {:name (fun country-code)
       :f
       (fn [chat-id]
-        (world {:cmd-names msg/cmd-names
-                :chat-id chat-id
+        (world {:chat-id chat-id
                 :country-code country-code
                 :pred (msg/pred-fn country-code)}))})
    [#(s/lower-case %)  ;; /de
@@ -105,8 +113,7 @@
 (defn cmds-general []
   (let [prm
         (conj
-         {:cmd-names msg/cmd-names
-          :pred (fn [_] true)}
+         {:pred (fn [_] true)}
          msg/options)
 
         prm-country-code {:country-code (cr/country-code d/worldwide)}]
@@ -123,7 +130,7 @@
                          (conj (assoc prm
                                       :parse_mode "HTML"
                                       :chat-id chat-id
-                                      :sort-fn (sort-by-asc case-kw))
+                                      :sort-by-case case-kw)
                                prm-country-code)))
         :desc (s-list-sorted-by-desc case-kw)})
      {:name s-start
@@ -148,14 +155,14 @@
   TODO do not support the old command for certain transition period.
   "
   [case-kw]
-  (let [prm (conj {:cmd-names msg/cmd-names :pred (fn [_] true)} msg/options)
+  (let [prm (conj {:pred (fn [_] true)} msg/options)
         prm-country-code {:country-code (cr/country-code d/worldwide)}]
     {:name (s-list-sorted-by case-kw)
      :f (fn [chat-id] (list-countries
                       (conj (assoc prm
                                    :parse_mode "HTML"
                                    :chat-id chat-id
-                                   :sort-fn (sort-by-asc case-kw))
+                                   :sort-by-case case-kw)
                             prm-country-code)))
      :desc (s-list-sorted-by-desc case-kw)}))
 
