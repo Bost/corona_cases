@@ -29,18 +29,32 @@
 
 (defn pred-fn [country-code] (data/pred-fn country-code))
 
-(defn get-percentage
-  ([place total-count] (get-percentage :normal place total-count))
+(defmacro static-fn [f] `(fn [x#] (~f x#)))
+
+(defn round
+  "TODO consider using :pre / :hooks. See `wrap-fn-pre-post-hooks`"
+  ([x] (round :normal x))
+  ([mode x]
+   (let [fn (case mode
+             :high    (static-fn Math/ceil)
+             :low     (static-fn Math/floor)
+             :normal  (static-fn Math/round)
+             (throw (Exception.
+                     "ERROR: round [:high|:low|:normal] <VALUE>")))]
+     (long (fn x)))))
+
+(defn percentage
+  "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
+  ([place total-count] (percentage :normal place total-count))
   ([mode place total-count]
-   (let [percentage (/ (* place 100.0) total-count)]
-     (condp = mode
-       :high     (int (Math/ceil  percentage))
-       :low      (int (Math/floor percentage))
-       :normal   (int (Math/round percentage))
-       (throw
-        (Exception. (str "ERROR: "
-                         "get-percentage [:high|:low|:normal] "
-                         "<PLACE> <TOTAL_COUNT>")))))))
+   (round mode (/ (* place 100.0) total-count))))
+​
+#_(defn round-precision [value precision]
+  (let [multiplier (Math/pow 10.0 precision)]
+    (/ (Math/round (* value multiplier)) multiplier)))
+
+#_(defn round-div-precision [dividend divisor precision]
+  (round-precision (/ (float dividend) divisor) precision))
 
 (def max-diff-order-of-magnitude 6)
 
@@ -67,7 +81,7 @@
           ;; count of digits to display. Increase it when the number of cases
           ;; increases by an order of magnitude
           (c/left-pad n " " 7)
-          (c/left-pad (if calc-rate (str (get-percentage n total) "%") " ")
+          (c/left-pad (if calc-rate (str (percentage n total) "%") " ")
                       " " 4)
           (plus-minus diff)
           desc))
