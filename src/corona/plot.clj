@@ -293,7 +293,7 @@
                      (fmt-day day)
                      (fmt-last-date stats)
                      cc/bot-name
-                     (->> [s-confirmed s-sick-cases s-recovered s-deaths]
+                     (->> [s-confirmed s-recovered s-deaths s-sick-cases ]
                           (zipmap com/all-crdi-cases)
                           case)
                      #_(case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
