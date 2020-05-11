@@ -14,7 +14,9 @@
 
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
-  Thanks to https://stackoverflow.com/a/10778647/5151982"
+  Thanks to https://stackoverflow.com/a/10778647/5151982
+  TODO doesn't work for multiarity functions. E.g. (defn f ([] (f 1)) ([x] x))
+  "
   [{:keys [f pre post]}]
   (fn [& args]
     (apply pre args)
