@@ -36,8 +36,7 @@
   (partition-all (/ (count col) cnt-messages-in-listing) col))
 
 (defn list-countries [{:keys [chat-id sort-by-case] :as prm}]
-  (let [sort-fn (sort-by-asc sort-by-case)
-        sub-msgs (->> (data/stats-all-affected-countries prm)
+  (let [sub-msgs (->> (data/stats-all-affected-countries prm)
                       ;; create and execute sorting function
                       ((fn [coll] (sort-by sort-by-case < coll)))
                       (partition-in-sub-msgs))
