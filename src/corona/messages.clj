@@ -43,7 +43,11 @@
   ([place total-count] (percentage :normal place total-count))
   ([mode place total-count]
    (round mode (/ (* place 100.0) total-count))))
-​
+
+;; TODO ask about unicode whitespace char
+;; Unicode whitespace ;;;;;​ ;;;;;
+;; Normal whitespace  ;;;;; ;;;;;
+
 #_(defn round-precision [value precision]
   (let [multiplier (Math/pow 10.0 precision)]
     (/ (Math/round (* value multiplier)) multiplier)))
