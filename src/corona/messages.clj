@@ -104,7 +104,7 @@
 
 (defn footer
   "Listing commands in the message footer correspond to the columns in the listing.
-  See also `list-countries`."
+  See also `list-countries`, `bot-father-edit-cmds`."
   [{:keys [parse_mode]}]
   (let [spacer "   "]
     (str
@@ -114,11 +114,9 @@
           (map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer))
      spacer "listings:  "
-     #_spacer
-     (->> (map s-list-sorted-by [:i :r :d])
+     (->> (map s-list-sorted-by com/listing-ird-cases)
           (map com/encode-cmd)
-          (s/join spacer))
-     )))
+          (s/join spacer)))))
 
 (defn toByteArrayAutoClosable
   "Thanks to https://stackoverflow.com/a/15414490"
@@ -192,7 +190,7 @@
 
 (defn list-countries
   "Listing commands in the message footer correspond to the columns in the listing.
-  See also `footer`."
+  See also `footer`, `bot-father-edit-cmds`."
   [{:keys [data msg-idx cnt-msgs sort-by-case] :as prm}]
   (let [spacer " "
         sort-indicator "▴" ;; " " "▲"
@@ -238,10 +236,7 @@
                 #_(map (fn [part] (s/join "       " part))))))
      ""
      #_(if (= msg-idx cnt-msgs)
-       (format (str "\n\n"
-                    "Table sorted by %s in ascending order.")
-               "case"
-               #_sort-by-case)
+       (str "\n\n" (s-list-sorted-by-desc sort-by-case))
        "")
      (footer prm))))
 

@@ -123,6 +123,8 @@
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
                                    prm-country-code)))
       :desc s-world-desc}
+
+     ;; TODO /list is obsolete. Remove after some deprecation time
      (let [case-kw :i]
        {:name s-list
         :f (fn [chat-id] (list-countries
@@ -132,6 +134,7 @@
                                       :sort-by-case case-kw)
                                prm-country-code)))
         :desc (s-list-sorted-by-desc case-kw)})
+
      {:name s-start
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
                                    prm-country-code)))
@@ -149,28 +152,29 @@
       :f (fn [chat-id] (references (assoc prm :chat-id chat-id)))
       :desc "Knowledge is power - educate yourself"}]))
 
-(defn cmds-list
-  "Command map for list-sort-by-case
-  TODO do not support the old command for certain transition period.
-  "
-  [case-kw]
-  (let [prm (conj {:pred (fn [_] true)} msg/options)
-        prm-country-code {:country-code (cr/country-code d/worldwide)}]
-    {:name (s-list-sorted-by case-kw)
-     :f (fn [chat-id] (list-countries
-                      (conj (assoc prm
-                                   :parse_mode "HTML"
-                                   :chat-id chat-id
-                                   :sort-by-case case-kw)
-                            prm-country-code)))
-     :desc (s-list-sorted-by-desc case-kw)}))
+
+(defn cmds-listing []
+  "Command map for list-sort-by-case. See also `footer`, `list-countries`.
+  TODO do not support the old command for certain transition period."
+  (->> com/listing-ird-cases
+       (map (fn [case-kw]
+              (let [prm (conj {:pred (fn [_] true)} msg/options)
+                    prm-country-code {:country-code (cr/country-code d/worldwide)}]
+                {:name (s-list-sorted-by case-kw)
+                 :f (fn [chat-id] (list-countries
+                                  (conj (assoc prm
+                                               :parse_mode "HTML"
+                                               :chat-id chat-id
+                                               :sort-by-case case-kw)
+                                        prm-country-code)))
+                 :desc (s-list-sorted-by-desc case-kw)})))))
 
 (defn cmds
   "Create a vector of hash-maps for all available commands."
   []
   (transduce (map cmds-country-code)
              into (into (cmds-general)
-                        (map cmds-list com/all-crdi-cases))
+                        (cmds-listing))
              (cr/all-country-codes)))
 
 (defn bot-father-edit-cmds []
@@ -178,8 +182,17 @@
        (remove (fn [hm]
                  (in? [s-start
                        ;; Need to save space it the mobile app. Sorry guys.
-                       s-contributors] (:name hm))))
+                       s-contributors
+
+                       ;; obsolete; will be removed after some deprecation time
+                       s-references
+                       ;; obsolete; will be removed after some deprecation time
+                       s-list
+
+                       s-feedback
+                       ] (:name hm))))
+       (into (cmds-listing))
        (sort-by :name)
        (reverse)
        (map (fn [{:keys [name desc]}] (println name "-" desc)))
-       doall))
+       (doall)))

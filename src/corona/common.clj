@@ -20,6 +20,8 @@
 
 (def all-crdi-cases [:c :r :d :i])
 
+(def listing-ird-cases [:i :r :d])
+
 (defn fmt-date [date]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                 (t/default-time-zone))

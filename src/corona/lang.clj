@@ -1,5 +1,6 @@
 (ns corona.lang
-  (:require [corona.common :as com]))
+  (:require [corona.common :as com]
+            [clojure.string :as s]))
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
@@ -10,32 +11,43 @@
 (def s-contributors  "contributors")
 (def s-references    "references")
 (def s-feedback      "feedback")
-(def s-confirmed     "Confirmed")
-(def s-conf          "Conf")
-(def s-deaths        "Deaths")
-(def s-recovered     "Recovered")
-(def s-recov         "Recov")
+
+(def s-conf            "Conf")
+(def s-confirmed       "Confirmed")
+(def s-confirmed-cases "Confirmed cases")
+
+(def s-deaths         "Deaths")
+(def s-death-cases    "Death cases")
+
+(def s-recov           "Recov")
+(def s-recovered       "Recovered")
+(def s-recovered-cases "Recovered cases")
+
 (def s-sick          "Sick")
+(def s-sick-cases    "Sick cases")
+
 (def s-closed        "Closed")
-(def s-sick-absolute "country")
+(def s-closed-cases  "Closed cases")
+
 (def s-day           "Day")
 (def s-sick-absolute "Sick absolute")
 (def s-absolute      "absolute")
 (def s-population    "Population")
 (def s-stats         "Stats")
-(def s-sick-cases    "Sick cases")
 
 (def s-list          "list")
 (def s-list-desc     "List of countries")
 
 (defn s-list-sorted-by [case-kw]
   (->> [s-conf s-recov s-deaths s-sick]
+       (map s/lower-case)
        (zipmap com/all-crdi-cases)
        case-kw))
 
 (defn s-list-sorted-by-desc [case-kw]
-  (format "List countries sorted by the number of %s cases"
-          (->> [s-confirmed s-recovered s-deaths s-sick]
+  (format "Countries sorted by nr. of %s" ;; "... in ascending order"
+          (->> [s-confirmed-cases s-recovered-cases s-deaths s-sick-cases]
+               (map s/lower-case)
                (zipmap com/all-crdi-cases)
                case-kw)))
 
