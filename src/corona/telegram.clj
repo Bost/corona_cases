@@ -47,7 +47,7 @@
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
   (let [cmds (cmds/cmds)]
-    (println "Registered commands:" (count cmds))
+    (println (count cmds) "registered '/<cmd>' commands")
     (->> cmds
          (mapv cmd-handler)
          (into [(h/callback-fn msg/callback-handler-fn)])

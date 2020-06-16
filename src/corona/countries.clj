@@ -534,8 +534,13 @@
     (country-name cc)))
 
 (def population
+  "TODO get the population from v2/locations?source=...
+  locations
+      0	--> array
+      country_population	37172386
+  "
   {
-   "China" 1401754280
+   "China" 1401754280 ;; 1439323776
    "India" 1359772087
    "United States" 329448153
    "Indonesia" 266911900

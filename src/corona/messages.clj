@@ -44,15 +44,21 @@
   ([mode place total-count]
    (round mode (/ (* place 100.0) total-count))))
 
+(defn per-1e5
+  "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
+  ([place total-count] (per-1e5 :normal place total-count))
+  ([mode place total-count]
+   (round mode (/ (* place 1e5) total-count))))
+
 ;; TODO ask about unicode whitespace char
 ;; Unicode whitespace ;;;;;​ ;;;;;
 ;; Normal whitespace  ;;;;; ;;;;;
 
-#_(defn round-precision [value precision]
+(defn round-precision [value precision]
   (let [multiplier (Math/pow 10.0 precision)]
     (/ (Math/round (* value multiplier)) multiplier)))
 
-#_(defn round-div-precision [dividend divisor precision]
+(defn round-div-precision [dividend divisor precision]
   (round-precision (/ (float dividend) divisor) precision))
 
 (def max-diff-order-of-magnitude 6)
@@ -74,15 +80,18 @@
 
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
-  [{:keys [s n total diff desc calc-rate]}]
+  [{:keys [s n total diff desc calc-rate show-n calc-diff]
+    :or {show-n true calc-diff true}}]
   (format "<code>%s %s %s %s</code> %s"
-          (c/right-pad s " " 9) ; stays constant
+          (c/right-pad s " " 10) ; stays constant
           ;; count of digits to display. Increase it when the number of cases
           ;; increases by an order of magnitude
-          (c/left-pad n " " 7)
+          (c/left-pad (if show-n n "") " " 10)
           (c/left-pad (if calc-rate (str (percentage n total) "%") " ")
                       " " 4)
-          (plus-minus diff)
+          (if calc-diff
+            (plus-minus diff)
+            (c/left-pad "" " " max-diff-order-of-magnitude))
           desc))
 
 (def ref-mortality-rate
@@ -270,23 +279,45 @@
    (let [last-day (data/last-day prm)
          delta (data/delta prm)
          {confirmed :c} last-day
+         population (or (->> country-code
+                             (cr/country-code--country)
+                             (get cr/population))
+                        (->> country-code
+                             (cr/country-name-aliased)
+                             (get cr/population)))
          {dc :c} delta]
      (str
+      (fmt-to-cols
+       {:s s-population :n population
+        ;; :total 0
+        ;; :diff ""
+        :calc-rate false
+        :calc-diff false
+        :desc (str "= ~"(round-div-precision population 1e6 1) " millions")})
+      "\n"
       (fmt-to-cols {:s s-confirmed :n confirmed :diff dc
                     :calc-rate false :desc ""})
       "\n"
       (when (pos? confirmed)
         (let [{deaths :d
                recovered :r
-               ill :i} last-day
+               ill :i
+               } last-day
               closed (+ deaths recovered)
               {dd :d dr :r di :i} delta
               dclosed (+ dd dr)]
           (format
-           "%s\n%s\n%s\n%s\n"
+           "%s\n%s\n%s\n%s\n%s\n"
            (fmt-to-cols
             {:s s-sick      :n ill       :total confirmed :diff di
              :calc-rate true
+             :desc ""})
+           ;; TODO add effective reproduction number (R)
+           (fmt-to-cols
+            {:s s-sick-per-1e5 :n (per-1e5 ill population) :total population :diff ""
+             :calc-rate false
+             :show-n true
+             :calc-diff false
              :desc ""})
            (fmt-to-cols
             {:s s-recovered :n recovered :total confirmed :diff dr

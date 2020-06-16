@@ -138,7 +138,13 @@
          (raw-dates))))
 
 (defn get-counts
-  "Examples:
+  "Returns a hash-map containing case-counts day-by-day. E.g.:
+  {:c (48288 49684 50931 51614 52383 ...)
+   :r (    0     0     0     0     0 ...)
+   :d ( 4814  4854  4874  4874  4891 ...)
+   :i [43474 44830 46057 46740 47492 ...]}
+
+  Invocation e.g.:
   (get-counts {:pred (fn [_] true)})
   (get-counts {:pred (pred-fn sk)})
   "

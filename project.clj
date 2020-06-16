@@ -4,7 +4,7 @@
   ;; "Example of Clojure source code version output"
   ;; and:
   ;; https://github.com/arrdem/lein-git-version
-  "1.9.6"
+  "1.9.7"
 
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"
@@ -20,6 +20,9 @@
    ;; managing environment variables
    [environ                 "1.2.0"]
 
+   ;; get-json; clj-http apparently clashes with 3.9.1 used by the morse
+   #_[clj-http                "3.10.1"]
+
    ;; Clojure interface for Telegram Bot API
    [morse                   "0.4.3"]
 
@@ -32,7 +35,7 @@
    ;; https://github.com/generateme/cljplot
    [org.clojars.bost/cljplot "0.0.2"]
 
-   ;; See also https://github.com/jsa-aerial/hanami
+   ;; plotting - see also https://github.com/jsa-aerial/hanami
    #_[aerial.hanami "0.12.1"]
 
    ;; internationalization, ISO 3166-1 country codes etc.
