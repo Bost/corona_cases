@@ -17,7 +17,13 @@
 (def env-devel? (= env-type "DEVEL"))
 
 (def chat-id "112885364")
-(def bot-name (str "@" project-name "_bot"))
+(def bot-name (str "@"
+                   (cond
+                     env-prod? project-name
+                     env-test? "hokuspokus"
+                     env-devel? "hokuspokus"
+                     :else "undefined")
+                   "_bot"))
 
 (defn calculate-ill
   ([{:keys [cc f p c r d] :as prm}] (calculate-ill p c r d))
