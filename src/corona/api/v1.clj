@@ -12,8 +12,6 @@
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
-;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true
-
 (def url (format "http://%s/all" api-server))
 
 (defn data [] (c/get-json url))
@@ -152,21 +150,15 @@
   {:cc \"US\" :f #inst \"2020-03-31T00:00:00.000-00:00\" :c 188172 :r 7024  :d 3873 :p 331002651 :i 177275}
 )"
   []
-  (let [population (t/population)]
-    (apply map
-           (fn [{:keys [cc f confirmed] :as cm}
+  (apply map
+           (fn [{:keys [population] :as rm}
+               {:keys [cc f confirmed] :as cm}
                {:keys [recovered] :as rm}
                {:keys [deaths] :as dm}]
              (let [prm {:cc cc :f f :c confirmed :r recovered :d deaths
-                        :p (if-let [p (get population cc)]
-                             p
-                             (do
-                               ;; TODO what it the population of Kosovo XK?
-                               #_(printf "No population found for %s %s; using 0\n"
-                                       (cr/country-name cc) cc)
-                               0))}]
+                        :p population}]
                (assoc
                 prm
                 #_(dissoc prm :c)
                 :i (c/calculate-ill prm))))
-           (map xf-for-case [:confirmed :recovered :deaths]))))
+           (map xf-for-case [:population :confirmed :recovered :deaths])))

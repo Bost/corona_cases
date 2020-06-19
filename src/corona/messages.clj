@@ -278,13 +278,7 @@
 
    (let [last-day (data/last-day prm)
          delta (data/delta prm)
-         {confirmed :c} last-day
-         population (or (->> country-code
-                             (cr/country-code--country)
-                             (get cr/population))
-                        (->> country-code
-                             (cr/country-name-aliased)
-                             (get cr/population)))
+         {confirmed :c population :p} last-day
          {dc :c} delta]
      (str
       (fmt-to-cols

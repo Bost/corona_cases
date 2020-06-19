@@ -30,7 +30,7 @@
    [clojure.java-time       "0.3.2"]
    [net.cgrand/xforms       "0.19.2"]
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
-   [org.clojars.bost/utils "0.0.0-35-0x665f"]
+   [org.clojars.bost/utils  "0.0.0-37-0xc96a"]
 
    ;; https://github.com/generateme/cljplot
    [org.clojars.bost/cljplot "0.0.2"]

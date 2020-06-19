@@ -164,7 +164,6 @@
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
   [{:keys [day cc stats]}]
-  (println "plot-country")
   (let [base-data (stats-for-country cc stats)
         sarea-data (remove (fn [[case-kw vs]]
                              (in? #_[:c :i :r :d] [:c :p] case-kw))

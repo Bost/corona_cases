@@ -534,11 +534,8 @@
     (country-name cc)))
 
 (def population
-  "TODO get the population from v2/locations?source=...
-  locations
-      0	--> array
-      country_population	37172386
-  "
+  "The v2 api service doesn't contain precise numbers.
+  TODO calculate population using tables/data"
   {
    "China" 1401754280 ;; 1439323776
    "India" 1359772087

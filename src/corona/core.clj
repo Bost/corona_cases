@@ -20,8 +20,8 @@
 (def bot-name (str "@" project-name "_bot"))
 
 (defn calculate-ill
-  ([{:keys [cc f c r d] :as prm}] (calculate-ill c r d))
-  ([c r d] (- c (+ r d))))
+  ([{:keys [cc f p c r d] :as prm}] (calculate-ill p c r d))
+  ([_ c r d] (- c (+ r d))))
 
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]

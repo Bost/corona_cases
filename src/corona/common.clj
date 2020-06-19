@@ -18,7 +18,7 @@
       s)
     s))
 
-(def all-crdi-cases [:c :r :d :i])
+(def all-crdi-cases [:p :c :r :d :i])
 
 (def listing-ird-cases [:i :r :d])
 
