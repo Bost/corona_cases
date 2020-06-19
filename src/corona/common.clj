@@ -18,7 +18,8 @@
       s)
     s))
 
-(def all-crdi-cases [:p :c :r :d :i])
+(def all-crdi-cases [:c :r :d :i])
+(def all-pcrdi-cases (into [:p] all-crdi-cases))
 
 (def listing-ird-cases [:i :r :d])
 
@@ -31,12 +32,12 @@
   "Countries with the number of cases less than the threshold are grouped into
   \"Rest\". See also `threshold-increase`."
   [case-kw]
-  (case-kw (zipmap all-crdi-cases [(int 1e5) 30000 5000 59000])))
+  (case-kw (zipmap all-pcrdi-cases [(int 1e7) (int 2e5) 151000 9500 99000])))
 
 (defn threshold-increase
   "Case-dependent threshold recalculation increase. See also `min-threshold`."
   [case-kw]
-  (case-kw (zipmap all-crdi-cases [5000 1000 500 1000])))
+  (case-kw (zipmap all-pcrdi-cases [(int 1e6) 5000 1000 500 1000])))
 
 (def sorry-ws
   (str

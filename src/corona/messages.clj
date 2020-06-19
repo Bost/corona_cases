@@ -166,7 +166,7 @@
        (toByteArrayAutoClosable
         (let [plot-fn (if (= type :sum) p/plot-all-by-case p/plot-all-absolute)]
           (plot-fn
-           {:day (count (v1/raw-dates-unsorted)) :case case :type type
+           {:day (count (data/raw-dates-unsorted)) :case case :type type
             :threshold (com/min-threshold case)
             :threshold-increase (com/threshold-increase case)
             :stats (v1/pic-data)})))))))

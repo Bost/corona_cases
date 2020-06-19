@@ -24,7 +24,7 @@
        {})
      (msg/toByteArrayAutoClosable
       (p/plot-country
-       {:day (count (v1/raw-dates-unsorted)) :cc country-code
+       {:day (count (data/raw-dates-unsorted)) :cc country-code
         :stats (v1/pic-data)})))))
 
 (def cnt-messages-in-listing

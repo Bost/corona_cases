@@ -8,24 +8,10 @@
             [corona.country-codes :refer :all]
             [utils.core :refer :all :exclude [id]]
             [corona.tables :as t]
+            [corona.api.expdev07 :as srvc]
             [net.cgrand.xforms :as x])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
-
-(def url (format "http://%s/all" api-server))
-
-(defn data [] (c/get-json url))
-
-(def data-memo (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
-
-#_(require '[ clojure.inspector :as i])
-#_(i/inspect (data-memo))
-
-(defn raw-dates-unsorted []
-  #_[(keyword "2/22/20") (keyword "2/2/20")]
-  ((comp keys :history last :locations :confirmed) (data-memo)))
-
-(defn keyname [key] (str (namespace key) "/" (name key)))
 
 ;; avoid creating new class each time the `fmt` function is called
 (def sdf (let [sdf (new SimpleDateFormat "MM/dd/yy")]
@@ -34,7 +20,7 @@
                               "UTC"))
            sdf))
 
-(defn fmt [raw-date] (.parse sdf (keyname raw-date)))
+(defn fmt [raw-date] (.parse sdf (srvc/keyname raw-date)))
 
 ;; (defn for-case [case]
 ;;   (->> (get-in (data-memo) [case :locations])
@@ -59,6 +45,7 @@
 
 (def ccs
   #{
+    
     ;; cr tg za pe lc ch ru si au kr it fi sc tt my sy mn am dz uy td dj bi mk
     ;; mu li gr gy cg ml gm sa bh ne bn xk cd dk bj me bo jo cv ve ci uz tn is
     ;; ga tz at lt np bg il pk pt hr mr ge hu tw mm sr va kw se gb qq vn cf pa
@@ -126,7 +113,7 @@
   ;; Transducers: how-to
   ;; https://www.astrecipes.net/blog/2016/11/24/transducers-how-to/
 
-  (->> (get-in (data-memo) [case :locations])
+  (->> (get-in (srvc/data-with-pop-memo) [case :locations])
        (transduce (comp
                    (filter (fn [loc]
                              true
@@ -151,14 +138,19 @@
 )"
   []
   (apply map
-           (fn [{:keys [population] :as rm}
+         (fn [
+               {:keys [population] :as pm}
                {:keys [cc f confirmed] :as cm}
                {:keys [recovered] :as rm}
                {:keys [deaths] :as dm}]
              (let [prm {:cc cc :f f :c confirmed :r recovered :d deaths
-                        :p population}]
+                        :p population
+                        }]
                (assoc
                 prm
                 #_(dissoc prm :c)
-                :i (c/calculate-ill prm))))
-           (map xf-for-case [:population :confirmed :recovered :deaths])))
+                :i (c/calculate-ill prm))))  ;; TODO watch out for arity of calculate-ill
+         (map xf-for-case [
+                           :population
+                           :confirmed :recovered :deaths
+                           ])))

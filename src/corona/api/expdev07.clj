@@ -17,7 +17,6 @@
 
 (def data-memo (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
 
-
 (defn raw-dates-unsorted []
   #_[(keyword "2/22/20") (keyword "2/2/20")]
   (->> (data-memo) :confirmed :locations last :history keys))
@@ -193,10 +192,10 @@
   (get-counts {:pred (pred-fn sk)})
   "
   [prm]
-  (let [crd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
-                  [:population :confirmed :recovered :deaths])]
-    (zipmap com/all-crdi-cases
-            (conj crd (apply mapv c/calculate-ill crd)))))
+  (let [pcrd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
+                   [:population :confirmed :recovered :deaths])]
+    (zipmap com/all-pcrdi-cases
+            (conj pcrd (apply mapv c/calculate-ill pcrd)))))
 
 (def get-counts-memo
   (memo/ttl get-counts {} :ttl/threshold (* time-to-live 60 1000)))
@@ -227,7 +226,7 @@
        (apply (fn [prv lst]
                 (map (fn [k]
                        {k (- (k lst) (k prv))})
-                     com/all-crdi-cases)))
+                     com/all-pcrdi-cases)))
        (reduce into {})))
 
 (defn last-day
