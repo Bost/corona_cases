@@ -83,12 +83,12 @@
   [{:keys [s n total diff desc calc-rate show-n calc-diff]
     :or {show-n true calc-diff true}}]
   (format "<code>%s %s %s %s</code> %s"
-          (c/right-pad s " " 10) ; stays constant
+          (c/right-pad s " " 9) ; stays constant
           ;; count of digits to display. Increase it when the number of cases
           ;; increases by an order of magnitude
           (c/left-pad (if show-n n "") " " 10)
           (c/left-pad (if calc-rate (str (percentage n total) "%") " ")
-                      " " 4)
+                      " " 3)
           (if calc-diff
             (plus-minus diff)
             (c/left-pad "" " " max-diff-order-of-magnitude))
@@ -281,14 +281,15 @@
          {confirmed :c population :p} last-day
          {dc :c} delta]
      (str
-      (fmt-to-cols
-       {:s s-population :n population
-        ;; :total 0
-        ;; :diff ""
-        :calc-rate false
-        :calc-diff false
-        :desc (str "= ~"(round-div-precision population 1e6 1) " millions")})
-      "\n"
+      (str
+       (fmt-to-cols
+        {:s s-population :n population
+         ;; :total 0
+         ;; :diff ""
+         :calc-rate false
+         :calc-diff false
+         :desc (str "= "(round-div-precision population 1e6 1) " Millions")})
+       "\n")
       (fmt-to-cols {:s s-confirmed :n confirmed :diff dc
                     :calc-rate false :desc ""})
       "\n"
@@ -324,9 +325,7 @@
            (fmt-to-cols
             {:s s-closed    :n closed :total confirmed :diff dclosed
              :calc-rate true
-             :desc (format "= %s + %s"
-                           (s/lower-case s-recovered)
-                           (s/lower-case s-deaths))}))))))
+             :desc ""}))))))
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
@@ -389,6 +388,9 @@
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" prm)
     "\n")
    "\n"
+   (format "- Closed cases = %s + %s\n"
+           (s/lower-case s-recovered)
+           (s/lower-case s-deaths))
    "- Percentage calculation: <cases> / confirmed\n"
    #_(str
       "\n"

@@ -33,7 +33,7 @@
 (def s-day           "Day")
 (def s-sick-absolute "Sick absolute")
 (def s-absolute      "absolute")
-(def s-population    "Population")
+(def s-population    "People") ;; "Population" is too long see `fmt-to-cols`
 (def s-stats         "Stats")
 
 (def s-list          "list")
