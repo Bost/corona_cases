@@ -309,6 +309,7 @@
                recovered :r
                ill :i
                } last-day
+              {ill-week-ago :i} (data/week-ago prm)
               closed (+ deaths recovered)
               {dd :d dr :r di :i} delta
               dclosed (+ dd dr)]
@@ -321,6 +322,20 @@
            ;; TODO add effective reproduction number (R)
            (fmt-to-cols
             {:s s-sick-per-1e5 :n (per-1e5 ill population) :total population :diff ""
+             :calc-rate false
+             :show-n true
+             :calc-diff false
+             :desc ""})
+           (fmt-to-cols
+            {:s s-floating-avg :n (round-precision
+                               (/ (- ill ill-week-ago) 7.0)
+                               2) :total population :diff ""
+             :calc-rate false
+             :show-n true
+             :calc-diff false
+             :desc ""})
+           (fmt-to-cols
+            {:s "Sick-7r" :n ill-week-ago :total population :diff ""
              :calc-rate false
              :show-n true
              :calc-diff false
@@ -403,6 +418,7 @@
            (s/lower-case s-recovered)
            (s/lower-case s-deaths))
    "- Percentage calculation: <cases> / confirmed\n"
+   (format "- %s = (%s - %s) / 7\n" s-floating-avg s-sick-today s-sick-week-ago)
    #_(str
       "\n"
       " - " (link "Home page"

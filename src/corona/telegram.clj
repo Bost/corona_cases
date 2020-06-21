@@ -3,14 +3,16 @@
   (:require [clj-time-ext.core :as te]
             [clojure.core.async :as async :refer [<!!]]
             [clojure.string :as s]
-            [clojure.tools.logging :as log]
             [corona.commands :as cmds]
             [corona.core :as c :refer [bot-ver env-type token]]
             [corona.messages :as msg]
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
-            [morse.polling-patch :as p-patch]))
+            [clj-time.core :as t]
+            [morse.polling-patch :as p-patch])
+  (:import java.time.ZoneId
+           java.util.TimeZone))
 
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
@@ -68,11 +70,23 @@
      running)))
 
 (defn -main [& args]
-  (log/info (str "[" (te/tnow) " " bot-ver "]")
+  (println (str "[" (te/tnow) " " bot-ver "]"))
+  (if-not (= (str (t/default-time-zone))
+             (str (ZoneId/systemDefault))
+             (.getID (TimeZone/getDefault)))
+    (printf (str
+             "t/default-time-zone %s; "
+             "ZoneId/systemDefault: %s; "
+             "TimeZone/getDefault: %s\n")
+            (str (t/default-time-zone))
+            (str (ZoneId/systemDefault))
+            (.getID (TimeZone/getDefault)))
+    (println "TimeZone:" (str (t/default-time-zone))))
+  (println (str "[" (te/tnow) " " bot-ver "]")
             (str "Starting " env-type " Telegram Chatbot..."))
   (let [blank-prms (filter #(-> % env s/blank?) [:telegram-token])]
     (when (not-empty blank-prms)
-      (log/fatal (str "Undef environment var(s): " blank-prms))
+      (println "ERROR" "Undef environment var(s):" blank-prms)
       (System/exit 1)))
   (<!! (start-polling token handler)))
 

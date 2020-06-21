@@ -1,6 +1,5 @@
 (ns morse.polling-patch
   (:require [clojure.core.async :as a :refer [>! close! go-loop]]
-            [clojure.tools.logging :as log]
             [morse.api :as api]
             [morse.polling :as p]))
 
@@ -22,26 +21,25 @@
         (case data
           ;; running got closed by the user
           nil
-          (do (log/info "Stopping Telegram polling...")
+          (do (println "Stopping Telegram polling...")
               (close! wait-timeout)
               (close! updates))
 
           ::wait-timeout
-          (do (log/error "HTTP request timed out, stopping polling")
+          (do (println "ERROR" "HTTP request timed out, stopping polling")
               (close! running)
               (close! updates)
-              (log/fatal "ABORT on ::wait-timeout")
+              (println "ABORT" "on ::wait-timeout")
               (api-error-handle-fn))
 
           ::api/error
-          (do (log/warn "Got error from Telegram API, stopping polling")
+          (do (println "WARN" "Got error from Telegram API, stopping polling")
               (close! running)
               (close! updates)
-              (log/fatal "ABORT on ::api/error")
+              (println "ABORT" "on ::api/error")
               (api-error-handle-fn))
 
           (do (close! wait-timeout)
               (doseq [upd data] (>! updates upd))
               (recur (p/new-offset data offset))))))
     updates))
-

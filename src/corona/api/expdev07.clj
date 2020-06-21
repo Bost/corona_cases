@@ -152,6 +152,11 @@
 
 (defn get-prev [coll] (first (take-last 2 coll)))
 
+(defn get-last-7th-report
+  "(last-7th-report [0 1 2 3 4 5 6 7])
+  ;; => 0"
+  [coll] (first (take-last 8 coll)))
+
 (defn sums-for-date [case locations raw-date]
   (if (and (empty? locations)
            (= :recovered case))
@@ -236,6 +241,14 @@
   [prm]
   #_(println "last-day" "prm" prm)
   (eval-fun (assoc prm :fun get-last)))
+
+(defn last-7th-report
+  "E.g.:
+  (last-day {:pred (pred-fn sk)})
+  (last-day {:pred (fn [_] true)})"
+  [prm]
+  #_(println "last-day" "prm" prm)
+  (eval-fun (assoc prm :fun get-last-7th-report)))
 
 (defn pred-fn [country-code]
   (fn [loc]

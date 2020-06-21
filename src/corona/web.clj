@@ -2,7 +2,6 @@
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [clojure.string :as s]
-            [clojure.tools.logging :as log]
             [compojure.core :refer [ANY defroutes GET POST]]
             [compojure.handler :refer [site]]
             [compojure.route :as route]
@@ -25,7 +24,7 @@
 (def ws-path (format "ws/%s" project-ver))
 
 (defn web-service [{:keys [type] :as prm}]
-  (println "web-service" prm) ;; TODO better logging
+  (println "web-service" prm)
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body
@@ -112,7 +111,7 @@
        (route/not-found (slurp (io/resource "404.html")))))
 
 (defn webapp [& [port]]
-  (log/info (str "Starting " c/env-type " webapp..."))
+  (println (str "Starting " c/env-type " webapp..."))
   (let [port (Integer. (or port (env :port)
                            (cond c/env-prod? 5000
                                  ;; keep port-nr in sync with README.md
