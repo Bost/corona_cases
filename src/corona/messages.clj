@@ -309,7 +309,7 @@
                recovered :r
                ill :i
                } last-day
-              {ill-week-ago :i} (data/week-ago prm)
+              {last-7th-report :i} (data/last-7th-report prm)
               closed (+ deaths recovered)
               {dd :d dr :r di :i} delta
               dclosed (+ dd dr)]
@@ -326,16 +326,16 @@
              :show-n true
              :calc-diff false
              :desc ""})
-           (fmt-to-cols
-            {:s s-floating-avg :n (round-precision
-                               (/ (- ill ill-week-ago) 7.0)
-                               2) :total population :diff ""
+           #_(fmt-to-cols
+            {:s s-floating-avg
+             :n (round-precision (/ (- ill last-7th-report) 7.0) 2)
+             :total population :diff ""
              :calc-rate false
              :show-n true
              :calc-diff false
              :desc ""})
-           (fmt-to-cols
-            {:s "Sick-7r" :n ill-week-ago :total population :diff ""
+           #_(fmt-to-cols
+            {:s "Sick-7r" :n last-7th-report :total population :diff ""
              :calc-rate false
              :show-n true
              :calc-diff false
