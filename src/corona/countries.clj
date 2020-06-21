@@ -448,31 +448,7 @@
 
    "Burma"                            mm ; Myanmar
 
-   "St. Pierre & Miquelon"            pm
-   "Svalbard & Jan Mayen"             sj
-   "Turks & Caicos Islands"           tc
-
-   "Heard Island & McDonald Islands"  hm
-
-   "St. Helena, Ascension & Tristan da Cunha"  sh
-
-   ;; "Falkland Islands (Malvinas)"     fk
-   ;; "Falkland Islands / Malvinas"     fk
-
-
-   ;; Northern Mariana Islands  /mp
-   ;; Sint Maarten (Dutch part)  /sx
-   ;; French Southern Territories  /tf
-   ;; Saint Martin (French part)  /mf
-   ;; Virgin Islands, British  /vg
-   ;; United States Minor Outlying Islands  /um
-   ;; Bonaire, Sint Eustatius and Saba  /bq
-   ;; Cocos (Keeling) Islands  /cc
-   ;; South Georgia and the South Sandwich Islands  /gs
-   ;; Virgin Islands, U.S.  /vi
-   ;; British Indian Ocean Territory  /io
-
-   ;; "Others" has no mapping
+;; "Others" has no mapping
    ;; "Cruise Ship" is mapped to the default val
    })
 
@@ -516,6 +492,24 @@
     gq "Equat Guinea"
     qq "Rest"
     fm "Micronesia"
+
+    pm "St Pierre Miquelo"
+    sj "Svalbard J. Mayen"
+    tc "Turks Caicos Isla"
+    vi "Virgin Islands US"
+    hm "Heard McDonald Is"
+    sx "St Maarten, Dutch"
+    mf "St Martin, French"
+    sh "St He Ascen Cunha"
+    fk "Falklands/Malvina"
+    cc "Cocos/Keeling Isl"
+    mp "Northern Mariana"
+    vg "Brit Virgin Islan"
+    bq "Bona St Eust Saba"
+    io "Br Indian Ocean T"
+    um "US Min Outlying I"
+    tf "Fr Southern Terri"
+    gs "S Georgia Sandwic"
     }))
 
 (defn- lower-case-keyword
@@ -551,12 +545,13 @@
 (defn country-name-aliased
   "Use an alias; typically a shorter name for some countries.
   See `country-alias--country-code-inverted`"
-  [cc]
+  [country-code]
   (if (in?
        [va tw do ir ru ps ae kr mk ba cd bo md bn ve vc kp tz xk la sy kn tt ag
-        cf cz st pg gq qq] cc)
-    (country-alias cc)
-    (country-name cc)))
+       cf cz st pg gq qq fm pm sj tc vi hm sx mf sh fk cc bq mp vg io um tf gs]
+       country-code)
+    (country-alias country-code)
+    (country-name country-code)))
 
 (def population
   "The v2 api service doesn't contain precise numbers.

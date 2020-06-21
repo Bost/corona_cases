@@ -9,7 +9,6 @@
 (def s-start         "start")
 (def s-about         "about")
 (def s-contributors  "contributors")
-(def s-references    "references")
 (def s-feedback      "feedback")
 
 (def s-conf            "Conf")
@@ -38,15 +37,14 @@
 (def s-population    "People") ;; "Population" is too long see `fmt-to-cols`
 (def s-stats         "Stats")
 
-(def s-list          "list")
 (def s-list-desc     "List of countries")
 
 (def s-floating-avg
   "Sick case Change over last 7 Reports - floating Average"
   "SCAvg7r")
 
-(def s-sick-today    "active-today")
-(def s-sick-week-ago "active-week-ago")
+(def s-sick-today    "active-now")
+(def s-sick-week-ago "active-7-reports-ago")
 
 (defn s-list-sorted-by [case-kw]
   (->> [s-conf s-recov s-deaths s-sick]
@@ -62,7 +60,7 @@
                case-kw)))
 
 (def s-buttons "Shortened button names"
-  (zipmap com/all-crdi-cases ["Co" "Re" "De" "Si"]))
+  (zipmap com/all-crdi-cases ["Co" "Re" "De" "Ac"]))
 
 (def s-type "Buttons for plot-types" {:sum "Σ" :abs "A"})
 
