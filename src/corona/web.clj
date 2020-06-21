@@ -18,7 +18,10 @@
 (defn home-page []
   {:status 200
    :headers {"Content-Type" "text/plain"}
-   :body (s/join "\n" ["home page"])})
+   :body
+   (s/join "\n"
+           #_[:div "TODO klipse"]
+           ["home page"])})
 
 (def project-ver "See also `c/project-ver`" "dev" #_"1.7.2")
 (def ws-path (format "ws/%s" project-ver))
