@@ -25,7 +25,7 @@
 
 (def s-sick          "Sick")
 (def s-sick-cases    "Sick cases")
-(def s-sick-per-1e5  "Sick/100K")
+(def s-sick-per-1e5  "Sick/100k")
 
 (def s-closed        "Closed")
 (def s-closed-cases  "Closed cases")
