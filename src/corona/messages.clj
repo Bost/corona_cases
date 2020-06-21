@@ -78,6 +78,17 @@
       n))
    " " max-diff-order-of-magnitude))
 
+(defn fmt-to-cols-narrower
+  "Info-message numbers of aligned to columns for better readability"
+  [{:keys [s n total diff desc calc-rate show-n calc-diff]
+    :or {show-n true calc-diff true}}]
+  (format "<code>%s %s</code> %s"
+          (c/right-pad s " " 8) ; stays constant
+          ;; count of digits to display. Increase it when the number of cases
+          ;; increases by an order of magnitude
+          (c/left-pad (if show-n n "") " " 10)
+          desc))
+
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
   [{:keys [s n total diff desc calc-rate show-n calc-diff]
@@ -86,9 +97,9 @@
           (c/right-pad s " " 9) ; stays constant
           ;; count of digits to display. Increase it when the number of cases
           ;; increases by an order of magnitude
-          (c/left-pad (if show-n n "") " " 10)
+          (c/left-pad (if show-n n "") " " 9)
           (c/left-pad (if calc-rate (str (percentage n total) "%") " ")
-                      " " 3)
+                      " " 4)
           (if calc-diff
             (plus-minus diff)
             (c/left-pad "" " " max-diff-order-of-magnitude))
@@ -282,13 +293,13 @@
          {dc :c} delta]
      (str
       (str
-       (fmt-to-cols
+       (fmt-to-cols-narrower
         {:s s-population :n population
          ;; :total 0
          ;; :diff ""
          :calc-rate false
          :calc-diff false
-         :desc (str "= "(round-div-precision population 1e6 1) " Millions")})
+         :desc (str "= "(round-div-precision population 1e6 1) " Mill")})
        "\n")
       (fmt-to-cols {:s s-confirmed :n confirmed :diff dc
                     :calc-rate false :desc ""})
