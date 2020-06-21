@@ -158,17 +158,18 @@
                         (cmds-listing))
              (cr/all-country-codes)))
 
-(defn bot-father-edit-cmds []
+(defn bot-father-edit-cmds
+  "Evaluate this function and upload the results under:
+     @BotFather -> ... -> Edit Bot -> Edit Commands"
+  []
   (->> (cmds-general)
        (remove (fn [hm]
                  (in? [s-start
-                       ;; Need to save space it the mobile app. Sorry guys.
+                       ;; Need to save space on smartphones. Sorry guys.
                        s-contributors
-
                        s-feedback
                        ] (:name hm))))
-       (into (cmds-listing))
-       (sort-by :name)
        (reverse)
+       (into (cmds-listing))
        (map (fn [{:keys [name desc]}] (println name "-" desc)))
        (doall)))

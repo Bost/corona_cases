@@ -49,7 +49,7 @@
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
   (let [cmds (cmds/cmds)]
-    (println (count cmds) "registered '/<cmd>' commands")
+    (println "Registered user-commands '/<cmd>':" (count cmds))
     (->> cmds
          (mapv cmd-handler)
          (into [(h/callback-fn msg/callback-handler-fn)])
@@ -86,7 +86,7 @@
             (str "Starting " env-type " Telegram Chatbot..."))
   (let [blank-prms (filter #(-> % env s/blank?) [:telegram-token])]
     (when (not-empty blank-prms)
-      (println "ERROR" "Undef environment var(s):" blank-prms)
+      (println "ERROR" "Undefined environment var(s):" blank-prms)
       (System/exit 1)))
   (<!! (start-polling token handler)))
 
