@@ -23,9 +23,9 @@
 (def s-recovered       "Recovered")
 (def s-recovered-cases "Recovered cases")
 
-(def s-sick          "Sick")
-(def s-sick-cases    "Sick cases")
-(def s-sick-per-1e5  "Sick/100k")
+(def s-sick          "Active")
+(def s-sick-cases    "Active cases")
+(def s-sick-per-1e5  "Act/100k")
 
 (def s-closed        "Closed")
 (def s-closed-cases  "Closed cases")
@@ -33,7 +33,7 @@
 (def s-day
   "Coincidentally there seems to be 1 report per day"
   "Day\\Report")
-(def s-sick-absolute "Sick absolute")
+(def s-sick-absolute "Active absolute")
 (def s-absolute      "absolute")
 (def s-population    "People") ;; "Population" is too long see `fmt-to-cols`
 (def s-stats         "Stats")
@@ -45,8 +45,8 @@
   "Sick case Change over last 7 Reports - floating Average"
   "SCAvg7r")
 
-(def s-sick-today    "sick-today")
-(def s-sick-week-ago "sick-week-ago")
+(def s-sick-today    "active-today")
+(def s-sick-week-ago "active-week-ago")
 
 (defn s-list-sorted-by [case-kw]
   (->> [s-conf s-recov s-deaths s-sick]
