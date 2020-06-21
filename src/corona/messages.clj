@@ -61,7 +61,7 @@
 (defn round-div-precision [dividend divisor precision]
   (round-precision (/ (float dividend) divisor) precision))
 
-(def max-diff-order-of-magnitude 6)
+(def max-diff-order-of-magnitude 7)
 
 (defn plus-minus
   "Display \"+0\" when n is zero"
@@ -83,7 +83,7 @@
   [{:keys [s n total diff desc calc-rate show-n calc-diff]
     :or {show-n true calc-diff true}}]
   (format "<code>%s %s</code> %s"
-          (c/right-pad s " " 8) ; stays constant
+          (c/right-pad s " " 7) ; stays constant
           ;; count of digits to display. Increase it when the number of cases
           ;; increases by an order of magnitude
           (c/left-pad (if show-n n "") " " 10)
@@ -97,7 +97,7 @@
           (c/right-pad s " " 9) ; stays constant
           ;; count of digits to display. Increase it when the number of cases
           ;; increases by an order of magnitude
-          (c/left-pad (if show-n n "") " " 9)
+          (c/left-pad (if show-n n "") " " 8)
           (c/left-pad (if calc-rate (str (percentage n total) "%") " ")
                       " " 4)
           (if calc-diff
