@@ -49,7 +49,7 @@
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
   (let [cmds (cmds/cmds)]
-    (println "Registered user-commands '/<cmd>':" (count cmds))
+    (println "Registered Telegram commands:" (count cmds))
     (->> cmds
          (mapv cmd-handler)
          (into [(h/callback-fn msg/callback-handler-fn)])
@@ -71,17 +71,16 @@
 
 (defn -main [& args]
   (println (str "[" (te/tnow) " " bot-ver "]"))
-  (if-not (= (str (t/default-time-zone))
-             (str (ZoneId/systemDefault))
-             (.getID (TimeZone/getDefault)))
-    (printf (str
-             "t/default-time-zone %s; "
-             "ZoneId/systemDefault: %s; "
-             "TimeZone/getDefault: %s\n")
-            (str (t/default-time-zone))
-            (str (ZoneId/systemDefault))
-            (.getID (TimeZone/getDefault)))
-    (println "TimeZone:" (str (t/default-time-zone))))
+  (if (= (str (t/default-time-zone))
+         (str (ZoneId/systemDefault))
+         (.getID (TimeZone/getDefault)))
+    (println "TimeZone:" (str (t/default-time-zone)))
+    (printf (str "t/default-time-zone %s; "
+                 "ZoneId/systemDefault: %s; "
+                 "TimeZone/getDefault: %s\n")
+            (t/default-time-zone)
+            (ZoneId/systemDefault )
+            (.getID (TimeZone/getDefault))))
   (println (str "[" (te/tnow) " " bot-ver "]")
             (str "Starting " env-type " Telegram Chatbot..."))
   (let [blank-prms (filter #(-> % env s/blank?) [:telegram-token])]
