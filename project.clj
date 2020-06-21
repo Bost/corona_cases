@@ -13,8 +13,14 @@
   :dependencies
   [
    [org.clojure/clojure     "1.10.1"]
+
+   ;; CSV reader/writer to/from Clojure data structures.
    [org.clojure/data.csv    "1.0.0"]
+
+   ;; Ring routing lib; dispatching of GET, PUT, etc.
    [compojure               "1.6.1"]
+
+   ;; Ring Jetty adapter
    [ring/ring-jetty-adapter "1.8.1"]
 
    ;; managing environment variables
