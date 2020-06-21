@@ -30,7 +30,9 @@
 (def s-closed        "Closed")
 (def s-closed-cases  "Closed cases")
 
-(def s-day           "Day")
+(def s-day
+  "Coincidentally there seems to be 1 report per day"
+  "Day\\Report")
 (def s-sick-absolute "Sick absolute")
 (def s-absolute      "absolute")
 (def s-population    "People") ;; "Population" is too long see `fmt-to-cols`

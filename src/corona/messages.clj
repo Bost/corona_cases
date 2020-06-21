@@ -219,7 +219,7 @@
         omag-deaths (dec omag-ill)]
     (format
      (format (str "%s\n" ; header
-                  "%s\n" ; Day
+                  "%s\n" ; Day\Report
                   "         %s "  ; Sick
                   "%s"   ; spacer
                   "%s "  ; Recovered
@@ -285,7 +285,7 @@
            (map (fn [s] (->> s s/lower-case com/encode-cmd))
                 [country-code
                  (cr/country-code-3-letter country-code)])))
-   (str "Day " (count (data/raw-dates)))
+   (str s-day " " (count (data/raw-dates)))
 
    (let [last-day (data/last-day prm)
          delta (data/delta prm)
