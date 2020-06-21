@@ -14,11 +14,11 @@
            java.util.TimeZone))
 
 ;; avoid creating new class each time the `fmt` function is called
-(def sdf (let [sdf (new SimpleDateFormat "MM/dd/yy")]
-           (.setTimeZone sdf (TimeZone/getTimeZone
-                              #_"America/New_York"
-                              "UTC"))
-           sdf))
+(def sdf
+  "SimpleDateFormat"
+  (let [sdf (new SimpleDateFormat "MM/dd/yy")]
+    (.setTimeZone sdf (TimeZone/getDefault))
+    sdf))
 
 (defn fmt [raw-date] (.parse sdf (srvc/keyname raw-date)))
 

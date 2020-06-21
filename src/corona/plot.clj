@@ -43,9 +43,7 @@
       (c2d/get-image)))
 
 (defn to-java-time-local-date [java-util-date]
-  (LocalDate/ofInstant (.toInstant java-util-date)
-                       (ZoneId/systemDefault)
-                       #_(ZoneId/of"Europe/Berlin")))
+  (LocalDate/ofInstant (.toInstant java-util-date) (ZoneId/systemDefault)))
 
 (defn sort-by-country-name [mapped-hm]
   (sort-by first (comp - compare)
