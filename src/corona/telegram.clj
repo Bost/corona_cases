@@ -49,7 +49,7 @@
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
   (let [cmds (cmds/cmds)]
-    (println "Registered Telegram commands:" (count cmds))
+    (println "Registering" (count cmds) "chatbot commands")
     (->> cmds
          (mapv cmd-handler)
          (into [(h/callback-fn msg/callback-handler-fn)])

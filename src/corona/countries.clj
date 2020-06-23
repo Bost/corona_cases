@@ -132,6 +132,7 @@
    "Mainland China"                   cn ; "China"
    "South Korea"                      kr ; "Korea, Republic of"
    "Korea, South"                     kr ; "Korea, Republic of"
+   "Korea South"                      kr ; "Korea, Republic of"
    "Republic of Korea"                kr ; "Korea, Republic of"
 
    "Taiwan"                           tw ; "Taiwan, Province of China"
@@ -368,7 +369,7 @@
    "South Africa" 58775022
    "Tanzania" 55890747
    "Myanmar" 54339766
-   "Korea South" 51780579
+   "South Korea" 51780579
    "Colombia" 49395678
    "Kenya" 47564296
    "Spain" 47100396
