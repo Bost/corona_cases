@@ -26,11 +26,15 @@
    ;; managing environment variables
    [environ                 "1.2.0"]
 
-   ;; get-json; clj-http apparently clashes with 3.9.1 used by the morse
-   #_[clj-http                "3.10.1"]
+   ;; JSON and JSON SMILE encoding
+   [cheshire "5.10.0"]  ;; it looks like the clj-http requires this dependency.
+                        ;; otherwise I get `namespace 'cheshire.factory' not
+                        ;; found`
+   ;; for the get-json function
+   [clj-http                "3.10.1"]
 
    ;; Clojure interface for Telegram Bot API
-   [morse                   "0.4.3"]
+   [org.clojars.bost/morse  "0.0.0-157-0x8c5c"]
 
    [org.clojure/data.json   "1.0.0"]
    [clojure.java-time       "0.3.2"]
