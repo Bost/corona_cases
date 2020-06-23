@@ -1,19 +1,20 @@
 (ns corona.plot
-  (:require [cljplot.build :as b]
-            [cljplot.common :as plotcom]
-            ;; XXX cljplot.core must be required otherwise an empty plot is
-            ;; shown when released. WTF?
-            [cljplot.core]
-            [cljplot.render :as r]
-            [clojure.set :as cset]
-            [clojure2d.color :as c]
-            [clojure2d.core :as c2d]
-            [corona.common :as com]
-            [corona.core :as cc]
-            [corona.countries :as cr]
-            [corona.defs :as d]
-            [corona.lang :as l]
-            [utils.core :refer :all])
+  (:require
+   [cljplot.build :as b]
+   [cljplot.common :as plotcom]
+   ;; XXX cljplot.core must be required otherwise an empty plot is
+   ;; shown when released. WTF?
+   [cljplot.core]
+   [cljplot.render :as r]
+   [clojure.set :as cset]
+   [clojure2d.color :as c]
+   [clojure2d.core :as c2d]
+   [corona.common :as com]
+   [corona.core :as cc]
+   [corona.countries :as cr]
+   [corona.defs :as d]
+   [corona.lang :as l]
+   [utils.core :refer :all])
   (:import [java.time LocalDate ZoneId]))
 
 (defn metrics-prefix-formatter [max-val]

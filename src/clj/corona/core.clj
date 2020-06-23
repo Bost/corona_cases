@@ -36,6 +36,7 @@
       (throw (Exception.
               (format "Unrecognized TELEGRAM_TOKEN suffix: %s" suffix))))))
 
+;; TODO read pom.properties/revision=b74228d69b40b3a3fc7ef999545c05cd0d948289
 (def project-ver
   "From target/classes/META-INF/maven/%s/%s/pom.properties"
   (let [pom-props
