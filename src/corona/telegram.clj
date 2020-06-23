@@ -10,7 +10,7 @@
    [environ.core :refer [env]]
    [morse.handlers :as h]
    [morse.polling :as p]
-   [morse.polling-patch :as p-patch]))
+   ))
 
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
@@ -61,7 +61,7 @@
   ([token handler] (start-polling token handler {}))
   ([token handler opts]
    (let [running (async/chan)
-         updates (p-patch/create-producer-with-handle
+         updates (p/create-producer
                   running token opts (fn []
                                        (when c/env-prod? (System/exit 2))))]
      (println (str "[" (te/tnow) " " c/bot-ver "]")
