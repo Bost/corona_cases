@@ -40,11 +40,11 @@
 (def s-list-desc     "List of countries")
 
 (def s-floating-avg
-  "Sick case Change over last 7 Reports - floating Average"
+  "Sick cases Change over last 7 Reports - floating Average"
   "SCAvg7r")
 
-(def s-sick-today    "active-now")
-(def s-sick-week-ago "active-7-reports-ago")
+(def s-sick-today    "ActiveNow")
+(def s-sick-week-ago "Active7ReportsAgo")
 
 (defn s-list-sorted-by [case-kw]
   (->> [s-conf s-recov s-deaths s-sick]

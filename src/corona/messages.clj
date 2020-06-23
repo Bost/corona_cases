@@ -335,7 +335,7 @@
              :calc-diff false
              :desc ""})
            #_(fmt-to-cols
-            {:s "Sick-7r" :n last-7th-report :total population :diff ""
+            {:s "Active-7r" :n last-7th-report :total population :diff ""
              :calc-rate false
              :show-n true
              :calc-diff false
@@ -418,7 +418,11 @@
            (s/lower-case s-recovered)
            (s/lower-case s-deaths))
    "- Percentage calculation: <cases> / confirmed\n"
-   (format "- %s = (%s - %s) / 7\n" s-floating-avg s-sick-today s-sick-week-ago)
+   #_(format (str "- %s = (%s - %s) / 7\n"
+                "  %s\n")
+           s-floating-avg
+           s-sick-today s-sick-week-ago
+           "Active cases Change between current and last 7th report - floating Average")
    #_(str
       "\n"
       " - " (link "Home page"
@@ -441,7 +445,7 @@
            "- Worldometer - COVID-19 Coronavirus"
            (link "Coronavirus Age Sex Demographics" ref-age-sex prm)
            (link "Mortality rate" ref-mortality-rate prm))
-   (format "- Thanks goes to %s. Send %s \n"
+   (format "- Thanks goes to %s. Please send %s \n"
            (com/encode-cmd s-contributors)
            (com/encode-cmd s-feedback))
    "\n"
