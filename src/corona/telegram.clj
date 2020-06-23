@@ -9,8 +9,7 @@
             [environ.core :refer [env]]
             [morse.handlers :as h]
             [morse.polling :as p]
-            [clj-time.core :as t]
-            [morse.polling-patch :as p-patch])
+            [clj-time.core :as t])
   (:import java.time.ZoneId
            java.util.TimeZone))
 
@@ -62,7 +61,7 @@
   ([token handler] (start-polling token handler {}))
   ([token handler opts]
    (let [running (async/chan)
-         updates (p-patch/create-producer-with-handle
+         updates (p/create-producer
                   running token opts (fn []
                                        (when c/env-prod? (System/exit 2))))]
      (println "Polling on handler" handler "...")
