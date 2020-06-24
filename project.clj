@@ -59,9 +59,19 @@
 
    ;; web repl
    [viebel/klipse "7.9.6"]
+
+   [reagent "0.10.0"]
    ;; }}}
    ]
 
-  :min-lein-version "2.0.0"
+  :min-lein-version "2.7.1"
+
   :uberjar-name "corona_cases-standalone.jar"
-  :profiles {:production {:env {:production true}}})
+
+  :profiles
+  {
+   :dev {:dependencies [[com.bhauman/figwheel-main "0.2.9"]
+                        [com.bhauman/rebel-readline-cljs "0.1.4"]]
+         }
+   :production {:env {:production true}}
+   })
