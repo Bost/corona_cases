@@ -42,13 +42,14 @@
                  (printf log-fmt tbeg ":" (te/tnow)    c/bot-ver name chat)
                  fn-result))}))))
 
-(def handler
+(defn handler
   "Receiving incoming updates using long polling (getUpdates method)
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
+  []
   (let [cmds (cmds/cmds)]
     (println (str "[" (te/tnow) " " c/bot-ver "]")
-             "Registering" (count cmds) "chatbot commands")
+             "Registering" (count cmds) "chatbot commands...")
     (->> cmds
          (mapv cmd-handler)
          (into [(h/callback-fn msg/callback-handler-fn)])
@@ -85,7 +86,7 @@
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start   [] (swap! test-obj (fn [_] (start-polling c/token handler))))
+(defn start   [] (swap! test-obj (fn [_] (start-polling c/token (handler)))))
 (defn stop    [] (swap! test-obj (fn [_] (p/stop @test-obj))))
 (defn restart []
   (when @test-obj
