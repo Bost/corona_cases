@@ -126,8 +126,12 @@
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start [] (swap! test-obj (fn [_] (webapp))))
-(defn stop []  (.stop @test-obj))
+(defn start []
+  (println "@test-obj" @test-obj)
+  (swap! test-obj (fn [_] (webapp))))
+(defn stop []
+  (println "Stopping" @test-obj)
+  (.stop @test-obj))
 (defn restart []
   (when @test-obj (stop))
   (start))
