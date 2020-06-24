@@ -4,67 +4,68 @@
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
-(def s-world         "world")
-(def s-world-desc    "Start here")
-(def s-start         "start")
-(def s-about         "about")
-(def s-contributors  "contributors")
-(def s-feedback      "feedback")
+(def world         "world")
+(def world-desc    "Start here")
+(def start         "start")
+(def about         "about")
+(def contributors  "contributors")
+(def feedback      "feedback")
 
-(def s-conf            "Conf")
-(def s-confirmed       "Confirmed")
-(def s-confirmed-cases "Confirmed cases")
+(def conf            "Conf")
+(def confirmed       "Confirmed")
+(def confirmed-cases "Confirmed cases")
 
-(def s-deaths         "Deaths")
-(def s-death-cases    "Death cases")
+(def deaths         "Deaths")
+(def death-cases    "Death cases")
 
-(def s-recov           "Recov")
-(def s-recovered       "Recovered")
-(def s-recovered-cases "Recovered cases")
+(def recov           "Recov")
+(def recovered       "Recovered")
+(def recovered-cases "Recovered cases")
 
-(def s-sick          "Active")
-(def s-sick-cases    "Active cases")
-(def s-sick-per-1e5  "Act/100k")
+(def sick          "Active")
+(def sick-cases    "Active cases")
+(def sick-per-1e5  "Act/100k")
 
-(def s-closed        "Closed")
-(def s-closed-cases  "Closed cases")
+(def closed        "Closed")
+(def closed-cases  "Closed cases")
 
-(def s-day
+(def day
   "Coincidentally there seems to be 1 report per day"
   "Day\\Report")
-(def s-sick-absolute "Active absolute")
-(def s-absolute      "absolute")
-(def s-population    "People") ;; "Population" is too long see `fmt-to-cols`
-(def s-stats         "Stats")
+(def sick-absolute "Active absolute")
+(def absolute      "absolute")
+(def population    "People") ;; "Population" is too long see `fmt-to-cols`
+(def stats         "Stats")
 
-(def s-list-desc     "List of countries")
+(def list-desc     "List of countries")
 
-(def s-floating-avg
-  "Sick cases Change over last 7 Reports - floating Average"
-  "SCAvg7r")
+(def floating-avg
+  "Active cases Change over last 7 Reports - floating Average"
+  "ASCAvg7r")
 
-(def s-sick-today    "ActiveNow")
-(def s-sick-week-ago "Active7ReportsAgo")
+(def sick-today    "ActiveNow")
+(def sick-week-ago "Active7ReportsAgo")
+(def millions-rounded "Mill")
 
-(defn s-list-sorted-by [case-kw]
-  (->> [s-conf s-recov s-deaths s-sick]
+(defn list-sorted-by [case-kw]
+  (->> [conf recov deaths sick]
        (map s/lower-case)
        (zipmap com/all-crdi-cases)
        case-kw))
 
-(defn s-list-sorted-by-desc [case-kw]
+(defn list-sorted-by-desc [case-kw]
   (format "Countries sorted by nr. of %s" ;; "... in ascending order"
-          (->> [s-confirmed-cases s-recovered-cases s-deaths s-sick-cases]
+          (->> [confirmed-cases recovered-cases deaths sick-cases]
                (map s/lower-case)
                (zipmap com/all-crdi-cases)
                case-kw)))
 
-(def s-buttons "Shortened button names"
+(def buttons "Shortened button names"
   (zipmap com/all-crdi-cases ["Co" "Re" "De" "Ac"]))
 
-(def s-type "Buttons for plot-types" {:sum "Σ" :abs "A"})
+(def type "Buttons for plot-types" {:sum "Σ" :abs "A"})
 
-;; (def s-language     (:language     lang-strings))
-;; (def cmd-s-country  (format "<%s>" (:country lang-strings)))
+;; (def language     (:language     lang-strings))
+;; (def cmd-country  (format "<%s>" (:country lang-strings)))
 
 ;; (def lang-de "lang:de")
