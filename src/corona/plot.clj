@@ -12,7 +12,7 @@
             [corona.core :as cc]
             [corona.countries :as cr]
             [corona.defs :as d]
-            [corona.lang :refer :all]
+            [corona.lang :as l]
             [utils.core :refer :all])
   (:import [java.time LocalDate ZoneId]))
 
@@ -100,7 +100,7 @@
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :f last) (sort-by :f stats)))
 
-(defn fmt-day [day] (format "%s %s" s-day day))
+(defn fmt-day [day] (format "%s %s" l/day day))
 
 (defn plot-label
   "day - day since the outbreak
@@ -112,7 +112,7 @@
           (fmt-last-date stats)
           cc/bot-name
           (format "%s %s %s"
-                  s-stats
+                  l/stats
                   (cr/country-name-aliased cc)
                   (com/encode-cmd cc))))
 
@@ -193,11 +193,11 @@
       :legend (reverse
                (conj (map #(vector :rect %2 {:color %1})
                           palette
-                          (map (fn [k] (get {:i s-sick :d s-deaths :r s-recovered} k))
+                          (map (fn [k] (get {:i l/sick :d l/deaths :r l/recovered} k))
                                curves))
-                     [:line s-confirmed     stroke-confirmed]
-                     [:line s-sick-absolute stroke-sick]
-                     #_[:line s-population    stroke-population]))
+                     [:line l/confirmed     stroke-confirmed]
+                     [:line l/sick-absolute stroke-sick]
+                     #_[:line l/population    stroke-population]))
       :label (plot-label day cc stats)
       :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})))
 
@@ -290,10 +290,10 @@
                      (fmt-day day)
                      (fmt-last-date stats)
                      cc/bot-name
-                     (->> [s-confirmed s-recovered s-deaths s-sick-cases ]
+                     (->> [l/confirmed l/recovered l/deaths l/sick-cases ]
                           (zipmap com/all-crdi-cases)
                           case)
-                     #_(case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
+                     #_(case {:c l/confirmed :i l/sick-cases :r l/recovered :d l/deaths})
                      threshold)
       :label-conf {:color (c/darken :steelblue) :font-size 14}})))
 
@@ -335,7 +335,7 @@
               (fmt-day day)
               (fmt-last-date stats)
               cc/bot-name
-              (str (case {:c s-confirmed :i s-sick-cases :r s-recovered :d s-deaths})
-                   " " s-absolute)
+              (str (case {:c l/confirmed :i l/sick-cases :r l/recovered :d l/deaths})
+                   " " l/absolute)
               threshold)
       :label-conf {:color (c/darken :steelblue) :font-size 14}})))

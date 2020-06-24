@@ -5,7 +5,7 @@
             [corona.core :as c]
             [corona.countries :as cr]
             [corona.defs :as d]
-            [corona.lang :refer :all]
+            [corona.lang :as l]
             [corona.messages :as msg]
             [corona.plot :as p]
             [morse.api :as morse]
@@ -116,21 +116,21 @@
          msg/options)
 
         prm-country-code {:country-code (cr/country-code d/worldwide)}]
-    [{:name s-contributors
+    [{:name l/contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
-     {:name s-world
+     {:name l/world
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
                                    prm-country-code)))
-      :desc s-world-desc}
-     {:name s-start
+      :desc l/world-desc}
+     {:name l/start
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
                                    prm-country-code)))
-      :desc s-world-desc}
-     {:name s-about
+      :desc l/world-desc}
+     {:name l/about
       :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
       :desc "Bot version & some additional info"}
-     {:name s-feedback
+     {:name l/feedback
       :f (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}]))
 
@@ -141,14 +141,14 @@
        (map (fn [case-kw]
               (let [prm (conj {:pred (fn [_] true)} msg/options)
                     prm-country-code {:country-code (cr/country-code d/worldwide)}]
-                {:name (s-list-sorted-by case-kw)
+                {:name (l/list-sorted-by case-kw)
                  :f (fn [chat-id] (list-countries
                                   (conj (assoc prm
                                                :parse_mode "HTML"
                                                :chat-id chat-id
                                                :sort-by-case case-kw)
                                         prm-country-code)))
-                 :desc (s-list-sorted-by-desc case-kw)})))))
+                 :desc (l/list-sorted-by-desc case-kw)})))))
 
 (defn cmds
   "Create a vector of hash-maps for all available commands."
@@ -164,10 +164,10 @@
   []
   (->> (cmds-general)
        (remove (fn [hm]
-                 (in? [s-start
+                 (in? [l/start
                        ;; Need to save space on smartphones. Sorry guys.
-                       s-contributors
-                       s-feedback
+                       l/contributors
+                       l/feedback
                        ] (:name hm))))
        (reverse)
        (into (cmds-listing))

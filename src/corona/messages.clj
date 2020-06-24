@@ -9,7 +9,7 @@
             [corona.core :as c]
             [corona.countries :as cr]
             [corona.defs :as d]
-            [corona.lang :refer :all]
+            [corona.lang :as l]
             [corona.plot :as p]
             [morse.api :as morse]
             [utils.core :refer :all])
@@ -129,12 +129,12 @@
   (let [spacer "   "]
     (str
      ;; "Try" spacer
-     (->> [s-world s-about]
+     (->> [l/world l/about]
           (map com/encode-cmd)
           (map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer))
      spacer "listings:  "
-     (->> (map s-list-sorted-by com/listing-ird-cases)
+     (->> (map l/list-sorted-by com/listing-ird-cases)
           (map com/encode-cmd)
           (s/join spacer)))))
 
@@ -153,8 +153,8 @@
        into
        (mapv (fn [type]
                (mapv (fn [case-kw]
-                       {:text (str (case-kw s-buttons)
-                                   (type s-type))
+                       {:text (str (case-kw l/buttons)
+                                   (type l/type))
                         :callback_data (pr-str (assoc prm
                                                       :case case-kw
                                                       :type type))})
@@ -227,12 +227,12 @@
                   "%s\n" ; Deaths
                   "%s")
              (header prm)
-             (format "%s %s;  %s/%s" s-day (count (data/raw-dates)) msg-idx cnt-msgs)
-             (str s-sick      (if (= :i sort-by-case) sort-indicator " "))
+             (format "%s %s;  %s/%s" l/day (count (data/raw-dates)) msg-idx cnt-msgs)
+             (str l/sick      (if (= :i sort-by-case) sort-indicator " "))
              spacer
-             (str s-recovered (if (= :r sort-by-case) sort-indicator " "))
+             (str l/recovered (if (= :r sort-by-case) sort-indicator " "))
              spacer
-             (str s-deaths    (if (= :d sort-by-case) sort-indicator " "))
+             (str l/deaths    (if (= :d sort-by-case) sort-indicator " "))
              (str
               "%s"   ; listing table
               "%s"   ; sorted-by description; has its own new-line
@@ -256,7 +256,7 @@
                 #_(map (fn [part] (s/join "       " part))))))
      ""
      #_(if (= msg-idx cnt-msgs)
-       (str "\n\n" (s-list-sorted-by-desc sort-by-case))
+       (str "\n\n" (l/list-sorted-by-desc sort-by-case))
        "")
      (footer prm))))
 
@@ -285,7 +285,7 @@
            (map (fn [s] (->> s s/lower-case com/encode-cmd))
                 [country-code
                  (cr/country-code-3-letter country-code)])))
-   (str s-day " " (count (data/raw-dates)))
+   (str l/day " " (count (data/raw-dates)))
 
    (let [last-day (data/last-day prm)
          delta (data/delta prm)
@@ -294,14 +294,14 @@
      (str
       (str
        (fmt-to-cols-narrower
-        {:s s-population :n population
+        {:s l/population :n population
          ;; :total 0
          ;; :diff ""
          :calc-rate false
          :calc-diff false
          :desc (str "= "(round-div-precision population 1e6 1) " Mill")})
        "\n")
-      (fmt-to-cols {:s s-confirmed :n confirmed :diff dc
+      (fmt-to-cols {:s l/confirmed :n confirmed :diff dc
                     :calc-rate false :desc ""})
       "\n"
       (when (pos? confirmed)
@@ -316,18 +316,18 @@
           (format
            "%s\n%s\n%s\n%s\n%s\n"
            (fmt-to-cols
-            {:s s-sick      :n ill       :total confirmed :diff di
+            {:s l/sick      :n ill       :total confirmed :diff di
              :calc-rate true
              :desc ""})
            ;; TODO add effective reproduction number (R)
            (fmt-to-cols
-            {:s s-sick-per-1e5 :n (per-1e5 ill population) :total population :diff ""
+            {:s l/sick-per-1e5 :n (per-1e5 ill population) :total population :diff ""
              :calc-rate false
              :show-n true
              :calc-diff false
              :desc ""})
            #_(fmt-to-cols
-            {:s s-floating-avg
+            {:s l/floating-avg
              :n (round-precision (/ (- ill last-7th-report) 7.0) 2)
              :total population :diff ""
              :calc-rate false
@@ -341,15 +341,15 @@
              :calc-diff false
              :desc ""})
            (fmt-to-cols
-            {:s s-recovered :n recovered :total confirmed :diff dr
+            {:s l/recovered :n recovered :total confirmed :diff dr
              :calc-rate true
              :desc ""})
            (fmt-to-cols
-            {:s s-deaths    :n deaths    :total confirmed :diff dd
+            {:s l/deaths    :n deaths    :total confirmed :diff dd
              :calc-rate true
              :desc ""})
            (fmt-to-cols
-            {:s s-closed    :n closed :total confirmed :diff dclosed
+            {:s l/closed    :n closed :total confirmed :diff dclosed
              :calc-rate true
              :desc ""}))))))
    (footer prm)))
@@ -363,19 +363,19 @@
   (let [line-style {:marker-type :none :render-style :line}
         dates {:x (data/dates)}]
     (-> (chart/xy-chart
-         {s-sick      (assoc dates :y (data/ill prm)
+         {l/sick      (assoc dates :y (data/ill prm)
                              :style {:marker-type :none})
-          s-confirmed (assoc dates :y (data/confirmed prm)
+          l/confirmed (assoc dates :y (data/confirmed prm)
                              :style (assoc line-style :line-color :black))
-          s-deaths    (assoc dates :y (data/deaths prm)
+          l/deaths    (assoc dates :y (data/deaths prm)
                              :style (assoc line-style :line-color :red))
-          s-recovered (assoc dates :y (data/recovered prm)
+          l/recovered (assoc dates :y (data/recovered prm)
                              :style (assoc line-style :line-color :green))}
          {:title (format "%s; %s: %s; see %s"
                          (format-last-day prm)
                          c/bot-name
                          (cr/country-name-aliased country-code)
-                         (com/encode-cmd s-about))
+                         (com/encode-cmd l/about))
           :render-style :area
           :legend {:position :inside-nw}
           ;; :x-axis {:title "Date"}
@@ -415,13 +415,13 @@
     "\n")
    "\n"
    (format "- Closed cases = %s + %s\n"
-           (s/lower-case s-recovered)
-           (s/lower-case s-deaths))
+           (s/lower-case l/recovered)
+           (s/lower-case l/deaths))
    "- Percentage calculation: <cases> / confirmed\n"
    #_(format (str "- %s = (%s - %s) / 7\n"
                 "  %s\n")
-           s-floating-avg
-           s-sick-today s-sick-week-ago
+           l/floating-avg
+           l/sick-today l/sick-week-ago
            "Active cases Change between current and last 7th report - floating Average")
    #_(str
       "\n"
@@ -446,8 +446,8 @@
            (link "Coronavirus Age Sex Demographics" ref-age-sex prm)
            (link "Mortality rate" ref-mortality-rate prm))
    (format "- Thanks goes to %s. Please send %s \n"
-           (com/encode-cmd s-contributors)
-           (com/encode-cmd s-feedback))
+           (com/encode-cmd l/contributors)
+           (com/encode-cmd l/feedback))
    "\n"
    (footer prm)))
 
