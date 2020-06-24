@@ -81,7 +81,8 @@
 (defn fmt-to-cols-narrower
   "Info-message numbers of aligned to columns for better readability"
   [{:keys [s n total diff desc calc-rate show-n calc-diff]
-    :or {show-n true calc-diff true}}]
+    :or {show-n true calc-diff true
+         desc ""}}]
   (format "<code>%s %s</code> %s"
           (c/right-pad s " " 7) ; stays constant
           ;; count of digits to display. Increase it when the number of cases
@@ -92,7 +93,8 @@
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
   [{:keys [s n total diff desc calc-rate show-n calc-diff]
-    :or {show-n true calc-diff true}}]
+    :or {show-n true calc-diff true
+         desc ""}}]
   (format "<code>%s %s %s %s</code> %s"
           (c/right-pad s " " 9) ; stays constant
           ;; count of digits to display. Increase it when the number of cases
@@ -290,6 +292,7 @@
    (let [last-day (data/last-day prm)
          delta (data/delta prm)
          {confirmed :c population :p} last-day
+         population-rounded (round-div-precision population 1e6 1)
          {dc :c} delta]
      (str
       (str
@@ -299,16 +302,13 @@
          ;; :diff ""
          :calc-rate false
          :calc-diff false
-         :desc (str "= "(round-div-precision population 1e6 1) " Mill")})
+         :desc (format "= %s %s" population-rounded l/millions-rounded)})
        "\n")
       (fmt-to-cols {:s l/confirmed :n confirmed :diff dc
                     :calc-rate false :desc ""})
       "\n"
       (when (pos? confirmed)
-        (let [{deaths :d
-               recovered :r
-               ill :i
-               } last-day
+        (let [{deaths :d recovered :r ill :i} last-day
               {last-7th-report :i} (data/last-7th-report prm)
               closed (+ deaths recovered)
               {dd :d dr :r di :i} delta
@@ -317,41 +317,34 @@
            "%s\n%s\n%s\n%s\n%s\n"
            (fmt-to-cols
             {:s l/sick      :n ill       :total confirmed :diff di
-             :calc-rate true
-             :desc ""})
+             :calc-rate true})
            ;; TODO add effective reproduction number (R)
            (fmt-to-cols
             {:s l/sick-per-1e5 :n (per-1e5 ill population) :total population :diff ""
              :calc-rate false
              :show-n true
-             :calc-diff false
-             :desc ""})
+             :calc-diff false})
            #_(fmt-to-cols
             {:s l/floating-avg
              :n (round-precision (/ (- ill last-7th-report) 7.0) 2)
              :total population :diff ""
              :calc-rate false
              :show-n true
-             :calc-diff false
-             :desc ""})
+             :calc-diff false})
            #_(fmt-to-cols
             {:s "Active-7r" :n last-7th-report :total population :diff ""
              :calc-rate false
              :show-n true
-             :calc-diff false
-             :desc ""})
+             :calc-diff false})
            (fmt-to-cols
             {:s l/recovered :n recovered :total confirmed :diff dr
-             :calc-rate true
-             :desc ""})
+             :calc-rate true})
            (fmt-to-cols
             {:s l/deaths    :n deaths    :total confirmed :diff dd
-             :calc-rate true
-             :desc ""})
+             :calc-rate true})
            (fmt-to-cols
             {:s l/closed    :n closed :total confirmed :diff dclosed
-             :calc-rate true
-             :desc ""}))))))
+             :calc-rate true}))))))
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
