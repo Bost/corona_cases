@@ -37,6 +37,7 @@
               (format "Unrecognized TELEGRAM_TOKEN suffix: %s" suffix))))))
 
 (def project-ver
+  "From target/classes/META-INF/maven/%s/%s/pom.properties"
   (let [pom-props
         (with-open
           [pom-props-reader
