@@ -38,16 +38,21 @@ printf "DBG: REMOTE: %s\n" $REMOTE
 printf "DBG: restArgs: %s\n" (string join -- " " $restArgs)
 printf "\n"
 
+# TODO $restArgs should contain "... hours ago"
+
 set logDir (printf "log/%s" $envName)
 mkdir -p $logDir
 
 set ptToken (heroku config:get PAPERTRAIL_API_TOKEN --app $APP)
 set ptHeader (printf "'X-Papertrail-Token: %s'" $ptToken)
 
-for hourAgo in (seq 0 1)
-    set sDate (printf "%s hours ago" $hourAgo)
+for hourAgo in (seq 0 0)
+    # It takes approximately 6-7 hours for logs to be available in the archive.
+    # https://help.papertrailapp.com/kb/how-it-works/permanent-log-archives/#download-a-single-archive-using-date
+    set hourAgoDelayed (expr $hourAgo + 7)
+    set sDate (printf "%s hours ago" $hourAgoDelayed)
     set dateAgo (date -u --date=$sDate +%Y-%m-%d-%H)
-    set outFile (printf "%s/%s.tsv.gz" $logDir $dateAgo)
+    set outFile (printf "%s/%s-UTC.tsv.gz" $logDir $dateAgo)
     set cmd \
         curl --silent --no-include --output $outFile --location --header $ptHeader \
              https://papertrailapp.com/api/v1/archives/$dateAgo/download
