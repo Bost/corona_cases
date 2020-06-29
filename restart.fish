@@ -13,10 +13,15 @@ switch $prmEnvName
     case $hostEnvs[2]
         set envName corona-cases
     case \*
-        printf "ERR: Unknown parameter: %s\n" $prmEnvName
+        if test -z "$prmEnvName"
+            printf "ERR: Undefined parameter\n"
+        else
+            printf "ERR: Unknown parameter: %s\n" $prmEnvName
+        end
         # w/o the '--' every list element gets printed on a separate line
         # as if invoked in a for-loop. WTF?
-        printf "Possible values: %s\n" (string join -- ", " $hostEnvs)
+        printf "Usage: %s {%s}\n" (basename (status --current-filename)) \
+                                  (string join -- " | " $hostEnvs)
         printf "\n"
         printf "Examples:\n"
         for hostEnv in $hostEnvs
