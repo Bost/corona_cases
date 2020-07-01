@@ -4,185 +4,115 @@
   ;; "Example of Clojure source code version output"
   ;; and:
   ;; https://github.com/arrdem/lein-git-version
-  "2.0.1"
+  "2.0.2"
 
-  :description "Telegram Chatbot for tracking coronavirus information"
-  :url "http://corona-cases-bot.herokuapp.com"
-  :license {:name "Eclipse Public License v1.0"
+  :description "FIXME: write description"
+  :url "http://example.com/FIXME"
+  :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies
-  [
-   [org.clojure/clojure "1.10.1"]
 
-   ;; CSV reader/writer to/from Clojure data structures.
-   [org.clojure/data.csv    "1.0.0"]
+  :dependencies [[org.clojure/clojure "1.10.1"]
+                 [ring-server "0.5.0"]
+                 [reagent "0.10.0"]
+                 [reagent-utils "0.3.3"]
+                 [ring "1.8.1"]
+                 [ring/ring-defaults "0.3.2"]
+                 [hiccup "1.0.5"]
+                 [yogthos/config "1.1.7"]
+                 [org.clojure/clojurescript "1.10.764"
+                  :scope "provided"]
+                 [metosin/reitit "0.5.1"]
+                 [metosin/jsonista "0.2.6"]
+                 [pez/clerk "1.0.0"]
+                 [venantius/accountant "0.2.5"
+                  :exclusions [org.clojure/tools.reader]]]
 
-   ;; Ring routing lib; dispatching of GET, PUT, etc.
-   [compojure               "1.6.1"]
+  :plugins [[lein-environ "1.1.0"]
+            [lein-cljsbuild "1.1.7"]
+            [lein-asset-minifier "0.4.6"
+             :exclusions [org.clojure/clojure]]]
 
-   ;; Ring Jetty adapter
-   [ring/ring-jetty-adapter "1.8.1"]
+  :ring {:handler corona.handler/app
+         :uberwar-name "corona.war"}
 
-   ;; managing environment variables
-   [environ                 "1.2.0"]
+  :min-lein-version "2.5.0"
+  :uberjar-name "corona.jar"
+  :main corona.server
+  :clean-targets ^{:protect false}
+  [:target-path
+   [:cljsbuild :builds :app :compiler :output-dir]
+   [:cljsbuild :builds :app :compiler :output-to]]
 
-   ;; JSON and JSON SMILE encoding - see also clj-http
-   [cheshire "5.10.0"]
+  :source-paths ["src/clj" "src/cljc" "src/cljs"]
+  :resource-paths ["resources" "target/cljsbuild"]
 
-   ;; for the get-json function. Not having it cheshire as a dependency results
-   ;; in: `namespace 'cheshire.factory' not found`
-   [clj-http                "3.10.1"]
-
-   ;; Clojure interface for Telegram Bot API
-   [org.clojars.bost/morse  "0.0.0-157-0x8c5c"]
-
-   [org.clojure/data.json   "1.0.0"]
-   [clojure.java-time       "0.3.2"]
-   [net.cgrand/xforms       "0.19.2"]
-   [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
-   [org.clojars.bost/utils  "0.0.0-37-0xc96a"]
-
-   ;; https://github.com/generateme/cljplot
-   [org.clojars.bost/cljplot "0.0.2"]
-
-   ;; plotting - see also https://github.com/jsa-aerial/hanami
-   #_[aerial.hanami "0.12.1"]
-
-   ;; internationalization, ISO 3166-1 country codes etc.
-   [com.neovisionaries/nv-i18n "1.27"]
-
-   ;; parse HTML into Clojure data structures - scrapping data from HTML tables
-   [hickory "0.7.1"]
-
-   [org.clojars.bost/clojurescript "1.10.785"]
-   [org.clojure/core.async  "1.2.603"]
-   [reagent "0.10.0"]
-   [org.clojars.bost/klipse "7.9.10"]
-   ]
-
-  :plugins
-  [
-   [lein-figwheel "0.5.20"]
-   [lein-cljsbuild "1.1.8" :exclusions [[org.clojure/clojure]]]
-   ]
-
-  :source-paths ["src/clj" "src/cljs"]
-  ;; :resource-paths ["scripts" "src" "resources" "target"]
+  :minify-assets
+  [[:css {:source "resources/public/css/site.css"
+          :target "resources/public/css/site.min.css"}]]
 
   :cljsbuild
-  {
-   :builds
-   [{:id "dev"
-     :source-paths ["src/cljs"]
-
-     ;; The presence of a :figwheel configuration here will cause figwheel to
-     ;; inject the figwheel client into your build
-     :figwheel
-     {
-      :on-jsload "corona.core/on-js-reload"
-      ;; :open-urls will pop open your application in the default browser once
-      ;; Figwheel has started and compiled your application.
-      ;; Comment this out once it no longer serves you.
-      :open-urls ["http://localhost:3449/index.html"]}
-
-     :compiler
-     {
-      :main corona.core
-      :asset-path "js/compiled/out"
-      :output-to "resources/public/js/compiled/corona.js"
-      :output-dir "resources/public/js/compiled/out"
-      :source-map-timestamp true
-      ;; To console.log CLJS data-structures, enable devtools in the Chrome
-      ;; https://github.com/binaryage/cljs-devtools
-      :preloads [devtools.preload]
-      }
-     }
-    ;; This next build is a compressed minified build for production. You can
-    ;; build this with `lein cljsbuild once min`
-    {:id "min"
-     :source-paths ["src/cljs"]
-     :compiler {:output-to "resources/public/js/compiled/corona.js"
-                :main corona.core
-                :optimizations :advanced
-                :pretty-print false}}]}
+  {:builds {:min
+            {:source-paths ["src/cljs" "src/cljc" "env/prod/cljs"]
+             :compiler
+             {:output-to        "target/cljsbuild/public/js/app.js"
+              :output-dir       "target/cljsbuild/public/js"
+              :source-map       "target/cljsbuild/public/js/app.js.map"
+              :optimizations :advanced
+              :infer-externs true
+              :pretty-print  false}}
+            :app
+            {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
+             :figwheel {:on-jsload "corona.core/mount-root"}
+             :compiler
+             {:main "corona.dev"
+              :asset-path "/js/out"
+              :output-to "target/cljsbuild/public/js/app.js"
+              :output-dir "target/cljsbuild/public/js/out"
+              :source-map true
+              :optimizations :none
+              :pretty-print  true}}
+            }
+   }
 
   :figwheel
-  {
-   ;; :http-server-root "public" ;; default and assumes "resources"
-   ;; :server-port 3449 ;; default
-   ;; :server-ip "127.0.0.1"
-
-   :css-dirs ["resources/public/css"] ;; watch and update CSS
-
-   ;; Start an nREPL server into the running figwheel process
-   :nrepl-port 7888
-
+  {:http-server-root "public"
+   :server-port 3449
+   :nrepl-port 7002
    :nrepl-middleware [cider.piggieback/wrap-cljs-repl
                       cider.nrepl/cider-middleware
                       refactor-nrepl.middleware/wrap-refactor
                       ]
+   :css-dirs ["resources/public/css"]
+   :ring-handler corona.handler/app}
 
-   ;; Server Ring Handler (optional)
-   ;; if you want to embed a ring handler into the figwheel http-kit server,
-   ;; this is for simple ring servers, if this doesn't work for you just run
-   ;; your own server :) (see lein-ring)
+  :profiles {:dev {:repl-options {:init-ns corona.repl}
+                   :dependencies [[cider/piggieback "0.5.0"]
+                                  [binaryage/devtools "1.0.0"]
+                                  [ring/ring-mock "0.4.0"]
+                                  [ring/ring-devel "1.8.1"]
+                                  [prone "2020-01-17"]
+                                  [figwheel-sidecar "0.5.20"]
+                                  [nrepl "0.7.0"]
+                                  [pjstadig/humane-test-output "0.10.0"]
+                                  ]
 
-   ;; :ring-handler hello_world.server/handler
+                   :source-paths ["env/dev/clj"]
+                   :plugins [[lein-figwheel "0.5.20"]
+                             [cider/cider-nrepl "0.21.1"]
+                             [org.clojure/tools.namespace "0.3.0-alpha4"
+                              :exclusions [org.clojure/tools.reader]]
+                             [refactor-nrepl "2.4.0"
+                              :exclusions [org.clojure/clojure]]
+                             ]
 
-   ;; To be able to open files in your editor from the heads up display you will
-   ;; need to put a script on your path.
-   ;; that script will have to take a file path and a line number ie. in
-   ;; ~/bin/myfile-opener
-   ;; #! /bin/sh
-   ;; emacsclient -n +$2 $1
-   ;;
-   ;; :open-file-command "myfile-opener"
+                   :injections [(require 'pjstadig.humane-test-output)
+                                (pjstadig.humane-test-output/activate!)]
 
-   ;; if you are using emacsclient you can just use
-   ;; :open-file-command "emacsclient"
+                   :env {:dev true}}
 
-   ;; if you want to disable the REPL
-   ;; :repl false
-
-   ;; to configure a different figwheel logfile path
-   ;; :server-logfile "tmp/logs/figwheel-logfile.log"
-
-   ;; to pipe all the output to the repl
-   ;; :server-logfile false
-   }
-  :min-lein-version "2.9.1"
-  :uberjar-name "corona_cases-standalone.jar"
-  :profiles
-  {
-   ;; recommended by
-   ;; https://devcenter.heroku.com/articles/deploying-clojure#the-project-clj-file
-   :uberjar {:aot :all}
-
-   ;; comes from `lein new heroku ...`
-   :production {:env {:production true}}
-
-   :dev
-   {
-    :dependencies
-    [
-     [cider/piggieback "0.5.0"]
-     [binaryage/devtools "1.0.2"]
-     [figwheel-sidecar "0.5.20"]
-     [nrepl "0.7.0"]
-     ]
-    :source-paths ["src/clj" "src/cljs" "dev"]
-    :plugins
-    [
-     [lein-figwheel "0.5.20"]
-     [cider/cider-nrepl "0.25.2"]
-     [org.clojure/tools.namespace "1.0.0"
-      :exclusions [org.clojure/tools.reader]]
-     [refactor-nrepl "2.5.0"
-      :exclusions [org.clojure/clojure]]
-     ]
-    :env {:dev true}
-    ;; need to add the compiled assets to the :clean-targets
-    :clean-targets ^{:protect false} ["resources/public/js/compiled"
-                                      :target-path]}
-   }
-  )
+             :uberjar {:hooks [minify-assets.plugin/hooks]
+                       :source-paths ["env/prod/clj"]
+                       :prep-tasks ["compile" ["cljsbuild" "once" "min"]]
+                       :env {:production true}
+                       :aot :all
+                       :omit-source true}})

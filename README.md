@@ -1,69 +1,90 @@
-# [@corona_cases_bot](https://t.me/corona_cases_bot)
+# corona
 
-## Raison d´être
-> The Internet interprets censorship as damage and routes around it.
-> - John Gilmore
+This is the corona project.
 
-Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
-[@corona_cases_bot](https://t.me/corona_cases_bot)
+## Development mode
 
-![Screenshot](/resources/pics/screenshot_1-50-percents.jpg)
-![Screenshot](/resources/pics/screenshot_2-50-percents.jpg)
+To start the Figwheel compiler, navigate to the project folder and run the following command in the terminal:
 
-## Running locally
-Start Clojure REPL:
-```fish
-lein repl
 ```
-Start telegram chatbot:
+lein figwheel
+```
+
+Figwheel will automatically push cljs changes to the browser. The server will be available at [http://localhost:3449](http://localhost:3449) once Figwheel starts up. 
+
+Figwheel also starts `nREPL` using the value of the `:nrepl-port` in the `:figwheel`
+config found in `project.clj`. By default the port is set to `7002`.
+
+The figwheel server can have unexpected behaviors in some situations such as when using
+websockets. In this case it's recommended to run a standalone instance of a web server as follows:
+
+```
+lein do clean, run
+```
+
+The application will now be available at [http://localhost:3000](http://localhost:3000).
+
+
+### Optional development tools
+
+Start the browser REPL:
+
+```
+$ lein repl
+```
+The Jetty server can be started by running:
+
 ```clojure
-(require '[corona.telegram])
-(corona.telegram/-main)
+(start-server)
 ```
-Start web server:
+and stopped by running:
 ```clojure
-(require 'corona.web)
-(corona.web/-main)
+(stop-server)
 ```
-Then check the [http://localhost:5050/](http://localhost:5050/)
 
-## Development klipse cljs repl
 
-To get an interactive development environment run:
+## Building for release
 
-    lein fig:build
+```
+lein do clean, uberjar
+```
 
-This will auto compile and send all changes to the browser without the
-need to reload. After the compilation process is complete, you will
-get a Browser Connected REPL. An easy way to try it is:
+## Deploying to Heroku
 
-    (js/alert "Am I connected?")
+Make sure you have [Git](http://git-scm.com/downloads) and [Heroku toolbelt](https://toolbelt.heroku.com/) installed, then simply follow the steps below.
 
-and you should see an alert in the browser window.
+Optionally, test that your application runs locally with foreman by running.
 
-To clean all compiled files:
+```
+foreman start
+```
 
-	lein clean
+Now, you can initialize your git repo and commit your application.
 
-To create a production build run:
+```
+git init
+git add .
+git commit -m "init"
+```
+create your app on Heroku
 
-	lein clean
-	lein fig:min
+```
+heroku create
+```
 
-## Deploy to Heroku
-Using fish-shell: see [deploy.fish](./deploy.fish).
+optionally, create a database for the application
 
-## TODOs
-- Graphs:
-  -- better user experience - show:
-     only interpolated graphs
-     relative numbers (e.g. percentage)
-     doubling time as in the spiegel.de
-     logarithmic scale
-- Prediction - extrapolate graphs
-- Use buttons instead of `/<command-name>`
-- Don't panic: Compare data: Corona vs. Flu vs. World population and Show deaths
-  rates distribution by age / age-groups; probability calculator
-- Create API web service(s) even for own use
-- Create home page providing extensive information
-- Tables - show: average recovery time, cases in % of population
+```
+heroku addons:add heroku-postgresql
+```
+
+The connection settings can be found at your [Heroku dashboard](https://dashboard.heroku.com/apps/) under the add-ons for the app.
+
+deploy the application
+
+```
+git push heroku master
+```
+
+Your application should now be deployed to Heroku!
+For further instructions see the [official documentation](https://devcenter.heroku.com/articles/clojure).
