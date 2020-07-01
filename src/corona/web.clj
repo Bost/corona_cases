@@ -1,16 +1,22 @@
 (ns corona.web
-  (:require [clojure.data.json :as json]
-            [clojure.java.io :as io]
-            [clojure.string :as s]
-            [compojure.core :refer [ANY defroutes GET POST]]
-            [compojure.handler :refer [site]]
-            [compojure.route :as route]
-            [corona.common :as com]
-            [corona.api.beds :as beds]
-            [corona.core :as c :refer [chat-id token]]
-            [corona.telegram :as telegram]
-            [environ.core :refer [env]]
-            [ring.adapter.jetty :as jetty]))
+  (:require
+   [clj-time-ext.core :as te]
+   [clj-time.core :as t]
+   [clojure.data.json :as json]
+   [clojure.java.io :as io]
+   [clojure.string :as s]
+   [compojure.core :refer [ANY defroutes GET POST]]
+   [compojure.handler :refer [site]]
+   [compojure.route :as route]
+   [corona.api.beds :as beds]
+   [corona.common :as com]
+   [corona.core :as c]
+   [corona.telegram :as telegram]
+   [environ.core :refer [env]]
+   [ring.adapter.jetty :as jetty])
+  (:import
+   java.time.ZoneId
+   java.util.TimeZone))
 
 (def telegram-hook "telegram")
 (def google-hook "google")
@@ -67,10 +73,10 @@
      "curl --request POST \"https://api.telegram.org/bot$TELEGRAM_TOKEN/getUpdates\" | jq .message.chat.id"
      ""
      (str "curl --request POST -H 'Content-Type: application/json' "
-          "-d '{\"chat_id\":" chat-id ",\"text\":\"curl test msg\",\"disable_notification\":true}' "
+          "-d '{\"chat_id\":" c/chat-id ",\"text\":\"curl test msg\",\"disable_notification\":true}' "
           "\"https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage\"")
      ""
-     (str "curl --request POST --form chat_id=" chat-id " "
+     (str "curl --request POST --form chat_id=" c/chat-id " "
           "--form photo=@/tmp/pic.png "
           "\"https://api.telegram.org/bot$TELEGRAM_TOKEN/sendPhoto\"")
      ])})
@@ -78,7 +84,7 @@
 (defroutes app
   (let [hook telegram-hook]
     (POST
-     (str "/" hook "/" token) req ;; {{input :input} :params}
+     (str "/" hook "/" c/token) req ;; {{input :input} :params}
      {:status 200
       :headers {"Content-Type" "text/plain"}
       :body
@@ -87,7 +93,7 @@
 
   (let [hook google-hook]
     (POST
-     (str "/" hook "/" token) req ;; {{input :input} :params}
+     (str "/" hook "/" c/token) req ;; {{input :input} :params}
      {:status 200
       :headers {"Content-Type" "text/plain"}
       :body
@@ -111,15 +117,37 @@
        (route/not-found (slurp (io/resource "404.html")))))
 
 (defn webapp [& [port]]
-  (println (str "Starting " c/env-type " webapp..."))
-  (let [port (Integer. (or port (env :port)
-                           (cond c/env-prod? 5000
-                                 ;; keep port-nr in sync with README.md
-                                 :else 5050)))]
-    (jetty/run-jetty (site #'app) {:port port :join? false})))
+  (let [msg (str "Starting " c/env-type " webapp...")]
+    (let [tbeg (te/tnow)
+          log-fmt "[%s%s%s %s] %s\n"]
+      (printf log-fmt tbeg " " "          " c/bot-ver msg)
+      (let [port (Integer. (or port (env :port)
+                               (cond c/env-prod? 5000
+                                     ;; keep port-nr in sync with README.md
+                                     :else 5050)))]
+        (jetty/run-jetty (site #'app) {:port port :join? false}))
+      (printf log-fmt tbeg ":" (te/tnow)    c/bot-ver (str msg " done")))))
 
 (defn -main [& [port]]
-  (pmap (fn [fn-name] (fn-name)) [telegram/-main webapp]))
+  (let [msg (str "Starting " c/env-type " -main...")]
+    (let [tbeg (te/tnow)
+          log-fmt "[%s%s%s %s] %s\n"]
+      (printf log-fmt tbeg " " "          " c/bot-ver msg)
+      (do
+        (if (= (str (t/default-time-zone))
+               (str (ZoneId/systemDefault))
+               (.getID (TimeZone/getDefault)))
+          (println (str "[" (te/tnow) " " c/bot-ver "]")
+                   "TimeZone:" (str (t/default-time-zone)))
+          (println (str "[" (te/tnow) " " c/bot-ver "]")
+                   (format (str "t/default-time-zone %s; "
+                                "ZoneId/systemDefault: %s; "
+                                "TimeZone/getDefault: %s\n")
+                           (t/default-time-zone)
+                           (ZoneId/systemDefault )
+                           (.getID (TimeZone/getDefault)))))
+        (pmap (fn [fn-name] (fn-name)) [telegram/-main webapp]))
+      (printf log-fmt tbeg ":" (te/tnow)    c/bot-ver (str msg " done")))))
 
 ;; For interactive development:
 (def test-obj (atom nil))

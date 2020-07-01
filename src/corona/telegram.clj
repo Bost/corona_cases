@@ -1,18 +1,16 @@
 (ns corona.telegram
   (:gen-class)
-  (:require [clj-time-ext.core :as te]
-            [clojure.core.async :as async :refer [<!!]]
-            [clojure.string :as s]
-            [corona.commands :as cmds]
-            [corona.core :as c :refer [bot-ver env-type token]]
-            [corona.messages :as msg]
-            [environ.core :refer [env]]
-            [morse.handlers :as h]
-            [morse.polling :as p]
-            [clj-time.core :as t]
-            [morse.polling-patch :as p-patch])
-  (:import java.time.ZoneId
-           java.util.TimeZone))
+  (:require
+   [clj-time-ext.core :as te]
+   [clojure.core.async :as async :refer [<!!]]
+   [clojure.string :as s]
+   [corona.commands :as cmds]
+   [corona.core :as c]
+   [corona.messages :as msg]
+   [environ.core :refer [env]]
+   [morse.handlers :as h]
+   [morse.polling :as p]
+   [morse.polling-patch :as p-patch]))
 
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
@@ -38,10 +36,10 @@
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
               (let [chat (-> args first :chat)]
-                (printf log-fmt tbeg " " "          " bot-ver name chat)))
+                (printf log-fmt tbeg " " "          " c/bot-ver name chat)))
        :post (fn [& args]
                (let [[fn-result {:keys [chat]}] args]
-                 (printf log-fmt tbeg ":" (te/tnow)    bot-ver name chat)
+                 (printf log-fmt tbeg ":" (te/tnow)    c/bot-ver name chat)
                  fn-result))}))))
 
 (def handler
@@ -49,7 +47,8 @@
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
   (let [cmds (cmds/cmds)]
-    (println "Registering" (count cmds) "chatbot commands")
+    (println (str "[" (te/tnow) " " c/bot-ver "]")
+             "Registering" (count cmds) "chatbot commands")
     (->> cmds
          (mapv cmd-handler)
          (into [(h/callback-fn msg/callback-handler-fn)])
@@ -65,33 +64,28 @@
          updates (p-patch/create-producer-with-handle
                   running token opts (fn []
                                        (when c/env-prod? (System/exit 2))))]
-     (println "Polling on handler" handler "...")
+     (println (str "[" (te/tnow) " " c/bot-ver "]")
+              "Polling on handler" handler "...")
      (p/create-consumer updates handler)
      running)))
 
 (defn -main [& args]
-  (println (str "[" (te/tnow) " " bot-ver "]"))
-  (if (= (str (t/default-time-zone))
-         (str (ZoneId/systemDefault))
-         (.getID (TimeZone/getDefault)))
-    (println "TimeZone:" (str (t/default-time-zone)))
-    (printf (str "t/default-time-zone %s; "
-                 "ZoneId/systemDefault: %s; "
-                 "TimeZone/getDefault: %s\n")
-            (t/default-time-zone)
-            (ZoneId/systemDefault )
-            (.getID (TimeZone/getDefault))))
-  (println (str "[" (te/tnow) " " bot-ver "]")
-            (str "Starting " env-type " Telegram Chatbot..."))
-  (let [blank-prms (filter #(-> % env s/blank?) [:telegram-token])]
-    (when (not-empty blank-prms)
-      (println "ERROR" "Undefined environment var(s):" blank-prms)
-      (System/exit 1)))
-  (<!! (start-polling token handler)))
+  (let [msg (str "Starting " c/env-type " Telegram Chatbot...")]
+    (let [tbeg (te/tnow)
+          log-fmt "[%s%s%s %s] %s\n"]
+      (printf log-fmt tbeg " " "          " c/bot-ver msg)
+      (do
+        (let [blank-prms (filter #(-> % env s/blank?) [:telegram-token])]
+          (when (not-empty blank-prms)
+            (println (str "[" (te/tnow) " " c/bot-ver "]")
+                     "ERROR" "Undefined environment var(s):" blank-prms)
+            (System/exit 1)))
+        (<!! (start-polling c/token handler)))
+      (printf log-fmt tbeg ":" (te/tnow)    c/bot-ver (str msg " done")))))
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start   [] (swap! test-obj (fn [_] (start-polling token handler))))
+(defn start   [] (swap! test-obj (fn [_] (start-polling c/token handler))))
 (defn stop    [] (swap! test-obj (fn [_] (p/stop @test-obj))))
 (defn restart []
   (when @test-obj
