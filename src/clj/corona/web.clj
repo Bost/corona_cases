@@ -1,7 +1,6 @@
 (ns corona.web
   (:require
    [clj-time-ext.core :as te]
-   [clj-time.core :as t]
    [clojure.data.json :as json]
    [clojure.java.io :as io]
    [clojure.string :as s]
@@ -11,12 +10,9 @@
    [corona.api.beds :as beds]
    [corona.common :as com]
    [corona.core :as c]
-   [corona.telegram :as telegram]
    [environ.core :refer [env]]
-   [ring.adapter.jetty :as jetty])
-  (:import
-   java.time.ZoneId
-   java.util.TimeZone))
+   [ring.adapter.jetty :as jetty]
+   ))
 
 (def telegram-hook "telegram")
 (def google-hook "google")
@@ -119,8 +115,8 @@
   (ANY "*" []
        (route/not-found (slurp (io/resource "404.html")))))
 
-(defn webapp [& [port]]
-  (let [msg (str "Starting " c/env-type " webapp...")]
+(defn -main [& [port]]
+  (let [msg (str "Starting " c/env-type " WebApp...")]
     (let [tbeg (te/tnow)
           log-fmt "[%s%s%s %s] %s\n"]
       (printf log-fmt tbeg " " "          " c/bot-ver msg)
@@ -131,32 +127,11 @@
         (jetty/run-jetty (site #'app) {:port port :join? false}))
       (printf log-fmt tbeg ":" (te/tnow)    c/bot-ver (str msg " done")))))
 
-(defn -main [& [port]]
-  (let [msg (str "Starting " c/env-type " -main...")]
-    (let [tbeg (te/tnow)
-          log-fmt "[%s%s%s %s] %s\n"]
-      (printf log-fmt tbeg " " "          " c/bot-ver msg)
-      (do
-        (if (= (str (t/default-time-zone))
-               (str (ZoneId/systemDefault))
-               (.getID (TimeZone/getDefault)))
-          (println (str "[" (te/tnow) " " c/bot-ver "]")
-                   "TimeZone:" (str (t/default-time-zone)))
-          (println (str "[" (te/tnow) " " c/bot-ver "]")
-                   (format (str "t/default-time-zone %s; "
-                                "ZoneId/systemDefault: %s; "
-                                "TimeZone/getDefault: %s\n")
-                           (t/default-time-zone)
-                           (ZoneId/systemDefault )
-                           (.getID (TimeZone/getDefault)))))
-        (pmap (fn [fn-name] (fn-name)) [telegram/-main webapp]))
-      (printf log-fmt tbeg ":" (te/tnow)    c/bot-ver (str msg " done")))))
-
 ;; For interactive development:
 (def test-obj (atom nil))
 (defn start []
   (println "@test-obj" @test-obj)
-  (swap! test-obj (fn [_] (webapp))))
+  (swap! test-obj (fn [_] (-main))))
 (defn stop []
   (println "Stopping" @test-obj)
   (.stop @test-obj))
