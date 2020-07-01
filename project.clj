@@ -19,16 +19,16 @@
                  [ring/ring-defaults "0.3.2"]
                  [hiccup "1.0.5"]
                  [yogthos/config "1.1.7"]
-                 [org.clojure/clojurescript "1.10.764"
+                 [org.clojure/clojurescript "1.10.773"
                   :scope "provided"]
-                 [metosin/reitit "0.5.1"]
+                 [metosin/reitit "0.5.2"]
                  [metosin/jsonista "0.2.6"]
                  [pez/clerk "1.0.0"]
                  [venantius/accountant "0.2.5"
                   :exclusions [org.clojure/tools.reader]]]
 
-  :plugins [[lein-environ "1.1.0"]
-            [lein-cljsbuild "1.1.7"]
+  :plugins [[lein-environ "1.2.0"]
+            [lein-cljsbuild "1.1.8"]
             [lein-asset-minifier "0.4.6"
              :exclusions [org.clojure/clojure]]]
 
@@ -87,7 +87,7 @@
 
   :profiles {:dev {:repl-options {:init-ns corona.repl}
                    :dependencies [[cider/piggieback "0.5.0"]
-                                  [binaryage/devtools "1.0.0"]
+                                  [binaryage/devtools "1.0.2"]
                                   [ring/ring-mock "0.4.0"]
                                   [ring/ring-devel "1.8.1"]
                                   [prone "2020-01-17"]
@@ -98,10 +98,10 @@
 
                    :source-paths ["env/dev/clj"]
                    :plugins [[lein-figwheel "0.5.20"]
-                             [cider/cider-nrepl "0.21.1"]
-                             [org.clojure/tools.namespace "0.3.0-alpha4"
+                             [cider/cider-nrepl "0.25.2"]
+                             [org.clojure/tools.namespace "1.0.0"
                               :exclusions [org.clojure/tools.reader]]
-                             [refactor-nrepl "2.4.0"
+                             [refactor-nrepl "2.5.0"
                               :exclusions [org.clojure/clojure]]
                              ]
 
