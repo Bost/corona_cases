@@ -64,4 +64,7 @@
 
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"
+
+  :source-paths ["src/clj"]
+
   :profiles {:production {:env {:production true}}})
