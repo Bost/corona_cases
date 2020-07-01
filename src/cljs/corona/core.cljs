@@ -5,7 +5,12 @@
    [reagent.session :as session]
    [reitit.frontend :as reitit]
    [clerk.core :as clerk]
-   [accountant.core :as accountant]))
+   [accountant.core :as accountant]
+
+   ;; this namespace initializes Klipse. We require it for its side effects
+   [klipse.run.plugin.plugin]
+   [klipse.plugin :as klipse-plugin]
+   ))
 
 ;; -------------------------
 ;; Routes
@@ -26,10 +31,32 @@
 ;; -------------------------
 ;; Page components
 
+(defn klipse-wrapper
+  [{:keys [scripts content settings]}]
+  (reagent/create-class
+   {:component-did-mount (fn [_]
+                           (klipse-plugin/init (clj->js settings)))
+    :reagent-render      (fn [{:keys [content]}]
+                           content)}))
+
+(defn klipse-snippet []
+  [klipse-wrapper
+   {:content
+    [:div
+     [:div.klipse.language-klipse
+      "(require '[reagent.core :as r])"]
+     [:div.klipse.language-reagent
+      "[:div {:style {:color \"red\"}} \"hello world!\"]"]
+     [:div.klipse.language-klipse "(+ 3 3)"]]
+    :settings {:selector ".language-klipse"
+               :selector_reagent ".language-reagent"}}])
+
+
 (defn home-page []
   (fn []
     [:span.main
      [:h1 "Welcome to corona"]
+     [klipse-snippet]
      [:ul
       [:li [:a {:href (path-for :items)} "Items of corona"]]
       [:li [:a {:href "/broken/link"} "Broken link"]]]]))

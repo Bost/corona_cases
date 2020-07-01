@@ -21,13 +21,63 @@
    [ring/ring-defaults "0.3.2"]
    [hiccup "1.0.5"]
    [yogthos/config "1.1.7"]
-   [org.clojure/clojurescript "1.10.773"
+   #_[org.clojure/clojurescript "1.10.773"
     :scope "provided"]
    [metosin/reitit "0.5.2"]
    [metosin/jsonista "0.2.6"]
    [pez/clerk "1.0.0"]
    [venantius/accountant "0.2.5"
     :exclusions [org.clojure/tools.reader]]
+
+
+   [org.clojars.bost/clojurescript "1.10.785"
+    :scope "provided"]
+   [org.clojure/core.async  "1.2.603"]
+   #_[reagent "0.10.0"]
+   [org.clojars.bost/klipse "7.9.10"]
+
+
+   ;; CSV reader/writer to/from Clojure data structures.
+   [org.clojure/data.csv    "1.0.0"]
+
+   ;; Ring routing lib; dispatching of GET, PUT, etc.
+   [compojure               "1.6.1"]
+
+   ;; Ring Jetty adapter
+   [ring/ring-jetty-adapter "1.8.1"]
+
+   ;; managing environment variables
+   [environ                 "1.2.0"]
+
+   ;; JSON and JSON SMILE encoding - see also clj-http
+   [cheshire "5.10.0"]
+
+   ;; for the get-json function. Not having it cheshire as a dependency results
+   ;; in: `namespace 'cheshire.factory' not found`
+   [clj-http                "3.10.1"]
+
+   ;; Clojure interface for Telegram Bot API
+   [org.clojars.bost/morse  "0.0.0-157-0x8c5c"]
+
+   [org.clojure/data.json   "1.0.0"]
+   [clojure.java-time       "0.3.2"]
+   [net.cgrand/xforms       "0.19.2"]
+   [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
+   [org.clojars.bost/utils  "0.0.0-37-0xc96a"]
+
+   ;; https://github.com/generateme/cljplot
+   [org.clojars.bost/cljplot "0.0.2"]
+
+   ;; plotting - see also https://github.com/jsa-aerial/hanami
+   #_[aerial.hanami "0.12.1"]
+
+   ;; internationalization, ISO 3166-1 country codes etc.
+   [com.neovisionaries/nv-i18n "1.27"]
+
+   ;; parse HTML into Clojure data structures - scrapping data from HTML tables
+   [hickory "0.7.1"]
+
+
    ]
 
   :plugins
