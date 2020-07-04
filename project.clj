@@ -21,8 +21,6 @@
    [ring/ring-defaults "0.3.2"]
    [hiccup "1.0.5"]
    [yogthos/config "1.1.7"]
-   #_[org.clojure/clojurescript "1.10.773"
-    :scope "provided"]
    [metosin/reitit "0.5.2"]
    [metosin/jsonista "0.2.6"]
    [pez/clerk "1.0.0"]
@@ -30,12 +28,10 @@
     :exclusions [org.clojure/tools.reader]]
 
 
-   [org.clojars.bost/clojurescript "1.10.785"
-    :scope "provided"]
-   [org.clojure/core.async  "1.2.603"]
-   #_[reagent "0.10.0"]
-   [org.clojars.bost/klipse "7.9.10"]
-
+   #_[org.clojure/clojurescript "1.10.773" :scope "provided"]
+   [org.clojars.bost/clojurescript "1.10.785" :scope "provided"]
+   #_[viebel/klipse "7.9.6"]
+   [org.clojars.bost/klipse "7.9.13"]
 
    ;; CSV reader/writer to/from Clojure data structures.
    [org.clojure/data.csv    "1.0.0"]
@@ -83,7 +79,8 @@
   :plugins
   [
    [lein-environ "1.2.0"]
-   [lein-cljsbuild "1.1.8"]
+   #_[lein-cljsbuild "1.1.8"]
+   [org.clojars.bost/lein-cljsbuild "1.1.9"]
    [lein-asset-minifier "0.4.6"
     :exclusions [org.clojure/clojure]]
    ]
@@ -182,7 +179,8 @@
     :injections [(require 'pjstadig.humane-test-output)
                  (pjstadig.humane-test-output/activate!)]
 
-    :env {:dev true}}
+    :env {:dev true}
+    }
 
    :uberjar {
              :hooks [minify-assets.plugin/hooks]
