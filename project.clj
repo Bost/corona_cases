@@ -29,9 +29,9 @@
 
 
    #_[org.clojure/clojurescript "1.10.773" :scope "provided"]
-   [org.clojars.bost/clojurescript "1.10.785" :scope "provided"]
+   [org.clojars.bost/clojurescript "1.10.787" :scope "provided"]
    #_[viebel/klipse "7.9.6"]
-   [org.clojars.bost/klipse "7.9.13"]
+   [org.clojars.bost/klipse "7.9.14"]
 
    ;; CSV reader/writer to/from Clojure data structures.
    [org.clojure/data.csv    "1.0.0"]
@@ -80,7 +80,7 @@
   [
    [lein-environ "1.2.0"]
    #_[lein-cljsbuild "1.1.8"]
-   [org.clojars.bost/lein-cljsbuild "1.1.9"]
+   [org.clojars.bost/lein-cljsbuild "1.1.10"]
    [lein-asset-minifier "0.4.6"
     :exclusions [org.clojure/clojure]]
    ]
