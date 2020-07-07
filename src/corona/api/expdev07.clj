@@ -72,7 +72,9 @@
    conj []
    (raw-dates-unsorted)))
 
-(defn data-with-pop []
+(defn data-with-pop
+  "Data with population numbers"
+  []
   (conj
    (data-memo)
    {:population

@@ -8,7 +8,7 @@
            com.neovisionaries.i18n.CountryCode$Assignment))
 
 (def country-code-2-to-3-hm
-  "Mapping of country codes 2 -> 3 letters"
+  "Mapping: 2-letter country codes -> 3-letter country codes"
   (conj
    {
     cr "CRI" tg "TGO" tj "TJK" za "ZAF" im "IMN" pe "PER" lc "LCA"
@@ -105,7 +105,7 @@
 ;;        (into {})))
 
 (def country--country-code
-  "Mapping of country names to alpha-2 codes.
+  "Mapping: country-names -> 2-letter country codes.
   https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
   (cset/map-invert country-code--country))
 
@@ -304,7 +304,7 @@
   (into {} (map (fn [[k v]] [(s/lower-case k) v]) hm)))
 
 (defn country-code
-  "Return two letter country code (Alpha-2) according to
+  "Return 2-letter country code (Alpha-2) according to
   https://en.wikipedia.org/wiki/ISO_3166-1
   Defaults to `default-2-country-code`."
   [country-name]
