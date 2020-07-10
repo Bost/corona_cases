@@ -81,7 +81,7 @@
             (println (str "[" (te/tnow) " " co/bot-ver "]")
                      "ERROR" "Undefined environment var(s):" blank-prms)
             (System/exit 1)))
-        (async/<!! (start-polling co/token handler)))
+        (async/<!! (start-polling co/token (handler))))
       (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done")))))
 
 ;; For interactive development:
