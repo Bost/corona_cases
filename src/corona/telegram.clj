@@ -49,7 +49,7 @@
   []
   (let [cmds (cm/cmds)]
     (println (str "[" (te/tnow) " " co/bot-ver "]")
-             "Registering" (count cmds) "chatbot commands...")
+             "Registering" (count cmds) "Telegram Chatbot commands...")
     (->> cmds
          (mapv cmd-handler)
          (into [(h/callback-fn msg/callback-handler-fn)])
