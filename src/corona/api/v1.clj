@@ -1,15 +1,16 @@
 (ns corona.api.v1
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
-  (:require [clojure.core.memoize :as memo]
-            [corona.common :refer [api-server time-to-live]]
-            [corona.core :as c]
-            [corona.countries :as cr]
-            [corona.country-codes :refer :all]
-            [utils.core :refer :all :exclude [id]]
-            [corona.tables :as t]
-            [corona.api.expdev07 :as srvc]
-            [net.cgrand.xforms :as x])
+  (:require
+   [clojure.core.memoize :as memo]
+   [corona.common :as co]
+   [corona.countries :as cr]
+   [corona.country-codes :refer :all]
+   [utils.core :refer :all :exclude [id]]
+   [corona.tables :as t]
+   [corona.api.expdev07 :as srvc]
+   [net.cgrand.xforms :as x]
+   )
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
@@ -148,7 +149,7 @@
                (assoc
                 prm
                 #_(dissoc prm :c)
-                :i (c/calculate-ill prm))))  ;; TODO watch out for arity of calculate-ill
+                :i (co/calculate-ill prm))))  ;; TODO watch out for arity of calculate-ill
          (map xf-for-case [
                            :population
                            :confirmed :recovered :deaths

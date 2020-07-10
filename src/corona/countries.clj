@@ -1,65 +1,17 @@
 (ns corona.countries
-  (:require [clojure.set :as cset]
-            [corona.country-codes :refer :all]
-            [utils.core :refer :all :exclude [id]]
-            [clojure.string :as s]
-            [corona.defs :as d])
+  (:require
+   [clojure.set :as cset]
+   [corona.country-codes :refer :all]
+   [utils.core :refer :all :exclude [id]]
+   [clojure.string :as s]
+   )
   (:import com.neovisionaries.i18n.CountryCode
            com.neovisionaries.i18n.CountryCode$Assignment))
 
-(def country-code-2-to-3-hm
-  "Mapping: 2-letter country codes -> 3-letter country codes"
-  (conj
-   {
-    cr "CRI" tg "TGO" tj "TJK" za "ZAF" im "IMN" pe "PER" lc "LCA"
-    ch "CHE" ru "RUS" mp "MNP" ck "COK" si "SVN" au "AUS" kr "KOR" it "ITA"
-    fi "FIN" gf "GUF" sc "SYC" sx "SXM" zz "ZZZ" tt "TTO" tk "TKL" my "MYS"
-    sy "SYR" mn "MNG" tf "ATF" kp "PRK" am "ARM" dz "DZA" uy "URY" td "TCD"
-    dj "DJI" bi "BDI" mk "MKD" mu "MUS" li "LIE" nu "NIU" gr "GRC" gy "GUY"
-    cg "COG" nf "NFK" ml "MLI" ax "ALA" gm "GMB" sa "SAU" cx "CXR" bh "BHR"
-    ne "NER" bn "BRN" xk "XKX" mf "MAF" cd "COD" dk "DNK" bj "BEN" me "MNE"
-    sj "SJM" bo "BOL" jo "JOR" cv "CPV" ve "VEN" ci "CIV" uz "UZB" tn "TUN"
-    is "ISL" eh "ESH" tm "TKM" ga "GAB" ls "LSO" tz "TZA" at "AUT" lt "LTU"
-    np "NPL" bg "BGR" il "ISR" gu "GUM" pk "PAK" pt "PRT" hr "HRV" vu "VUT"
-    pf "PYF" bm "BMU" mr "MRT" ge "GEO" hu "HUN" tw "TWN" mm "MMR" vg "VGB"
-    ye "YEM" sr "SUR" pn "PCN" va "VAT" pr "PRI" kw "KWT" se "SWE" gb "GBR"
-    qq "QQQ" um "UMI" vn "VNM" cf "CAF" pa "PAN" vc "VCT" jp "JPN" ir "IRN"
-    af "AFG" ly "LBY" mz "MOZ" ro "ROU" qa "QAT" cm "CMR" gg "GGY" by "BLR"
-    sd "SDN" bq "BES" mo "MAC" ky "CYM" ar "ARG" br "BRA" zw "ZWE" nr "NRU"
-    nz "NZL" aw "ABW" fj "FJI" id "IDN" sv "SLV" cn "CHN" fm "FSM" ht "HTI"
-    cc "CCK" rw "RWA" ba "BIH" tl "TLS" jm "JAM" km "COM" ke "KEN" ws "WSM"
-    to "TON" py "PRY" sh "SHN" cy "CYP" gh "GHA" ma "MAR" sg "SGP" lk "LKA"
-    ph "PHL" sm "SMR" wf "WLF" tr "TUR" ps "PSE" bz "BLZ" cu "CUB" tv "TUV"
-    ad "AND" sb "SLB" dm "DMA" lr "LBR" om "OMN" so "SOM" do "DOM" al "ALB"
-    bl "BLM" fr "FRA" gw "GNB" ms "MSR" bb "BRB" ca "CAN" mg "MDG" kh "KHM"
-    la "LAO" gp "GLP" bv "BVT" hn "HND" th "THA" de "DEU" lb "LBN" kz "KAZ"
-    as "ASM" ec "ECU" no "NOR" ao "AGO" fk "FLK" et "ETH" gs "SGS" md "MDA"
-    ag "ATG" be "BEL" mv "MDV" sz "SWZ" cz "CZE" cl "CHL" bt "BTN" nl "NLD"
-    eg "EGY" mq "MTQ" sn "SEN" fo "FRO" ee "EST" aq "ATA" st "STP" kn "KNA"
-    bw "BWA" mh "MHL" ni "NIC" pg "PNG" vi "VIR" iq "IRQ" kg "KGZ" us "USA"
-    zm "ZMB" mc "MCO" gi "GIB" nc "NCL" gt "GTM" bf "BFA" yt "MYT" lu "LUX"
-    ua "UKR" ie "IRL" lv "LVA" gd "GRD" mw "MWI" bs "BHS" az "AZE" sk "SVK"
-    gq "GNQ" tc "TCA" re "REU" in "IND" es "ESP" gl "GRL" ki "KIR" hk "HKG"
-    co "COL" ss "SSD" rs "SRB" io "IOT" ng "NGA" ug "UGA" cw "CUW" sl "SLE"
-    er "ERI" je "JEY" ae "ARE" hm "HMD" pm "SPM" bd "BGD" mt "MLT" ai "AIA"
-    gn "GIN" pw "PLW" na "NAM" mx "MEX" pl "POL"
-    } d/default-country-codes
-   d/worldwide-country-codes))
-
-(defn country-code-3-letter
-  "3-letter country code from 2-letter country code: \"DE\" -> \"DEU\" "
-  [cc]
-  (get country-code-2-to-3-hm cc))
-
-(defn all-country-codes [] (keys country-code-2-to-3-hm))
-
-
 ;; nothing should be default affected!!!
-(def default-affected [d/country-code-worldwide
-                       d/country-code-others])
-
 (def default-affected-country-codes
-  (->> default-affected
+  (->> [country-code-worldwide
+        country-code-others]
        (reduce into)
        (mapv (fn [[k _]] k))))
 
@@ -83,8 +35,8 @@
 (def country-code--country
   (conj
    (country-code--country-nv-i18n)
-    d/country-code-worldwide
-    d/country-code-others
+    country-code-worldwide
+    country-code-others
     ;; see
     ;; https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
     {
@@ -318,8 +270,8 @@
       (do (println (format
                     "No country code found for \"%s\". Using \"%s\""
                     country-name
-                    d/default-2-country-code))
-          d/default-2-country-code))))
+                    default-2-country-code))
+          default-2-country-code))))
 
 (defn country-alias
   "Get a country alias or the normal name if an alias doesn't exist"

@@ -1,10 +1,11 @@
 (ns corona.csv
-  (:require [clojure.data.csv :as dcsv]
-            [clojure.java.io :as io]
-            [clojure.string :as s]
-            [corona.common :as com]
-            [corona.core :as c]
-            [corona.countries :as cr])
+  (:require
+   [clojure.data.csv :as dcsv]
+   [clojure.java.io :as io]
+   [clojure.string :as s]
+   [corona.common :as co]
+   [corona.countries :as cr]
+   )
   (:import java.text.SimpleDateFormat))
 
 ;; find all the CSV files in the directory
@@ -37,7 +38,7 @@
        (transduce
         (comp
          (map sum-up-fn)
-         (map c/fix-octal-val)
+         (map co/fix-octal-val)
          (remove empty?)
          (map read-string))
         + 0)))
@@ -57,7 +58,7 @@
        (sum-up (assoc prm :sum-up-fn #(nth % 4)))
        (sum-up (assoc prm :sum-up-fn #(nth % 5)))
        (sum-up (assoc prm :sum-up-fn #(let [[_ _ _ c d r] %]
-                                        (apply c/calculate-ill (map c/read-number [c d r])))))))
+                                        (apply co/calculate-ill (map co/read-number [c d r])))))))
 
 ;; http://blog.cognitect.com/blog/2017/6/5/repl-debugging-no-stacktrace-required
 (defn confirmed [prm] (map :c (get-counts prm)))

@@ -2,12 +2,12 @@
   (:gen-class)
   (:require
    [clj-time-ext.core :as te]
-   [clojure.core.async :as async :refer [<!!]]
+   [clojure.core.async :as async]
    [clojure.string :as s]
-   [corona.commands :as cmds]
-   [corona.core :as c]
+   [corona.commands :as cm]
+   [corona.common :as co]
    [corona.messages :as msg]
-   [environ.core :refer [env]]
+   [environ.core :as en]
    [morse.handlers :as h]
    [morse.polling :as p]
    ))
@@ -36,10 +36,10 @@
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
               (let [chat (-> args first :chat)]
-                (printf log-fmt tbeg " " "          " c/bot-ver name chat)))
+                (printf log-fmt tbeg " " "          " co/bot-ver name chat)))
        :post (fn [& args]
                (let [[fn-result {:keys [chat]}] args]
-                 (printf log-fmt tbeg ":" (te/tnow)    c/bot-ver name chat)
+                 (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver name chat)
                  fn-result))}))))
 
 (defn handler
@@ -47,8 +47,8 @@
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
   []
-  (let [cmds (cmds/cmds)]
-    (println (str "[" (te/tnow) " " c/bot-ver "]")
+  (let [cmds (cm/cmds)]
+    (println (str "[" (te/tnow) " " co/bot-ver "]")
              "Registering" (count cmds) "chatbot commands...")
     (->> cmds
          (mapv cmd-handler)
@@ -64,29 +64,29 @@
    (let [running (async/chan)
          updates (p/create-producer
                   running token opts (fn []
-                                       (when c/env-prod? (System/exit 2))))]
-     (println (str "[" (te/tnow) " " c/bot-ver "]")
+                                       (when co/env-prod? (System/exit 2))))]
+     (println (str "[" (te/tnow) " " co/bot-ver "]")
               "Polling on handler" handler "...")
      (p/create-consumer updates handler)
      running)))
 
 (defn -main [& args]
-  (let [msg (str "Starting " c/env-type " Telegram Chatbot...")]
+  (let [msg (str "Starting " co/env-type " Telegram Chatbot...")]
     (let [tbeg (te/tnow)
           log-fmt "[%s%s%s %s] %s\n"]
-      (printf log-fmt tbeg " " "          " c/bot-ver msg)
+      (printf log-fmt tbeg " " "          " co/bot-ver msg)
       (do
-        (let [blank-prms (filter #(-> % env s/blank?) [:telegram-token])]
+        (let [blank-prms (filter (fn [v] (-> v en/env s/blank?)) [:telegram-token])]
           (when (not-empty blank-prms)
-            (println (str "[" (te/tnow) " " c/bot-ver "]")
+            (println (str "[" (te/tnow) " " co/bot-ver "]")
                      "ERROR" "Undefined environment var(s):" blank-prms)
             (System/exit 1)))
-        (<!! (start-polling c/token handler)))
-      (printf log-fmt tbeg ":" (te/tnow)    c/bot-ver (str msg " done")))))
+        (async/<!! (start-polling co/token handler)))
+      (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done")))))
 
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start   [] (swap! test-obj (fn [_] (start-polling c/token (handler)))))
+(defn start   [] (swap! test-obj (fn [_] (start-polling co/token (handler)))))
 (defn stop    [] (swap! test-obj (fn [_] (p/stop @test-obj))))
 (defn restart []
   (when @test-obj

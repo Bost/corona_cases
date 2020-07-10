@@ -1,12 +1,12 @@
 (ns corona.api.v2
-  (:require [clj-time.coerce :as tc]
-            [clj-time.local :as tl]
-            [clojure.core.memoize :as memo]
-            [corona.country-codes :refer :all]
-            [utils.core :refer :all :exclude [id]]
-            [corona.common :refer [api-data-source api-server time-to-live]]
-            [net.cgrand.xforms :as x]
-            [corona.core :as c]))
+  (:require
+   [clj-time.coerce :as tc]
+   [clj-time.local :as tl]
+   [clojure.core.memoize :as memo]
+   [corona.common :as co]
+   [corona.country-codes :refer :all]
+   [utils.core :refer :all]
+   ))
 
 ;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true
 
@@ -16,13 +16,13 @@
 ;; Denmark http://localhost:8000/v2/locations/94
 
 (def url (format "http://%s/v2/locations?source=%s&timelines=true"
-                 api-server api-data-source))
+                 co/api-server co/api-data-source))
 
-(defn data [] (c/get-json url))
+(defn data [] (co/get-json url))
 
 (def data-memo
   #_data
-  (memo/ttl data {} :ttl/threshold (* time-to-live 60 1000)))
+  (memo/ttl data {} :ttl/threshold (* co/time-to-live 60 1000)))
 
 (defn cnt-days []
   #_5
@@ -113,7 +113,7 @@
                       :c c
                       :r r
                       :d d
-                      :i (c/calculate-ill c r d)})
+                      :i (co/calculate-ill c r d)})
                    (timeline :confirmed loc)
                    (if-let [norm-timeline (seq (timeline :recovered loc))]
                      norm-timeline

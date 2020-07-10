@@ -1,24 +1,25 @@
 (ns corona.commands
-  (:require [clojure.string :as s]
-            [corona.api.expdev07 :as data]
-            [corona.api.v1 :as v1]
-            [corona.core :as c]
-            [corona.countries :as cr]
-            [corona.defs :as d]
-            [corona.lang :as l]
-            [corona.messages :as msg]
-            [corona.plot :as p]
-            [morse.api :as morse]
-            [utils.core :refer :all]
-            [corona.common :as com]))
+  (:require
+   [clojure.string :as s]
+   [corona.api.expdev07 :as data]
+   [corona.api.v1 :as v1]
+   [corona.countries :as cr]
+   [corona.country-codes :as cc]
+   [corona.lang :as l]
+   [corona.messages :as msg]
+   [corona.plot :as p]
+   [morse.api :as morse]
+   [utils.core :refer :all]
+   [corona.common :as co]
+   ))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (println "world" "msg/worldwide?" (msg/worldwide? country-code))
   (let [prm (assoc prm :parse_mode "HTML")]
-    (morse/send-text c/token chat-id (select-keys prm (keys msg/options))
+    (morse/send-text co/token chat-id (select-keys prm (keys msg/options))
                      (msg/info (assoc prm :disable_web_page_preview true)))
     (morse/send-photo
-     c/token chat-id
+     co/token chat-id
      (if (msg/worldwide? country-code)
        (msg/buttons {:chat-id chat-id :cc country-code})
        {})
@@ -48,28 +49,28 @@
           (fn [idx sub-msg]
             (->> (assoc prm :data sub-msg :msg-idx (inc idx) :cnt-msgs cnt-msgs)
                  (msg/list-countries-memo)
-                 (morse/send-text c/token chat-id
+                 (morse/send-text co/token chat-id
                                   (select-keys prm (keys msg/options))))))
          doall)))
 
 (defn about [{:keys [chat-id] :as prm}]
-  (morse/send-text c/token chat-id msg/options (msg/about prm)))
+  (morse/send-text co/token chat-id msg/options (msg/about prm)))
 
 (defn feedback [{:keys [chat-id] :as prm}]
-  (morse/send-text c/token chat-id msg/options (msg/feedback prm)))
+  (morse/send-text co/token chat-id msg/options (msg/feedback prm)))
 
 (defn references
   "No standalone message. Show the about message instead and deprecate this
   function after some deprecation time."
   [{:keys [chat-id] :as prm}]
-  (morse/send-text c/token chat-id msg/options (msg/about prm)))
+  (morse/send-text co/token chat-id msg/options (msg/about prm)))
 
 ;; (defn language [{:keys [chat-id] :as prm}]
-;;   (morse/send-text c/token chat-id msg/options (msg/language prm)))
+;;   (morse/send-text co/token chat-id msg/options (msg/language prm)))
 
 (defn contributors [{:keys [chat-id] :as prm}]
   (morse/send-text
-   c/token chat-id msg/options
+   co/token chat-id msg/options
    (msg/contributors prm)))
 
 (defn- normalize
@@ -102,9 +103,9 @@
    [#(s/lower-case %)  ;; /de
     #(s/upper-case %)  ;; /DE
     #(s/capitalize %)  ;; /De
-    #(s/lower-case (cr/country-code-3-letter %)) ;; /deu
-    #(s/upper-case (cr/country-code-3-letter %)) ;; /DEU
-    #(s/capitalize (cr/country-code-3-letter %)) ;; /Deu
+    #(s/lower-case (cc/country-code-3-letter %)) ;; /deu
+    #(s/upper-case (cc/country-code-3-letter %)) ;; /DEU
+    #(s/capitalize (cc/country-code-3-letter %)) ;; /Deu
     #(s/lower-case (normalize %))   ;; /unitedstates
     #(s/upper-case (normalize %))   ;; /UNITEDSTATES
     #(normalize %)]))
@@ -115,7 +116,7 @@
          {:pred (fn [_] true)}
          msg/options)
 
-        prm-country-code {:country-code (cr/country-code d/worldwide)}]
+        prm-country-code {:country-code (cr/country-code cc/worldwide)}]
     [{:name l/contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
@@ -137,10 +138,10 @@
 (defn cmds-listing []
   "Command map for list-sort-by-case. See also `footer`, `list-countries`.
   TODO do not support the old command for certain transition period."
-  (->> com/listing-ird-cases
+  (->> co/listing-ird-cases
        (map (fn [case-kw]
               (let [prm (conj {:pred (fn [_] true)} msg/options)
-                    prm-country-code {:country-code (cr/country-code d/worldwide)}]
+                    prm-country-code {:country-code (cr/country-code cc/worldwide)}]
                 {:name (l/list-sorted-by case-kw)
                  :f (fn [chat-id] (list-countries
                                   (conj (assoc prm
@@ -156,7 +157,7 @@
   (transduce (map cmds-country-code)
              into (into (cmds-general)
                         (cmds-listing))
-             (cr/all-country-codes)))
+             (cc/all-country-codes)))
 
 (defn bot-father-edit-cmds
   "Evaluate this function and upload the results under:

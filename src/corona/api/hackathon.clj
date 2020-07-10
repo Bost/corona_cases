@@ -1,6 +1,8 @@
 (ns corona.api.hackathon
-  (:require [corona.core :as c]
-            [corona.countries :as cr]))
+  (:require
+   [corona.common :as co]
+   [corona.country-codes :as cc]
+   ))
 
 (defn data
   "Iterate over all countries and
@@ -18,7 +20,7 @@
   "
   []
   (->>
-   #_(cr/all-country-codes)
+   #_(cc/all-country-codes)
    #_(take 3)
    [
     "DE"
@@ -27,7 +29,7 @@
            ;; convert to 3 letter code
            (as-> (cr/country-code-3-letter country-code) $
              (format "https://corona.ndo.dev/api/timespan?country=%s&time=year" $)
-             (c/get-json $)
+             (co/get-json $)
              (:timeseries $)
              (map :data $)
              (map (fn [m]
