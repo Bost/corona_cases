@@ -8,6 +8,7 @@
 (def world-desc    "Start here")
 (def start         "start")
 (def about         "about")
+(def explain       "explain")
 (def contributors  "contributors")
 (def feedback      "feedback")
 
@@ -40,11 +41,13 @@
 (def list-desc     "List of countries")
 
 (def floating-avg
-  "Active cases Change over last 7 Reports - floating Average"
-  "ASCAvg7r")
+  "Active cases in last 7 reports - floating Average Change"
+  "ActL7AvgC")
 
-(def sick-today    "ActiveNow")
-(def sick-week-ago "Active7ReportsAgo")
+(def active-7-ago
+  "Active cases in last 7 reports"
+  "ActL7")
+
 (def millions-rounded "Mill")
 
 (defn list-sorted-by [case-kw]

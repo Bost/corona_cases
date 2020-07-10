@@ -132,7 +132,7 @@
   (let [spacer "   "]
     (str
      ;; "Try" spacer
-     (->> [l/world l/about]
+     (->> [l/world l/explain]
           (map co/encode-cmd)
           (map (fn [cmd] (co/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer))
@@ -315,7 +315,14 @@
               {dd :d dr :r di :i} delta
               dclosed (+ dd dr)]
           (format
-           "%s\n%s\n%s\n%s\n%s\n"
+           (str "%s\n" ; l/sick
+                "%s\n" ; l/sick-per-1e5
+                "%s\n" ; l/active-7-ago
+                "%s\n" ; l/floating-avg
+                "%s\n" ; l/recovered
+                "%s\n" ; l/deaths
+                "%s\n" ; l/closed
+                )
            (fmt-to-cols
             {:s l/sick      :n ill       :total confirmed :diff di
              :calc-rate true})
@@ -325,15 +332,15 @@
              :calc-rate false
              :show-n true
              :calc-diff false})
-           #_(fmt-to-cols
-            {:s l/floating-avg
-             :n (round-precision (/ (- ill last-7th-report) 7.0) 2)
-             :total population :diff ""
+           (fmt-to-cols
+            {:s l/active-7-ago :n last-7th-report :total population :diff ""
              :calc-rate false
              :show-n true
              :calc-diff false})
-           #_(fmt-to-cols
-            {:s "Active-7r" :n last-7th-report :total population :diff ""
+           (fmt-to-cols
+            {:s l/floating-avg
+             :n (round-precision (/ (- ill last-7th-report) 7.0) 2)
+             :total population :diff ""
              :calc-rate false
              :show-n true
              :calc-diff false})
@@ -408,15 +415,19 @@
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" prm)
     "\n")
    "\n"
-   (format "- Closed cases = %s + %s\n"
-           (s/lower-case l/recovered)
-           (s/lower-case l/deaths))
-   "- Percentage calculation: <cases> / confirmed\n"
-   #_(format (str "- %s = (%s - %s) / 7\n"
+   (format "- %s cases = %s + %s\n"
+           l/closed
+           l/recovered
+           l/deaths)
+   (format "- Percentage calculation: <cases> / %s\n" l/confirmed)
+   (format (str "- %s: %s\n")
+           l/active-7-ago
+           (:doc (meta #'l/active-7-ago)))
+   (format (str "- %s = (%s - %s) / 7\n"
                 "  %s\n")
            l/floating-avg
-           l/sick-today l/sick-week-ago
-           "Active cases Change between current and last 7th report - floating Average")
+           l/sick l/active-7-ago
+           (:doc (meta #'l/floating-avg)))
    #_(str
       "\n"
       " - " (link "Home page"
@@ -427,6 +438,7 @@
                       :else "http://localhost:5050"))
                   prm))
    ;; (abbreviated) content of the former reference message
+   "\n"
    (format "%s %s\n"
            "- Robert Koch-Institut "
            (link "COVID-19 (Coronavirus SARS-CoV-2)"

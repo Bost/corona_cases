@@ -128,6 +128,10 @@
       :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
                                    prm-country-code)))
       :desc l/world-desc}
+     {:name l/explain
+      :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
+      :desc "Explain abbreviations & some additional info"}
+     ;; TODO deprecate the l/about command
      {:name l/about
       :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
       :desc "Bot version & some additional info"}
