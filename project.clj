@@ -54,12 +54,9 @@
    ;; parse HTML into Clojure data structures - scrapping data from HTML tables
    [hickory "0.7.1"]
 
-   ;; {{{ klipse stuff
-   [org.clojure/clojurescript "1.10.773"]
+   ;; TODO debugging - changes prompt according to sexp result
+   ;; https://github.com/AppsFlyer/mate-clj
 
-   ;; web repl
-   [viebel/klipse "7.9.6"]
-   ;; }}}
    ]
 
   :min-lein-version "2.0.0"
