@@ -145,7 +145,12 @@
                            (t/default-time-zone)
                            (ZoneId/systemDefault )
                            (.getID (TimeZone/getDefault)))))
-        (pmap (fn [fn-name] (fn-name)) [telegram/-main webapp]))
+        (pmap (fn [fn-name] (fn-name))
+              [telegram/-main
+               ;; Seems like the webapp must be always started, otherwise I get:
+               ;; Error R10 (Boot timeout) -> Web process failed to bind to
+               ;; $PORT within 60 seconds of launch
+               webapp]))
       (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done")))))
 
 ;; For interactive development:
