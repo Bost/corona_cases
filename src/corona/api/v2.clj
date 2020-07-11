@@ -113,7 +113,7 @@
                       :c c
                       :r r
                       :d d
-                      :i (co/calculate-ill c r d)})
+                      :i (co/calculate-active c r d)})
                    (timeline :confirmed loc)
                    (if-let [norm-timeline (seq (timeline :recovered loc))]
                      norm-timeline

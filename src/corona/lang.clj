@@ -23,9 +23,9 @@
 (def recovered       "Recovered")
 (def recovered-cases "Recovered cases")
 
-(def sick          "Active")
-(def sick-cases    "Active cases")
-(def sick-per-1e5  "Act/100k")
+(def active         "Active")
+(def active-cases   "Active cases")
+(def active-per-1e5 "Act/100k")
 
 (def closed        "Closed")
 (def closed-cases  "Closed cases")
@@ -35,7 +35,7 @@
   "Day\\Report")
 (def sick-absolute "Active absolute")
 (def absolute      "absolute")
-(def population    "People") ;; "Population" is too long see `fmt-to-cols`
+(def people        "People") ;; "Population" is too long see `fmt-to-cols`
 (def stats         "Stats")
 
 (def list-desc     "List of countries")

@@ -221,13 +221,13 @@
   [{:keys [data msg-idx cnt-msgs sort-by-case] :as prm}]
   (let [spacer " "
         sort-indicator "▴" ;; " " "▲"
-        omag-ill    7 ;; order of magnitude i.e. number of digits
-        omag-recov  omag-ill
-        omag-deaths (dec omag-ill)]
+        omag-active    7 ;; order of magnitude i.e. number of digits
+        omag-recov  omag-active
+        omag-deaths (dec omag-active)]
     (format
      (format (str "%s\n" ; header
                   "%s\n" ; Day\Report
-                  "         %s "  ; Sick
+                  "         %s "  ; Active
                   "%s"   ; spacer
                   "%s "  ; Recovered
                   "%s"   ; spacer
@@ -235,7 +235,7 @@
                   "%s")
              (header prm)
              (format "%s %s;  %s/%s" l/day (count (data/raw-dates)) msg-idx cnt-msgs)
-             (str l/sick      (if (= :i sort-by-case) sort-indicator " "))
+             (str l/active    (if (= :i sort-by-case) sort-indicator " "))
              spacer
              (str l/recovered (if (= :r sort-by-case) sort-indicator " "))
              spacer
@@ -250,7 +250,7 @@
       "\n"
       (map (fn [stats]
              (format "<code>%s%s%s%s%s %s</code>  %s"
-                     (co/left-pad (:i stats) " " omag-ill)
+                     (co/left-pad (:i stats) " " omag-active)
                      spacer
                      (co/left-pad (:r stats) " " omag-recov)
                      spacer
@@ -314,7 +314,7 @@
      (str
       (str
        (fmt-to-cols-narrower
-        {:s l/population :n population
+        {:s l/people :n population
          ;; :total 0
          ;; :diff ""
          :calc-rate false
@@ -325,7 +325,7 @@
                     :calc-rate false :desc ""})
       "\n"
       (when (pos? confirmed)
-        (let [{deaths :d recovered :r ill :i} last-day
+        (let [{deaths :d recovered :r active :i} last-day
               {last-7-reports :i} (data/last-7-reports prm)
               last-7th-report (first last-7-reports)
               closed (+ deaths recovered)
@@ -335,13 +335,13 @@
           ;; (println "last-7th-report                :" last-7th-report)
           ;; (println "roll-median 7                  :" (->> last-7-reports (izoo/roll-median 7) first int))
           ;; (println "(mean last-7-reports)          :" (->> last-7-reports istats/mean round-nr))
-          ;; (println "(/ (- ill last-7th-report) 7.0):" (/ (- ill last-7th-report) 7.0))
+          ;; (println "(/ (- active last-7th-report) 7.0):" (/ (- active last-7th-report) 7.0))
           ;; (println "(mean diff-coll-vals ...)      :" (istats/mean (diff-coll-vals last-7-reports)))
           ;; (println "(diff-coll-vals last-7-reports):" (diff-coll-vals last-7-reports))
 
           (format
            (str "%s\n" ; l/sick
-                "%s\n" ; l/sick-per-1e5
+                "%s\n" ; l/active-per-1e5
                 "%s\n" ; l/active-last-7-med
                 "%s\n" ; l/active-last-7-avg
                 "%s\n" ; l/active-last-7-avg-change
@@ -350,45 +350,34 @@
                 "%s\n" ; l/closed
                 )
            (fmt-to-cols
-            {:s l/sick
-             :n ill       :total confirmed :diff di
-             :calc-rate true})
+            {:s l/sick :n active :total confirmed :diff di :calc-rate true})
            ;; TODO add effective reproduction number (R)
            (fmt-to-cols
-            {:s l/sick-per-1e5 :n (per-1e5 ill population)
-             :total population :diff ""
-             :calc-rate false
-             :show-n true
+            {:s l/active-per-1e5 :n (per-1e5 active population)
+             :total population :diff "" :calc-rate false :show-n true
              :calc-diff false})
            (fmt-to-cols
             {:s l/active-last-7-med
              :n (->> last-7-reports (izoo/roll-median 7) first int)
-             :total population :diff ""
-             :calc-rate false
-             :show-n true
+             :total population :diff "" :calc-rate false :show-n true
              :calc-diff false})
            (fmt-to-cols
             {:s l/active-last-7-avg
              :n (-> last-7-reports istats/mean round-nr)
-             :total population :diff ""
-             :calc-rate false
-             :show-n true
+             :total population :diff "" :calc-rate false :show-n true
              :calc-diff false})
            (fmt-to-cols
             {:s l/active-last-7-avg-change
-             :n (round-nr (/ (- ill last-7th-report) 7.0))
-             :total population :diff ""
-             :calc-rate false
-             :show-n true
+             :n (round-nr (/ (- active last-7th-report) 7.0))
+             :total population :diff "" :calc-rate false :show-n true
              :calc-diff false})
            (fmt-to-cols
             {:s l/recovered :n recovered :total confirmed :diff dr
              :calc-rate true})
            (fmt-to-cols
-            {:s l/deaths    :n deaths    :total confirmed :diff dd
-             :calc-rate true})
+            {:s l/deaths :n deaths :total confirmed :diff dd :calc-rate true})
            (fmt-to-cols
-            {:s l/closed    :n closed :total confirmed :diff dclosed
+            {:s l/closed :n closed :total confirmed :diff dclosed
              :calc-rate true}))))))
    (footer prm)))
 
@@ -401,7 +390,7 @@
   (let [line-style {:marker-type :none :render-style :line}
         dates {:x (data/dates)}]
     (-> (chart/xy-chart
-         {l/sick      (assoc dates :y (data/ill prm)
+         {l/active    (assoc dates :y (data/active prm)
                              :style {:marker-type :none})
           l/confirmed (assoc dates :y (data/confirmed prm)
                              :style (assoc line-style :line-color :black))
@@ -468,7 +457,7 @@
    (format (str "- %s = (%s - %s) / 7\n"
                 "  %s\n")
            l/active-last-7-avg-change
-           l/sick l/active-last-7-avg
+           l/active l/active-last-7-avg
            (:doc (meta #'l/active-last-7-avg-change)))
    #_(str
       "\n"

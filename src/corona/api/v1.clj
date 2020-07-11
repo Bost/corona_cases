@@ -149,7 +149,8 @@
                (assoc
                 prm
                 #_(dissoc prm :c)
-                :i (co/calculate-ill prm))))  ;; TODO watch out for arity of calculate-ill
+                ;; TODO watch out for arity of calculate-active
+                :i (co/calculate-active prm))))
          (map xf-for-case [
                            :population
                            :confirmed :recovered :deaths

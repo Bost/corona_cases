@@ -195,7 +195,7 @@
   (let [pcrd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
                    [:population :confirmed :recovered :deaths])]
     (zipmap co/all-pcrdi-cases
-            (conj pcrd (apply mapv co/calculate-ill pcrd)))))
+            (conj pcrd (apply mapv co/calculate-active pcrd)))))
 
 (def get-counts-memo
   (memo/ttl get-counts {} :ttl/threshold (* co/time-to-live 60 1000)))
@@ -204,7 +204,7 @@
 (defn confirmed [prm]  (:c (get-counts-memo prm)))
 (defn deaths    [prm]  (:d (get-counts-memo prm)))
 (defn recovered [prm]  (:r (get-counts-memo prm)))
-(defn ill       [prm]  (:i (get-counts-memo prm)))
+(defn active    [prm]  (:i (get-counts-memo prm)))
 
 (defn eval-fun
   "E.g.:

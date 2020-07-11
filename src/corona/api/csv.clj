@@ -57,14 +57,16 @@
        (sum-up (assoc prm :sum-up-fn #(nth % 3)))
        (sum-up (assoc prm :sum-up-fn #(nth % 4)))
        (sum-up (assoc prm :sum-up-fn #(nth % 5)))
-       (sum-up (assoc prm :sum-up-fn #(let [[_ _ _ c d r] %]
-                                        (apply co/calculate-ill (map co/read-number [c d r])))))))
+       (sum-up (assoc prm :sum-up-fn
+                      #(let [[_ _ _ c d r] %]
+                         (apply co/calculate-active
+                                (map co/read-number [c d r])))))))
 
 ;; http://blog.cognitect.com/blog/2017/6/5/repl-debugging-no-stacktrace-required
 (defn confirmed [prm] (map :c (get-counts prm)))
 (defn deaths    [prm] (map :d (get-counts prm)))
 (defn recovered [prm] (map :r (get-counts prm)))
-(defn ill       [prm] (map :i (get-counts prm)))
+(defn active    [prm] (map :i (get-counts prm)))
 (defn dates     []    (map :f (get-counts {:pred (fn [_] true)})))
 
 (defn last-day  [prm]

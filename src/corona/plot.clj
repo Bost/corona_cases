@@ -106,7 +106,7 @@
 (defn plot-label
   "day - day since the outbreak
   cc - country code
-  stats - statistics ill, confirmed, etc. for the given country code"
+  stats - statistics active, confirmed, etc. for the given country code"
   [day cc stats]
   (format "%s; %s; %s: %s"
           (fmt-day day)
@@ -194,17 +194,18 @@
       :legend (reverse
                (conj (map #(vector :rect %2 {:color %1})
                           palette
-                          (map (fn [k] (get {:i l/sick :d l/deaths :r l/recovered} k))
+                          (map (fn [k] (get {:i l/active :d l/deaths :r l/recovered} k))
                                curves))
                      [:line l/confirmed     stroke-confirmed]
                      [:line l/sick-absolute stroke-sick]
-                     #_[:line l/population    stroke-population]))
+                     #_[:line l/people    stroke-population]))
       :label (plot-label day cc stats)
       :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})))
 
 (defn group-below-threshold
-  "Group all countries w/ the number of ill cases below the threshold under the
-  `cc/default-2-country-code` so that max 10 countries are displayed in the plot"
+  "Group all countries w/ the number of active cases below the threshold under the
+  `cc/default-2-country-code` so that max 10 countries are displayed in the
+  plot"
   [{:keys [case threshold threshold-increase stats] :as prm}]
   (let [max-plot-lines 10
         res (map (fn [hm] (if (< (case hm) threshold)
@@ -223,7 +224,7 @@
       {:data res :threshold threshold})))
 
 (defn sum-all-by-date-by-case
-  "Group the country stats by day and sum up the ill cases"
+  "Group the country stats by day and sum up the active cases"
   [{:keys [case] :as prm}]
   (let [prm (group-below-threshold prm)
         {data :data} prm]
@@ -285,16 +286,16 @@
                                        (co/country-alias cc)))
                      (keys json-data))))
       :y-axis-formatter (metrics-prefix-formatter
-                         ;; `+` means: sum up all sick/ill cases
+                         ;; `+` means: sum up all active cases
                          (max-y-val + json-data))
       :label (format "%s; %s; %s: %s > %s"
                      (fmt-day day)
                      (fmt-last-date stats)
                      co/bot-name
-                     (->> [l/confirmed l/recovered l/deaths l/sick-cases ]
+                     (->> [l/confirmed l/recovered l/deaths l/active-cases ]
                           (zipmap co/all-crdi-cases)
                           case)
-                     #_(case {:c l/confirmed :i l/sick-cases :r l/recovered :d l/deaths})
+                     #_(case {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
                      threshold)
       :label-conf {:color (c/darken :steelblue) :font-size 14}})))
 
@@ -336,7 +337,7 @@
               (fmt-day day)
               (fmt-last-date stats)
               co/bot-name
-              (str (case {:c l/confirmed :i l/sick-cases :r l/recovered :d l/deaths})
+              (str (case {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
                    " " l/absolute)
               threshold)
       :label-conf {:color (c/darken :steelblue) :font-size 14}})))

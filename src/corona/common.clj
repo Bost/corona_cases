@@ -30,8 +30,8 @@
                      :else "undefined")
                    "_bot"))
 
-(defn calculate-ill
-  ([{:keys [cc f p c r d] :as prm}] (calculate-ill p c r d))
+(defn calculate-active
+  ([{:keys [cc f p c r d] :as prm}] (calculate-active p c r d))
   ([_ c r d] (- c (+ r d))))
 
 (defn telegram-token-suffix []
