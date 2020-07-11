@@ -6,7 +6,7 @@
    [corona.common :as co]
    [corona.countries :as cr]
    [corona.country-codes :refer :all]
-   [utils.core :refer :all :exclude [id]]
+   [utils.core :refer [] :exclude [id]]
    [corona.tables :as t]
    [corona.api.expdev07 :as srvc]
    [net.cgrand.xforms :as x]

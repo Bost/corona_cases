@@ -4,9 +4,8 @@
    [clojure.set :as cset]
    [corona.common :as co]
    [corona.countries :as cr]
-   [corona.country-codes :as cc]
-   ;; for debugging
-   ;; [utils.core :refer :all :exclude [id]]
+   [corona.country-codes :as cc :refer :all]
+   [utils.core :refer [] :exclude [id]]
    )
   (:import java.text.SimpleDateFormat))
 
@@ -153,11 +152,6 @@
 
 (defn get-prev [coll] (first (take-last 2 coll)))
 
-(defn get-last-7th-report
-  "(last-7th-report [0 1 2 3 4 5 6 7])
-  ;; => 0"
-  [coll] (first (take-last 8 coll)))
-
 (defn sums-for-date [case locations raw-date]
   (if (and (empty? locations)
            (= :recovered case))
@@ -243,13 +237,13 @@
   #_(println "last-day" "prm" prm)
   (eval-fun (assoc prm :fun get-last)))
 
-(defn last-7th-report
+(defn last-7-reports
   "E.g.:
-  (last-day {:pred (pred-fn sk)})
-  (last-day {:pred (fn [_] true)})"
+  (last-7-reports {:pred (pred-fn sk)})
+  (last-7-reports {:pred (fn [_] true)})"
   [prm]
   #_(println "last-day" "prm" prm)
-  (eval-fun (assoc prm :fun get-last-7th-report)))
+  (eval-fun (assoc prm :fun (fn [coll] (take-last 7 coll)))))
 
 (defn pred-fn [country-code]
   (fn [loc]

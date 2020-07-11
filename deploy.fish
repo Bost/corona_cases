@@ -81,12 +81,26 @@ heroku ps:scale web=1 --app $APP
 # publish source code only when deploying to production
 if test $envName = corona-cases
     # seems like `git push --tags` pushes only tags w/o the code
-    set gitTag $botVerNr"-"$botVerSHA; and \
-    git tag $gitTag; and \
-    git push $pushFlags origin; and \
-    git push $pushFlags gitlab; and \
-    git push --tags $pushFlags origin; and \
-    git push --tags $pushFlags gitlab
+    set gitTag $botVerNr"-"$botVerSHA
+    git tag --annotate $gitTag
+    set pushFlags --follow-tags --verbose
+
+    set remotes origin gitlab
+    for remote in $remotes
+        set cmd git push $pushFlags $remote
+        echo $cmd
+        eval $cmd
+        if test $status != 0
+            break
+        end
+        # TODO this should not be needed
+        # set cmd git push --tags $pushFlags $remote
+        # echo $cmd
+        # eval $cmd
+        # if test $status != 0
+        #     break
+        # end
+    end
 end
 
 # heroku ps:scale web=0 --app $APP; and \

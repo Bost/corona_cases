@@ -40,13 +40,24 @@
 
 (def list-desc     "List of countries")
 
-(def floating-avg
-  "Active cases in last 7 reports - floating Average Change"
-  "ActL7AvgC")
+;; TODO
+;; https://en.wikipedia.org/wiki/Moving_average#Moving_median
+;; simple moving median SMM
 
-(def active-7-ago
-  "Active cases in last 7 reports"
-  "ActL7")
+;; https://en.wikipedia.org/wiki/Moving_average#Simple_moving_average
+;; simple moving average SMA
+
+(def active-last-7-med
+  "Active cases in last 7 reports - simple moving Median rounded"
+  "ActL7Med")
+
+(def active-last-7-avg
+  "Active cases in last 7 reports - simple moving Average rounded"
+  "ActL7Avg")
+
+(def active-last-7-avg-change
+  "Active cases in last 7 reports - simple moving Average Change rounded"
+  "ActL7AvgC")
 
 (def millions-rounded "Mill")
 

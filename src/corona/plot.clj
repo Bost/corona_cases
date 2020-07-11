@@ -13,7 +13,8 @@
    [corona.countries :as cr]
    [corona.country-codes :as cc]
    [corona.lang :as l]
-   [utils.core :refer :all])
+   [utils.core :refer [in?] :exclude [id]]
+   )
   (:import [java.time LocalDate ZoneId]))
 
 (defn metrics-prefix-formatter [max-val]

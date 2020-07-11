@@ -2,7 +2,7 @@
   (:require
    [clojure.set :as cset]
    [corona.country-codes :refer :all]
-   [utils.core :refer :all :exclude [id]]
+   [utils.core :refer [in?] :exclude [id]]
    [clojure.string :as s]
    )
   (:import com.neovisionaries.i18n.CountryCode

@@ -9,7 +9,7 @@
    [corona.messages :as msg]
    [corona.plot :as p]
    [morse.api :as morse]
-   [utils.core :refer :all]
+   [utils.core :refer [in?] :exclude [id]]
    [corona.common :as co]
    ))
 

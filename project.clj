@@ -57,6 +57,9 @@
    ;; TODO debugging - changes prompt according to sexp result
    ;; https://github.com/AppsFlyer/mate-clj
 
+   [incanter/incanter-zoo "1.9.3"]   ;; roll-mean
+   [incanter/incanter-core "1.9.3"]  ;; mean
+
    ]
 
   :min-lein-version "2.0.0"

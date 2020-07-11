@@ -12,7 +12,9 @@
    [corona.lang :as l]
    [corona.plot :as p]
    [morse.api :as morse]
-   [utils.core :refer :all]
+   [utils.core :refer [in?] :exclude [id]]
+   [incanter.stats :as istats]
+   [incanter.zoo :as izoo]
    )
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
@@ -58,6 +60,8 @@
 (defn round-precision [value precision]
   (let [multiplier (Math/pow 10.0 precision)]
     (/ (Math/round (* value multiplier)) multiplier)))
+
+(defn round-nr [value] (int (round-precision value 0)))
 
 (defn round-div-precision [dividend divisor precision]
   (round-precision (/ (float dividend) divisor) precision))
@@ -267,6 +271,18 @@
   #_list-countries
   (memo/ttl list-countries {} :ttl/threshold (* 60 60 1000)))
 
+(defn diff-coll-vals
+  "Differences between values. E.g.:
+  (diff-coll-valls [1 3 6 10 9 9 10])
+  ;; => [2 3 4 -1 0 1]"
+  [coll]
+  (loop [[head & tail] coll
+         result []]
+    (if (and head (seq tail))
+      (recur tail (conj result (- (first tail) head)))
+      result)))
+
+#_[226 255 270 271 266 297 346 361]
 (defn info
   "Shows the table with the absolute and %-wise number of cases"
   [{:keys [country-code] :as prm}]
@@ -310,36 +326,57 @@
       "\n"
       (when (pos? confirmed)
         (let [{deaths :d recovered :r ill :i} last-day
-              {last-7th-report :i} (data/last-7th-report prm)
+              {last-7-reports :i} (data/last-7-reports prm)
+              last-7th-report (first last-7-reports)
               closed (+ deaths recovered)
               {dd :d dr :r di :i} delta
               dclosed (+ dd dr)]
+          ;; (println "last-7-reports                 :" last-7-reports)
+          ;; (println "last-7th-report                :" last-7th-report)
+          ;; (println "roll-median 7                  :" (->> last-7-reports (izoo/roll-median 7) first int))
+          ;; (println "(mean last-7-reports)          :" (->> last-7-reports istats/mean round-nr))
+          ;; (println "(/ (- ill last-7th-report) 7.0):" (/ (- ill last-7th-report) 7.0))
+          ;; (println "(mean diff-coll-vals ...)      :" (istats/mean (diff-coll-vals last-7-reports)))
+          ;; (println "(diff-coll-vals last-7-reports):" (diff-coll-vals last-7-reports))
+
           (format
            (str "%s\n" ; l/sick
                 "%s\n" ; l/sick-per-1e5
-                "%s\n" ; l/active-7-ago
-                "%s\n" ; l/floating-avg
+                "%s\n" ; l/active-last-7-med
+                "%s\n" ; l/active-last-7-avg
+                "%s\n" ; l/active-last-7-avg-change
                 "%s\n" ; l/recovered
                 "%s\n" ; l/deaths
                 "%s\n" ; l/closed
                 )
            (fmt-to-cols
-            {:s l/sick      :n ill       :total confirmed :diff di
+            {:s l/sick
+             :n ill       :total confirmed :diff di
              :calc-rate true})
            ;; TODO add effective reproduction number (R)
            (fmt-to-cols
-            {:s l/sick-per-1e5 :n (per-1e5 ill population) :total population :diff ""
+            {:s l/sick-per-1e5 :n (per-1e5 ill population)
+             :total population :diff ""
              :calc-rate false
              :show-n true
              :calc-diff false})
            (fmt-to-cols
-            {:s l/active-7-ago :n last-7th-report :total population :diff ""
+            {:s l/active-last-7-med
+             :n (->> last-7-reports (izoo/roll-median 7) first int)
+             :total population :diff ""
              :calc-rate false
              :show-n true
              :calc-diff false})
            (fmt-to-cols
-            {:s l/floating-avg
-             :n (round-precision (/ (- ill last-7th-report) 7.0) 2)
+            {:s l/active-last-7-avg
+             :n (-> last-7-reports istats/mean round-nr)
+             :total population :diff ""
+             :calc-rate false
+             :show-n true
+             :calc-diff false})
+           (fmt-to-cols
+            {:s l/active-last-7-avg-change
+             :n (round-nr (/ (- ill last-7th-report) 7.0))
              :total population :diff ""
              :calc-rate false
              :show-n true
@@ -420,14 +457,19 @@
            l/recovered
            l/deaths)
    (format "- Percentage calculation: <cases> / %s\n" l/confirmed)
-   (format (str "- %s: %s\n")
-           l/active-7-ago
-           (:doc (meta #'l/active-7-ago)))
+   (format (str "- %s:\n"
+                "  %s\n")
+           l/active-last-7-med
+           (:doc (meta #'l/active-last-7-med)))
+   (format (str "- %s:\n"
+                "  %s\n")
+           l/active-last-7-avg
+           (:doc (meta #'l/active-last-7-avg)))
    (format (str "- %s = (%s - %s) / 7\n"
                 "  %s\n")
-           l/floating-avg
-           l/sick l/active-7-ago
-           (:doc (meta #'l/floating-avg)))
+           l/active-last-7-avg-change
+           l/sick l/active-last-7-avg
+           (:doc (meta #'l/active-last-7-avg-change)))
    #_(str
       "\n"
       " - " (link "Home page"
