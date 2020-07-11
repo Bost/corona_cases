@@ -150,6 +150,10 @@
                ;; Seems like the webapp must be always started, otherwise I get:
                ;; Error R10 (Boot timeout) -> Web process failed to bind to
                ;; $PORT within 60 seconds of launch
+               ;; TODO try to change it in the Procfile. See in the console:
+               ;;     remote: -----> Discovering process types
+               ;;     remote:        Procfile declares types -> web
+               ;; during the deployment process
                webapp]))
       (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done")))))
 
