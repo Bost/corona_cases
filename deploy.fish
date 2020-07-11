@@ -69,12 +69,13 @@ else
     exit 1
 end
 
+set botVerSHA (git rev-parse --short master)
+set botVerNr (grep --max-count=1 --only-matching '\([0-9]\+\.\)\+[0-9]\+' project.clj)
+
 # heroku logs --tail --app $APP blocks the execution
 heroku addons:open papertrail --app $APP; and \
 heroku ps:scale web=0 --app $APP; and \
 git push $restArgs $REMOTE master; and \
-set botVerSHA (git rev-parse --short master); and \
-set botVerNr (grep --max-count=1 --only-matching '\([0-9]\+\.\)\+[0-9]\+' project.clj); and \
 heroku config:set BOT_VER=$botVerSHA --app $APP; and \
 heroku ps:scale web=1 --app $APP
 
@@ -82,7 +83,7 @@ heroku ps:scale web=1 --app $APP
 if test $envName = corona-cases
     # seems like `git push --tags` pushes only tags w/o the code
     set gitTag $botVerNr"-"$botVerSHA
-    git tag --annotate $gitTag
+    git tag --annotate --message "" $gitTag
     set pushFlags --follow-tags --verbose
 
     set remotes origin gitlab
