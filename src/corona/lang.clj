@@ -1,6 +1,7 @@
 (ns corona.lang
-  (:require [corona.common :as com]
-            [clojure.string :as s]))
+  (:require
+   [corona.common :as com]
+   [clojure.string :as s]))
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
@@ -55,21 +56,25 @@
   "Active cases in last 7 reports - simple moving Average rounded"
   "ActL7Avg")
 
-(def active-last-7-avg-change
-  "Active cases in last 7 reports - simple moving Average Change rounded"
-  "ActL7AvgC")
+(def active-last-8th
+  "Active cases of the last 8th report"
+  "ActL8th")
+
+(def active-change-last-7-avg
+  "Active cases Change - simple moving Average of last 7 values"
+  "ActCL7Avg")
 
 (def millions-rounded "Mill")
 
 (defn list-sorted-by [case-kw]
-  (->> [conf recov deaths sick]
+  (->> [conf recov deaths active]
        (map s/lower-case)
        (zipmap com/all-crdi-cases)
        case-kw))
 
 (defn list-sorted-by-desc [case-kw]
   (format "Countries sorted by nr. of %s" ;; "... in ascending order"
-          (->> [confirmed-cases recovered-cases deaths sick-cases]
+          (->> [confirmed-cases recovered-cases deaths active-cases]
                (map s/lower-case)
                (zipmap com/all-crdi-cases)
                case-kw)))

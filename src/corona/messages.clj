@@ -326,31 +326,37 @@
       "\n"
       (when (pos? confirmed)
         (let [{deaths :d recovered :r active :i} last-day
-              {last-7-reports :i} (data/last-7-reports prm)
-              last-7th-report (first last-7-reports)
+              {last-8-reports :i} (data/last-8-reports prm)
+              [last-8th-report & last-7-reports] last-8-reports
+              [last-7th-report & _] last-7-reports
               closed (+ deaths recovered)
               {dd :d dr :r di :i} delta
               dclosed (+ dd dr)]
-          ;; (println "last-7-reports                 :" last-7-reports)
-          ;; (println "last-7th-report                :" last-7th-report)
+          ;; (println "last-8-reports                    :" last-8-reports)
+          ;; (println "last-7-reports                    :" last-7-reports)
+          ;; (println "last-7th-report                   :" last-7th-report)
+          ;; (println "last-8th-report                   :" last-8th-report)
+          ;; (println "active                            :" active)
           ;; (println "roll-median 7                  :" (->> last-7-reports (izoo/roll-median 7) first int))
           ;; (println "(mean last-7-reports)          :" (->> last-7-reports istats/mean round-nr))
-          ;; (println "(/ (- active last-7th-report) 7.0):" (/ (- active last-7th-report) 7.0))
-          ;; (println "(mean diff-coll-vals ...)      :" (istats/mean (diff-coll-vals last-7-reports)))
-          ;; (println "(diff-coll-vals last-7-reports):" (diff-coll-vals last-7-reports))
+          ;; (println "(/ (- active last-8th-report) 7.0):" (/ (- active last-8th-report) 7.0))
+          ;; (println "(mean diff-coll-vals 7 ...)       :" (-> last-7-reports diff-coll-vals istats/mean round-nr))
+          ;; (println "(mean diff-coll-vals 8 ...)       :" (-> last-8-reports diff-coll-vals istats/mean round-nr))
+          ;; (println "(diff-coll-vals last-7-reports)   :" (diff-coll-vals last-7-reports))
+          ;; (println "(diff-coll-vals last-8-reports)   :" (diff-coll-vals last-8-reports))
 
           (format
-           (str "%s\n" ; l/sick
+           (str "%s\n" ; l/active
                 "%s\n" ; l/active-per-1e5
                 "%s\n" ; l/active-last-7-med
                 "%s\n" ; l/active-last-7-avg
-                "%s\n" ; l/active-last-7-avg-change
+                "%s\n" ; l/active-change-last-7-avg
                 "%s\n" ; l/recovered
                 "%s\n" ; l/deaths
                 "%s\n" ; l/closed
                 )
            (fmt-to-cols
-            {:s l/sick :n active :total confirmed :diff di :calc-rate true})
+            {:s l/active :n active :total confirmed :diff di :calc-rate true})
            ;; TODO add effective reproduction number (R)
            (fmt-to-cols
             {:s l/active-per-1e5 :n (per-1e5 active population)
@@ -367,8 +373,20 @@
              :total population :diff "" :calc-rate false :show-n true
              :calc-diff false})
            (fmt-to-cols
-            {:s l/active-last-7-avg-change
-             :n (round-nr (/ (- active last-7th-report) 7.0))
+            {:s l/active-change-last-7-avg
+
+             ;; ActC(t0)    = active(t0)    - active(t0-1d)
+             ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
+             ;; ActC(t0-2d) = active(t0-2d) - active(t0-3d)
+             ;; ActC(t0-3d) = active(t0-2d) - active(t0-4d)
+             ;; ActC(t0-4d) = active(t0-2d) - active(t0-5d)
+             ;; ActC(t0-5d) = active(t0-2d) - active(t0-6d)
+             ;; ActC(t0-6d) = active(t0-6d) - active(t0-7d)
+
+             ;; ActCL7CAvg =
+             ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
+             ;; = (active(t0) - active(t0-7d)) / 7
+             :n (-> (/ (- active last-8th-report) 7.0) round-nr plus-minus)
              :total population :diff "" :calc-rate false :show-n true
              :calc-diff false})
            (fmt-to-cols
@@ -456,9 +474,9 @@
            (:doc (meta #'l/active-last-7-avg)))
    (format (str "- %s = (%s - %s) / 7\n"
                 "  %s\n")
-           l/active-last-7-avg-change
-           l/active l/active-last-7-avg
-           (:doc (meta #'l/active-last-7-avg-change)))
+           l/active-change-last-7-avg
+           l/active l/active-last-8th
+           (:doc (meta #'l/active-change-last-7-avg)))
    #_(str
       "\n"
       " - " (link "Home page"

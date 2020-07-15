@@ -237,13 +237,13 @@
   #_(println "last-day" "prm" prm)
   (eval-fun (assoc prm :fun get-last)))
 
-(defn last-7-reports
+(defn last-8-reports
   "E.g.:
-  (last-7-reports {:pred (pred-fn sk)})
-  (last-7-reports {:pred (fn [_] true)})"
+  (last-8-reports {:pred (pred-fn sk)})
+  (last-8-reports {:pred (fn [_] true)})"
   [prm]
   #_(println "last-day" "prm" prm)
-  (eval-fun (assoc prm :fun (fn [coll] (take-last 7 coll)))))
+  (eval-fun (assoc prm :fun (fn [coll] (take-last 8 coll)))))
 
 (defn pred-fn [country-code]
   (fn [loc]
