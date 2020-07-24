@@ -1,6 +1,6 @@
 (ns corona.web
   (:require
-   [clj-time-ext.core :as te]
+   [corona.time #_clj-time-ext.core :as te]
    [clj-time.core :as t]
    [clojure.data.json :as json]
    [clojure.java.io :as io]
@@ -137,13 +137,18 @@
                (str (ZoneId/systemDefault))
                (.getID (TimeZone/getDefault)))
           (println (str "[" (te/tnow) " " co/bot-ver "]")
-                   "TimeZone:" (str (t/default-time-zone)))
+                   (let [zone-id "Europe/Berlin"]
+                     (format "TimeZone: %s; current time: %s (%s in %s)"
+                             (str (t/default-time-zone))
+                             (te/tnow)
+                             (te/tnow zone-id)
+                             zone-id)))
           (println (str "[" (te/tnow) " " co/bot-ver "]")
                    (format (str "t/default-time-zone %s; "
                                 "ZoneId/systemDefault: %s; "
                                 "TimeZone/getDefault: %s\n")
                            (t/default-time-zone)
-                           (ZoneId/systemDefault )
+                           (ZoneId/systemDefault)
                            (.getID (TimeZone/getDefault)))))
         (pmap (fn [fn-name] (fn-name))
               [telegram/-main
