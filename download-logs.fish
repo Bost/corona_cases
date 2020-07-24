@@ -48,7 +48,7 @@ set ptHeader (printf "'X-Papertrail-Token: %s'" $ptToken)
 
 for hourAgo in (seq 0 0)
     # It takes approximately 6-7 hours for logs to be available in the archive.
-    # https://help.papertrailapp.com/kb/how-it-works/permanent-log-archives/#download-a-single-archive-using-date
+    # https://help.papertrailapp.com/kb/how-it-works/permanent-log-archives
     set hourAgoDelayed (expr $hourAgo + 7)
     set sDate (printf "%s hours ago" $hourAgoDelayed)
     set dateAgo (date -u --date=$sDate +%Y-%m-%d-%H)
@@ -56,7 +56,15 @@ for hourAgo in (seq 0 0)
     set cmd \
         curl --silent --no-include --output $outFile --location --header $ptHeader \
              https://papertrailapp.com/api/v1/archives/$dateAgo/download
-    echo $outFile
     # echo $cmd
+    echo $outFile
     eval $cmd
 end
+
+# Search in logs:
+# rg --search-zip SEARCH_TERM ./log/
+# gzip -cd ./log/* | grep SEARCH_TERM
+# gzip --to-stdout --decompress ./log/* | grep SEARCH_TERM
+
+# heroku logs --num 1500 --app $APP # last 1500 lines
+# heroku logs --tail --app $APP

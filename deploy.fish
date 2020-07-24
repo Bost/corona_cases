@@ -72,7 +72,7 @@ end
 set botVerSHA (git rev-parse --short master)
 set botVerNr (grep --max-count=1 --only-matching '\([0-9]\+\.\)\+[0-9]\+' project.clj)
 
-# heroku logs --tail --app $APP blocks the execution
+# `heroku logs --tail --app $APP` blocks the execution
 heroku addons:open papertrail --app $APP; and \
 heroku ps:scale web=0 --app $APP; and \
 git push $restArgs $REMOTE master; and \

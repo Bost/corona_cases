@@ -38,11 +38,16 @@ printf "DBG: REMOTE: %s\n" $REMOTE
 printf "DBG: restArgs: %s\n" (string join -- " " $restArgs)
 printf "\n"
 
-set cmd heroku ps:scale web=0 --app $APP
+# See https://devcenter.heroku.com/articles/dynos#automatic-dyno-restarts
+set cmd heroku ps:restart --app $APP
 echo $cmd
 eval $cmd
 
-set cmd heroku ps:scale web=1 --app $APP
-echo $cmd
-eval $cmd
+# set cmd heroku ps:scale web=0 --app $APP
+# echo $cmd
+# eval $cmd
+
+# set cmd heroku ps:scale web=1 --app $APP
+# echo $cmd
+# eval $cmd
 
