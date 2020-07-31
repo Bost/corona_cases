@@ -1,3 +1,5 @@
+;; See https://elements.heroku.com/buildpacks/heroku/heroku-buildpack-clojure
+
 (defproject corona_cases
   ;; see:
   ;; https://github.com/roomkey/lein-v
@@ -64,4 +66,8 @@
 
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"
-  :profiles {:production {:env {:production true}}})
+  :profiles
+  {
+   ;; TODO test :uberjar {:aot :all}
+   :production {:env {:production true}}
+   })
