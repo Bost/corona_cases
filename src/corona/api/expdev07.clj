@@ -96,7 +96,11 @@
                                                (get cr/population))
                                           ;; world population is the sum
                                           ;; 7792480951
-                                          0)]
+                                          (let [default-population 0]
+                                            (printf "ERROR No population defined for country-code: %s; using %s\n"
+                                                    country-code
+                                                    default-population)
+                                            default-population))]
                        (zipmap dates (repeat population)))}))))}}))
 
 (def data-with-pop-memo (memo/ttl data-with-pop {} :ttl/threshold (* co/time-to-live 60 1000)))

@@ -27,7 +27,7 @@
     #_"SK"]
    (map (fn [country-code]
            ;; convert to 3 letter code
-           (as-> (cr/country-code-3-letter country-code) $
+           (as-> (cc/country-code-3-letter country-code) $
              (format "https://corona.ndo.dev/api/timespan?country=%s&time=year" $)
              (co/get-json $)
              (:timeseries $)

@@ -5,7 +5,7 @@
    [clojure.core.memoize :as memo]
    [corona.common :as co]
    [corona.country-codes :refer :all]
-   [utils.core :refer [] :exclude [id]]
+   [utils.core :refer [in?] :exclude [id]]
    ))
 
 ;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true

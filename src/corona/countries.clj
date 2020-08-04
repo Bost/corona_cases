@@ -248,6 +248,8 @@
 
     cg "Congo-Brazzaville"
     cd "Congo-Kinshasa"
+
+    vn "Vietnam"
     }))
 
 (defn- lower-case-keyword
@@ -287,7 +289,7 @@
   (if (in?
        [va tw do ir ru ps ae kr mk ba cd bo md bn ve vc kp tz xk la sy kn tt ag
         cf cz st pg gq qq fm pm sj tc vi hm sx mf sh fk cc bq mp vg io um tf gs
-        cd cg]
+        cd cg vn]
        country-code)
     (country-alias country-code)
     (country-name country-code)))
