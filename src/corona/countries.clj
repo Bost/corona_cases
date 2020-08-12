@@ -93,7 +93,7 @@
 
    "US"                               us ; "United States"
 
-   "Macau"                            mo
+   "Macau"                            mo ; Macao
    "Macao SAR"                        mo ; "Macao"
 
    "Vietnam"                          vn ; "Viet Nam"
@@ -296,7 +296,26 @@
 
 (def population
   "The v2 api service doesn't contain precise numbers.
-  TODO calculate population using tables/data"
+  TODO use country codes
+  TODO calculate population using tables/data
+  TODO Countries not listed
+  sx - St Maarten, Dutch
+  zz - Worldwide
+  tf - Fr Southern Terri
+  mf - St Martin, French
+  sj - Svalbard J. Mayen
+  ci - Côte d'Ivoire
+  vg - Brit Virgin Islan
+  qq - Rest
+  um - US Min Outlying I
+  bq - Bona St Eust Saba
+  bv - Bouvet Island
+  gs - S Georgia Sandwic
+  aq - Antarctica
+  st - St Tome Principe
+  io - Br Indian Ocean T
+  hm - Heard McDonald Is
+  "
   {
    "China" 1401754280 ;; 1439323776
    "India" 1359772087
@@ -417,7 +436,7 @@
    "Slovakia" 5456362
    "Norway" 5367580
    "Costa Rica" 5058007
-   "occupied Palestinian territory" 4976684
+   "Palestine" 4976684
    "New Zealand" 4970195
    "Ireland" 4921500
    "Oman" 4664790
@@ -443,13 +462,13 @@
    "Botswana" 2338851
    "Gabon" 2172579
    "Slovenia" 2094060
-   "North Macedonia" 2077132
+   "Macedonia" 2077132
    "Lesotho" 2007201
    "Latvia" 1906800
    "Kosovo" 1795666
    "Guinea-Bissau" 1604528
    "Bahrain" 1543300
-   "East Timor" 1387149
+   "Timor-Leste" 1387149
    "Trinidad and Tobago" 1363985
    "Equatorial Guinea" 1358276
    "Estonia" 1328360
@@ -462,7 +481,7 @@
    "Guyana" 782766
    "Bhutan" 741672
    "Solomon Islands" 680806
-   "Macau" 679600
+   "Macao" 679600
    "Montenegro" 622359
    "Luxembourg" 613894
    "Western Sahara" 582463
@@ -492,8 +511,8 @@
    "Grenada" 112003
    "Saint Vincent and the Grenadines" 110608
    "Jersey" 106800
-   "U.S. Virgin Islands" 104578
-   "F.S. Micronesia" 104468
+   "Virgin Islands US" 104578
+   "Micronesia" 104468
    "Tonga" 100651
    "Seychelles" 97625
    "Antigua and Barbuda" 96453
@@ -527,16 +546,16 @@
    "Tuvalu" 10200
    "Saint Barthélemy" 9793
    "Saint Pierre and Miquelon" 6008
-   "Saint Helena Ascension and Tristan da Cunha" 5633
+   "St He Ascen Cunha" 5633 ;; "Saint Helena Ascension and Tristan da Cunha"
    "Montserrat" 4989
-   "Falkland Islands" 3198
+   "Falklands/Malvina" 3198
    "Christmas Island" 1928
    "Norfolk Island" 1756
    "Niue" 1520
    "Tokelau" 1400
-   "Vatican City" 799
+   "Vatican" 799
    "Cocos (Keeling) Islands" 538
-   "Pitcairn Islands" 50
+   "Pitcairn" 50
    "Martinique" 376480
    "French Guiana" 	290691
    "Mayotte" 279471
@@ -545,7 +564,7 @@
    "Congo-Kinshasa"    89561404 ;; cd
 
    "Cote d'Ivoire" 23740424
-   "Reunion" 859959
+   "Réunion" 859959
    "Guadeloupe" 395700
    "The Bahamas" 385637
    })

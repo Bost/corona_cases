@@ -124,7 +124,8 @@
   "Countries with the number of cases less than the threshold are grouped into
   \"Rest\". See also `threshold-increase`."
   [case-kw]
-  (case-kw (zipmap all-pcrdi-cases [(int 1e7) (int 255e3) (int 191e3) 11500 (int 102e3)])))
+  (case-kw (zipmap all-pcrdi-cases
+                   [(int 1e7) (int 335e3) (int 263e3) (int 19e3) (int 129e3)])))
 
 (defn threshold-increase
   "Case-dependent threshold recalculation increase. See also `min-threshold`."

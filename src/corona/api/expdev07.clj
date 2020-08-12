@@ -70,6 +70,21 @@
    conj []
    (raw-dates-unsorted)))
 
+(defn population-cnt [country-code]
+  (or (->> country-code
+           (cr/country-code--country)
+           (get cr/population))
+      (->> country-code
+           (cr/country-name-aliased)
+           (get cr/population))
+      ;; world population is the sum
+      ;; 7792480951
+      (let [default-population 0]
+        (printf "ERROR No population defined for country-code: %s; using %s\n"
+                country-code
+                default-population)
+        default-population)))
+
 (defn data-with-pop
   "Data with population numbers"
   []
@@ -88,20 +103,8 @@
                      ;; {:1/23/20 1e6 ;; start number
                      ;;    ;; other days - calc diff
                      ;; }
-                     (let [population (or (->> country-code
-                                               (cr/country-code--country)
-                                               (get cr/population))
-                                          (->> country-code
-                                               (cr/country-name-aliased)
-                                               (get cr/population))
-                                          ;; world population is the sum
-                                          ;; 7792480951
-                                          (let [default-population 0]
-                                            (printf "ERROR No population defined for country-code: %s; using %s\n"
-                                                    country-code
-                                                    default-population)
-                                            default-population))]
-                       (zipmap dates (repeat population)))}))))}}))
+                     (let [pop-cnt (population-cnt country-code)]
+                       (zipmap dates (repeat pop-cnt)))}))))}}))
 
 (def data-with-pop-memo (memo/ttl data-with-pop {} :ttl/threshold (* co/time-to-live 60 1000)))
 

@@ -216,7 +216,7 @@
     (if (> (count (group-by :cc res)) max-plot-lines)
       (let [raised-threshold (+ threshold-increase threshold)]
         (printf (str "INFO Case %s; %s countries above threshold. "
-                     "Raising threshold to %s and recalculating...\n")
+                     "Raise to %s\n")
                 case
                 (count (group-by :cc res))
                 raised-threshold)
