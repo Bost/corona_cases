@@ -172,8 +172,7 @@
                locations)))
 
 (defn sums-for-case
-  "Return sums for a given `case` calculated for every single day
-  E.g.
+  "Return sums for a given `case` calculated for every single day. E.g.
   (sums-for-case {:case :confirmed :pred (pred-fn sk)})
   "
   [{:keys [case pred]}]
@@ -187,16 +186,16 @@
 
 (defn get-counts
   "Returns a hash-map containing case-counts day-by-day. E.g.:
-  {
-   :p (                              ...) #_TODO
-   :c (48288 49684 50931 51614 52383 ...)
-   :r (    0     0     0     0     0 ...)
-   :d ( 4814  4854  4874  4874  4891 ...)
-   :i [43474 44830 46057 46740 47492 ...]}
-
-  Invocation e.g.:
-  (get-counts {:pred (fn [_] true)})
   (get-counts {:pred (pred-fn sk)})
+  ;; => ;; last 5 values
+  {
+   :p (... 5456362 5456362 5456362 5456362 5456362)
+   :c (...    2566    2596    2599    2615    2690)
+   :r (...    1861    1864    1866    1874    1884)
+   :d (...      31      31      31      31      31)
+   :i (...     674     701     702     710     775)}
+
+  (get-counts {:pred (fn [_] true)})
   "
   [prm]
   (let [pcrd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
