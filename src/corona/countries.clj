@@ -304,7 +304,6 @@
   tf - Fr Southern Terri
   mf - St Martin, French
   sj - Svalbard J. Mayen
-  ci - Côte d'Ivoire
   vg - Brit Virgin Islan
   qq - Rest
   um - US Min Outlying I
@@ -312,11 +311,11 @@
   bv - Bouvet Island
   gs - S Georgia Sandwic
   aq - Antarctica
-  st - St Tome Principe
-  io - Br Indian Ocean T
   hm - Heard McDonald Is
   "
   {
+   "Br Indian Ocean T" 3000
+   "St Tome Principe" 219663
    "China" 1401754280 ;; 1439323776
    "India" 1359772087
    "United States" 329448153
@@ -563,7 +562,8 @@
    "Congo-Brazzaville"  5244359 ;; cg
    "Congo-Kinshasa"    89561404 ;; cd
 
-   "Cote d'Ivoire" 23740424
+   "Côte d'Ivoire" 26459797
+
    "Réunion" 859959
    "Guadeloupe" 395700
    "The Bahamas" 385637

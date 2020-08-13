@@ -5,7 +5,7 @@
    [corona.common :as co]
    [corona.countries :as cr]
    [corona.country-codes :as cc :refer :all]
-   [utils.core :refer [] :exclude [id]]
+   [utils.core :refer [dbgv dbgi] :exclude [id]]
    )
   (:import java.text.SimpleDateFormat))
 
@@ -80,7 +80,7 @@
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]
-        (printf "ERROR No population defined for country-code: %s; using %s\n"
+        (printf "ERROR population undefined; country-code: %s; using %s\n"
                 country-code
                 default-population)
         default-population)))
@@ -106,7 +106,8 @@
                      (let [pop-cnt (population-cnt country-code)]
                        (zipmap dates (repeat pop-cnt)))}))))}}))
 
-(def data-with-pop-memo (memo/ttl data-with-pop {} :ttl/threshold (* co/time-to-live 60 1000)))
+(def data-with-pop-memo
+  (memo/ttl data-with-pop {} :ttl/threshold (* co/time-to-live 60 1000)))
 
 (defn all-affected-country-codes
   "Countries with some confirmed, deaths or recovered cases"
@@ -153,7 +154,8 @@
      (map (fn [rd] (.parse sdf (keyname rd)))
           (limit-fn (raw-dates))))))
 
-(def dates-memo (memo/ttl dates {} :ttl/threshold (* co/time-to-live 60 1000)))
+(def dates-memo
+  (memo/ttl dates {} :ttl/threshold (* co/time-to-live 60 1000)))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -200,10 +202,15 @@
   [prm]
   (let [pcrd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
                    [:population :confirmed :recovered :deaths])]
-    (zipmap co/all-pcrdi-cases
-            (conj pcrd (apply mapv co/calculate-active pcrd)))))
+    (zipmap co/all-cases
+            (conj pcrd
+                  (apply mapv co/calculate-active pcrd)
+                  (apply mapv co/calculate-active-per-100k    pcrd)
+                  (apply mapv co/calculate-recovered-per-100k pcrd)
+                  (apply mapv co/calculate-deaths-per-100k    pcrd)))))
 
 (def get-counts-memo
+  #_get-counts
   (memo/ttl get-counts {} :ttl/threshold (* co/time-to-live 60 1000)))
 
 (defn population [prm] (:p (get-counts-memo prm)))
@@ -211,6 +218,9 @@
 (defn deaths    [prm]  (:d (get-counts-memo prm)))
 (defn recovered [prm]  (:r (get-counts-memo prm)))
 (defn active    [prm]  (:i (get-counts-memo prm)))
+(defn active-per-100k    [prm] (:i100k (get-counts-memo prm)))
+(defn recovered-per-100k [prm] (:r100k (get-counts-memo prm)))
+(defn deaths-per-100k    [prm] (:d100k (get-counts-memo prm)))
 
 (defn eval-fun
   "E.g.:
@@ -232,7 +242,7 @@
        (apply (fn [prv lst]
                 (map (fn [k]
                        {k (- (k lst) (k prv))})
-                     co/all-pcrdi-cases)))
+                     co/all-cases)))
        (reduce into {})))
 
 (defn last-day

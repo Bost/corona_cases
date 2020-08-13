@@ -26,7 +26,21 @@
 
 (def active         "Active")
 (def active-cases   "Active cases")
-(def active-per-1e5 "Act/100k")
+(def hundred-k      "100k")
+
+(def cmd-active-per-1e5    (str "a" hundred-k))
+(def cmd-recovered-per-1e5 (str "r" hundred-k))
+(def cmd-deaths-per-1e5    (str "d" hundred-k))
+
+(def active-per-1e5
+  "Active cases per 100 000"
+  (str "Act" hundred-k))
+(def recovered-per-1e5
+  "Recovered cases per 100 000"
+  (str "Rec" hundred-k))
+(def deaths-per-1e5
+  "Deaths per 100 000"
+  (str "Dea" hundred-k))
 
 (def closed        "Closed")
 (def closed-cases  "Closed cases")
@@ -40,6 +54,7 @@
 (def stats         "Stats")
 
 (def list-desc     "List of countries")
+(def listings      "lists")
 
 ;; TODO
 ;; https://en.wikipedia.org/wiki/Moving_average#Moving_median
@@ -67,20 +82,22 @@
 (def millions-rounded "Mill")
 
 (defn list-sorted-by [case-kw]
-  (->> [conf recov deaths active]
+  (->> [conf recov deaths active
+        cmd-active-per-1e5 cmd-recovered-per-1e5 cmd-deaths-per-1e5]
        (map s/lower-case)
-       (zipmap com/all-crdi-cases)
+       (zipmap com/basic-cases)
        case-kw))
 
 (defn list-sorted-by-desc [case-kw]
   (format "Countries sorted by nr. of %s" ;; "... in ascending order"
-          (->> [confirmed-cases recovered-cases deaths active-cases]
+          (->> [confirmed-cases recovered-cases deaths
+                active-cases active-per-1e5]
                (map s/lower-case)
-               (zipmap com/all-crdi-cases)
+               (zipmap com/basic-cases)
                case-kw)))
 
 (def buttons "Shortened button names"
-  (zipmap com/all-crdi-cases ["Co" "Re" "De" "Ac"]))
+  (zipmap com/absolute-cases ["Co" "Re" "De" "Ac"]))
 
 (def type "Buttons for plot-types" {:sum "Σ" :abs "A"})
 

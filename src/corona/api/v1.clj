@@ -6,7 +6,7 @@
    [corona.common :as co]
    [corona.countries :as cr]
    [corona.country-codes :refer :all]
-   [utils.core :refer [] :exclude [id]]
+   [utils.core :refer [in?] :exclude [id]]
    [corona.tables :as t]
    [corona.api.expdev07 :as srvc]
    [net.cgrand.xforms :as x]
@@ -150,8 +150,9 @@
                 prm
                 #_(dissoc prm :c)
                 ;; TODO watch out for arity of calculate-active
-                :i (co/calculate-active prm))))
-         (map xf-for-case [
-                           :population
-                           :confirmed :recovered :deaths
-                           ])))
+                :i (co/calculate-active prm)
+                :i100k (co/calculate-active-per-100k    prm)
+                :r100k (co/calculate-recovered-per-100k prm)
+                :d100k (co/calculate-deaths-per-100k    prm)
+                )))
+         (map xf-for-case [:population :confirmed :recovered :deaths])))

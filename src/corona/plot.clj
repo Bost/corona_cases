@@ -293,7 +293,7 @@
                      (fmt-last-date stats)
                      co/bot-name
                      (->> [l/confirmed l/recovered l/deaths l/active-cases ]
-                          (zipmap co/all-crdi-cases)
+                          (zipmap co/basic-cases)
                           case)
                      #_(case {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
                      threshold)

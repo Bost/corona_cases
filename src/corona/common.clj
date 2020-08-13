@@ -9,6 +9,9 @@
    [clojure.java.io :as io]
    [clojure.string :as s]
    [environ.core :as en]
+   [utils.num :as un]
+   [utils.core :refer [in?] :exclude [id]]
+   [corona.country-codes :refer :all]
    ))
 
 (def project-name "corona_cases") ;; see project.clj: defproject
@@ -33,6 +36,33 @@
 (defn calculate-active
   ([{:keys [cc f p c r d] :as prm}] (calculate-active p c r d))
   ([_ c r d] (- c (+ r d))))
+
+(defn per-1e5
+  "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
+  ([place total-count] (per-1e5 :normal place total-count))
+  ([mode place total-count]
+   (un/round mode (/ (* place 1e5) total-count))))
+
+(defn calculate-active-per-100k
+  ([{:keys [cc f p c r d] :as prm}] (calculate-active-per-100k p c r d))
+  ([p c r d]
+   (if (zero? p)
+     0
+     (per-1e5 (calculate-active p c r d) p))))
+
+(defn calculate-recovered-per-100k
+  ([{:keys [cc f p c r d] :as prm}] (calculate-recovered-per-100k p c r d))
+  ([p c r d]
+   (if (zero? p)
+     0
+     (per-1e5 r p))))
+
+(defn calculate-deaths-per-100k
+  ([{:keys [cc f p c r d] :as prm}] (calculate-deaths-per-100k p c r d))
+  ([p c r d]
+   (if (zero? p)
+     0
+     (per-1e5 d p))))
 
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]
@@ -110,10 +140,11 @@
       s)
     s))
 
-(def all-crdi-cases [:c :r :d :i])
-(def all-pcrdi-cases (into [:p] all-crdi-cases))
+(def absolute-cases [:c :r :d :i])
+(def basic-cases (into absolute-cases [:i100k :r100k :d100k]))
+(def all-cases (into [:p] basic-cases))
 
-(def listing-ird-cases [:i :r :d])
+(def listing-cases [:i :r :d :i100k :r100k :d100k])
 
 (defn fmt-date [date]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
@@ -124,13 +155,13 @@
   "Countries with the number of cases less than the threshold are grouped into
   \"Rest\". See also `threshold-increase`."
   [case-kw]
-  (case-kw (zipmap all-pcrdi-cases
+  (case-kw (zipmap all-cases
                    [(int 1e7) (int 335e3) (int 263e3) (int 19e3) (int 129e3)])))
 
 (defn threshold-increase
   "Case-dependent threshold recalculation increase. See also `min-threshold`."
   [case-kw]
-  (case-kw (zipmap all-pcrdi-cases [(int 1e6) 5000 2500 500 1000])))
+  (case-kw (zipmap all-cases [(int 1e6) 5000 2500 500 1000])))
 
 (def sorry-ws
   (str

@@ -53,6 +53,23 @@
                                   (select-keys prm (keys msg/options))))))
          doall)))
 
+(defn list-per-100k [{:keys [chat-id sort-by-case] :as prm}]
+  (let [sub-msgs (->> (data/stats-all-affected-countries prm)
+                      ;; create and execute sorting function
+                      ((fn [coll] (sort-by sort-by-case < coll)))
+                      (partition-in-sub-msgs))
+        cnt-msgs (count sub-msgs)]
+    (->> sub-msgs
+         #_(take 3)
+         #_(take-last 1)
+         (map-indexed
+          (fn [idx sub-msg]
+            (->> (assoc prm :data sub-msg :msg-idx (inc idx) :cnt-msgs cnt-msgs)
+                 (msg/list-per-100k-memo)
+                 (morse/send-text co/token chat-id
+                                  (select-keys prm (keys msg/options))))))
+         doall)))
+
 (defn about [{:keys [chat-id] :as prm}]
   (morse/send-text co/token chat-id msg/options (msg/about prm)))
 
@@ -142,17 +159,20 @@
 (defn cmds-listing []
   "Command map for list-sort-by-case. See also `footer`, `list-countries`.
   TODO do not support the old command for certain transition period."
-  (->> co/listing-ird-cases
+  (->> co/listing-cases
        (map (fn [case-kw]
               (let [prm (conj {:pred (fn [_] true)} msg/options)
                     prm-country-code {:country-code (cr/country-code cc/worldwide)}]
                 {:name (l/list-sorted-by case-kw)
-                 :f (fn [chat-id] (list-countries
-                                  (conj (assoc prm
-                                               :parse_mode "HTML"
-                                               :chat-id chat-id
-                                               :sort-by-case case-kw)
-                                        prm-country-code)))
+                 :f (fn [chat-id]
+                      (let [list-fn (if (in? [:i100k :r100k :d100k] case-kw)
+                                      list-per-100k
+                                      list-countries)]
+                        (list-fn (conj (assoc prm
+                                              :parse_mode "HTML"
+                                              :chat-id chat-id
+                                              :sort-by-case case-kw)
+                                       prm-country-code))))
                  :desc (l/list-sorted-by-desc case-kw)})))))
 
 (defn cmds

@@ -6,7 +6,7 @@
   ;; "Example of Clojure source code version output"
   ;; and:
   ;; https://github.com/arrdem/lein-git-version
-  "2.0.4"
+  "2.0.5"
 
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"
@@ -42,7 +42,7 @@
    [clojure.java-time       "0.3.2"]
    [net.cgrand/xforms       "0.19.2"]
    [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
-   [org.clojars.bost/utils  "0.0.0-37-0xc96a"]
+   [org.clojars.bost/utils  "0.0.0-41-0xf2a3"]
 
    ;; https://github.com/generateme/cljplot
    [org.clojars.bost/cljplot "0.0.2"]

@@ -12,7 +12,8 @@
    [corona.lang :as l]
    [corona.plot :as p]
    [morse.api :as morse]
-   [utils.core :refer [in?] :exclude [id]]
+   [utils.core :refer [in? dbgv dbgi] :exclude [id]]
+   [utils.num :as un]
    [incanter.stats :as istats]
    [incanter.zoo :as izoo]
    )
@@ -27,44 +28,7 @@
 
 (defn pred-fn [country-code] (data/pred-fn country-code))
 
-(defmacro static-fn [f] `(fn [x#] (~f x#)))
-
-(defn round
-  "TODO consider using :pre / :hooks. See `wrap-fn-pre-post-hooks`"
-  ([x] (round :normal x))
-  ([mode x]
-   (let [f (case mode
-             :high    (static-fn Math/ceil)
-             :low     (static-fn Math/floor)
-             :normal  (static-fn Math/round)
-             (throw (Exception.
-                     "ERROR: round [:high|:low|:normal] <VALUE>")))]
-     (long (f x)))))
-
-(defn percentage
-  "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
-  ([place total-count] (percentage :normal place total-count))
-  ([mode place total-count]
-   (round mode (/ (* place 100.0) total-count))))
-
-(defn per-1e5
-  "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
-  ([place total-count] (per-1e5 :normal place total-count))
-  ([mode place total-count]
-   (round mode (/ (* place 1e5) total-count))))
-
-;; TODO ask about unicode whitespace char
-;; Unicode whitespace ;;;;;​ ;;;;;
-;; Normal whitespace  ;;;;; ;;;;;
-
-(defn round-precision [value precision]
-  (let [multiplier (Math/pow 10.0 precision)]
-    (/ (Math/round (* value multiplier)) multiplier)))
-
-(defn round-nr [value] (int (round-precision value 0)))
-
-(defn round-div-precision [dividend divisor precision]
-  (round-precision (/ (float dividend) divisor) precision))
+(defn round-nr [value] (int (un/round-precision value 0)))
 
 (def max-diff-order-of-magnitude 7)
 
@@ -105,7 +69,7 @@
           ;; count of digits to display. Increase it when the number of cases
           ;; increases by an order of magnitude
           (co/left-pad (if show-n n "") " " 8)
-          (co/left-pad (if calc-rate (str (percentage n total) "%") " ")
+          (co/left-pad (if calc-rate (str (un/percentage n total) "%") " ")
                       " " 4)
           (if calc-diff
             (plus-minus diff)
@@ -133,15 +97,15 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `list-countries`, `bot-father-edit-cmds`."
   [{:keys [parse_mode]}]
-  (let [spacer "   "]
+  (let [spacer "  "]
     (str
      ;; "Try" spacer
      (->> [l/world l/explain]
           (map co/encode-cmd)
           (map (fn [cmd] (co/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer))
-     spacer "listings:  "
-     (->> (map l/list-sorted-by co/listing-ird-cases)
+     spacer l/listings ":  "
+     (->> (mapv l/list-sorted-by co/listing-cases)
           (map co/encode-cmd)
           (s/join spacer)))))
 
@@ -165,7 +129,7 @@
                         :callback_data (pr-str (assoc prm
                                                       :case case-kw
                                                       :type type))})
-                     co/all-crdi-cases))
+                     co/absolute-cases))
              [:sum :abs]))]})})
 
 (defn worldwide? [country-code]
@@ -222,12 +186,12 @@
   (let [spacer " "
         sort-indicator "▴" ;; " " "▲"
         omag-active    7 ;; order of magnitude i.e. number of digits
-        omag-recov  omag-active
+        omag-recov  (inc omag-active)
         omag-deaths (dec omag-active)]
     (format
      (format (str "%s\n" ; header
                   "%s\n" ; Day\Report
-                  "         %s "  ; Active
+                  "    %s "  ; Active
                   "%s"   ; spacer
                   "%s "  ; Recovered
                   "%s"   ; spacer
@@ -271,6 +235,65 @@
   #_list-countries
   (memo/ttl list-countries {} :ttl/threshold (* 60 60 1000)))
 
+(defn list-per-100k
+  "Listing commands in the message footer correspond to the columns in the listing.
+  See also `footer`, `bot-father-edit-cmds`."
+  [{:keys [data msg-idx cnt-msgs sort-by-case] :as prm}]
+  (let [spacer " "
+        sort-indicator "▴" ;; " " "▲"
+        ;; omag - order of magnitude i.e. number of digits
+        omag-active-per-100k    4
+        omag-recovered-per-100k omag-active-per-100k
+        omag-deaths-per-100k    (dec omag-active-per-100k)
+        ]
+    (format
+     (format (str "%s\n" ; header
+                  "%s\n" ; Day\Report
+                  "%s "  ; Act100k
+                  "%s"   ; spacer
+                  "%s "  ; Rec100k
+                  "%s"   ; spacer
+                  "%s"   ; Dea100k
+                  "\n"
+                  "%s")
+             (header prm)
+             (format "%s %s;  %s/%s" l/day (count (data/raw-dates)) msg-idx cnt-msgs)
+             (str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))
+             spacer
+             (str l/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))
+             spacer
+             (str l/deaths-per-1e5    (if (= :d100k sort-by-case) sort-indicator " "))
+             (str
+              "%s"   ; listing table
+              "%s"   ; sorted-by description; has its own new-line
+              "\n\n"
+              "%s"   ; footer
+              ))
+     (s/join
+      "\n"
+      (map (fn [stats]
+             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
+                     (co/left-pad (:i100k stats) " " omag-active-per-100k)
+                     spacer
+                     (co/left-pad (:r100k stats) " " omag-recovered-per-100k)
+                     spacer
+                     (co/left-pad (:d100k stats) " " omag-deaths-per-100k)
+                     (co/right-pad (:cn stats) 17)
+                     (s/lower-case (co/encode-cmd (:cc stats)))))
+           (->> data
+                #_(take-last 11)
+                #_(partition-all 2)
+                #_(map (fn [part] (s/join "       " part))))))
+     ""
+     #_(if (= msg-idx cnt-msgs)
+       (str "\n\n" (l/list-sorted-by-desc sort-by-case))
+       "")
+     (footer prm))))
+
+(def list-per-100k-memo
+  list-per-100k
+  #_(memo/ttl list-per-100k {} :ttl/threshold (* 60 60 1000)))
+
 (defn diff-coll-vals
   "Differences between values. E.g.:
   (diff-coll-valls [1 3 6 10 9 9 10])
@@ -309,7 +332,7 @@
    (let [last-day (data/last-day prm)
          delta (data/delta prm)
          {confirmed :c population :p} last-day
-         population-rounded (round-div-precision population 1e6 1)
+         population-rounded (un/round-div-precision population 1e6 1)
          {dc :c} delta]
      (str
       (str
@@ -325,7 +348,13 @@
                     :calc-rate false :desc ""})
       "\n"
       (when (pos? confirmed)
-        (let [{deaths :d recovered :r active :i} last-day
+        (let [{deaths             :d
+               recovered          :r
+               active             :i
+               active-per-100k    :i100k
+               recovered-per-100k :r100k
+               deaths-per-100k    :d100k
+               } last-day
               {last-8-reports :i} (data/last-8-reports prm)
               [last-8th-report & last-7-reports] last-8-reports
               [last-7th-report & _] last-7-reports
@@ -352,14 +381,16 @@
                 "%s\n" ; l/active-last-7-avg
                 "%s\n" ; l/active-change-last-7-avg
                 "%s\n" ; l/recovered
+                "%s\n" ; l/recovered-per-1e5
                 "%s\n" ; l/deaths
+                "%s\n" ; l/deaths-per-1e5
                 "%s\n" ; l/closed
                 )
            (fmt-to-cols
             {:s l/active :n active :total confirmed :diff di :calc-rate true})
            ;; TODO add effective reproduction number (R)
            (fmt-to-cols
-            {:s l/active-per-1e5 :n (per-1e5 active population)
+            {:s l/active-per-1e5 :n active-per-100k
              :total population :diff "" :calc-rate false :show-n true
              :calc-diff false})
            (fmt-to-cols
@@ -393,7 +424,15 @@
             {:s l/recovered :n recovered :total confirmed :diff dr
              :calc-rate true})
            (fmt-to-cols
+            {:s l/recovered-per-1e5 :n recovered-per-100k
+             :total population :diff "" :calc-rate false :show-n true
+             :calc-diff false})
+           (fmt-to-cols
             {:s l/deaths :n deaths :total confirmed :diff dd :calc-rate true})
+           (fmt-to-cols
+            {:s l/deaths-per-1e5 :n deaths-per-100k
+             :total population :diff "" :calc-rate false :show-n true
+             :calc-diff false})
            (fmt-to-cols
             {:s l/closed :n closed :total confirmed :diff dclosed
              :calc-rate true}))))))
@@ -487,6 +526,12 @@
                       :else "http://localhost:5050"))
                   prm))
    ;; (abbreviated) content of the former reference message
+   (format (str "- %s, %s, %s:\n"
+                "  %s\n")
+           l/active-per-1e5
+           l/recovered-per-1e5
+           l/deaths-per-1e5
+           "Cases per 100 000 people")
    "\n"
    (format "%s %s\n"
            "- Robert Koch-Institut "
