@@ -8,7 +8,6 @@
 (def world         "world")
 (def world-desc    "Start here")
 (def start         "start")
-(def about         "about")
 (def explain       "explain")
 (def contributors  "contributors")
 (def feedback      "feedback")
@@ -54,7 +53,6 @@
 (def stats         "Stats")
 
 (def list-desc     "List of countries")
-(def listings      "lists")
 
 ;; TODO
 ;; https://en.wikipedia.org/wiki/Moving_average#Moving_median
@@ -91,7 +89,11 @@
 (defn list-sorted-by-desc [case-kw]
   (format "Countries sorted by nr. of %s" ;; "... in ascending order"
           (->> [confirmed-cases recovered-cases deaths
-                active-cases active-per-1e5]
+                active-cases
+                active-per-1e5
+                recovered-per-1e5
+                deaths-per-1e5
+                ]
                (map s/lower-case)
                (zipmap com/basic-cases)
                case-kw)))

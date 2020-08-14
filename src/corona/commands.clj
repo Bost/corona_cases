@@ -148,10 +148,6 @@
      {:name l/explain
       :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
       :desc "Explain abbreviations & some additional info"}
-     ;; TODO deprecate the l/about command
-     {:name l/about
-      :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
-      :desc "Bot version & some additional info"}
      {:name l/feedback
       :f (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}]))

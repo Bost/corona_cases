@@ -97,14 +97,14 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `list-countries`, `bot-father-edit-cmds`."
   [{:keys [parse_mode]}]
-  (let [spacer "  "]
+  (let [spacer "   "]
     (str
      ;; "Try" spacer
      (->> [l/world l/explain]
           (map co/encode-cmd)
           (map (fn [cmd] (co/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer))
-     spacer l/listings ":  "
+     spacer
      (->> (mapv l/list-sorted-by co/listing-cases)
           (map co/encode-cmd)
           (s/join spacer)))))
@@ -459,7 +459,7 @@
                          (format-last-day prm)
                          co/bot-name
                          (cr/country-name-aliased country-code)
-                         (co/encode-cmd l/about))
+                         (co/encode-cmd l/explain))
           :render-style :area
           :legend {:position :inside-nw}
           ;; :x-axis {:title "Date"}
