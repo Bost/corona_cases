@@ -153,15 +153,14 @@
       :desc "Talk to the bot-creator"}]))
 
 (defn cmds-listing []
-  "Command map for list-sort-by-case. See also `footer`, `list-countries`.
-  TODO do not support the old command for certain transition period."
+  "Command map for list-sort-by-case. See also `footer`, `list-countries`."
   (->> co/listing-cases
        (map (fn [case-kw]
               (let [prm (conj {:pred (fn [_] true)} msg/options)
                     prm-country-code {:country-code (cr/country-code cc/worldwide)}]
                 {:name (l/list-sorted-by case-kw)
                  :f (fn [chat-id]
-                      (let [list-fn (if (in? [:i100k :r100k :d100k] case-kw)
+                      (let [list-fn (if (in? listing-cases-per-100k case-kw)
                                       list-per-100k
                                       list-countries)]
                         (list-fn (conj (assoc prm

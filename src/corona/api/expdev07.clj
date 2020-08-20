@@ -221,6 +221,7 @@
 (defn active-per-100k    [prm] (:i100k (get-counts-memo prm)))
 (defn recovered-per-100k [prm] (:r100k (get-counts-memo prm)))
 (defn deaths-per-100k    [prm] (:d100k (get-counts-memo prm)))
+(defn closed-per-100k    [prm] (:c100k (get-counts-memo prm)))
 
 (defn eval-fun
   "E.g.:

@@ -141,10 +141,15 @@
     s))
 
 (def absolute-cases [:c :r :d :i])
-(def basic-cases (into absolute-cases [:i100k :r100k :d100k]))
+(def basic-cases (into absolute-cases [:i100k :r100k :d100k :c100k]))
 (def all-cases (into [:p] basic-cases))
 
-(def listing-cases [:i :r :d :i100k :r100k :d100k])
+(def listing-cases-per-100k
+  "No listing of :c100k - Closed cases per 100k"
+  [:i100k :r100k :d100k])
+
+(def listing-cases
+  (into [:i :r :d] listing-cases-per-100k))
 
 (defn fmt-date [date]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")

@@ -40,6 +40,9 @@
 (def deaths-per-1e5
   "Deaths per 100 000"
   (str "Dea" hundred-k))
+(def closed-per-1e5
+  "Closed per 100 000"
+  (str "Clo" hundred-k))
 
 (def closed        "Closed")
 (def closed-cases  "Closed cases")

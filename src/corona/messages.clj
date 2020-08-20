@@ -354,6 +354,7 @@
                active-per-100k    :i100k
                recovered-per-100k :r100k
                deaths-per-100k    :d100k
+               closed-per-100k    :c100k
                } last-day
               {last-8-reports :i} (data/last-8-reports prm)
               [last-8th-report & last-7-reports] last-8-reports
@@ -385,6 +386,8 @@
                 "%s\n" ; l/deaths
                 "%s\n" ; l/deaths-per-1e5
                 "%s\n" ; l/closed
+                "%s\n" ; l/closed-per-1e5
+                "%s\n" ; last-7-days-data
                 )
            (fmt-to-cols
             {:s l/active :n active :total confirmed :diff di :calc-rate true})
@@ -435,7 +438,13 @@
              :calc-diff false})
            (fmt-to-cols
             {:s l/closed :n closed :total confirmed :diff dclosed
-             :calc-rate true}))))))
+             :calc-rate true})
+           (fmt-to-cols
+            {:s l/closed-per-1e5 :n closed-per-100k
+             :total population :diff "" :calc-rate false :show-n true
+             :calc-diff false})
+           "TODO last-7-days-data"
+           )))))
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
