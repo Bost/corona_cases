@@ -30,6 +30,7 @@
 (def cmd-active-per-1e5    (str "a" hundred-k))
 (def cmd-recovered-per-1e5 (str "r" hundred-k))
 (def cmd-deaths-per-1e5    (str "d" hundred-k))
+(def cmd-closed-per-1e5    (str "c" hundred-k))
 
 (def active-per-1e5
   "Active cases per 100 000"
@@ -56,6 +57,7 @@
 (def stats         "Stats")
 
 (def list-desc     "List of countries")
+(def listings      "lists")
 
 ;; TODO
 ;; https://en.wikipedia.org/wiki/Moving_average#Moving_median

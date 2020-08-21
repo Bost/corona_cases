@@ -61,10 +61,11 @@
 
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
-  [{:keys [s n total diff desc calc-rate show-n calc-diff]
+  [{:keys [s n total diff calc-rate show-n calc-diff
+           s1 n1 cmd1]
     :or {show-n true calc-diff true
-         desc ""}}]
-  (format "<code>%s %s %s %s</code> %s"
+         s1 "" n1 "" cmd1 ""}}]
+  (format "<code>%s %s %s %s  %s %s </code> %s"
           (co/right-pad s " " 9) ; stays constant
           ;; count of digits to display. Increase it when the number of cases
           ;; increases by an order of magnitude
@@ -74,7 +75,9 @@
           (if calc-diff
             (plus-minus diff)
             (co/left-pad "" " " max-diff-order-of-magnitude))
-          desc))
+          s1
+          (co/left-pad n1 " " 4)
+          cmd1))
 
 (def ref-mortality-rate
   "https://www.worldometers.info/coronavirus/coronavirus-death-rate/")
@@ -104,7 +107,7 @@
           (map co/encode-cmd)
           (map (fn [cmd] (co/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer))
-     spacer
+     spacer l/listings ":  "
      (->> (mapv l/list-sorted-by co/listing-cases)
           (map co/encode-cmd)
           (s/join spacer)))))
@@ -344,8 +347,7 @@
          :calc-diff false
          :desc (format "= %s %s" population-rounded l/millions-rounded)})
        "\n")
-      (fmt-to-cols {:s l/confirmed :n confirmed :diff dc
-                    :calc-rate false :desc ""})
+      (fmt-to-cols {:s l/confirmed :n confirmed :diff dc :calc-rate false})
       "\n"
       (when (pos? confirmed)
         (let [{deaths             :d
@@ -377,25 +379,20 @@
 
           (format
            (str "%s\n" ; l/active
-                "%s\n" ; l/active-per-1e5
                 "%s\n" ; l/active-last-7-med
                 "%s\n" ; l/active-last-7-avg
                 "%s\n" ; l/active-change-last-7-avg
                 "%s\n" ; l/recovered
-                "%s\n" ; l/recovered-per-1e5
                 "%s\n" ; l/deaths
-                "%s\n" ; l/deaths-per-1e5
                 "%s\n" ; l/closed
-                "%s\n" ; l/closed-per-1e5
-                "%s\n" ; last-7-days-data
+                #_"%s\n" ; last-7-days-data
                 )
            (fmt-to-cols
-            {:s l/active :n active :total confirmed :diff di :calc-rate true})
+            {:s l/active :n active :total confirmed :diff di :calc-rate true
+             :s1 l/active-per-1e5
+             :n1 active-per-100k
+             :cmd1 (co/encode-cmd l/cmd-active-per-1e5)})
            ;; TODO add effective reproduction number (R)
-           (fmt-to-cols
-            {:s l/active-per-1e5 :n active-per-100k
-             :total population :diff "" :calc-rate false :show-n true
-             :calc-diff false})
            (fmt-to-cols
             {:s l/active-last-7-med
              :n (->> last-7-reports (izoo/roll-median 7) first int)
@@ -425,25 +422,23 @@
              :calc-diff false})
            (fmt-to-cols
             {:s l/recovered :n recovered :total confirmed :diff dr
-             :calc-rate true})
+             :calc-rate true
+             :s1 l/recovered-per-1e5
+             :n1 recovered-per-100k
+             :cmd1 (co/encode-cmd l/cmd-recovered-per-1e5)})
            (fmt-to-cols
-            {:s l/recovered-per-1e5 :n recovered-per-100k
-             :total population :diff "" :calc-rate false :show-n true
-             :calc-diff false})
-           (fmt-to-cols
-            {:s l/deaths :n deaths :total confirmed :diff dd :calc-rate true})
-           (fmt-to-cols
-            {:s l/deaths-per-1e5 :n deaths-per-100k
-             :total population :diff "" :calc-rate false :show-n true
-             :calc-diff false})
+            {:s l/deaths :n deaths :total confirmed :diff dd :calc-rate true
+             :s1 l/deaths-per-1e5
+             :n1 deaths-per-100k
+             :cmd1 (co/encode-cmd l/cmd-deaths-per-1e5)})
            (fmt-to-cols
             {:s l/closed :n closed :total confirmed :diff dclosed
-             :calc-rate true})
-           (fmt-to-cols
-            {:s l/closed-per-1e5 :n closed-per-100k
-             :total population :diff "" :calc-rate false :show-n true
-             :calc-diff false})
-           "TODO last-7-days-data"
+             :calc-rate true
+             :s1 l/closed-per-1e5
+             :n1 closed-per-100k
+             ;; TODO :cmd1 (co/encode-cmd l/cmd-closed-per-1e5)
+             })
+           #_"TODO show last-7-days-data"
            )))))
    (footer prm)))
 
@@ -497,7 +492,7 @@
            "approved their inclusion to this list yet. 🙏 Thanks folks.")
           (footer prm)))
 
-(defn about [{:keys [parse_mode] :as prm}]
+(defn explain [{:keys [parse_mode] :as prm}]
   (str
    ;; escape underscores for the markdown parsing
    (bot-name-formatted)
@@ -535,11 +530,12 @@
                       :else "http://localhost:5050"))
                   prm))
    ;; (abbreviated) content of the former reference message
-   (format (str "- %s, %s, %s:\n"
+   (format (str "- %s, %s, %s, %s:\n"
                 "  %s\n")
            l/active-per-1e5
            l/recovered-per-1e5
            l/deaths-per-1e5
+           l/closed-per-1e5
            "Cases per 100 000 people")
    "\n"
    (format "%s %s\n"

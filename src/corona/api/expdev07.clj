@@ -207,7 +207,8 @@
                   (apply mapv co/calculate-active pcrd)
                   (apply mapv co/calculate-active-per-100k    pcrd)
                   (apply mapv co/calculate-recovered-per-100k pcrd)
-                  (apply mapv co/calculate-deaths-per-100k    pcrd)))))
+                  (apply mapv co/calculate-deaths-per-100k    pcrd)
+                  (apply mapv co/calculate-closed-per-100k    pcrd)))))
 
 (def get-counts-memo
   #_get-counts

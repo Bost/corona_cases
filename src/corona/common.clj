@@ -64,6 +64,13 @@
      0
      (per-1e5 d p))))
 
+(defn calculate-closed-per-100k
+  ([{:keys [cc f p c r d] :as prm}] (calculate-closed-per-100k p c r d))
+  ([p c r d]
+   (if (zero? p)
+     0
+     (per-1e5 c p))))
+
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]
     (if (or (= suffix "Fq8") (= suffix "MR8"))
@@ -134,6 +141,7 @@
 (defn encode-pseudo-cmd
   "For displaying e.g. /<command-name>"
   [s parse_mode]
+  {:pre (in? ["HTML" "Markdown"] parse_mode)}
   (if (= parse_mode "HTML")
     (let [s (s/replace s "<" "&lt;")
           s (s/replace s ">" "&gt;")]
@@ -149,7 +157,8 @@
   [:i100k :r100k :d100k])
 
 (def listing-cases
-  (into [:i :r :d] listing-cases-per-100k))
+  (into [:i :r :d]
+        #_listing-cases-per-100k))
 
 (defn fmt-date [date]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
@@ -168,13 +177,9 @@
   [case-kw]
   (case-kw (zipmap all-cases [(int 1e6) 5000 2500 500 1000])))
 
-(def sorry-ws
-  (str
-   "Just found out: quite many countries are located on more than one "
-   "continent. The hash map continent-code -> country-codes was buggy. "
-   "This service won't be supported anymore. At least not in the near future. "
-   "Apologies for serving you misleading information previously."
-   ""))
+(def desc-ws
+  "A placeholder"
+  "")
 
 ;; TODO evaluate web services
 ;; https://sheets.googleapis.com/v4/spreadsheets/1jxkZpw2XjQzG04VTwChsqRnWn4-FsHH6a7UHVxvO95c/values/Dati?majorDimension=ROWS&key=AIzaSyAy6NFBLKa42yB9KMkFNucI4NLyXxlJ6jQ

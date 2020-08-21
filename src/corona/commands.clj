@@ -70,17 +70,11 @@
                                   (select-keys prm (keys msg/options))))))
          doall)))
 
-(defn about [{:keys [chat-id] :as prm}]
-  (morse/send-text co/token chat-id msg/options (msg/about prm)))
+(defn explain [{:keys [chat-id] :as prm}]
+  (morse/send-text co/token chat-id msg/options (msg/explain prm)))
 
 (defn feedback [{:keys [chat-id] :as prm}]
   (morse/send-text co/token chat-id msg/options (msg/feedback prm)))
-
-(defn references
-  "No standalone message. Show the about message instead and deprecate this
-  function after some deprecation time."
-  [{:keys [chat-id] :as prm}]
-  (morse/send-text co/token chat-id msg/options (msg/about prm)))
 
 ;; (defn language [{:keys [chat-id] :as prm}]
 ;;   (morse/send-text co/token chat-id msg/options (msg/language prm)))
@@ -146,7 +140,7 @@
                                    prm-country-code)))
       :desc l/world-desc}
      {:name l/explain
-      :f (fn [chat-id] (about (assoc prm :chat-id chat-id)))
+      :f (fn [chat-id] (explain (assoc prm :chat-id chat-id)))
       :desc "Explain abbreviations & some additional info"}
      {:name l/feedback
       :f (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
@@ -160,7 +154,7 @@
                     prm-country-code {:country-code (cr/country-code cc/worldwide)}]
                 {:name (l/list-sorted-by case-kw)
                  :f (fn [chat-id]
-                      (let [list-fn (if (in? listing-cases-per-100k case-kw)
+                      (let [list-fn (if (in? co/listing-cases-per-100k case-kw)
                                       list-per-100k
                                       list-countries)]
                         (list-fn (conj (assoc prm
