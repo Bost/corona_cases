@@ -20,7 +20,7 @@
    [org.clojure/data.csv    "1.0.0"]
 
    ;; Ring routing lib; dispatching of GET, PUT, etc.
-   [compojure               "1.6.1"]
+   [compojure               "1.6.2"]
 
    ;; Ring Jetty adapter
    [ring/ring-jetty-adapter "1.8.1"]
@@ -33,7 +33,7 @@
 
    ;; for the get-json function. Not having it cheshire as a dependency results
    ;; in: `namespace 'cheshire.factory' not found`
-   [clj-http                "3.10.1"]
+   [clj-http                "3.10.2"]
 
    ;; Clojure interface for Telegram Bot API
    [org.clojars.bost/morse  "0.0.0-157-0x8c5c"]
