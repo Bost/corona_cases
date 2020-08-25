@@ -50,6 +50,20 @@
      0
      (per-1e5 (calculate-active p c r d) p))))
 
+(defn fn-calculate-cases-per-100k [case-kw]
+  #_(println fn-calculate-cases-per-100k case-kw)
+  (fn calculate-cases-per-100k
+    ([{:keys [cc f p c r d] :as prm}] (calculate-cases-per-100k p c r d))
+    ([p c r d]
+     (if (zero? p)
+       0
+       (per-1e5
+        (case case-kw
+          :r r
+          :d d
+          :c c)
+        p)))))
+
 (defn calculate-recovered-per-100k
   ([{:keys [cc f p c r d] :as prm}] (calculate-recovered-per-100k p c r d))
   ([p c r d]

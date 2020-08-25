@@ -206,9 +206,14 @@
             (conj pcrd
                   (apply mapv co/calculate-active pcrd)
                   (apply mapv co/calculate-active-per-100k    pcrd)
-                  (apply mapv co/calculate-recovered-per-100k pcrd)
-                  (apply mapv co/calculate-deaths-per-100k    pcrd)
-                  (apply mapv co/calculate-closed-per-100k    pcrd)))))
+                  ;; TODO DRY - eliminate this:
+                  #_(apply mapv co/calculate-recovered-per-100k pcrd)
+                  #_(apply mapv co/calculate-deaths-per-100k    pcrd)
+                  #_(apply mapv co/calculate-closed-per-100k    pcrd)
+                  (apply mapv (co/fn-calculate-cases-per-100k :r) pcrd)
+                  (apply mapv (co/fn-calculate-cases-per-100k :d) pcrd)
+                  (apply mapv (co/fn-calculate-cases-per-100k :c) pcrd)
+                  ))))
 
 (def get-counts-memo
   #_get-counts
