@@ -156,7 +156,7 @@
   "No listing of :c100k - Closed cases per 100k"
   [:i100k :r100k :d100k])
 
-(def listing-cases
+(def listing-cases-absolute
   (into [:i :r :d]
         #_listing-cases-per-100k))
 

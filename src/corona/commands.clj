@@ -148,7 +148,8 @@
 
 (defn cmds-listing []
   "Command map for list-sort-by-case. See also `footer`, `list-countries`."
-  (->> co/listing-cases
+  (->> co/listing-cases-absolute
+       (into co/listing-cases-per-100k)
        (map (fn [case-kw]
               (let [prm (conj {:pred (fn [_] true)} msg/options)
                     prm-country-code {:country-code (cr/country-code cc/worldwide)}]

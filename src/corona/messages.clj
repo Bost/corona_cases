@@ -108,7 +108,7 @@
           (map (fn [cmd] (co/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer))
      spacer l/listings ":  "
-     (->> (mapv l/list-sorted-by co/listing-cases)
+     (->> (mapv l/list-sorted-by co/listing-cases-absolute)
           (map co/encode-cmd)
           (s/join spacer)))))
 

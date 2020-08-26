@@ -6,7 +6,7 @@
   ;; "Example of Clojure source code version output"
   ;; and:
   ;; https://github.com/arrdem/lein-git-version
-  "2.0.6"
+  "2.0.7"
 
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"
