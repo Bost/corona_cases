@@ -127,7 +127,7 @@
         (s/join (repeat (- padding-len (count s)) with)))))
 
 (defn get-json [url]
-  ;; TODO use monad for logging
+  ;; TODO use monad (Kleisli Category) for logging
   (let [tbeg (te/tnow)]
     (println (str "[" tbeg "           " " " bot-ver " /" "get-json " url "]"))
     (let [r (as-> url $

@@ -364,19 +364,6 @@
               closed (+ deaths recovered)
               {dd :d dr :r di :i} delta
               dclosed (+ dd dr)]
-          ;; (println "last-8-reports                    :" last-8-reports)
-          ;; (println "last-7-reports                    :" last-7-reports)
-          ;; (println "last-7th-report                   :" last-7th-report)
-          ;; (println "last-8th-report                   :" last-8th-report)
-          ;; (println "active                            :" active)
-          ;; (println "roll-median 7                  :" (->> last-7-reports (izoo/roll-median 7) first int))
-          ;; (println "(mean last-7-reports)          :" (->> last-7-reports istats/mean round-nr))
-          ;; (println "(/ (- active last-8th-report) 7.0):" (/ (- active last-8th-report) 7.0))
-          ;; (println "(mean diff-coll-vals 7 ...)       :" (-> last-7-reports diff-coll-vals istats/mean round-nr))
-          ;; (println "(mean diff-coll-vals 8 ...)       :" (-> last-8-reports diff-coll-vals istats/mean round-nr))
-          ;; (println "(diff-coll-vals last-7-reports)   :" (diff-coll-vals last-7-reports))
-          ;; (println "(diff-coll-vals last-8-reports)   :" (diff-coll-vals last-8-reports))
-
           (format
            (str "%s\n" ; l/active
                 "%s\n" ; l/active-last-7-med

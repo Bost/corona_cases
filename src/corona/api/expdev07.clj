@@ -252,7 +252,6 @@
   (last-day {:pred (pred-fn sk)})
   (last-day {:pred (fn [_] true)})"
   [prm]
-  #_(println "last-day" "prm" prm)
   (eval-fun (assoc prm :fun get-last)))
 
 (defn last-8-reports
@@ -260,7 +259,6 @@
   (last-8-reports {:pred (pred-fn sk)})
   (last-8-reports {:pred (fn [_] true)})"
   [prm]
-  #_(println "last-day" "prm" prm)
   (eval-fun (assoc prm :fun (fn [coll] (take-last 8 coll)))))
 
 (defn pred-fn [country-code]

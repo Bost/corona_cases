@@ -14,7 +14,6 @@
    ))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
-  (println "world" "msg/worldwide?" (msg/worldwide? country-code))
   (let [prm (assoc prm :parse_mode "HTML")]
     (morse/send-text co/token chat-id (select-keys prm (keys msg/options))
                      (msg/info (assoc prm :disable_web_page_preview true)))
