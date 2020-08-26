@@ -45,6 +45,10 @@
   "Closed per 100 000"
   (str "Clo" hundred-k))
 
+(def active-max
+  "Peak of active cases from all reports"
+  "ActMax")
+
 (def closed        "Closed")
 (def closed-cases  "Closed cases")
 
@@ -59,20 +63,26 @@
 (def list-desc     "List of countries")
 (def listings      "lists")
 
-;; TODO
+(def reached-today "reached today")
+(def reached-on-date "reached on %s")
+
 ;; https://en.wikipedia.org/wiki/Moving_average#Moving_median
 ;; simple moving median SMM
 
 ;; https://en.wikipedia.org/wiki/Moving_average#Simple_moving_average
 ;; simple moving average SMA
 
+(def active-last-7
+  "Active cases in last 7 reports"
+  "ActL7")
+
 (def active-last-7-med
   "Active cases in last 7 reports - simple moving Median rounded"
-  "ActL7Med")
+  (str active-last-7 "Med"))
 
 (def active-last-7-avg
   "Active cases in last 7 reports - simple moving Average rounded"
-  "ActL7Avg")
+  (str active-last-7 "Avg"))
 
 (def active-last-8th
   "Active cases of the last 8th report"

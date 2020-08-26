@@ -47,16 +47,28 @@
       n))
    " " max-diff-order-of-magnitude))
 
+(def padding-s
+  "Stays constant" 9)
+(def padding-n
+  "Count of digits to display. Increase it when the number of cases. Increases by
+  an order of magnitude" 8)
+
 (defn fmt-to-cols-narrower
   "Info-message numbers of aligned to columns for better readability"
   [{:keys [s n total diff desc calc-rate show-n calc-diff]
     :or {show-n true calc-diff true
          desc ""}}]
   (format "<code>%s %s</code> %s"
-          (co/right-pad s " " 7) ; stays constant
-          ;; count of digits to display. Increase it when the number of cases
-          ;; increases by an order of magnitude
-          (co/left-pad (if show-n n "") " " 10)
+          (co/right-pad s " " (- padding-s 2))
+          (co/left-pad (if show-n n "") " " (+ padding-n 2))
+          desc))
+
+(defn fmt-val-to-cols
+  [{:keys [s n show-n desc]
+    :or {show-n true desc ""}}]
+  (format "<code>%s %s</code> %s"
+          (co/right-pad s " " padding-s)
+          (co/left-pad (if show-n n "") " " padding-n)
           desc))
 
 (defn fmt-to-cols
@@ -66,10 +78,8 @@
     :or {show-n true calc-diff true
          s1 "" n1 "" cmd1 ""}}]
   (format "<code>%s %s %s %s  %s %s </code> %s"
-          (co/right-pad s " " 9) ; stays constant
-          ;; count of digits to display. Increase it when the number of cases
-          ;; increases by an order of magnitude
-          (co/left-pad (if show-n n "") " " 8)
+          (co/right-pad s " " padding-s)
+          (co/left-pad (if show-n n "") " " padding-n)
           (co/left-pad (if calc-rate (str (un/percentage n total) "%") " ")
                       " " 4)
           (if calc-diff
@@ -164,7 +174,8 @@
 ;;    "en"
 ;;    (footer prm)))
 
-(defn format-last-day [prm] (co/fmt-date (:f (data/last-day prm))))
+(defn last-day-val [prm] (:f (data/last-day prm)))
+(defn format-last-day [prm] (co/fmt-date (last-day-val prm)))
 
 (defn header [{:keys [parse_mode] :as prm}]
   (format
@@ -308,9 +319,9 @@
       (recur tail (conj result (- (first tail) head)))
       result)))
 
-#_[226 255 270 271 266 297 346 361]
 (defn info
-  "Shows the table with the absolute and %-wise number of cases"
+  "Shows the table with the absolute and %-wise number of cases, cases per-100k etc.
+  TODO show: Country does not report recovered cases"
   [{:keys [country-code] :as prm}]
   (format
    (str
@@ -332,7 +343,10 @@
                  (cc/country-code-3-letter country-code)])))
    (str l/day " " (count (data/raw-dates)))
 
-   (let [last-day (data/last-day prm)
+   (let [max-active-val (apply max (data/active prm))
+         max-active-idx (.lastIndexOf (data/active prm) max-active-val)
+         max-active-date (nth (data/dates) max-active-idx)
+         last-day (data/last-day prm)
          delta (data/delta prm)
          {confirmed :c population :p} last-day
          population-rounded (un/round-div-precision population 1e6 1)
@@ -366,19 +380,30 @@
               dclosed (+ dd dr)]
           (format
            (str "%s\n" ; l/active
+                "%s\n" ; l/active-max
                 "%s\n" ; l/active-last-7-med
                 "%s\n" ; l/active-last-7-avg
                 "%s\n" ; l/active-change-last-7-avg
                 "%s\n" ; l/recovered
                 "%s\n" ; l/deaths
                 "%s\n" ; l/closed
-                #_"%s\n" ; last-7-days-data
+                "\n"   ; visual separation for the l/active-last-7
+                "%s\n" ; l/active-last-7
                 )
            (fmt-to-cols
             {:s l/active :n active :total confirmed :diff di :calc-rate true
              :s1 l/active-per-1e5
              :n1 active-per-100k
              :cmd1 (co/encode-cmd l/cmd-active-per-1e5)})
+
+           (fmt-val-to-cols
+            {:s l/active-max
+             :n max-active-val
+             :show-n true
+             :desc (if (= max-active-date (last-day-val prm))
+                     l/reached-today
+                     (format l/reached-on-date (co/fmt-date max-active-date)))})
+
            ;; TODO add effective reproduction number (R)
            (fmt-to-cols
             {:s l/active-last-7-med
@@ -425,8 +450,7 @@
              :n1 closed-per-100k
              ;; TODO :cmd1 (co/encode-cmd l/cmd-closed-per-1e5)
              })
-           #_"TODO show last-7-days-data"
-           )))))
+           (format "<code>%s\n%s</code>" l/active-last-7 last-7-reports))))))
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
@@ -494,6 +518,14 @@
            l/recovered
            l/deaths)
    (format "- Percentage calculation: <cases> / %s\n" l/confirmed)
+   (format (str "- %s:\n"
+                "  %s\n")
+           l/active-max
+           (:doc (meta #'l/active-max)))
+   (format (str "- %s:\n"
+                "  %s\n")
+           l/active-last-7
+           (:doc (meta #'l/active-last-7)))
    (format (str "- %s:\n"
                 "  %s\n")
            l/active-last-7-med
