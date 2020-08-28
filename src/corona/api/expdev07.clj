@@ -1,6 +1,5 @@
 (ns corona.api.expdev07
   (:require
-   [clojure.core.memoize :as memo]
    [clojure.set :as cset]
    [corona.common :as co]
    [corona.countries :as cr]
@@ -13,7 +12,7 @@
 
 (defn data [] (co/get-json url))
 
-(def data-memo (memo/ttl data {} :ttl/threshold (* co/time-to-live 60 1000)))
+(def data-memo (co/memo-ttl data))
 
 (defn raw-dates-unsorted []
   #_[(keyword "2/22/20") (keyword "2/2/20")]
@@ -107,7 +106,7 @@
                        (zipmap dates (repeat pop-cnt)))}))))}}))
 
 (def data-with-pop-memo
-  (memo/ttl data-with-pop {} :ttl/threshold (* co/time-to-live 60 1000)))
+  (co/memo-ttl data-with-pop))
 
 (defn all-affected-country-codes
   "Countries with some confirmed, deaths or recovered cases"
@@ -155,7 +154,7 @@
           (limit-fn (raw-dates))))))
 
 (def dates-memo
-  (memo/ttl dates {} :ttl/threshold (* co/time-to-live 60 1000)))
+  (co/memo-ttl dates))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -217,7 +216,7 @@
 
 (def get-counts-memo
   #_get-counts
-  (memo/ttl get-counts {} :ttl/threshold (* co/time-to-live 60 1000)))
+  (co/memo-ttl get-counts))
 
 (defn population [prm] (:p (get-counts-memo prm)))
 (defn confirmed [prm]  (:c (get-counts-memo prm)))

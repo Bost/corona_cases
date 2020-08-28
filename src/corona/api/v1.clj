@@ -2,7 +2,6 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require
-   [clojure.core.memoize :as memo]
    [corona.common :as co]
    [corona.countries :as cr]
    [corona.country-codes :refer :all]

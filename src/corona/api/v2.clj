@@ -2,7 +2,6 @@
   (:require
    [clj-time.coerce :as tc]
    [clj-time.local :as tl]
-   [clojure.core.memoize :as memo]
    [corona.common :as co]
    [corona.country-codes :refer :all]
    [utils.core :refer [in?] :exclude [id]]
@@ -22,7 +21,7 @@
 
 (def data-memo
   #_data
-  (memo/ttl data {} :ttl/threshold (* co/time-to-live 60 1000)))
+  (co/memo-ttl data))
 
 (defn cnt-days []
   #_5

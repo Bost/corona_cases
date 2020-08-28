@@ -7,6 +7,7 @@
    [clj-time.format :as tf]
    [clojure.data.json :as json]
    [clojure.java.io :as io]
+   [clojure.core.memoize :as memo]
    [clojure.string :as s]
    [environ.core :as en]
    [utils.num :as un]
@@ -215,4 +216,8 @@
 (def api-server  (cond (or env-prod? env-test?) heroku-host-api-server
                        :else                    "localhost:8000"))
 
-(def time-to-live "In minutes" 15)
+(defn memo-ttl
+  "In (* <minutes> 60 1000)
+  TODO auto-reload expired cache, don't wait for the next request"
+  [fun]
+  (memo/ttl fun {} :ttl/threshold (* 60 60 1000)))

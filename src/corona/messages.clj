@@ -1,6 +1,5 @@
 (ns corona.messages
   (:require
-   [clojure.core.memoize :as memo]
    [clojure.data.json :as json]
    [clojure.edn :as edn]
    [clojure.string :as s]
@@ -247,7 +246,7 @@
 
 (def list-countries-memo
   #_list-countries
-  (memo/ttl list-countries {} :ttl/threshold (* 60 60 1000)))
+  (co/memo-ttl list-countries))
 
 (defn list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
@@ -305,8 +304,8 @@
      (footer prm))))
 
 (def list-per-100k-memo
-  list-per-100k
-  #_(memo/ttl list-per-100k {} :ttl/threshold (* 60 60 1000)))
+  #_list-per-100k
+  (co/memo-ttl list-per-100k))
 
 (defn diff-coll-vals
   "Differences between values. E.g.:
