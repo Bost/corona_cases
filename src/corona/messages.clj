@@ -12,7 +12,7 @@
    [corona.lang :as l]
    [corona.plot :as p]
    [morse.api :as morse]
-   [utils.core :refer [in? dbgv dbgi] :exclude [id]]
+   [utils.core :as u :refer [in? dbgv dbgi] :exclude [id]]
    [utils.num :as un]
    [incanter.stats :as istats]
    [incanter.zoo :as izoo]
@@ -77,7 +77,7 @@
            s1 n1 cmd1]
     :or {show-n true calc-diff true
          s1 "" n1 "" cmd1 ""}}]
-  (format "<code>%s %s %s %s  %s %s </code> %s"
+  (format "<code>%s %s %s %s  %s %s </code>%s"
           (co/right-pad s " " padding-s)
           (co/left-pad (if show-n n "") " " padding-n)
           (co/left-pad (if calc-rate (str (un/percentage n total) "%") " ")
@@ -452,7 +452,11 @@
              :n1 closed-per-100k
              ;; TODO :cmd1 (co/encode-cmd l/cmd-closed-per-1e5)
              })
-           (format "<code>%s\n%s</code>" l/active-last-7 last-7-reports))))))
+           (format
+            #_"%s\n%s"
+            "<code>%s</code>\n%s"
+            #_"<code>%s\n%s</code>" l/active-last-7
+                   (u/sjoin last-7-reports)))))))
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
