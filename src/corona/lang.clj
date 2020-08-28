@@ -1,6 +1,6 @@
 (ns corona.lang
   (:require
-   [corona.common :as com]
+   [corona.common :as co]
    [clojure.string :as s]))
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
@@ -98,7 +98,7 @@
   (->> [conf recov deaths active
         cmd-active-per-1e5 cmd-recovered-per-1e5 cmd-deaths-per-1e5]
        (map s/lower-case)
-       (zipmap com/basic-cases)
+       (zipmap co/basic-cases)
        case-kw))
 
 (defn list-sorted-by-desc [case-kw]
@@ -110,11 +110,11 @@
                 deaths-per-1e5
                 ]
                (map s/lower-case)
-               (zipmap com/basic-cases)
+               (zipmap co/basic-cases)
                case-kw)))
 
 (def buttons "Shortened button names"
-  (zipmap com/absolute-cases ["Co" "Re" "De" "Ac"]))
+  (zipmap co/absolute-cases ["Co" "Re" "De" "Ac"]))
 
 (def type "Buttons for plot-types" {:sum "Σ" :abs "A"})
 

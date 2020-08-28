@@ -215,7 +215,7 @@
     ;; TODO implement recalculation for decreasing case numbers (e.g. sics)
     (if (> (count (group-by :cc res)) max-plot-lines)
       (let [raised-threshold (+ threshold-increase threshold)]
-        (printf (str "INFO Case %s; %s countries above threshold. "
+        (printf (str "INFO: Case %s; %s countries above threshold. "
                      "Raise to %s\n")
                 case
                 (count (group-by :cc res))

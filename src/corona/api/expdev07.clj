@@ -80,7 +80,7 @@
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]
-        (printf "ERROR population undefined; country-code: %s; using %s\n"
+        (printf "ERROR: population nr unknown; country-code: %s; using %s\n"
                 country-code
                 default-population)
         default-population)))

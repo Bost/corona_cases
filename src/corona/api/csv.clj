@@ -1,4 +1,4 @@
-(ns corona.csv
+(ns corona.api.csv
   (:require
    [clojure.data.csv :as dcsv]
    [clojure.java.io :as io]

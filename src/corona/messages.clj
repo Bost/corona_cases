@@ -50,8 +50,8 @@
 (def padding-s
   "Stays constant" 9)
 (def padding-n
-  "Count of digits to display. Increase it when the number of cases. Increases by
-  an order of magnitude" 8)
+  "Count of digits to display. Increase it when the nr of cases. Increases by an
+  order of magnitude" 8)
 
 (defn fmt-to-cols-narrower
   "Info-message numbers of aligned to columns for better readability"

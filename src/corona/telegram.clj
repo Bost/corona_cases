@@ -76,10 +76,11 @@
           log-fmt "[%s%s%s %s] %s\n"]
       (printf log-fmt tbeg " " "          " co/bot-ver msg)
       (do
-        (let [blank-prms (filter (fn [v] (-> v en/env s/blank?)) [:telegram-token])]
+        (let [blank-prms (filter (fn [v] (-> v en/env s/blank?))
+                                 [:telegram-token])]
           (when (not-empty blank-prms)
             (println (str "[" (te/tnow) " " co/bot-ver "]")
-                     "ERROR" "Undefined environment var(s):" blank-prms)
+                     "ERROR:" "Undefined environment var(s):" blank-prms)
             (System/exit 1)))
         (async/<!! (start-polling co/token (handler))))
       (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done")))))
