@@ -10,6 +10,7 @@
    [environ.core :as en]
    [morse.handlers :as h]
    [morse.polling :as p]
+   [taoensso.timbre :as timbre :refer :all]
    ))
 
 (defn wrap-fn-pre-post-hooks
@@ -36,10 +37,10 @@
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
               (let [chat (-> args first :chat)]
-                (printf log-fmt tbeg " " "          " co/bot-ver name chat)))
+                (info (format log-fmt tbeg " " "          " co/bot-ver name chat))))
        :post (fn [& args]
                (let [[fn-result {:keys [chat]}] args]
-                 (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver name chat)
+                 (info (format log-fmt tbeg ":" (te/tnow)    co/bot-ver name chat))
                  fn-result))}))))
 
 (defn handler
@@ -48,8 +49,8 @@
   An Array of Update-objects is returned."
   []
   (let [cmds (cm/cmds)]
-    (println (str "[" (te/tnow) " " co/bot-ver "]")
-             "Registering" (count cmds) "Telegram Chatbot commands...")
+    (info (str "[" (te/tnow) " " co/bot-ver "]")
+          "Registering" (count cmds) "Telegram Chatbot commands...")
     (->> cmds
          (mapv cmd-handler)
          (into [(h/callback-fn msg/callback-handler-fn)])
@@ -65,8 +66,8 @@
          updates (p/create-producer
                   running token opts (fn []
                                        (when co/env-prod? (System/exit 2))))]
-     (println (str "[" (te/tnow) " " co/bot-ver "]")
-              "Polling on handler" handler "...")
+     (info (str "[" (te/tnow) " " co/bot-ver "]")
+           "Polling on handler" handler "...")
      (p/create-consumer updates handler)
      running)))
 
@@ -74,17 +75,18 @@
   (let [msg (str "Starting " co/env-type " Telegram Chatbot...")]
     (let [tbeg (te/tnow)
           log-fmt "[%s%s%s %s] %s\n"]
-      (printf log-fmt tbeg " " "          " co/bot-ver msg)
+      (info (format log-fmt tbeg " " "          " co/bot-ver msg))
       (do
         (let [blank-prms (filter (fn [v] (-> v en/env s/blank?))
                                  [:telegram-token])]
           (when (not-empty blank-prms)
-            (println (str "[" (te/tnow) " " co/bot-ver "]")
-                     "ERROR:" "Undefined environment var(s):" blank-prms)
+            (error (str "[" (te/tnow) " " co/bot-ver "]")
+                   "Undefined environment var(s):" blank-prms)
             (System/exit 1)))
         (async/<!! (start-polling co/token (handler))))
-      (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done")))))
+      (info (format log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done"))))))
 
+;; TODO use com.stuartsierra.compoment for start / stop
 ;; For interactive development:
 (def test-obj (atom nil))
 (defn start   [] (swap! test-obj (fn [_] (start-polling co/token (handler)))))

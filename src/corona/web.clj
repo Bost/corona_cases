@@ -12,6 +12,7 @@
    [corona.common :as co]
    [corona.telegram :as telegram]
    [ring.adapter.jetty :as jetty]
+   [taoensso.timbre :as timbre :refer :all]
    )
   (:import
    java.time.ZoneId
@@ -29,7 +30,7 @@
 (def ^:const ws-path (format "ws/%s" project-ver))
 
 (defn web-service [{:keys [type] :as prm}]
-  (println "web-service" prm)
+  (info "web-service" prm)
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body
@@ -119,37 +120,37 @@
   (let [msg (str "Starting " co/env-type " webapp...")]
     (let [tbeg (te/tnow)
           log-fmt "[%s%s%s %s] %s\n"]
-      (printf log-fmt tbeg " " "          " co/bot-ver msg)
+      (info (format log-fmt tbeg " " "          " co/bot-ver msg))
       (let [port (Integer. (or port co/port
                                (cond co/env-prod? 5000
                                      ;; keep port-nr in sync with README.md
                                      :else 5050)))]
         (jetty/run-jetty (site #'app) {:port port :join? false}))
-      (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done")))))
+      (info (format log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done"))))))
 
 (defn -main [& [port]]
   (let [msg (str "Starting " co/env-type " -main...")]
     (let [tbeg (te/tnow)
           log-fmt "[%s%s%s %s] %s\n"]
-      (printf log-fmt tbeg " " "          " co/bot-ver msg)
+      (info (format log-fmt tbeg " " "          " co/bot-ver msg))
       (do
         (if (= (str (t/default-time-zone))
                (str (ZoneId/systemDefault))
                (.getID (TimeZone/getDefault)))
-          (println (str "[" (te/tnow) " " co/bot-ver "]")
-                   (let [zone-id "Europe/Berlin"]
-                     (format "TimeZone: %s; current time: %s (%s in %s)"
-                             (str (t/default-time-zone))
-                             (te/tnow)
-                             (te/tnow zone-id)
-                             zone-id)))
-          (println (str "[" (te/tnow) " " co/bot-ver "]")
-                   (format (str "t/default-time-zone %s; "
-                                "ZoneId/systemDefault: %s; "
-                                "TimeZone/getDefault: %s\n")
-                           (t/default-time-zone)
-                           (ZoneId/systemDefault)
-                           (.getID (TimeZone/getDefault)))))
+          (info (str "[" (te/tnow) " " co/bot-ver "]")
+                (let [zone-id "Europe/Berlin"]
+                  (format "TimeZone: %s; current time: %s (%s in %s)"
+                          (str (t/default-time-zone))
+                          (te/tnow)
+                          (te/tnow zone-id)
+                          zone-id)))
+          (info (str "[" (te/tnow) " " co/bot-ver "]")
+                (format (str "t/default-time-zone %s; "
+                             "ZoneId/systemDefault: %s; "
+                             "TimeZone/getDefault: %s\n")
+                        (t/default-time-zone)
+                        (ZoneId/systemDefault)
+                        (.getID (TimeZone/getDefault)))))
         (pmap (fn [fn-name] (fn-name))
               [telegram/-main
                ;; Seems like the webapp must be always started, otherwise I get:
@@ -160,15 +161,15 @@
                ;;     remote:        Procfile declares types -> web
                ;; during the deployment process
                webapp]))
-      (printf log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done")))))
+      (info (format log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done"))))))
 
 ;; For interactive development:
 (def test-obj (atom nil))
 (defn start []
-  (println "@test-obj" @test-obj)
+  (info "@test-obj" @test-obj)
   (swap! test-obj (fn [_] (webapp))))
 (defn stop []
-  (println "Stopping" @test-obj)
+  (info "Stopping" @test-obj)
   (.stop @test-obj))
 (defn restart []
   (when @test-obj (stop))

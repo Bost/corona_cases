@@ -33,7 +33,6 @@
                       pred)))))
 
 (defn sum-up-file [{:keys [sum-up-fn pred file] :as prm}]
-  #_(println "prm" prm)
   (->> (sum-up-file-de prm)
        (transduce
         (comp

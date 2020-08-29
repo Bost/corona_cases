@@ -5,6 +5,7 @@
    [corona.countries :as cr]
    [corona.country-codes :as cc :refer :all]
    [utils.core :refer [dbgv dbgi] :exclude [id]]
+   [taoensso.timbre :as timbre :refer :all]
    )
   (:import java.text.SimpleDateFormat))
 
@@ -79,9 +80,9 @@
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]
-        (printf "ERROR: population nr unknown; country-code: %s; using %s\n"
-                country-code
-                default-population)
+        (error (format "population nr unknown; country-code: %s; using %s\n"
+                       country-code
+                       default-population))
         default-population)))
 
 (defn data-with-pop

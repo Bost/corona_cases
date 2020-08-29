@@ -4,6 +4,7 @@
    [corona.country-codes :refer :all]
    [utils.core :refer [in?] :exclude [id]]
    [clojure.string :as s]
+   [taoensso.timbre :as timbre :refer :all]
    )
   (:import com.neovisionaries.i18n.CountryCode
            com.neovisionaries.i18n.CountryCode$Assignment))
@@ -269,10 +270,10 @@
                                 (cset/map-invert country-alias--country-code-inverted)))]
     (if-let [cc (get lcases-countries country)]
       cc
-      (do (println (format
-                    "No country code found for \"%s\". Using \"%s\""
-                    country-name
-                    default-2-country-code))
+      (do (error (format
+                  "No country code found for \"%s\". Using \"%s\""
+                  country-name
+                  default-2-country-code))
           default-2-country-code))))
 
 (defn country-alias

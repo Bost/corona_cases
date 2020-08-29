@@ -14,6 +14,7 @@
    [corona.country-codes :as cc]
    [corona.lang :as l]
    [utils.core :refer [in?] :exclude [id]]
+   [taoensso.timbre :as timbre :refer :all]
    )
   (:import [java.time LocalDate ZoneId]))
 
@@ -217,11 +218,11 @@
     ;; TODO implement recalculation for decreasing case numbers (e.g. sics)
     (if (> (count (group-by :cc res)) max-plot-lines)
       (let [raised-threshold (+ threshold-increase threshold)]
-        (printf (str "INFO: Case %s; %s countries above threshold. "
-                     "Raise to %s\n")
-                case
-                (count (group-by :cc res))
-                raised-threshold)
+        (info (format (str "Case %s; %s countries above threshold. "
+                           "Raise to %s\n")
+                     case
+                     (count (group-by :cc res))
+                     raised-threshold))
         (group-below-threshold (assoc prm :threshold raised-threshold)))
       {:data res :threshold threshold})))
 

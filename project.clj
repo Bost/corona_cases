@@ -6,7 +6,7 @@
   ;; "Example of Clojure source code version output"
   ;; and:
   ;; https://github.com/arrdem/lein-git-version
-  "2.0.7"
+  "2.0.8"
 
   :description "Telegram Chatbot for tracking coronavirus information"
   :url "http://corona-cases-bot.herokuapp.com"
@@ -62,6 +62,8 @@
    [incanter/incanter-zoo "1.9.3"]   ;; roll-mean
    [incanter/incanter-core "1.9.3"]  ;; mean
 
+   ;; logging
+   [com.taoensso/timbre "4.10.0"]
    ]
 
   :min-lein-version "2.0.0"

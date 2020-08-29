@@ -13,6 +13,7 @@
    [utils.num :as un]
    [utils.core :refer [in?] :exclude [id]]
    [corona.country-codes :refer :all]
+   [taoensso.timbre :as timbre :refer :all]
    ))
 
 (def ^:const project-name "corona_cases") ;; see project.clj: defproject
@@ -52,7 +53,6 @@
      (per-1e5 (calculate-active p c r d) p))))
 
 (defn fn-calculate-cases-per-100k [case-kw]
-  #_(println fn-calculate-cases-per-100k case-kw)
   (fn calculate-cases-per-100k
     ([{:keys [cc f p c r d] :as prm}] (calculate-cases-per-100k p c r d))
     ([p c r d]
@@ -142,14 +142,14 @@
         (s/join (repeat (- padding-len (count s)) with)))))
 
 (defn get-json [url]
-  ;; TODO use monad (Kleisli Category) for logging
+  ;; TODO for logging use monad (Kleisli Category) or taoensso.timber
   (let [tbeg (te/tnow)]
-    (println (str "[" tbeg "           " " " bot-ver " /" "get-json " url "]"))
+    (info (str "[" tbeg "           " " " bot-ver " /" "get-json " url "]"))
     (let [r (as-> url $
               (client/get $ {:accept :json})
               (:body $)
               (json/read-json $))]
-      (println (str "[" tbeg ":" (te/tnow) " " bot-ver " /" "get-json " url "]"))
+      (info (str "[" tbeg ":" (te/tnow) " " bot-ver " /" "get-json " url "]"))
       r)))
 (defn encode-cmd [s] (str "/" s))
 
