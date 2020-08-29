@@ -163,34 +163,67 @@
       s)
     s))
 
-(def ^:const absolute-cases [:c :r :d :i])
-(def ^:const basic-cases (into absolute-cases [:i100k :r100k :d100k :c100k]))
-(def ^:const all-cases (into [:p] basic-cases))
+(def ^:const case-params
+  ":idx - defines an order in appearance
+  :p ~ population
+  :c ~ closed cased
+  :r ~ recovered cased
+  :d ~ deaths
+  :i ~ ill, i.e. active cases"
+  [
+   {:idx 0 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
+   {:idx 1 :kw :c                :threshold {:inc 5000      :val (int 410e3)}}
+   {:idx 2 :kw :r :listing-idx 1 :threshold {:inc 2500      :val (int 319e3)}}
+   {:idx 3 :kw :d :listing-idx 2 :threshold {:inc 500       :val (int 21e3)}}
+   {:idx 4 :kw :i :listing-idx 0 :threshold {:inc 1000      :val (int 169e3)}}
+   {:idx 5 :kw :i100k}
+   {:idx 6 :kw :r100k}
+   {:idx 7 :kw :d100k}
+   {:idx 8 :kw :c100k}])
+
+(def ^:const absolute-cases (->> case-params
+                                 (filter (fn [m] (in? [1 2 3 4] (:idx m))))
+                                 (mapv :kw)))
+
+(def ^:const basic-cases (->> case-params
+                              (filter (fn [m] (in? [1 2 3 4 5 6 7 8] (:idx m))))
+                              (mapv :kw)))
+(def ^:const all-cases (->> case-params
+                            (mapv :kw)))
 
 (def ^:const listing-cases-per-100k
   "No listing of :c100k - Closed cases per 100k"
-  [:i100k :r100k :d100k])
+  (->> case-params
+       (filter (fn [m] (in? [5 6 7] (:idx m))))
+       (mapv :kw)))
 
 (def ^:const listing-cases-absolute
-  (into [:i :r :d]
-        #_listing-cases-per-100k))
+  (->> case-params
+       (filter (fn [m] (in? [0 1 2] (:listing-idx m))))
+       (sort-by :listing-idx)
+       (mapv :kw)))
 
 (defn fmt-date [date]
   (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
                 (t/default-time-zone))
               (tc/from-date date)))
 
+(defn- threshold [case-kw]
+  (->> case-params
+       (filter (fn [m] (= (:kw m) case-kw)))
+       (map :threshold)
+       (first)))
+
 (defn min-threshold
   "Countries with the number of cases less than the threshold are grouped into
-  \"Rest\". See also `threshold-increase`."
+  \"Rest\"."
   [case-kw]
-  (case-kw (zipmap all-cases
-                   [(int 1e7) (int 335e3) (int 263e3) (int 19e3) (int 129e3)])))
+  (->> case-kw threshold :val))
 
 (defn threshold-increase
-  "Case-dependent threshold recalculation increase. See also `min-threshold`."
+  "Case-dependent threshold recalculation increase."
   [case-kw]
-  (case-kw (zipmap all-cases [(int 1e6) 5000 2500 500 1000])))
+  (->> case-kw threshold :inc))
 
 (def ^:const desc-ws
   "A placeholder"
