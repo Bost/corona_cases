@@ -15,7 +15,7 @@
    [corona.country-codes :refer :all]
    ))
 
-(def project-name "corona_cases") ;; see project.clj: defproject
+(def ^:const project-name "corona_cases") ;; see project.clj: defproject
 
 (def token (en/env :telegram-token))
 (def port "Needed only in the corona.web" (en/env :port))
@@ -25,7 +25,7 @@
 (def env-test?  (= env-type "TEST"))
 (def env-devel? (= env-type "DEVEL"))
 
-(def chat-id "112885364")
+(def ^:const chat-id "112885364")
 (def bot-name (str "@"
                    (cond
                      env-prod? project-name
@@ -163,15 +163,15 @@
       s)
     s))
 
-(def absolute-cases [:c :r :d :i])
-(def basic-cases (into absolute-cases [:i100k :r100k :d100k :c100k]))
-(def all-cases (into [:p] basic-cases))
+(def ^:const absolute-cases [:c :r :d :i])
+(def ^:const basic-cases (into absolute-cases [:i100k :r100k :d100k :c100k]))
+(def ^:const all-cases (into [:p] basic-cases))
 
-(def listing-cases-per-100k
+(def ^:const listing-cases-per-100k
   "No listing of :c100k - Closed cases per 100k"
   [:i100k :r100k :d100k])
 
-(def listing-cases-absolute
+(def ^:const listing-cases-absolute
   (into [:i :r :d]
         #_listing-cases-per-100k))
 
@@ -192,7 +192,7 @@
   [case-kw]
   (case-kw (zipmap all-cases [(int 1e6) 5000 2500 500 1000])))
 
-(def desc-ws
+(def ^:const desc-ws
   "A placeholder"
   "")
 
@@ -201,7 +201,7 @@
 
 ;; https://github.com/iceweasel1/COVID-19-Germany
 
-(def api-data-source
+(def ^:const api-data-source
   "jhu"
 
   ;; csbs throws:
@@ -209,12 +209,12 @@
   ;; Wrong number of args (0) passed to: cljplot.common/fast-max
   #_"csbs")
 
-(def heroku-host-api-server
+(def ^:const heroku-host-api-server
   "covid-tracker-us.herokuapp.com"
   #_"coronavirus-tracker-api.herokuapp.com")
 
-(def api-server  (cond (or env-prod? env-test?) heroku-host-api-server
-                       :else                    "localhost:8000"))
+(def ^:const api-server (cond (or env-prod? env-test?) heroku-host-api-server
+                              :else                    "localhost:8000"))
 
 (defn memo-ttl
   "In (* <minutes> 60 1000)

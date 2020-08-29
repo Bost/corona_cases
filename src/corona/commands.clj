@@ -27,7 +27,7 @@
        {:day (count (data/raw-dates-unsorted)) :cc country-code
         :stats (v1/pic-data)})))))
 
-(def cnt-messages-in-listing
+(def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 

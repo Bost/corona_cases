@@ -8,7 +8,7 @@
    )
   (:import java.text.SimpleDateFormat))
 
-(def url (format "http://%s/all" co/api-server))
+(def ^:const url (format "http://%s/all" co/api-server))
 
 (defn data [] (co/get-json url))
 

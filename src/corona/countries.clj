@@ -9,7 +9,7 @@
            com.neovisionaries.i18n.CountryCode$Assignment))
 
 ;; nothing should be default affected!!!
-(def default-affected-country-codes
+(def ^:const default-affected-country-codes
   (->> [country-code-worldwide
         country-code-others]
        (reduce into)
@@ -32,7 +32,7 @@
                       (.getName cc)]))
        (into {})))
 
-(def country-code--country
+(def ^:const country-code--country
   (conj
    (country-code--country-nv-i18n)
     country-code-worldwide
@@ -56,7 +56,7 @@
 ;;                          #_(s/replace "&" "and"))]))
 ;;        (into {})))
 
-(def country--country-code
+(def ^:const country--country-code
   "Mapping: country-names -> 2-letter country codes.
   https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
   (cset/map-invert country-code--country))
@@ -66,7 +66,7 @@
   [cc]
   (get country-code--country cc))
 
-(def country-alias--country-code
+(def ^:const country-alias--country-code
   "Mapping of alternative names, spelling, typos to the names of countries used by
   the ISO 3166-1 norm.
 
@@ -188,7 +188,7 @@
    ;; "Cruise Ship" is mapped to the default val
    })
 
-(def country-alias--country-code-inverted
+(def ^:const country-alias--country-code-inverted
   "See also `country-name-aliased`"
   (conj
    ;; (clojure.set/map-invert country-alias--country-code)
@@ -294,7 +294,7 @@
     (country-alias country-code)
     (country-name country-code)))
 
-(def population
+(def ^:const population
   "The v2 api service doesn't contain precise numbers.
   TODO use country codes
   TODO calculate population using tables/data

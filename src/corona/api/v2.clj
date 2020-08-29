@@ -14,8 +14,8 @@
 ;; Denmark http://localhost:8000/v2/locations/93
 ;; Denmark http://localhost:8000/v2/locations/94
 
-(def url (format "http://%s/v2/locations?source=%s&timelines=true"
-                 co/api-server co/api-data-source))
+(def ^:const url (format "http://%s/v2/locations?source=%s&timelines=true"
+                         co/api-server co/api-data-source))
 
 (defn data [] (co/get-json url))
 
@@ -28,7 +28,7 @@
   ((comp count :timeline :confirmed :timelines first :locations)
    (data-memo)))
 
-(def ccs
+(def ^:const ccs
   #{
     sk de
     ;; cr tg za pe lc ch ru si au kr it fi sc tt my sy mn am dz uy td dj bi mk

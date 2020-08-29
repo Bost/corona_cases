@@ -23,13 +23,13 @@
 (defn bot-name-formatted []
   (s/replace co/bot-name #"_" "\\\\_"))
 
-(def options {:parse_mode "Markdown" :disable_web_page_preview true})
+(def ^:const options {:parse_mode "Markdown" :disable_web_page_preview true})
 
 (defn pred-fn [country-code] (data/pred-fn country-code))
 
 (defn round-nr [value] (int (un/round-precision value 0)))
 
-(def max-diff-order-of-magnitude 7)
+(def ^:const max-diff-order-of-magnitude 7)
 
 (defn plus-minus
   "Display \"+0\" when n is zero"
@@ -46,9 +46,9 @@
       n))
    " " max-diff-order-of-magnitude))
 
-(def padding-s
+(def ^:const padding-s
   "Stays constant" 9)
-(def padding-n
+(def ^:const padding-n
   "Count of digits to display. Increase it when the nr of cases. Increases by an
   order of magnitude" 8)
 
@@ -88,16 +88,16 @@
           (co/left-pad n1 " " 4)
           cmd1))
 
-(def ref-mortality-rate
+(def ^:const ref-mortality-rate
   "https://www.worldometers.info/coronavirus/coronavirus-death-rate/")
 
-(def ref-rober-koch
+(def ^:const ref-rober-koch
   "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/nCoV.html")
 
-(def ref-3blue1brown-exp-growth
+(def ^:const ref-3blue1brown-exp-growth
   "https://youtu.be/Kas0tIxDvrg")
 
-(def ref-age-sex
+(def ^:const ref-age-sex
   "https://www.worldometers.info/coronavirus/coronavirus-age-sex-demographics/")
 
 (defn link [name url {:keys [parse_mode] :as prm}]
@@ -580,7 +580,7 @@
    "\n"
    (footer prm)))
 
-(def bot-description
+(def ^:const bot-description
   "Keep it in sync with README.md"
   "Coronavirus disease 2019 (COVID-19) information on Telegram Messenger")
 

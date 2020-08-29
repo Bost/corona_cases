@@ -5,66 +5,59 @@
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
-(def world         "world")
-(def world-desc    "Start here")
-(def start         "start")
-(def explain       "explain")
-(def contributors  "contributors")
-(def feedback      "feedback")
+(def ^:const world         "world")
+(def ^:const world-desc    "Start here")
+(def ^:const start         "start")
+(def ^:const explain       "explain")
+(def ^:const contributors  "contributors")
+(def ^:const feedback      "feedback")
+(def ^:const conf            "Conf")
+(def ^:const confirmed       "Confirmed")
+(def ^:const confirmed-cases "Confirmed cases")
+(def ^:const deaths         "Deaths")
+(def ^:const death-cases    "Death cases")
+(def ^:const recov           "Recov")
+(def ^:const recovered       "Recovered")
+(def ^:const recovered-cases "Recovered cases")
+(def ^:const active         "Active")
+(def ^:const active-cases   "Active cases")
+(def ^:const hundred-k      "100k")
+(def ^:const cmd-active-per-1e5    (str "a" hundred-k))
+(def ^:const cmd-recovered-per-1e5 (str "r" hundred-k))
+(def ^:const cmd-deaths-per-1e5    (str "d" hundred-k))
+(def ^:const cmd-closed-per-1e5    (str "c" hundred-k))
 
-(def conf            "Conf")
-(def confirmed       "Confirmed")
-(def confirmed-cases "Confirmed cases")
-
-(def deaths         "Deaths")
-(def death-cases    "Death cases")
-
-(def recov           "Recov")
-(def recovered       "Recovered")
-(def recovered-cases "Recovered cases")
-
-(def active         "Active")
-(def active-cases   "Active cases")
-(def hundred-k      "100k")
-
-(def cmd-active-per-1e5    (str "a" hundred-k))
-(def cmd-recovered-per-1e5 (str "r" hundred-k))
-(def cmd-deaths-per-1e5    (str "d" hundred-k))
-(def cmd-closed-per-1e5    (str "c" hundred-k))
-
-(def active-per-1e5
+(def ^:const active-per-1e5
   "Active cases per 100 000"
   (str "Act" hundred-k))
-(def recovered-per-1e5
+(def ^:const recovered-per-1e5
   "Recovered cases per 100 000"
   (str "Rec" hundred-k))
-(def deaths-per-1e5
+(def ^:const deaths-per-1e5
   "Deaths per 100 000"
   (str "Dea" hundred-k))
-(def closed-per-1e5
+(def ^:const closed-per-1e5
   "Closed per 100 000"
   (str "Clo" hundred-k))
 
-(def active-max
+(def ^:const active-max
   "Peak of active cases from all reports"
   "ActMax")
 
-(def closed        "Closed")
-(def closed-cases  "Closed cases")
+(def ^:const closed        "Closed")
+(def ^:const closed-cases  "Closed cases")
 
-(def day
+(def ^:const day
   "Coincidentally there seems to be 1 report per day"
   "Day\\Report")
-(def sick-absolute "Active absolute")
-(def absolute      "absolute")
-(def people        "People") ;; "Population" is too long see `fmt-to-cols`
-(def stats         "Stats")
-
-(def list-desc     "List of countries")
-(def listings      "lists")
-
-(def reached-today "reached today")
-(def reached-on-date "reached on %s")
+(def ^:const sick-absolute "Active absolute")
+(def ^:const absolute      "absolute")
+(def ^:const people        "People") ;; "Population" is too long see `fmt-to-cols`
+(def ^:const stats         "Stats")
+(def ^:const list-desc     "List of countries")
+(def ^:const listings      "lists")
+(def ^:const reached-today "reached today")
+(def ^:const reached-on-date "reached on %s")
 
 ;; https://en.wikipedia.org/wiki/Moving_average#Moving_median
 ;; simple moving median SMM
@@ -72,27 +65,27 @@
 ;; https://en.wikipedia.org/wiki/Moving_average#Simple_moving_average
 ;; simple moving average SMA
 
-(def active-last-7
+(def ^:const active-last-7
   "Active cases in last 7 reports"
   "ActL7")
 
-(def active-last-7-med
+(def ^:const active-last-7-med
   "Active cases in last 7 reports - simple moving Median rounded"
   (str active-last-7 "Med"))
 
-(def active-last-7-avg
+(def ^:const active-last-7-avg
   "Active cases in last 7 reports - simple moving Average rounded"
   (str active-last-7 "Avg"))
 
-(def active-last-8th
+(def ^:const active-last-8th
   "Active cases of the last 8th report"
   "ActL8th")
 
-(def active-change-last-7-avg
+(def ^:const active-change-last-7-avg
   "Active cases Change - simple moving Average of last 7 values"
   "ActCL7Avg")
 
-(def millions-rounded "Mill")
+(def ^:const millions-rounded "Mill")
 
 (defn list-sorted-by [case-kw]
   (->> [conf recov deaths active
@@ -113,12 +106,12 @@
                (zipmap co/basic-cases)
                case-kw)))
 
-(def buttons "Shortened button names"
+(def ^:const buttons "Shortened button names"
   (zipmap co/absolute-cases ["Co" "Re" "De" "Ac"]))
 
-(def type "Buttons for plot-types" {:sum "Σ" :abs "A"})
+(def ^:const type "Buttons for plot-types" {:sum "Σ" :abs "A"})
 
-;; (def language     (:language     lang-strings))
-;; (def cmd-country  (format "<%s>" (:country lang-strings)))
+;; (def ^:const language     (:language     lang-strings))
+;; (def ^:const cmd-country  (format "<%s>" (:country lang-strings)))
 
-;; (def lang-de "lang:de")
+;; (def ^:const lang-de "lang:de")

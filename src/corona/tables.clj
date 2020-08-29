@@ -1,7 +1,7 @@
 (ns corona.tables
   (:require [corona.countries :as cr]))
 
-(def regions
+(def ^:const regions
   "
   Contains \"Americas\" which is not a standard name. Bloody hell!
   https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)#List"
@@ -242,7 +242,7 @@
    ]
   )
 
-(def data
+(def ^:const data
   "
   https://www.worldometers.info/world-population/population-by-country/
   TODO create spec. E.g. Rate is percentage must be between 0 and 100

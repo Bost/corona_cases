@@ -17,16 +17,16 @@
    java.time.ZoneId
    java.util.TimeZone))
 
-(def telegram-hook "telegram")
-(def google-hook "google")
+(def ^:const telegram-hook "telegram")
+(def ^:const google-hook "google")
 
 (defn home-page []
   {:status 200
    :headers {"Content-Type" "text/plain"}
    :body (s/join "\n" ["home page"])})
 
-(def project-ver "See also `co/project-ver`" "dev" #_"1.7.2")
-(def ws-path (format "ws/%s" project-ver))
+(def ^:const project-ver "See also `co/project-ver`" "dev" #_"1.7.2")
+(def ^:const ws-path (format "ws/%s" project-ver))
 
 (defn web-service [{:keys [type] :as prm}]
   (println "web-service" prm)

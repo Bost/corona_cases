@@ -124,7 +124,7 @@
        (reverse)
        (cycle)))
 
-(def line-cfg
+(def ^:const line-cfg
   "By default line-margins are 5%. Setting them to [0 0] may not make up
   for 100% alignment with the axes. There is also some margin in
   canvas, or some other factors as rounding, aligning, java2d rendering
@@ -134,17 +134,19 @@
   ;; {:margins {:y [0 0]}} otherwise look for the min and set the :margins
   {:margins {:y [0 0]}})
 
-(def stroke-population (conj line-cfg {:color :red}))
+(def ^:const stroke-population (conj line-cfg {:color :red}))
 
-(def stroke-confirmed (conj line-cfg {:color
-                                      (last (c/palette-presets :ylgn-6))}))
+(def ^:const stroke-confirmed
+  (conj line-cfg {:color
+                  (last (c/palette-presets :ylgn-6))}))
 
-(def stroke-sick (conj line-cfg {:color :black
-                                 :stroke {:size 1.5
-                                          ;; :dash [20.0] :dash-phase 10
-                                          ;; :dash [5.0 2.0 2.0 2.0]
-                                          ;; :dash [10.0 5.0] :join :miter
-                                          :dash [4.0] :dash-phase 2.0}}))
+(def ^:const stroke-sick
+  (conj line-cfg {:color :black
+                  :stroke {:size 1.5
+                           ;; :dash [20.0] :dash-phase 10
+                           ;; :dash [5.0 2.0 2.0 2.0]
+                           ;; :dash [10.0 5.0] :join :miter
+                           :dash [4.0] :dash-phase 2.0}}))
 
 (defn max-y-val [reducer data]
   (transduce (comp (map (fn [[k v]] v))

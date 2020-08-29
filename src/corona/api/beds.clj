@@ -4,7 +4,7 @@
             [clj-http.client :as client]
             [clojure.string :as string]))
 
-(def url
+(def ^:const url
   "https://en.wikipedia.org/wiki/Template:Hospital_beds_by_country")
 
 (def site (-> (client/get url) :body parse as-hickory))

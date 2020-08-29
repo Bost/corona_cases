@@ -43,7 +43,7 @@
 ;;        (flatten)
 ;;        (sort-by :cc)))
 
-(def ccs
+(def ^:const ccs
   #{
     ;; cr tg za pe lc ch ru si au kr it fi sc tt my sy mn am dz uy td dj bi mk
     ;; mu li gr gy cg ml gm sa bh ne bn xk cd dk bj me bo jo cv ve ci uz tn is
