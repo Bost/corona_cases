@@ -203,17 +203,14 @@
   (let [pcrd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
                    [:population :confirmed :recovered :deaths])]
     (zipmap co/all-cases
-            (conj pcrd
-                  (apply mapv co/calculate-active pcrd)
-                  (apply mapv co/calculate-active-per-100k    pcrd)
-                  ;; TODO DRY - eliminate this:
-                  #_(apply mapv co/calculate-recovered-per-100k pcrd)
-                  #_(apply mapv co/calculate-deaths-per-100k    pcrd)
-                  #_(apply mapv co/calculate-closed-per-100k    pcrd)
-                  (apply mapv (co/fn-calculate-cases-per-100k :r) pcrd)
-                  (apply mapv (co/fn-calculate-cases-per-100k :d) pcrd)
-                  (apply mapv (co/fn-calculate-cases-per-100k :c) pcrd)
-                  ))))
+            (apply
+             conj pcrd
+             (->> [co/calculate-active
+                   (co/fn-calculate-cases-per-100k :i)
+                   (co/fn-calculate-cases-per-100k :r)
+                   (co/fn-calculate-cases-per-100k :d)
+                   (co/fn-calculate-cases-per-100k :c)]
+                  (mapv (fn [f] (apply mapv f pcrd))))))))
 
 (def get-counts-memo
   #_get-counts

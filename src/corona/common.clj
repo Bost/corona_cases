@@ -45,46 +45,18 @@
   ([mode place total-count]
    (un/round mode (/ (* place 1e5) total-count))))
 
-(defn calculate-active-per-100k
-  ([{:keys [cc f p c r d] :as prm}] (calculate-active-per-100k p c r d))
-  ([p c r d]
-   (if (zero? p)
-     0
-     (per-1e5 (calculate-active p c r d) p))))
-
 (defn fn-calculate-cases-per-100k [case-kw]
   (fn calculate-cases-per-100k
     ([{:keys [cc f p c r d] :as prm}] (calculate-cases-per-100k p c r d))
     ([p c r d]
      (if (zero? p)
        0
-       (per-1e5
-        (case case-kw
-          :r r
-          :d d
-          :c c)
-        p)))))
-
-(defn calculate-recovered-per-100k
-  ([{:keys [cc f p c r d] :as prm}] (calculate-recovered-per-100k p c r d))
-  ([p c r d]
-   (if (zero? p)
-     0
-     (per-1e5 r p))))
-
-(defn calculate-deaths-per-100k
-  ([{:keys [cc f p c r d] :as prm}] (calculate-deaths-per-100k p c r d))
-  ([p c r d]
-   (if (zero? p)
-     0
-     (per-1e5 d p))))
-
-(defn calculate-closed-per-100k
-  ([{:keys [cc f p c r d] :as prm}] (calculate-closed-per-100k p c r d))
-  ([p c r d]
-   (if (zero? p)
-     0
-     (per-1e5 c p))))
+       (per-1e5 (case case-kw
+                  :i (calculate-active p c r d)
+                  :r r
+                  :d d
+                  :c c)
+                p)))))
 
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]
