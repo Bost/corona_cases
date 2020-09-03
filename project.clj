@@ -33,7 +33,7 @@
 
    ;; for the get-json function. Not having it cheshire as a dependency results
    ;; in: `namespace 'cheshire.factory' not found`
-   [clj-http                "3.10.2"]
+   [clj-http                "3.10.3"]
 
    ;; Clojure interface for Telegram Bot API
    [org.clojars.bost/morse  "0.0.0-157-0x8c5c"]
@@ -41,8 +41,8 @@
    [org.clojure/data.json   "1.0.0"]
    [clojure.java-time       "0.3.2"]
    [net.cgrand/xforms       "0.19.2"]
-   [org.clojars.bost/clj-time-ext "0.0.0-37-0x545c"]
-   [org.clojars.bost/utils  "0.0.0-41-0xf2a3"]
+   [org.clojars.bost/clj-time-ext "0.0.0-39-0x3d91"]
+   [org.clojars.bost/utils "0.0.0-43-0x8a82"]
 
    ;; https://github.com/generateme/cljplot
    [org.clojars.bost/cljplot "0.0.2"]
@@ -63,7 +63,7 @@
    [incanter/incanter-core "1.9.3"]  ;; mean
 
    ;; logging
-   [com.taoensso/timbre "4.10.0"]
+   [com.taoensso/timbre "5.0.1"]
    ]
 
   :min-lein-version "2.0.0"
