@@ -89,8 +89,22 @@
 ;; TODO use com.stuartsierra.compoment for start / stop
 ;; For interactive development:
 (def test-obj (atom nil))
-(defn start   [] (swap! test-obj (fn [_] (start-polling co/token (handler)))))
-(defn stop    [] (swap! test-obj (fn [_] (p/stop @test-obj))))
+
+(def refresh-cache
+  "Auto-refresh cache by invoking a request from a separate thread when TTL
+  expires"
+  (atom true))
+
+(defn start []
+  (swap! test-obj (fn [_] (->> ['(while @refresh-cache
+                                  (Thread/sleep 4000)
+                                  (printf "%s\n" "Cache refreshed"))
+                               '(start-polling co/token (handler))]
+                              (pmap eval)))))
+(defn stop []
+  (swap! test-obj (fn [_] (-> ['(swap! refresh-cache (fn [_] false))
+                              '(p/stop @test-obj)]
+                             (pmap eval)))))
 (defn restart []
   (when @test-obj
     (stop)

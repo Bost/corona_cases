@@ -14,6 +14,7 @@
    [utils.core :refer [in?] :exclude [id]]
    [corona.country-codes :refer :all]
    [taoensso.timbre :as timbre :refer :all]
+   [clojure.core.cache :as cache]
    ))
 
 (def ^:const project-name "corona_cases") ;; see project.clj: defproject
@@ -221,6 +222,7 @@
 
 (defn memo-ttl
   "In (* <minutes> 60 1000)
+  TODO reload only the latest N reports
   TODO auto-reload expired cache, don't wait for the next request"
   [fun]
   (memo/ttl fun {} :ttl/threshold (* 60 60 1000)))
