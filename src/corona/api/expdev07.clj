@@ -71,12 +71,7 @@
    (raw-dates-unsorted)))
 
 (defn population-cnt [country-code]
-  (or (->> country-code
-           (cr/country-code--country)
-           (get cr/population))
-      (->> country-code
-           (cr/country-name-aliased)
-           (get cr/population))
+  (or (get cr/population country-code)
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]

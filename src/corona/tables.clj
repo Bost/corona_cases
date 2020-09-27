@@ -242,7 +242,7 @@
    ]
   )
 
-(def ^:const data
+(def ^:const population-table
   "
   https://www.worldometers.info/world-population/population-by-country/
   TODO create spec. E.g. Rate is percentage must be between 0 and 100
@@ -497,14 +497,14 @@
    ["Holy See"                 801 0.25 2 2003 0 nil nil nil 0.0]
    ])
 
-(defn population []
+(def population
   (transduce
        (map (fn [[Country Population YearlyChangeRate NetChange Density LandArea
                  Migrants FertilityRate MedianAge UrbanPopulationRate
                  WorldShareRate]]
               [(cr/country-code Country) Population]))
        conj (sorted-map)
-       data))
+       population-table))
 
 (defn growth-per-day
   "Population: number of people at the beginning of the year
