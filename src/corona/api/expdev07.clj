@@ -80,7 +80,7 @@
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]
-        (error (format "population nr unknown; country-code: %s; using %s\n"
+        (error (format "population nr unknown; country-code: %s; using %s"
                        country-code
                        default-population))
         default-population)))

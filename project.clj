@@ -73,3 +73,21 @@
    ;; TODO test :uberjar {:aot :all}
    :production {:env {:production true}}
    })
+
+;; TODO analyze results of lein nvd check
+;; $ lein nvd check
+;; ...
+;; Checking dependencies for corona_cases 2.0.8 ...
+;; using nvd-clojure:  and dependency-check: 5.3.2
+;; +--------------------------------------------------|----------------+
+;; | dependency                                       | status         |
+;; +--------------------------------------------------|----------------+
+;; | commons-compress-1.8.jar                         | CVE-2018-11771 |
+;; | google-closure-library-0.0-20160609-f42b4a24.jar | CVE-2020-8910  |
+;; | guava-19.0.jar                                   | CVE-2018-10237 |
+;; | jetty-server-9.4.28.v20200408.jar                | CVE-2019-17638 |
+;; | protobuf-java-2.5.0.jar                          | CVE-2015-5237  |
+;; +--------------------------------------------------|----------------+
+
+;; 5 vulnerabilities detected. Severity: HIGH
+;; Detailed reports saved in: target/nvd

@@ -33,7 +33,7 @@
    name
    (wrap-fn-pre-post-hooks
     (let [tbeg (te/tnow)
-          log-fmt "[%s%s%s %s /%s] %s\n"]
+          log-fmt "[%s%s%s %s /%s] %s"]
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
               (let [chat (-> args first :chat)]

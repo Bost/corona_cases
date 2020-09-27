@@ -508,9 +508,8 @@
 
 (defn growth-per-day
   "Population: number of people at the beginning of the year
-  YearlyChangeRate: in percents
-  E.g.
-  (growth-per-day 83517045 0.3) => 686"
+  YearlyChangeRate: in percents E.g.:
+  => (growth-per-day 83517045 0.3) ;; 686"
   [Population YearlyChangeRate]
   (int
    (/ (* Population (/ YearlyChangeRate 100))

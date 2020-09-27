@@ -322,7 +322,11 @@
   "Shows the table with the absolute and %-wise nr of cases, cases per-100k etc.
   TODO 1. 'Country does not report recovered cases'
   TODO 2. Estimate recovered cased (based on 1.) with avg recovery time 14 days
-  TODO 3. show CFR / IFR - Case Fatality Rate / Infection Fatality Rate"
+  TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
+  TODO show country ranking place in the info-message
+  TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
+  (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
+  "
   [{:keys [country-code] :as prm}]
   (format
    (str
