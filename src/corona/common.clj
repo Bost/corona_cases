@@ -34,10 +34,7 @@
                      env-devel? "hokuspokus"
                      :else "undefined")
                    "_bot"))
-
-(defn calculate-active
-  ([{:keys [cc f p c r d] :as prm}] (calculate-active p c r d))
-  ([_ c r d] (- c (+ r d))))
+(defn calculate-active [{:keys [c r d] :as prm}] (- c (+ r d)))
 
 (defn per-1e5
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
@@ -45,18 +42,16 @@
   ([mode place total-count]
    (un/round mode (/ (* place 1e5) total-count))))
 
-(defn fn-calculate-cases-per-100k [case-kw]
-  (fn calculate-cases-per-100k
-    ([{:keys [cc f p c r d] :as prm}] (calculate-cases-per-100k p c r d))
-    ([p c r d]
-     (if (zero? p)
-       0
-       (per-1e5 (case case-kw
-                  :i (calculate-active p c r d)
-                  :r r
-                  :d d
-                  :c c)
-                p)))))
+(defn calculate-cases-per-100k [case-kw]
+  (fn [{:keys [p c r d] :as prm}]
+    (if (zero? p)
+      0
+      (per-1e5 (case case-kw
+                 :i (calculate-active prm)
+                 :r r
+                 :d d
+                 :c c)
+               p))))
 
 (defn telegram-token-suffix []
   (let [suffix (.substring token (- (count token) 3))]

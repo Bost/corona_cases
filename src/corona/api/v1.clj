@@ -148,9 +148,8 @@
                (assoc
                 prm
                 #_(dissoc prm :c)
-                ;; TODO watch out for arity of calculate-active
                 :i (co/calculate-active prm)
-                :i100k ((co/fn-calculate-cases-per-100k :i) prm)
-                :r100k ((co/fn-calculate-cases-per-100k :r) prm)
-                :d100k ((co/fn-calculate-cases-per-100k :d) prm))))
+                :i100k ((co/calculate-cases-per-100k :i) prm)
+                :r100k ((co/calculate-cases-per-100k :r) prm)
+                :d100k ((co/calculate-cases-per-100k :d) prm))))
          (map xf-for-case [:population :confirmed :recovered :deaths])))

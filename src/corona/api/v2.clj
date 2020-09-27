@@ -103,16 +103,17 @@
                  #_true
                  (in? ccs (:country_code loc))))
        (mapv (fn [loc]
-              (map (fn [[f c] [_ r] [_ d]]
-                     {:cc (:country_code loc)
-                      :f (->> f
-                              (name)
-                              (tl/to-local-date-time)
-                              (tc/to-date))
-                      :c c
-                      :r r
-                      :d d
-                      :i (co/calculate-active c r d)})
+               (map (fn [[f c] [_ r] [_ d]]
+                      (let [prm {:c c :r r :d d}]
+                        (assoc prm
+                         {:cc (:country_code loc)
+                          :f (->> f
+                                  (name)
+                                  (tl/to-local-date-time)
+                                  (tc/to-date))
+                          :i (do
+                               (println "pic-data" prm)
+                               (co/calculate-active prm))})))
                    (timeline :confirmed loc)
                    (if-let [norm-timeline (seq (timeline :recovered loc))]
                      norm-timeline

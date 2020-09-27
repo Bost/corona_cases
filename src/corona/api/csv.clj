@@ -58,8 +58,10 @@
        (sum-up (assoc prm :sum-up-fn #(nth % 5)))
        (sum-up (assoc prm :sum-up-fn
                       #(let [[_ _ _ c d r] %]
-                         (apply co/calculate-active
-                                (map co/read-number [c d r])))))))
+                         (->> [c d r]
+                              (map co/read-number)
+                              (zipmap [:c :r :d])
+                              (co/calculate-active)))))))
 
 ;; http://blog.cognitect.com/blog/2017/6/5/repl-debugging-no-stacktrace-required
 (defn confirmed [prm] (map :c (get-counts prm)))

@@ -201,15 +201,19 @@
             (apply
              conj pcrd
              (->> [co/calculate-active
-                   (co/fn-calculate-cases-per-100k :i)
-                   (co/fn-calculate-cases-per-100k :r)
-                   (co/fn-calculate-cases-per-100k :d)
-                   (co/fn-calculate-cases-per-100k :c)]
-                  (mapv (fn [f] (apply mapv f pcrd))))))))
+                   (co/calculate-cases-per-100k :i)
+                   (co/calculate-cases-per-100k :r)
+                   (co/calculate-cases-per-100k :d)
+                   (co/calculate-cases-per-100k :c)]
+                  (mapv (fn [f] (apply mapv (fn [p c r d]
+                                             (->> [p c r d]
+                                                  (zipmap [:p :c :r :d])
+                                                  (f)))
+                                      pcrd))))))))
 
 (def get-counts-memo
-  #_get-counts
-  (co/memo-ttl get-counts))
+  get-counts
+  #_(co/memo-ttl get-counts))
 
 (defn population [prm] (:p (get-counts-memo prm)))
 (defn confirmed [prm]  (:c (get-counts-memo prm)))
