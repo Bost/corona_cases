@@ -201,10 +201,10 @@
             (apply
              conj pcrd
              (->> [co/calculate-active
-                   (co/fn-calculate-cases-per-100k :i)
-                   (co/fn-calculate-cases-per-100k :r)
-                   (co/fn-calculate-cases-per-100k :d)
-                   (co/fn-calculate-cases-per-100k :c)]
+                   (co/calculate-cases-per-100k :i)
+                   (co/calculate-cases-per-100k :r)
+                   (co/calculate-cases-per-100k :d)
+                   (co/calculate-cases-per-100k :c)]
                   #_(mapv (fn [f] (apply mapv f pcrd)))
                   (mapv (fn [f] (apply mapv (fn [p c r d]
                                              (->> [p c r d]

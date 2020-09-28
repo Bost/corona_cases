@@ -35,7 +35,7 @@
                      :else "undefined")
                    "_bot"))
 
-(defn calculate-active [{:keys [c r d] :as prm}]
+(defn calculate-active [{:keys [c r d]}]
   (- c (+ r d)))
 
 (defn per-1e5
@@ -44,8 +44,8 @@
   ([mode place total-count]
    (un/round mode (/ (* place 1e5) total-count))))
 
-(defn fn-calculate-cases-per-100k [case-kw]
-  (fn [{:keys [cc f p c r d] :as prm}]
+(defn calculate-cases-per-100k [case-kw]
+  (fn [{:keys [p c r d] :as prm}]
     (if (zero? p)
       0
       (per-1e5 (case case-kw
