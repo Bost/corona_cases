@@ -4,7 +4,7 @@
    [clj-time.local :as tl]
    [corona.common :as co]
    [corona.country-codes :refer :all]
-   [utils.core :refer [in?] :exclude [id]]
+   [utils.core :refer [in? transpose] :exclude [id]]
    ))
 
 ;; https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=jhu&timelines=true
@@ -58,23 +58,11 @@
                (conj acc-coll last-val)
                last-val)))))
 
-;; TODO use utils.core/transpose-matrix
-(defn transpose-matrix
-  "Transpose matrix. E.g.:
-  (transpose-matrix [[:a :b :c] [0 1 2]])
-
-  See also https://github.com/mikera/core.matrix
-  "
-  [m]
-  (if (seq m)
-    (apply mapv vector m)
-    m))
-
 (defn timeline [case loc]
   (let [hms (some->> loc :timelines case :timeline
                      (take (cnt-days)))
         v (->> hms
-               (transpose-matrix))
+               (transpose))
         [fs vs] v
         ;; sum-up-to-vs (sum-up-to vs)
         sum-up-to-vs vs
