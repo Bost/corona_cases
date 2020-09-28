@@ -18,7 +18,8 @@
 
     (let [options (select-keys prm (keys msg/options))
           content (msg/detailed-info (assoc prm
-                                            :disable_web_page_preview true))]
+                                            :disable_web_page_preview true
+                                            :ranking {:p 100 :c 200 :r 300 :d 400 :i 500}))]
       (morse/send-text co/token chat-id options content))
 
     ;; don't show the graph when developing

@@ -325,11 +325,10 @@
   TODO 1. 'Country does not report recovered cases'
   TODO 2. Estimate recovered cased (based on 1.) with avg recovery time 14 days
   TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
-  TODO show country ranking place in the info-message
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   "
-  [{:keys [country-code] :as prm}]
+  [{:keys [country-code ranking] :as prm}]
   (format
    (str
     "%s\n"  ; extended header
@@ -396,6 +395,8 @@
                 "%s\n" ; l/closed
                 "\n"   ; visual separation for the l/active-last-7
                 "%s\n" ; l/active-last-7
+                "\n"   ; visual separation for the l/ranking
+                "%s\n" ; l/ranking
                 )
            (fmt-to-cols
             {:s l/active :n active :total confirmed :diff di :calc-rate true
@@ -459,7 +460,20 @@
             #_"%s\n%s"
             "<code>%s</code>\n%s"
             #_"<code>%s\n%s</code>" l/active-last-7
-                   (u/sjoin last-7-reports)))))))
+            (u/sjoin last-7-reports))
+           (format (str "Country ranking - cases per 100k:\n"
+                        (clojure.string/join
+                         " " [
+                              "%s"
+                              "%s"
+                              "%s"
+                              "%s"
+                              "%s"]))
+                   (format "<code>%s</code>: %s" "population" (:p ranking))
+                   (format "<code>%s</code>: %s" l/active-per-1e5 (:i ranking))
+                   (format "<code>%s</code>: %s" l/recovered-per-1e5 (:r ranking))
+                   (format "<code>%s</code>: %s" l/deaths-per-1e5 (:d ranking))
+                   (format "<code>%s</code>: %s" l/closed-per-1e5 (:c ranking))))))))
    (footer prm)))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
