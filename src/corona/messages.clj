@@ -405,9 +405,7 @@
             {:s l/active-max
              :n max-active-val
              :show-n true
-             :desc (if (= max-active-date (last-day-val prm))
-                     l/reached-today
-                     (format l/reached-on-date (co/fmt-date max-active-date)))})
+             :desc (format "(%s)" (co/fmt-date max-active-date))})
 
            ;; TODO add effective reproduction number (R)
            (fmt-to-cols

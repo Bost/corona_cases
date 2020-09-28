@@ -56,8 +56,6 @@
 (def ^:const stats         "Stats")
 (def ^:const list-desc     "List of countries")
 (def ^:const listings      "lists")
-(def ^:const reached-today "reached today")
-(def ^:const reached-on-date "reached on %s")
 
 ;; https://en.wikipedia.org/wiki/Moving_average#Moving_median
 ;; simple moving median SMM
