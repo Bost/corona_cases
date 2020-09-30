@@ -15,23 +15,28 @@
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
-    (morse/send-text co/token chat-id (select-keys prm (keys msg/options))
-                     (msg/info (assoc prm :disable_web_page_preview true)))
-    (morse/send-photo
-     co/token chat-id
-     (if (msg/worldwide? country-code)
-       (msg/buttons {:chat-id chat-id :cc country-code})
-       {})
-     (msg/toByteArrayAutoClosable
-      (p/plot-country
-       {:day (count (data/raw-dates-unsorted)) :cc country-code
-        :stats (v1/pic-data)})))))
+
+    (let [options (select-keys prm (keys msg/options))
+          content (msg/detailed-info (assoc prm
+                                            :disable_web_page_preview true))]
+      (morse/send-text co/token chat-id options content))
+
+    (let [options (if (msg/worldwide? country-code)
+                        (msg/buttons {:chat-id chat-id :cc country-code})
+                        {})
+          content (msg/toByteArrayAutoClosable
+                       (p/plot-country
+                        {:day (count (data/raw-dates-unsorted))
+                         :cc country-code
+                         :stats (v1/pic-data)}))]
+      (morse/send-photo co/token chat-id options content))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
 (defn partition-in-sub-msgs
+  "Split the long list of all countries into smaller subparts"
   [col]
   (partition-all (/ (count col) cnt-messages-in-listing) col))
 

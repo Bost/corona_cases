@@ -5,23 +5,23 @@
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
-(def ^:const world         "world")
-(def ^:const world-desc    "Start here")
-(def ^:const start         "start")
-(def ^:const explain       "explain")
-(def ^:const contributors  "contributors")
-(def ^:const feedback      "feedback")
+(def ^:const world           "world")
+(def ^:const world-desc      "Start here")
+(def ^:const start           "start")
+(def ^:const explain         "explain")
+(def ^:const contributors    "contributors")
+(def ^:const feedback        "feedback")
 (def ^:const conf            "Conf")
 (def ^:const confirmed       "Confirmed")
 (def ^:const confirmed-cases "Confirmed cases")
-(def ^:const deaths         "Deaths")
-(def ^:const death-cases    "Death cases")
+(def ^:const deaths          "Deaths")
+(def ^:const death-cases     "Death cases")
 (def ^:const recov           "Recov")
 (def ^:const recovered       "Recovered")
 (def ^:const recovered-cases "Recovered cases")
-(def ^:const active         "Active")
-(def ^:const active-cases   "Active cases")
-(def ^:const hundred-k      "100k")
+(def ^:const active          "Active")
+(def ^:const active-cases    "Active cases")
+(def ^:const hundred-k       "100k")
 (def ^:const cmd-active-per-1e5    (str "a" hundred-k))
 (def ^:const cmd-recovered-per-1e5 (str "r" hundred-k))
 (def ^:const cmd-deaths-per-1e5    (str "d" hundred-k))
@@ -47,8 +47,9 @@
 (def ^:const closed        "Closed")
 (def ^:const closed-cases  "Closed cases")
 
+;; TODO rename day -> report
 (def ^:const day
-  "Coincidentally there seems to be 1 report per day"
+  "Coincidentally there is 1 report per day"
   "Day\\Report")
 (def ^:const sick-absolute "Active absolute")
 (def ^:const absolute      "absolute")

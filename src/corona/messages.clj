@@ -86,7 +86,7 @@
             (co/left-pad "" " " max-diff-order-of-magnitude))
           s1
           (co/left-pad n1 " " 4)
-          cmd1))
+          (co/encode-cmd cmd1)))
 
 (def ^:const ref-mortality-rate
   "https://www.worldometers.info/coronavirus/coronavirus-death-rate/")
@@ -196,7 +196,9 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   [{:keys [data msg-idx cnt-msgs sort-by-case] :as prm}]
-  (let [spacer " "
+  (let [
+        cnt-reports (count (data/raw-dates)) ;; TODO must be calculated only once
+        spacer " "
         sort-indicator "▴" ;; " " "▲"
         omag-active    7 ;; order of magnitude i.e. number of digits
         omag-recov  (inc omag-active)
@@ -318,7 +320,7 @@
       (recur tail (conj result (- (first tail) head)))
       result)))
 
-(defn info
+(defn detailed-info
   "Shows the table with the absolute and %-wise nr of cases, cases per-100k etc.
   TODO 1. 'Country does not report recovered cases'
   TODO 2. Estimate recovered cased (based on 1.) with avg recovery time 14 days
@@ -399,7 +401,7 @@
             {:s l/active :n active :total confirmed :diff di :calc-rate true
              :s1 l/active-per-1e5
              :n1 active-per-100k
-             :cmd1 (co/encode-cmd l/cmd-active-per-1e5)})
+             :cmd1 l/cmd-active-per-1e5})
 
            (fmt-val-to-cols
             {:s l/active-max
@@ -440,18 +442,18 @@
              :calc-rate true
              :s1 l/recovered-per-1e5
              :n1 recovered-per-100k
-             :cmd1 (co/encode-cmd l/cmd-recovered-per-1e5)})
+             :cmd1 l/cmd-recovered-per-1e5})
            (fmt-to-cols
             {:s l/deaths :n deaths :total confirmed :diff dd :calc-rate true
              :s1 l/deaths-per-1e5
              :n1 deaths-per-100k
-             :cmd1 (co/encode-cmd l/cmd-deaths-per-1e5)})
+             :cmd1 l/cmd-deaths-per-1e5})
            (fmt-to-cols
             {:s l/closed :n closed :total confirmed :diff dclosed
              :calc-rate true
              :s1 l/closed-per-1e5
              :n1 closed-per-100k
-             ;; TODO :cmd1 (co/encode-cmd l/cmd-closed-per-1e5)
+             ;; TODO :cmd1 l/cmd-closed-per-1e5
              })
            (format
             #_"%s\n%s"
