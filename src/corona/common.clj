@@ -120,7 +120,8 @@
               (json/read-json $))]
       (info (str "[" tbeg ":" (te/tnow) " " bot-ver " /" "get-json " url "]"))
       r)))
-(defn encode-cmd [s] (str "/" s))
+
+(defn encode-cmd [s] (str (if (empty? s) "" "/") s))
 
 (defn encode-pseudo-cmd
   "For displaying e.g. /<command-name>"
