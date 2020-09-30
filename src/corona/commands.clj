@@ -21,15 +21,17 @@
                                             :disable_web_page_preview true))]
       (morse/send-text co/token chat-id options content))
 
-    (let [options (if (msg/worldwide? country-code)
-                        (msg/buttons {:chat-id chat-id :cc country-code})
-                        {})
-          content (msg/toByteArrayAutoClosable
-                       (p/plot-country
-                        {:day (count (data/raw-dates-unsorted))
-                         :cc country-code
-                         :stats (v1/pic-data)}))]
-      (morse/send-photo co/token chat-id options content))))
+    ;; don't show the graph when developing
+    (when co/env-prod?
+      (let [options (if (msg/worldwide? country-code)
+                      (msg/buttons {:chat-id chat-id :cc country-code})
+                      {})
+            content (msg/toByteArrayAutoClosable
+                     (p/plot-country
+                      {:day (count (data/raw-dates-unsorted))
+                       :cc country-code
+                       :stats (v1/pic-data)}))]
+        (morse/send-photo co/token chat-id options content)))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
