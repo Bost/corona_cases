@@ -9,21 +9,79 @@
    [corona.messages :as msg]
    [corona.plot :as p]
    [morse.api :as morse]
-   [utils.core :refer [in?] :exclude [id]]
+   [utils.core :as u :refer [in?] :exclude [id]]
    [corona.common :as co]
    ))
+
+#_(defn deep-merge
+  "Recursively merges maps.
+  Thanks to https://dnaeon.github.io/recursively-merging-maps-in-clojure/"
+  [& maps]
+  (letfn [(m [& xs]
+            (if (some #(and (map? %) (not (record? %))) xs)
+              (apply merge-with m xs)
+              (last xs)))]
+    (reduce m maps)))
+
+(defn deep-merge
+  "Recursively merges maps.
+  Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2711849"
+  [& maps]
+  (apply merge-with (fn [& args]
+                      (if (every? map? args)
+                        (apply deep-merge args)
+                        (last args)))
+         maps))
+
+#_(defn deep-merge
+  "Might be buggy. See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
+  [a & maps]
+  (if (map? a)
+    (apply merge-with deep-merge a maps)
+    (apply merge-with deep-merge maps)))
+
+(defn rank [{:keys [rank-kw] :as prm}]
+  (->> (data/stats-all-affected-countries-memo prm)
+       #_(take 2)
+       ;; create and execute sorting function
+       ((fn [coll] (sort-by rank-kw > coll)))
+       (map-indexed (fn [idx hm]
+                      (-> (select-keys hm [:cc])
+                          (update-in [:rank rank-kw] (fn [_] idx)))))))
+
+(defn calculate-rankings []
+  (let [rakings (->> [:p :c100k :r100k :d100k :i100k]
+                     #_(take 3)
+                     (map (fn [rank-kw] (rank (assoc prm :rank-kw rank-kw))))
+                     (u/transpose))]
+    (->> (data/all-affected-country-codes-memo)
+         #_(take 2)
+         (map (fn [affected-cc]
+                (->> rakings
+                     (map (fn [ranking]
+                            (filter (fn [{:keys [cc]}] (= cc affected-cc))
+                                    ranking)))
+                     (reduce into [])
+                     (apply deep-merge)))))))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
 
     (let [options (select-keys prm (keys msg/options))
-          content (msg/detailed-info (assoc prm
-                                            :disable_web_page_preview true
-                                            :ranking {:p 100 :c 200 :r 300 :d 400 :i 500}))]
+          content (-> (assoc prm
+                             :disable_web_page_preview true
+                             :cnt-countries (count (data/all-affected-country-codes-memo))
+                             )
+                      (conj
+                       ;; the order of countries should be calculated only once
+                       (->> (calculate-rankings)
+                            (filter (fn [{:keys [cc]}] (= cc country-code)))
+                            (map (fn [m] (select-keys m [:rank])))
+                            (first)))
+                      (msg/detailed-info))]
       (morse/send-text co/token chat-id options content))
 
-    ;; don't show the graph when developing
-    (when co/env-prod?
+    (when co/env-prod? ;; don't show the graph when developing
       (let [options (if (msg/worldwide? country-code)
                       (msg/buttons {:chat-id chat-id :cc country-code})
                       {})
@@ -44,7 +102,7 @@
   (partition-all (/ (count col) cnt-messages-in-listing) col))
 
 (defn list-countries [{:keys [chat-id sort-by-case] :as prm}]
-  (let [sub-msgs (->> (data/stats-all-affected-countries prm)
+  (let [sub-msgs (->> (data/stats-all-affected-countries-memo prm)
                       ;; create and execute sorting function
                       ((fn [coll] (sort-by sort-by-case < coll)))
                       (partition-in-sub-msgs))
@@ -61,7 +119,7 @@
          doall)))
 
 (defn list-per-100k [{:keys [chat-id sort-by-case] :as prm}]
-  (let [sub-msgs (->> (data/stats-all-affected-countries prm)
+  (let [sub-msgs (->> (data/stats-all-affected-countries-memo prm)
                       ;; create and execute sorting function
                       ((fn [coll] (sort-by sort-by-case < coll)))
                       (partition-in-sub-msgs))

@@ -142,6 +142,10 @@
         (limit-fn)
         )))
 
+(def all-affected-country-codes-memo
+  #_all-affected-country-codes
+  (co/memo-ttl all-affected-country-codes))
+
 (defn dates
   ([] (dates {:limit-fn identity}))
   ([{:keys [limit-fn] :as prm}]
@@ -213,8 +217,8 @@
                                       pcrd))))))))
 
 (def get-counts-memo
-  get-counts
-  #_(co/memo-ttl get-counts))
+  #_get-counts
+  (co/memo-ttl get-counts))
 
 (defn population [prm] (:p (get-counts-memo prm)))
 (defn confirmed [prm]  (:c (get-counts-memo prm)))
@@ -282,6 +286,10 @@
               :cc cc})))
 
 (defn stats-all-affected-countries [prm]
-  (->> (all-affected-country-codes)
+  (->> (all-affected-country-codes-memo)
        (map (fn [cc]
               (stats-per-country (assoc prm :cc cc))))))
+
+(def stats-all-affected-countries-memo
+  #_stats-all-affected-countries
+  (co/memo-ttl stats-all-affected-countries))

@@ -348,7 +348,7 @@
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   "
-  [{:keys [country-code ranking] :as prm}]
+  [{:keys [country-code rank cnt-countries] :as prm}]
   (format-linewise
    [["%s\n"  ; extended header
      [(format-linewise
@@ -454,22 +454,22 @@
                          "<code>%s</code>\n%s"
                          #_"<code>%s\n%s</code>" l/active-last-7
                          (u/sjoin last-7-reports))]]
-               #_
-               ["\n%s\n"
+               ["\n%s"
                 [(format-linewise
                   [["%s" [l/people            :p]]
                    ["%s" [l/active-per-1e5    :i100k]]
                    ["%s" [l/recovered-per-1e5 :r100k]]
                    ["%s" [l/deaths-per-1e5    :d100k]]
                    ["%s" [l/closed-per-1e5    :c100k]]]
-                  :line-fmt "<code>%s</code>: %s"
+                  :line-fmt (str "<code>%s</code>: %s / " cnt-countries "\n")
                   :fn-fmts
-                  (fn [fmts] (str "Country ranking - cases per 100k:\n"
-                                 (s/join " " fmts)))
+                  (fn [fmts] (format "Ranking on the list of all %s countries:\n%s"
+                                    cnt-countries
+                                    (s/join "" fmts)))
                   :fn-args
                   (fn [args] (update args (-> args (count) (dec))
                                     (fn [_] (->> args (last)
-                                                (get ranking))))))]]])))))]]
+                                                (get rank))))))]]])))))]]
     ["%s\n" [(footer prm)]]])
 
   ;; By default Vars are static, but Vars can be marked as dynamic to
