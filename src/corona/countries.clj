@@ -18,7 +18,7 @@
 
 (defn country-code--country-nv-i18n
   "The base data from the internationalization, ISO 3166-1 country codes etc.
-  library: com.neovisionaries/nv-i18n \"1.27\" "
+  library: com.neovisionaries/nv-i18n \"1.27\""
   []
   (transduce (comp
               (filter (fn [cc] (= (.getAssignment cc)
@@ -376,9 +376,11 @@
     (country-name country-code)))
 
 (def ^:const population-table
-  "From https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population
-  The v2 api service doesn't contain precise numbers.
-  Values may significantly differ from `corona.tables/population`
+  "From
+  https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population
+  The v2 api service https://coronavirus-tracker-api.herokuapp.com/v2 doesn't
+  contain precise data. Values may significantly differ from the
+  `corona.tables/population`
 
   Countries not listed:
   zz - Worldwide

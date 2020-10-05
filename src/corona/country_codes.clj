@@ -54,6 +54,25 @@
 (def ^:const mx "MX") (def ^:const pl "PL")
 
 (def ^:const xd "XD") (def ^:const xe "XE") (def ^:const xs "XS") (def ^:const xx "XX")
+(def ^:const xd
+  "United Nations Neutral Zone. User-assigned.
+  \"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#XS\""
+  "XD")
+
+(def ^:const xe
+  "Iraq-Saudi Arabia Neutral Zone. User-assigned.
+  \"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#XS\""
+  "XE")
+
+(def ^:const xs
+  "Spratly Islands. User-assigned.
+\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#XS\""
+  "XS")
+
+(def ^:const xx
+  "Disputed Territory. Indicator for unknown states, other entities or organizations.
+\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#XX\""
+  "XX")
 
 (def ^:const worldwide-country-codes {zz "ZZZ"})
 (def ^:const worldwide-2-country-code (-> worldwide-country-codes keys first))
