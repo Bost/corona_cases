@@ -63,7 +63,7 @@
       (throw (Exception.
               (format "Unrecognized TELEGRAM_TOKEN suffix: %s" suffix))))))
 
-(def project-ver
+(def project-version
   "From target/classes/META-INF/maven/%s/%s/pom.properties
 
   TODO there's a sha-sum in the pom.properties. Use it, don't calculate it
@@ -80,7 +80,7 @@
     (get pom-props "version")))
 
 (def bot-ver
-  (format "%s-%s" project-ver (en/env :bot-ver)))
+  (format "%s-%s" project-version (en/env :bot-ver)))
 
 (def bot (str bot-ver ":" env-type))
 
