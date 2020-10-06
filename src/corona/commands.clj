@@ -11,6 +11,7 @@
    [morse.api :as morse]
    [utils.core :as u :refer [in?] :exclude [id]]
    [corona.common :as co]
+   [taoensso.timbre :as timbre :refer :all]
    ))
 
 #_(defn deep-merge
@@ -67,7 +68,6 @@ See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   (let [prm (assoc prm :parse_mode "HTML")]
-
     (let [options (select-keys prm (keys msg/options))
           cnt-countries (count (data/all-affected-country-codes-memo))
           content (-> (assoc prm
@@ -82,7 +82,7 @@ See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
                       (msg/detailed-info))]
       (morse/send-text co/token chat-id options content))
 
-    (when co/env-prod? ;; don't show the graph when developing
+    (if-not co/env-devel? ;; don't show the graph when developing
       (let [options (if (msg/worldwide? country-code)
                       (msg/buttons {:chat-id chat-id :cc country-code})
                       {})
@@ -91,7 +91,8 @@ See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
                       {:day (count (data/raw-dates-unsorted))
                        :cc country-code
                        :stats (v1/pic-data)}))]
-        (morse/send-photo co/token chat-id options content)))))
+        (morse/send-photo co/token chat-id options content))
+      (debug "Plot not displayed. co/env-devel? " co/env-devel?))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
