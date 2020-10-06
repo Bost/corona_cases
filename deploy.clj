@@ -5,7 +5,22 @@
   (:require
    [clojure.string :as str]
    [envdef :refer :all]
-   [babashka.process :refer [process]]))
+   [babashka.process :refer [process]]
+   [clojure.data.xml :as xml]
+   [clojure.zip :as zip]))
+
+(defn zip-str
+  "Convenience function, first seen at nakkaya.com later in clj.zip src"
+  [s]
+  (zip/xml-zip
+   (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
+
+(defn bot-version-number []
+  (->> "pom.xml" (slurp) (zip-str) (first) :content
+       (filter (fn [elem] (= (:tag elem)
+                            (keyword "xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version"))))
+       (map (fn [elem] (->> elem :content first)))
+       (first)))
 
 ;; need to define LEIN_SNAPSHOTS_IN_RELEASE=true because of
 ;; cljplot "0.0.2-SNAPSHOT"
@@ -37,9 +52,9 @@
         (sh "git commit -m \"Add new csv file(s)\""))))
 
 (def botVerSHA (sh "git" "rev-parse" "--short" "master"))
-(def botVerNr (sh "grep" "--max-count=1"
-                  "--only-matching" "\\([0-9]\\+\\.\\)\\+[0-9]\\+"
-                  "project.clj"))
+(def botVerNr (bot-version-number))
+
+(println (format "bot-version-number: %s" botVerNr))
 
 ;; `heroku logs --tail --app $APP` blocks the execution
 (sh "heroku" "addons:open" "papertrail" "--app" app)
