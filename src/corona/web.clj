@@ -1,6 +1,6 @@
 (ns corona.web
   (:require
-   [corona.time #_clj-time-ext.core :as te]
+   [clj-time-ext.core :as te]
    [clj-time.core :as t]
    [clojure.data.json :as json]
    [clojure.java.io :as io]
