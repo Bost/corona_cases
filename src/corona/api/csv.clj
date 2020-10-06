@@ -10,7 +10,9 @@
 
 ;; find all the CSV files in the directory
 (def csv-files
-  (->> (file-seq (io/file "resources/csv"))
+  (->> "resources/csv" ;; TODO read the csv files from an external location
+       (io/file)
+       (file-seq)
        (filter #(.isFile %))
        (map str)
        (filter #(re-find #".csv" %))
