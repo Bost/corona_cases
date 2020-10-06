@@ -25,7 +25,7 @@
 
 (defn deep-merge
   "Recursively merges maps.
-  Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2711849"
+Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2711849"
   [& maps]
   (apply merge-with (fn [& args]
                       (if (every? map? args)
@@ -34,7 +34,8 @@
          maps))
 
 #_(defn deep-merge
-  "Might be buggy. See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
+  "Might be buggy.
+See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
   [a & maps]
   (if (map? a)
     (apply merge-with deep-merge a maps)
@@ -49,7 +50,7 @@
                       (-> (select-keys hm [:cc])
                           (update-in [:rank rank-kw] (fn [_] idx)))))))
 
-(defn calculate-rankings []
+(defn calculate-rankings [prm]
   (let [rakings (->> [:p :c100k :r100k :d100k :i100k]
                      #_(take 3)
                      (map (fn [rank-kw] (rank (assoc prm :rank-kw rank-kw))))
@@ -68,13 +69,13 @@
   (let [prm (assoc prm :parse_mode "HTML")]
 
     (let [options (select-keys prm (keys msg/options))
+          cnt-countries (count (data/all-affected-country-codes-memo))
           content (-> (assoc prm
                              :disable_web_page_preview true
-                             :cnt-countries (count (data/all-affected-country-codes-memo))
-                             )
+                             :cnt-countries cnt-countries)
                       (conj
                        ;; the order of countries should be calculated only once
-                       (->> (calculate-rankings)
+                       (->> (calculate-rankings prm)
                             (filter (fn [{:keys [cc]}] (= cc country-code)))
                             (map (fn [m] (select-keys m [:rank])))
                             (first)))
