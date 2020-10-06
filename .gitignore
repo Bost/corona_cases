@@ -1,4 +1,3 @@
-pom.xml
 *jar
 /classes/
 /.lein-deps-sum
@@ -10,3 +9,4 @@ pom.xml
 /.lein-repl-history
 /.nrepl-port
 /log/
+/.cpcache/
