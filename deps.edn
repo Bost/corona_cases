@@ -28,10 +28,17 @@
 
  ;; project version is defined in the pom.xml
 
+ :aliases
+ {
+  :uberjar
+  {:extra-deps {seancorfield/depstar {:mvn/version "1.1.117"}}
+   :main-opts
+   ["--main" "hf.depstar.uberjar" "target/corona_cases-standalone.jar"
+    ;; AOT compilation
+    ;; See https://github.com/seancorfield/depstar#aot-compilation
+    #_"--compile"]}
+  }
 
- :aliases {:depstar
-           {:extra-deps
-            {seancorfield/depstar {:mvn/version "1.1.117"}}}}
  :deps
  {
   org.clojure/clojure     {:mvn/version "1.10.1"}
