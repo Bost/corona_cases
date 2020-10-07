@@ -347,6 +347,7 @@
   TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
+  TODO make an api service for the content shown in the message
   "
   [{:keys [country-code rank cnt-countries] :as prm}]
   (format-linewise

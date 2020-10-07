@@ -5,7 +5,6 @@
   (:require
    [clojure.string :as str]
    [envdef :refer :all]
-   [babashka.process :refer [process]]
    [clojure.data.xml :as xml]
    [clojure.zip :as zip]))
 

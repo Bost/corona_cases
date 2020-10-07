@@ -222,7 +222,7 @@
 
 (defn memo-ttl
   "In (* <minutes> 60 1000)
-  TODO reload only the latest N reports
+  TODO reload only the latest N reports. e.g. try one week
   TODO auto-reload expired cache, don't wait for the next request"
   [fun]
   (memo/ttl fun {} :ttl/threshold (* 60 60 1000)))

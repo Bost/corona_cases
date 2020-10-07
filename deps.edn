@@ -18,14 +18,16 @@
 ;; 5 vulnerabilities detected. Severity: HIGH
 ;; Detailed reports saved in: target/nvd
 
-;; TODO integrate spyscope tools.deps. See ~/.clojure/deps.edn
+;; TODO integrate spyscope tools.deps. See ~/.clojure/deps.edn - probably
+;; under :dev alias, then the cider-jack-in should use it I expect.
 
 {
  ;; See https://github.com/roomkey/lein-v
  ;; "Example of Clojure source code version output"
  ;; and https://github.com/arrdem/lein-git-version
 
- :version "2.0.8"
+ ;; project version is defined in the pom.xml
+
 
  :aliases {:depstar
            {:extra-deps
