@@ -60,6 +60,7 @@
 (sh "heroku" "ps:scale" "web=0" "--app" app)
 (sh "git" "push" (str/join " " rest-args) remote "master")
 (sh "heroku" "config:set" (str "BOT_VER=" botVerSHA) "--app" app)
+(sh "heroku" "config:set" "CLOJURE_CLI_VERSION=1.10.1.697" "--app" app)
 (sh "heroku" "ps:scale" "web=1" "--app" app)
 
 ;; ;; publish source code only when deploying to production
