@@ -14,7 +14,9 @@
   (zip/xml-zip
    (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
 
-(defn bot-version-number []
+;; TODO getting project-version-number from pom.properties may be simpler
+;; see corona.common/project-version-number
+(defn project-version-number []
   (->> "pom.xml" (slurp) (zip-str) (first) :content
        (filter (fn [elem] (= (:tag elem)
                             (keyword "xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version"))))
@@ -50,16 +52,16 @@
       (if (zero? (:exit status))
         (sh "git commit -m \"Add new csv file(s)\""))))
 
-(def botVerSHA (sh "git" "rev-parse" "--short" "master"))
-(def botVerNr (bot-version-number))
+(def commit (sh "git" "rev-parse" "--short" "master"))
+(def version-number (project-version-number))
 
-(println (format "bot-version-number: %s" botVerNr))
+(println 'version-number ": " version-number)
 
 ;; `heroku logs --tail --app $APP` blocks the execution
 (sh "heroku" "addons:open" "papertrail" "--app" app)
 (sh "heroku" "ps:scale" "web=0" "--app" app)
 (sh "git" "push" (str/join " " rest-args) remote "master")
-(sh "heroku" "config:set" (str "BOT_VER=" botVerSHA) "--app" app)
+(sh "heroku" "config:set" (str "BOT_VER=" commit) "--app" app)
 (sh "heroku" "config:set" "CLOJURE_CLI_VERSION=1.10.1.697" "--app" app)
 (sh "heroku" "ps:scale" "web=1" "--app" app)
 
@@ -68,7 +70,7 @@
   (do
     ;; seems like `git push --tags` pushes only tags w/o the code
     (sh "git" "tag" "--annotate" "--message" "''"
-        (str botVerNr "-" botVerSHA))
+        (str version-number "-" commit))
 
     (doseq [remote ["origin" "gitlab"]]
       (sh "git" "push" "--follow-tags" "--verbose" remote)

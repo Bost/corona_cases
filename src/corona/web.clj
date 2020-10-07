@@ -26,8 +26,8 @@
    :headers {"Content-Type" "text/plain"}
    :body (s/join "\n" ["home page"])})
 
-(def ^:const project-version "See also `co/project-version`" "dev" #_"1.7.2")
-(def ^:const ws-path (format "ws/%s" project-version))
+(def ^:const project-version-number "See `co/project-version-number`" nil)
+(def ^:const ws-path (format "ws/%s" project-version-number))
 
 (defn web-service [{:keys [type] :as prm}]
   (info "web-service" prm)
@@ -42,7 +42,7 @@
          :names (conj {"desc" co/desc-ws})
          :codes (conj {"desc" co/desc-ws})
          (format "Error. Wrong type %s" type))
-     (conj (when (= "dev" project-version)
+     (conj (when-not project-version-number
              {"warn" "Under construction. Don't use it in PROD env"}))
      (conj {"source" "https://github.com/Bost/corona_cases"})
      ;; swapped order x y -> y x

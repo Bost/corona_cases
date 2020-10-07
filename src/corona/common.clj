@@ -15,6 +15,7 @@
    [corona.country-codes :refer :all]
    [taoensso.timbre :as timbre :refer :all]
    [clojure.core.cache :as cache]
+   [corona.common :as co]
    ))
 
 (def ^:const project-name "corona_cases") ;; see project.clj: defproject
@@ -63,24 +64,21 @@
       (throw (Exception.
               (format "Unrecognized TELEGRAM_TOKEN suffix: %s" suffix))))))
 
-(def project-version
-  "From target/classes/META-INF/maven/%s/%s/pom.properties
-
-  TODO there's a sha-sum in the pom.properties. Use it, don't calculate it
-  "
-  (let [pom-props
-        (with-open
-          [pom-props-reader
-           (->> (format "META-INF/maven/%s/%s/pom.properties"
-                        project-name project-name)
-                io/resource
-                io/reader)]
-          (doto (java.util.Properties.)
-            (.load pom-props-reader)))]
-    (get pom-props "version")))
+(def project-version-number
+  "From META-INF/maven/%s/%s/pom.properties in uberjar; see the depstar plugin"
+  (let [url (format "META-INF/maven/%s/%s/pom.properties"
+                    project-name project-name)]
+    (if-let [props (try (with-open
+                          [reader (some-> url (io/resource) (io/reader))]
+                          (doto (java.util.Properties.)
+                            (.load reader)))
+                        (catch NullPointerException ex
+                          (if-not co/env-devel?
+                            (error "Can't read resource" url))))]
+      (get props "version"))))
 
 (def bot-ver
-  (format "%s-%s" project-version (en/env :bot-ver)))
+  (format "%s-%s" project-version-number (en/env :bot-ver)))
 
 (def bot (str bot-ver ":" env-type))
 

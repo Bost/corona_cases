@@ -69,8 +69,8 @@ else
     exit 1
 end
 
-set botVerSHA (git rev-parse --short master)
-set botVerNr (grep --max-count=1 --only-matching '\([0-9]\+\.\)\+[0-9]\+' project.clj)
+set commit (git rev-parse --short master)
+set version-number (grep --max-count=1 --only-matching '\([0-9]\+\.\)\+[0-9]\+' project.clj)
 
 # `heroku logs --tail --app $APP` blocks the execution
 heroku addons:open papertrail --app $APP; and \
