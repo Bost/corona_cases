@@ -351,7 +351,7 @@
     (if-let [cc (get lcases-countries country)]
       cc
       (do (error (format
-                  "No country code found for \"%s\". Using \"%s\""
+                  "\"%s\" has no country code. Using \"%s\""
                   country-name
                   default-2-country-code))
           default-2-country-code))))

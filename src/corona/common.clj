@@ -15,7 +15,6 @@
    [corona.country-codes :refer :all]
    [taoensso.timbre :as timbre :refer :all]
    [clojure.core.cache :as cache]
-   [corona.common :as co]
    ))
 
 (def ^:const project-name "corona_cases") ;; see project.clj: defproject
@@ -73,7 +72,7 @@
                           (doto (java.util.Properties.)
                             (.load reader)))
                         (catch NullPointerException ex
-                          (if-not co/env-devel?
+                          (if-not env-devel?
                             (error "Can't read resource" url))))]
       (get props "version"))))
 

@@ -233,7 +233,8 @@
   See also `footer`, `bot-father-edit-cmds`."
   [{:keys [data msg-idx cnt-msgs sort-by-case] :as prm}]
   (let [
-        cnt-reports (count (data/raw-dates)) ;; TODO must be calculated only once
+        ;; TODO calculate count of reports only once
+        cnt-reports (count (data/raw-dates))
         spacer " "
         sort-indicator "▴" ;; " " "▲"
         omag-active    7 ;; order of magnitude i.e. number of digits

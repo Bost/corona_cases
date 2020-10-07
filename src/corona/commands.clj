@@ -92,7 +92,7 @@ See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
                        :cc country-code
                        :stats (v1/pic-data)}))]
         (morse/send-photo co/token chat-id options content))
-      (debug "Plot not displayed. co/env-devel? " co/env-devel?))))
+      (debug "Plot not displayed. co/env-devel?" co/env-devel?))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

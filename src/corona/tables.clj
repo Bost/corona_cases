@@ -245,7 +245,7 @@
 (def ^:const population-table
   "
   https://www.worldometers.info/world-population/population-by-country/
-  TODO create spec. E.g. Rate is percentage must be between 0 and 100
+  TODO create spec, e.g. Rate is percentage so it must be between 0 and 100
 
   Country
   Population
