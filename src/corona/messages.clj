@@ -15,6 +15,7 @@
    [utils.num :as un]
    [incanter.stats :as istats]
    [incanter.zoo :as izoo]
+   [taoensso.timbre :as timbre :refer :all]
    )
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
@@ -355,6 +356,7 @@
   TODO make an api service for the content shown in the message
   "
   [{:keys [country-code rank cnt-countries] :as prm}]
+  (debug (format "worldwide? %s" (worldwide? country-code)))
   (format-linewise
    [["%s\n"  ; extended header
      [(format-linewise
@@ -460,21 +462,26 @@
                          "<code>%s</code>\n%s"
                          #_"<code>%s\n%s</code>" l/active-last-7
                          (u/sjoin last-7-reports))]]
-               ["\n%s"
-                [(format-linewise
-                  [["%s" [l/people            :p]]
-                   ["%s" [l/active-per-1e5    :i100k]]
-                   ["%s" [l/recovered-per-1e5 :r100k]]
-                   ["%s" [l/deaths-per-1e5    :d100k]]
-                   ["%s" [l/closed-per-1e5    :c100k]]]
-                  :line-fmt (str "<code>%s</code>: %s / " cnt-countries "\n")
-                  :fn-fmts
-                  (fn [fmts] (format "Ranking on the list of all %s countries:\n%s"
-                                    cnt-countries
-                                    (s/join "" fmts)))
-                  :fn-args
-                  (fn [args] (update args (dec (count args))
-                                    (fn [_] (get rank (last args))))))]]])))))]]
+
+               ;; no country ranking can be displayed for worldwide statistics
+               (if (worldwide? country-code)
+                 ["" [""]]
+                 ["\n%s"
+                  [(format-linewise
+                    [["%s" [l/people            :p]]
+                     ["%s" [l/active-per-1e5    :i100k]]
+                     ["%s" [l/recovered-per-1e5 :r100k]]
+                     ["%s" [l/deaths-per-1e5    :d100k]]
+                     ["%s" [l/closed-per-1e5    :c100k]]]
+                    :line-fmt (str "<code>%s</code>: %s / " cnt-countries "\n")
+                    :fn-fmts
+                    (fn [fmts] (format "Ranking on the list of all %s countries:\n%s"
+                                      cnt-countries
+                                      (s/join "" fmts)))
+                    :fn-args
+                    (fn [args] (update args (dec (count args))
+                                      (fn [_] (get rank (last args))))))]]
+                 )])))))]]
     ["%s\n" [(footer prm)]]])
 
   ;; By default Vars are static, but Vars can be marked as dynamic to
