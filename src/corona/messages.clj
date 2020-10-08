@@ -257,15 +257,16 @@
                    )]]])
      (s/join
       "\n"
-      (map (fn [stats]
-             (format "<code>%s%s%s%s%s %s</code>  %s"
-                     (co/left-pad (:i stats) " " omag-active)
-                     spacer
-                     (co/left-pad (:r stats) " " omag-recov)
-                     spacer
-                     (co/left-pad (:d stats) " " omag-deaths)
-                     (co/right-pad (:cn stats) 17)
-                     (s/lower-case (co/encode-cmd (:cc stats)))))
+      (map (fn [{:keys [i r d cc] :as stats}]
+             (let [cn (cr/country-name-aliased cc)]
+               (format "<code>%s%s%s%s%s %s</code>  %s"
+                       (co/left-pad i " " omag-active)
+                       spacer
+                       (co/left-pad r " " omag-recov)
+                       spacer
+                       (co/left-pad d " " omag-deaths)
+                       (co/right-pad cn 17)
+                       (s/lower-case (co/encode-cmd cc)))))
            (->> data
                 #_(take-last 11)
                 #_(partition-all 2)
@@ -307,15 +308,16 @@
                  )]]])
      (s/join
       "\n"
-      (map (fn [stats]
-             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
-                     (co/left-pad (:i100k stats) " " omag-active-per-100k)
-                     spacer
-                     (co/left-pad (:r100k stats) " " omag-recovered-per-100k)
-                     spacer
-                     (co/left-pad (:d100k stats) " " omag-deaths-per-100k)
-                     (co/right-pad (:cn stats) 17)
-                     (s/lower-case (co/encode-cmd (:cc stats)))))
+      (map (fn [{:keys [i100k r100k d100k cc] :as stats}]
+             (let [cn (cr/country-name-aliased cc)]
+               (format "<code>   %s%s   %s%s    %s %s</code>  %s"
+                       (co/left-pad i100k " " omag-active-per-100k)
+                       spacer
+                       (co/left-pad r100k " " omag-recovered-per-100k)
+                       spacer
+                       (co/left-pad d100k " " omag-deaths-per-100k)
+                       (co/right-pad cn 17)
+                       (s/lower-case (co/encode-cmd cc)))))
            (->> data
                 #_(take-last 11)
                 #_(partition-all 2)
@@ -358,7 +360,7 @@
         ["%s "  [(cr/country-name-aliased country-code)]]
         ["%s"   [;; country commands
                  (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
-                        (map (fn [s] (->> s s/lower-case co/encode-cmd))
+                        (map (fn [s] (co/encode-cmd (s/lower-case s)))
                              [country-code
                               (cc/country-code-3-letter country-code)]))]]])]]
     ["%s\n" [(str l/day " " (count (data/raw-dates)))]]
@@ -469,9 +471,8 @@
                                     cnt-countries
                                     (s/join "" fmts)))
                   :fn-args
-                  (fn [args] (update args (-> args (count) (dec))
-                                    (fn [_] (->> args (last)
-                                                (get rank))))))]]])))))]]
+                  (fn [args] (update args (dec (count args))
+                                    (fn [_] (get rank (last args))))))]]])))))]]
     ["%s\n" [(footer prm)]]])
 
   ;; By default Vars are static, but Vars can be marked as dynamic to

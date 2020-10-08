@@ -52,10 +52,9 @@
   (let [cmds (cm/cmds)]
     (info (str "[" (te/tnow) " " co/bot-ver "]")
           "Registering" (count cmds) "Telegram Chatbot commands...")
-    (->> cmds
-         (mapv cmd-handler)
-         (into [(h/callback-fn msg/callback-handler-fn)])
-         (apply h/handlers))))
+    (apply h/handlers
+           (into [(h/callback-fn msg/callback-handler-fn)]
+                 (mapv cmd-handler cmds)))))
 
 (defn start-polling
   "Starts long-polling process.

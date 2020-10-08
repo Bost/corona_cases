@@ -95,15 +95,13 @@
 
 (defn list-sorted-by-desc [case-kw]
   (format "Countries sorted by nr. of %s" ;; "... in ascending order"
-          (->> [confirmed-cases recovered-cases deaths
-                active-cases
-                active-per-1e5
-                recovered-per-1e5
-                deaths-per-1e5
-                ]
-               (map s/lower-case)
-               (zipmap co/basic-cases)
-               case-kw)))
+          (case-kw (zipmap co/basic-cases
+                           (map s/lower-case
+                                [confirmed-cases recovered-cases deaths
+                                 active-cases
+                                 active-per-1e5
+                                 recovered-per-1e5
+                                 deaths-per-1e5])))))
 
 (def ^:const buttons "Shortened button names"
   (zipmap co/absolute-cases ["Co" "Re" "De" "Ac"]))

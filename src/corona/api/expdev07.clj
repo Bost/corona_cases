@@ -31,7 +31,7 @@
 
 (defn raw-dates-unsorted []
   #_[(keyword "2/22/20") (keyword "2/2/20")]
-  (->> (data-memo) :confirmed :locations last :history keys))
+  (keys (:history (last (:locations (:confirmed (data-memo)))))))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
@@ -294,15 +294,15 @@
       (= country-code (:country_code loc)))))
 
 (defn stats-per-country [{:keys [cc] :as prm}]
-  (->> (assoc prm :pred (pred-fn cc))
-       (last-day)
-       (conj {:cn (cr/country-name-aliased cc)
-              :cc cc})))
+  (conj
+   (last-day (assoc prm :pred (pred-fn cc)))
+   #_{:cn (cr/country-name-aliased cc)}
+   {:cc cc}))
 
 (defn stats-all-affected-countries [prm]
-  (->> (all-affected-country-codes-memo)
-       (map (fn [cc]
-              (stats-per-country (assoc prm :cc cc))))))
+  (map (fn [cc]
+         (stats-per-country (assoc prm :cc cc)))
+       (all-affected-country-codes-memo)))
 
 (def stats-all-affected-countries-memo
   #_stats-all-affected-countries

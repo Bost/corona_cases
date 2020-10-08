@@ -43,30 +43,31 @@ See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
     (apply merge-with deep-merge maps)))
 
 (defn rank [{:keys [rank-kw] :as prm}]
-  (->> (data/stats-all-affected-countries-memo prm)
-       #_(take 2)
-       ;; create and execute sorting function
-       ((fn [coll] (sort-by rank-kw > coll)))
-       (map-indexed (fn [idx hm]
-                      (-> (select-keys hm [:cc])
-                          (update-in [:rank rank-kw] (fn [_] idx)))))))
+  #_(defn sort-fn [coll] (sort-by rank-kw > coll))
+  (map-indexed
+   (fn [idx hm]
+     (update-in (select-keys hm [:cc]) [:rank rank-kw] (fn [_] idx)))
+   (sort-by rank-kw >
+            ;; data/stats-all-affected-countries-memo - not passing the prm
+            (let [prm {}]
+              (data/stats-all-affected-countries-memo prm)))))
 
 (defn calculate-rankings [prm]
-  (let [rakings (->> [:p :c100k :r100k :d100k :i100k]
-                     #_(take 3)
-                     (map (fn [rank-kw] (rank (assoc prm :rank-kw rank-kw))))
-                     (u/transpose))]
-    (->> (data/all-affected-country-codes-memo)
-         #_(take 2)
-         (map (fn [affected-cc]
-                (->> rakings
-                     (map (fn [ranking]
-                            (filter (fn [{:keys [cc]}] (= cc affected-cc))
-                                    ranking)))
-                     (reduce into [])
-                     (apply deep-merge)))))))
+  (let [rankings (u/transpose (map (fn [rank-kw]
+                                     (rank (assoc prm :rank-kw rank-kw)))
+                                   [:p :c100k :r100k :d100k :i100k]))]
+    (map (fn [affected-cc]
+           (apply deep-merge
+                  (reduce into []
+                          (map (fn [ranking]
+                                 (filter (fn [{:keys [cc]}]
+                                           (= cc affected-cc))
+                                         ranking))
+                               rankings))))
+         (data/all-affected-country-codes-memo))))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
+  #_(debug "world" prm)
   (let [prm (assoc prm :parse_mode "HTML")]
     (let [options (select-keys prm (keys msg/options))
           cnt-countries (count (data/all-affected-country-codes-memo))
@@ -75,14 +76,14 @@ See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
                              :cnt-countries cnt-countries)
                       (conj
                        ;; the order of countries should be calculated only once
-                       (->> (calculate-rankings prm)
-                            (filter (fn [{:keys [cc]}] (= cc country-code)))
-                            (map (fn [m] (select-keys m [:rank])))
-                            (first)))
+                       (first (map (fn [m] (select-keys m [:rank]))
+                                   (filter (fn [{:keys [cc]}] (= cc country-code))
+                                           (calculate-rankings prm)))))
                       (msg/detailed-info))]
       (morse/send-text co/token chat-id options content))
 
-    (if-not co/env-devel? ;; don't show the graph when developing
+    (if false #_co/env-devel? ;; don't show the graph when developing
+      (debug "Plot not displayed. co/env-devel?" co/env-devel?)
       (let [options (if (msg/worldwide? country-code)
                       (msg/buttons {:chat-id chat-id :cc country-code})
                       {})
@@ -91,8 +92,7 @@ See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
                       {:day (count (data/raw-dates-unsorted))
                        :cc country-code
                        :stats (v1/pic-data)}))]
-        (morse/send-photo co/token chat-id options content))
-      (debug "Plot not displayed. co/env-devel?" co/env-devel?))))
+        (morse/send-photo co/token chat-id options content)))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
