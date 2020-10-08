@@ -9,10 +9,10 @@
    [compojure.handler :refer [site]]
    [compojure.route :as route]
    [corona.common :as co]
-   [corona.telegram :as tgram]
+   [corona.telegram]
    [ring.adapter.jetty :as jetty]
    [taoensso.timbre :as timbre :refer :all]
-   [corona.api.expdev07 :as data]
+   [corona.api.expdev07]
    )
   (:import
    java.time.ZoneId
@@ -142,13 +142,14 @@
                      (t/default-time-zone)
                      (ZoneId/systemDefault)
                      (.getID (TimeZone/getDefault)))))
+    (webapp port)
     (doall
-     (webapp port)
      (pmap (fn [form]
              (debug (format "[-main] evaluating %s..." form))
              (eval form))
-           ['(tgram/endlessly data/request! co/ttl)
-            '(tgram/telegram)]))
+           ['(corona.telegram/endlessly corona.api.expdev07/request!
+                                        corona.common/ttl)
+            '(corona.telegram/telegram)]))
     #_(map (fn [fn-name] (fn-name))
            [
             ;; Seems like the webapp must be always started, otherwise I get:

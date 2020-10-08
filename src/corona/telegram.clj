@@ -70,18 +70,18 @@
      running)))
 
 (defn telegram [& args]
-  (let [msg (format "[telegram] starting with %s ... "
+  (let [msg (format "[telegram] starting with %s..."
                     (if args (str "args: " args) "no args"))]
     (info msg)
-    (do
-      (let [blank-prms (filter (fn [v] (-> v en/env s/blank?))
-                               [:telegram-token])]
-        (when (not-empty blank-prms)
-          (error (str "[" (te/tnow) " " co/bot-ver "]")
-                 "Undefined environment var(s):" blank-prms)
-          (System/exit 1)))
-      (async/<!! (start-polling co/token (handler))))
-    (info (format "%s done" msg))))
+    (let [blank-prms (filter (fn [v] (-> v en/env s/blank?))
+                             [:telegram-token])]
+      (when (not-empty blank-prms)
+        (error (str "[" (te/tnow) " " co/bot-ver "]")
+               "Undefined environment var(s):" blank-prms)
+        (System/exit 1)))
+    (doall
+     (async/<!! (start-polling co/token (handler))))
+    (fatal (format "%s done - this must not happen!" msg))))
 
 (defn -main [& args]
   (apply telegram args))
@@ -98,10 +98,12 @@
   "Invoke fun and put the thread to sleep for millis in an endless loop.
   TODO have a look at `repeatedly`"
   [fun ttl]
-  (debug "[endlessly] starting...")
-  (while @continue
-    (fun)
-    (Thread/sleep ttl)))
+  (let [msg "[endlessly] starting..."]
+    (info msg)
+    (while @continue
+      (fun)
+      (Thread/sleep ttl))
+    (fatal (format "%s done - this must not happen!" msg))))
 
 (defn start []
   (swap! test-obj (fn [_] true))
