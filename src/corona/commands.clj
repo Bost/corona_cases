@@ -80,42 +80,29 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn partition-in-sub-msgs
-  "Split the long list of all countries into smaller subparts"
-  [col]
-  (partition-all (/ (count col) cnt-messages-in-listing) col))
-
-(defn list-countries [{:keys [chat-id sort-by-case] :as prm}]
-  (let [sub-msgs (partition-in-sub-msgs
-                  (sort-by sort-by-case <
-                           (data/stats-all-affected-countries-memo prm)))
+(defn listing [{:keys [listing-fn chat-id sort-by-case] :as prm}]
+  (let [coll (sort-by sort-by-case <
+                      (data/stats-all-affected-countries-memo prm))
+        ;; Split the long list of all countries into smaller subparts
+        sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
         cnt-msgs (count sub-msgs)]
     (doall
      (map-indexed (fn [idx sub-msg]
                     (morse/send-text co/token chat-id
                                      (select-keys prm (keys msg/options))
-                                     (msg/list-countries-memo
+                                     (listing-fn
                                       (assoc prm
                                              :data sub-msg
                                              :msg-idx (inc idx)
                                              :cnt-msgs cnt-msgs))))
                   sub-msgs))))
 
-(defn list-per-100k [{:keys [chat-id sort-by-case] :as prm}]
-  (let [sub-msgs (partition-in-sub-msgs
-                  (sort-by sort-by-case <
-                           (data/stats-all-affected-countries-memo prm)))
-        cnt-msgs (count sub-msgs)]
-    (doall
-     (map-indexed (fn [idx sub-msg]
-                    (morse/send-text co/token chat-id
-                                     (select-keys prm (keys msg/options))
-                                     (msg/list-per-100k-memo
-                                      (assoc prm
-                                             :data sub-msg
-                                             :msg-idx (inc idx)
-                                             :cnt-msgs cnt-msgs))))
-      sub-msgs))))
+
+(defn list-countries [prm]
+  (listing (assoc prm :listing-fn msg/list-countries-memo)))
+
+(defn list-per-100k [prm]
+  (listing (assoc prm :listing-fn msg/list-per-100k-memo)))
 
 (defn explain [{:keys [chat-id] :as prm}]
   (morse/send-text co/token chat-id msg/options (msg/explain prm)))
