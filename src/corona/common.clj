@@ -17,6 +17,18 @@
    [clojure.core.cache :as cache]
    ))
 
+(defn ttt
+  "For debugging.
+  TODO move ttt to utils and make it monadic"
+  [fun & args]
+  (debug fun #_args)
+  (let [tbeg (System/currentTimeMillis)]
+    (let [r (doall (apply fun args))]
+      (debug (format "%s took %s ms"
+                     fun
+                     (- (System/currentTimeMillis) tbeg)))
+      r)))
+
 (def ^:const project-name "corona_cases") ;; see project.clj: defproject
 
 (def token (en/env :telegram-token))

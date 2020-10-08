@@ -14,18 +14,8 @@
    [taoensso.timbre :as timbre :refer :all]
    ))
 
-#_(defn deep-merge
-  "Recursively merges maps.
-  Thanks to https://dnaeon.github.io/recursively-merging-maps-in-clojure/"
-  [& maps]
-  (letfn [(m [& xs]
-            (if (some #(and (map? %) (not (record? %))) xs)
-              (apply merge-with m xs)
-              (last xs)))]
-    (reduce m maps)))
-
 (defn deep-merge
-  "Recursively merges maps.
+  "Recursively merges maps. TODO see https://github.com/weavejester/medley
 Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2711849"
   [& maps]
   (apply merge-with (fn [& args]
@@ -33,14 +23,6 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                         (apply deep-merge args)
                         (last args)))
          maps))
-
-#_(defn deep-merge
-  "Might be buggy.
-See https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2845162"
-  [a & maps]
-  (if (map? a)
-    (apply merge-with deep-merge a maps)
-    (apply merge-with deep-merge maps)))
 
 (defn rank [{:keys [rank-kw] :as prm}]
   #_(defn sort-fn [coll] (sort-by rank-kw > coll))
