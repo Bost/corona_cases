@@ -86,38 +86,36 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   (partition-all (/ (count col) cnt-messages-in-listing) col))
 
 (defn list-countries [{:keys [chat-id sort-by-case] :as prm}]
-  (let [sub-msgs (->> (data/stats-all-affected-countries-memo prm)
-                      ;; create and execute sorting function
-                      ((fn [coll] (sort-by sort-by-case < coll)))
-                      (partition-in-sub-msgs))
+  (let [sub-msgs (partition-in-sub-msgs
+                  (sort-by sort-by-case <
+                           (data/stats-all-affected-countries-memo prm)))
         cnt-msgs (count sub-msgs)]
-    (->> sub-msgs
-         #_(take 3)
-         #_(take-last 1)
-         (map-indexed
-          (fn [idx sub-msg]
-            (->> (assoc prm :data sub-msg :msg-idx (inc idx) :cnt-msgs cnt-msgs)
-                 (msg/list-countries-memo)
-                 (morse/send-text co/token chat-id
-                                  (select-keys prm (keys msg/options))))))
-         doall)))
+    (doall
+     (map-indexed (fn [idx sub-msg]
+                    (morse/send-text co/token chat-id
+                                     (select-keys prm (keys msg/options))
+                                     (msg/list-countries-memo
+                                      (assoc prm
+                                             :data sub-msg
+                                             :msg-idx (inc idx)
+                                             :cnt-msgs cnt-msgs))))
+                  sub-msgs))))
 
 (defn list-per-100k [{:keys [chat-id sort-by-case] :as prm}]
-  (let [sub-msgs (->> (data/stats-all-affected-countries-memo prm)
-                      ;; create and execute sorting function
-                      ((fn [coll] (sort-by sort-by-case < coll)))
-                      (partition-in-sub-msgs))
+  (let [sub-msgs (partition-in-sub-msgs
+                  (sort-by sort-by-case <
+                           (data/stats-all-affected-countries-memo prm)))
         cnt-msgs (count sub-msgs)]
-    (->> sub-msgs
-         #_(take 3)
-         #_(take-last 1)
-         (map-indexed
-          (fn [idx sub-msg]
-            (->> (assoc prm :data sub-msg :msg-idx (inc idx) :cnt-msgs cnt-msgs)
-                 (msg/list-per-100k-memo)
-                 (morse/send-text co/token chat-id
-                                  (select-keys prm (keys msg/options))))))
-         doall)))
+    (doall
+     (map-indexed (fn [idx sub-msg]
+                    (morse/send-text co/token chat-id
+                                     (select-keys prm (keys msg/options))
+                                     (msg/list-per-100k-memo
+                                      (assoc prm
+                                             :data sub-msg
+                                             :msg-idx (inc idx)
+                                             :cnt-msgs cnt-msgs))))
+      sub-msgs))))
 
 (defn explain [{:keys [chat-id] :as prm}]
   (morse/send-text co/token chat-id msg/options (msg/explain prm)))

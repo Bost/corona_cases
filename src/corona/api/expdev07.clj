@@ -17,11 +17,10 @@
 
 (defn request! []
   (doall
-   (debug "Requesting data...")
    (let [tbeg (System/currentTimeMillis)]
      (let [response (data)]
        (swap! cache (fn [_] response))
-       (debug (format "%s chars received in %s ms"
+       (debug (format "%s characters cached in %s ms"
                       (count (str @cache))
                       (- (System/currentTimeMillis) tbeg)))))))
 

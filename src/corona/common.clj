@@ -121,15 +121,9 @@
         (s/join (repeat (- padding-len (count s)) with)))))
 
 (defn get-json [url]
-  ;; TODO for logging use monad (Kleisli Category) or taoensso.timber
-  (let [tbeg (te/tnow)]
-    (info (str "[" tbeg "           " " " bot-ver " /" "get-json " url "]"))
-    (let [r (as-> url $
-              (client/get $ {:accept :json})
-              (:body $)
-              (json/read-json $))]
-      (info (str "[" tbeg ":" (te/tnow) " " bot-ver " /" "get-json " url "]"))
-      r)))
+  (info "Requesting json-data from" url)
+  (json/read-json
+   (:body (client/get url {:accept :json}))))
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))
 
