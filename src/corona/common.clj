@@ -229,9 +229,13 @@
 (def ^:const api-server (cond (or env-prod? env-test?) heroku-host-api-server
                               :else                    "localhost:8000"))
 
+(def ttl
+  "Time to live in (* <minutes> <seconds> <miliseconds>)."
+  (* 60 60 1000))
+
+;; TODO reload only the latest N reports. e.g. try one week
 (defn memo-ttl
-  "In (* <minutes> 60 1000)
-  TODO reload only the latest N reports. e.g. try one week
-  TODO auto-reload expired cache, don't wait for the next request"
+  "E.g.:
+  (def foo-fun-memo (co/memo-ttl foo-fun))"
   [fun]
-  (memo/ttl fun {} :ttl/threshold (* 60 60 1000)))
+  (memo/ttl fun {} :ttl/threshold ttl))
