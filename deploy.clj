@@ -55,7 +55,7 @@
 (def commit (sh "git" "rev-parse" "--short" "master"))
 (def version-number (project-version-number))
 
-(println 'version-number ": " version-number)
+(printf "%s: %s\n" 'version-number version-number)
 
 ;; `heroku logs --tail --app $APP` blocks the execution
 (sh "heroku" "addons:open" "papertrail" "--app" app)

@@ -121,7 +121,7 @@
         (s/join (repeat (- padding-len (count s)) with)))))
 
 (defn get-json [url]
-  (info "Requesting json-data from" url)
+  (info (format "Requesting json-data from %s ..." url))
   (json/read-json
    (:body (client/get url {:accept :json}))))
 

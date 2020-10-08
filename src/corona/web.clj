@@ -117,51 +117,46 @@
        (route/not-found (slurp (io/resource "404.html")))))
 
 (defn webapp [& [port]]
-  (let [msg (str "Starting " co/env-type " webapp...")]
-    (let [tbeg (te/tnow)
-          log-fmt "[%s%s%s %s] %s\n"]
-      (info (format log-fmt tbeg " " "          " co/bot-ver msg))
-      (let [port (Integer. (or port co/port
-                               (cond co/env-prod? 5000
-                                     ;; keep port-nr in sync with README.md
-                                     :else 5050)))]
-        (jetty/run-jetty (site #'app) {:port port :join? false}))
-      (info (format log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done"))))))
+  (let [msg (format "[webapp] starting %s ..." co/env-type)]
+    (info msg)
+    (let [port (Integer. (or port co/port
+                             (cond co/env-prod? 5000
+                                   ;; keep port-nr in sync with README.md
+                                   :else 5050)))]
+      (jetty/run-jetty (site #'app) {:port port :join? false}))
+    (info (format "%s done" msg))))
 
 (defn -main [& [port]]
-  (let [msg (str "Starting " co/env-type " -main...")]
-    (let [tbeg (te/tnow)
-          log-fmt "[%s%s%s %s] %s\n"]
-      (info (format log-fmt tbeg " " "          " co/bot-ver msg))
-      (do
-        (if (= (str (t/default-time-zone))
-               (str (ZoneId/systemDefault))
-               (.getID (TimeZone/getDefault)))
-          (info (str "[" (te/tnow) " " co/bot-ver "]")
-                (let [zone-id "Europe/Berlin"]
-                  (format "TimeZone: %s; current time: %s (%s in %s)"
-                          (str (t/default-time-zone))
-                          (te/tnow)
-                          (te/tnow zone-id)
-                          zone-id)))
-          (info (str "[" (te/tnow) " " co/bot-ver "]")
-                (format (str "t/default-time-zone %s; "
-                             "ZoneId/systemDefault: %s; "
-                             "TimeZone/getDefault: %s\n")
-                        (t/default-time-zone)
-                        (ZoneId/systemDefault)
-                        (.getID (TimeZone/getDefault)))))
-        (pmap (fn [fn-name] (fn-name))
-              [telegram/-main
-               ;; Seems like the webapp must be always started, otherwise I get:
-               ;; Error R10 (Boot timeout) -> Web process failed to bind to
-               ;; $PORT within 60 seconds of launch
-               ;; TODO try to change it in the Procfile. See in the console:
-               ;;     remote: -----> Discovering process types
-               ;;     remote:        Procfile declares types -> web
-               ;; during the deployment process
-               webapp]))
-      (info (format log-fmt tbeg ":" (te/tnow)    co/bot-ver (str msg " done"))))))
+  (debug (format "bot-ver %s" co/bot-ver))
+  (let [msg (format "[-main] starting %s ... " co/env-type)]
+    (info msg)
+    (do
+      (if (= (str (t/default-time-zone))
+             (str (ZoneId/systemDefault))
+             (.getID (TimeZone/getDefault)))
+        (debug (let [zone-id "Europe/Berlin"]
+                 (format "TimeZone: %s; current time: %s (%s in %s)"
+                         (str (t/default-time-zone))
+                         (te/tnow)
+                         (te/tnow zone-id)
+                         zone-id)))
+        (debug (format (str "t/default-time-zone %s; "
+                            "ZoneId/systemDefault: %s; "
+                            "TimeZone/getDefault: %s\n")
+                       (t/default-time-zone)
+                       (ZoneId/systemDefault)
+                       (.getID (TimeZone/getDefault)))))
+      (pmap (fn [fn-name] (fn-name))
+            [telegram/-main
+             ;; Seems like the webapp must be always started, otherwise I get:
+             ;; Error R10 (Boot timeout) -> Web process failed to bind to
+             ;; $PORT within 60 seconds of launch
+             ;; TODO try to change it in the Procfile. See in the console:
+             ;;     remote: -----> Discovering process types
+             ;;     remote:        Procfile declares types -> web
+             ;; during the deployment process
+             webapp]))
+    (info (format "%s done" msg))))
 
 ;; For interactive development:
 (def test-obj (atom nil))

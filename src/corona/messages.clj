@@ -181,8 +181,10 @@
              [:sum :abs]))]})})
 
 (defn worldwide? [country-code]
-  (in? [cc/worldwide-2-country-code cc/worldwide-3-country-code cc/worldwide]
-       country-code))
+  (let [r (in? [cc/worldwide-2-country-code cc/worldwide-3-country-code
+                cc/worldwide] country-code)]
+    (debug (format "country-code %s; worldwide? %s" r))
+    r))
 
 (defn callback-handler-fn [{:keys [data] :as prm}]
   (let [{country-code :cc
