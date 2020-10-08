@@ -11,6 +11,7 @@
    [morse.handlers :as h]
    [morse.polling :as p]
    [taoensso.timbre :as timbre :refer :all]
+   [corona.api.expdev07 :as data]
    ))
 
 (defn wrap-fn-pre-post-hooks
@@ -90,21 +91,28 @@
 ;; For interactive development:
 (def test-obj (atom nil))
 
-(def refresh-cache
-  "Auto-refresh cache by invoking a request from a separate thread when TTL
-  expires"
+(def continue
+  "A flag to continue running the loop in the `endlessly` function."
   (atom true))
 
+(defn endlessly
+  "Invoke fun and put the thread to sleep for millis in an endless loop.
+  TODO have a look at `repeatedly`"
+  [fun ttl]
+  (while @continue
+    (fun)
+    (Thread/sleep ttl)))
+
 (defn start []
-  (swap! test-obj (fn [_] (->> ['(while @refresh-cache
-                                  (Thread/sleep 4000)
-                                  (printf "%s\n" "Cache refreshed"))
-                               '(start-polling co/token (handler))]
-                              (pmap eval)))))
+  (swap! test-obj (fn [_] true))
+  (->> ['(endlessly data/request! co/ttl)
+        '(start-polling co/token (handler))]
+       (pmap eval)))
+
 (defn stop []
-  (swap! test-obj (fn [_] (-> ['(swap! refresh-cache (fn [_] false))
-                              '(p/stop @test-obj)]
-                             (pmap eval)))))
+  (swap! test-obj (fn [_] nil))
+  (swap! continue (fn [_] false)))
+
 (defn restart []
   (when @test-obj
     (stop)

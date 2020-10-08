@@ -13,7 +13,21 @@
 
 (defn data [] (co/get-json url))
 
-(def data-memo (co/memo-ttl data))
+(def cache (atom nil))
+
+(defn request! []
+  (doall
+   (debug "Requesting data...")
+   (let [tbeg (System/currentTimeMillis)]
+     (let [response (data)]
+       (swap! cache (fn [_] response))
+       (debug (format "%s chars received in %s ms"
+                      (count (str @cache))
+                      (- (System/currentTimeMillis) tbeg)))))))
+
+(def data-memo
+  (fn [] @cache)
+  #_(co/memo-ttl data))
 
 (defn raw-dates-unsorted []
   #_[(keyword "2/22/20") (keyword "2/2/20")]
