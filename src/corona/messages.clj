@@ -174,7 +174,7 @@
        (mapv (fn [type]
                (mapv (fn [case-kw]
                        {:text (str (case-kw l/buttons)
-                                   (type l/type))
+                                   (type l/plot-type))
                         :callback_data (pr-str (assoc prm
                                                       :case case-kw
                                                       :type type))})

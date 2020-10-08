@@ -106,7 +106,7 @@
 (def ^:const buttons "Shortened button names"
   (zipmap co/absolute-cases ["Co" "Re" "De" "Ac"]))
 
-(def ^:const type "Buttons for plot-types" {:sum "Σ" :abs "A"})
+(def ^:const plot-type "Buttons for plot-types" {:sum "Σ" :abs "A"})
 
 ;; (def ^:const language     (:language     lang-strings))
 ;; (def ^:const cmd-country  (format "<%s>" (:country lang-strings)))
