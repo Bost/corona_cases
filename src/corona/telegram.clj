@@ -69,9 +69,9 @@
      (p/create-consumer updates handler)
      running)))
 
-(defn -main [& args]
-  (let [msg (format "[-main] starting %s Telegram Chatbot ... "
-                    co/env-type)]
+(defn telegram [& args]
+  (let [msg (format "[telegram] starting with %s ... "
+                    (if args (str "args: " args) "no args"))]
     (info msg)
     (do
       (let [blank-prms (filter (fn [v] (-> v en/env s/blank?))
@@ -82,6 +82,9 @@
           (System/exit 1)))
       (async/<!! (start-polling co/token (handler))))
     (info (format "%s done" msg))))
+
+(defn -main [& args]
+  (apply telegram args))
 
 ;; TODO use com.stuartsierra.compoment for start / stop
 ;; For interactive development:
@@ -95,6 +98,7 @@
   "Invoke fun and put the thread to sleep for millis in an endless loop.
   TODO have a look at `repeatedly`"
   [fun ttl]
+  (debug "[endlessly] starting...")
   (while @continue
     (fun)
     (Thread/sleep ttl)))
