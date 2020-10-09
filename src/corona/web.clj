@@ -8,7 +8,6 @@
    [compojure.core :refer [ANY defroutes GET POST]]
    [compojure.handler :refer [site]]
    [compojure.route :as route]
-   [corona.api.beds :as beds]
    [corona.common :as co]
    [corona.telegram :as telegram]
    [ring.adapter.jetty :as jetty]
@@ -37,8 +36,6 @@
    (json/write-str
     (->>
      (condp = type
-         :beds (conj #_{"desc" ""}
-                     {(name type) (beds/h)})
          :names (conj {"desc" co/desc-ws})
          :codes (conj {"desc" co/desc-ws})
          (format "Error. Wrong type %s" type))

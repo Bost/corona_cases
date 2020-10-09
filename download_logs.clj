@@ -1,7 +1,7 @@
 #!/usr/bin/env bb
 
 (load-file "envdef.clj")
-
+(ns download-logs)
 ;; TODO rest-args should contain "... hours ago"
 
 (def log-dir (str "log/" env-mame))
