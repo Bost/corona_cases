@@ -194,7 +194,7 @@
          case :case} (edn/read-string data)]
     (when (worldwide? country-code)
       (morse/send-photo
-       co/token chat-id
+       co/telegram-token chat-id
        (buttons {:chat-id chat-id :cc country-code})
        (toByteArrayAutoClosable
         (let [plot-fn (if (= type :sum) p/plot-all-by-case p/plot-all-absolute)]

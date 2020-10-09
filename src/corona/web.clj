@@ -81,7 +81,7 @@
 (defroutes app
   (let [hook telegram-hook]
     (POST
-     (str "/" hook "/" co/token) req ;; {{input :input} :params}
+     (str "/" hook "/" co/telegram-token) req ;; {{input :input} :params}
      {:status 200
       :headers {"Content-Type" "text/plain"}
       :body
@@ -90,7 +90,7 @@
 
   (let [hook google-hook]
     (POST
-     (str "/" hook "/" co/token) req ;; {{input :input} :params}
+     (str "/" hook "/" co/telegram-token) req ;; {{input :input} :params}
      {:status 200
       :headers {"Content-Type" "text/plain"}
       :body
@@ -113,18 +113,37 @@
   (ANY "*" []
        (route/not-found (slurp (io/resource "404.html")))))
 
-(defn webapp [& [port]]
-  (let [msg (format "[webapp] starting...")]
-    (info msg)
-    (let [port (Integer. (or port co/port
-                             (cond co/env-prod? 5000
-                                   ;; keep port-nr in sync with README.md
-                                   :else 5050)))]
-      (jetty/run-jetty (site #'app) {:port port :join? false}))
-    (info (format "%s done" msg))))
+;; For interactive development:
+(defonce component
+  (atom nil))
 
-(defn -main [& [port]]
-  (let [msg (format "[-main] starting %s..." co/env-type)]
+(defn webapp-start [& [env-type port]]
+  (let [port (Integer. (or port co/port
+                           (cond co/env-prod? 5000
+                                 ;; keep port-nr in sync with README.md
+                                 :else 5050)))
+
+        starting "[webapp] starting"
+        msg (format "%s version %s in environment %s on port %s..."
+                    starting
+                    (if co/env-devel? "<UNDEFINED>" co/bot-ver)
+                    env-type
+                    port)]
+    (info msg)
+    (let [web-server (jetty/run-jetty (site #'app) {:port port :join? false})]
+      (swap! component (fn [_] web-server))
+      (info (format "%s... done" starting))
+      web-server)))
+
+(defn -main [& [env-type port]]
+  (let [env-type (or env-type co/env-type)
+        port (or port co/port)
+        starting "[-main] starting"
+        msg (format "%s version %s in environment %s on port %s..."
+                    starting
+                    (if co/env-devel? "<UNDEFINED>" co/bot-ver)
+                    env-type
+                    port)]
     (info msg)
     (if (= (str (t/default-time-zone))
            (str (ZoneId/systemDefault))
@@ -148,27 +167,36 @@
     ;;     remote: -----> Discovering process types
     ;;     remote:        Procfile declares types -> web
     ;; during the deployment process
-    (webapp port)
-    (tgram/-main)
-    (info (format "%s done" msg))))
+    (webapp-start env-type port)
+    (tgram/-main env-type)
+    (info (format "%s... done" starting))))
 
-;; For interactive development:
-(def component-running
-  "Attention!
-  Value is reset to nil when reloading current buffer,
-  e.g. via `s-u` my=cider-save-and-load-current-buffer."
-  (atom nil))
+(defn webapp-stop []
+  (info "[webapp] stopping...")
+  (.stop @component)
+  (let [objs ['component]]
+    (run! (fn [obj-q]
+            (let [obj (eval obj-q)]
+              (swap! obj (fn [_] nil))
+              (debug (format "%s new value: %s"
+                             obj-q (if-let [v (deref obj)]
+                                     v "nil")))))
+          objs)))
 
-(defn start []
-  (info "@component-running" @component-running)
-  (swap! component-running (fn [_] (webapp))))
-
-(defn stop []
-  (info "Stopping...")
-  (.stop @component-running))
-
-(defn restart []
-  (when @component-running
-    (stop)
+(defn webapp-restart []
+  (when @component
+    (webapp-stop)
     (Thread/sleep 400))
-  (start))
+  (webapp-start co/env-type co/port))
+
+;; TODO defonce - add metadata
+#_(let [doc
+      "Attention!
+Value is reset to nil when reloading current buffer,
+e.g. via `s-u` my=cider-save-and-load-current-buffer."]
+  (->> ['component 'data/cache 'tgram/continue 'tgram/component]
+       (run! (fn [v] (alter-meta! (get (ns-interns *ns*) v) assoc :doc doc)))))
+
+
+
+

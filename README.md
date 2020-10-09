@@ -17,20 +17,20 @@ lein repl
 ```
 Start telegram chatbot:
 ```clojure
-(require '[corona.telegram])
-(corona.telegram/-main)
+(require '[corona.telegram] '[corona.common :as co])
+(corona.telegram/-main co/env-type)
 ```
 Start web server:
 ```clojure
-(require 'corona.web)
-(corona.web/-main)
+(require '[corona.telegram] '[corona.common :as co])
+(corona.web/webapp-start co/env-type co/port)
 ```
 Then check the [http://localhost:5050/](http://localhost:5050/)
 
 ## Run locally
 
 ```fish
-heroku local -env=.heroku-local.env
+heroku local --env=.heroku-local.env
 ```
 
 ## Deploy to Heroku

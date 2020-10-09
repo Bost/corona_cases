@@ -62,7 +62,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                                    (filter (fn [{:keys [cc]}] (= cc country-code))
                                            (calculate-rankings prm)))))
                       (msg/detailed-info))]
-      (morse/send-text co/token chat-id options content))
+      (morse/send-text co/telegram-token chat-id options content))
 
     (if co/env-devel? ;; don't show the graph when developing
       (debug "Plot not displayed. co/env-devel?" co/env-devel?)
@@ -74,7 +74,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                       {:day (count (data/raw-dates-unsorted))
                        :cc country-code
                        :stats (v1/pic-data)}))]
-        (morse/send-photo co/token chat-id options content)))))
+        (morse/send-photo co/telegram-token chat-id options content)))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
@@ -88,7 +88,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
         cnt-msgs (count sub-msgs)]
     (doall
      (map-indexed (fn [idx sub-msg]
-                    (morse/send-text co/token chat-id
+                    (morse/send-text co/telegram-token chat-id
                                      (select-keys prm (keys msg/options))
                                      (listing-fn
                                       (assoc prm
@@ -105,17 +105,17 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   (listing (assoc prm :listing-fn msg/list-per-100k-memo)))
 
 (defn explain [{:keys [chat-id] :as prm}]
-  (morse/send-text co/token chat-id msg/options (msg/explain prm)))
+  (morse/send-text co/telegram-token chat-id msg/options (msg/explain prm)))
 
 (defn feedback [{:keys [chat-id] :as prm}]
-  (morse/send-text co/token chat-id msg/options (msg/feedback prm)))
+  (morse/send-text co/telegram-token chat-id msg/options (msg/feedback prm)))
 
 ;; (defn language [{:keys [chat-id] :as prm}]
-;;   (morse/send-text co/token chat-id msg/options (msg/language prm)))
+;;   (morse/send-text co/telegram-token chat-id msg/options (msg/language prm)))
 
 (defn contributors [{:keys [chat-id] :as prm}]
   (morse/send-text
-   co/token chat-id msg/options
+   co/telegram-token chat-id msg/options
    (msg/contributors prm)))
 
 (defn- normalize

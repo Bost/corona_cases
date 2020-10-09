@@ -50,7 +50,7 @@
   An Array of Update-objects is returned."
   []
   (let [cmds (cm/cmds)]
-    (info (format "Registering %s Telegram Chatbot commands..." (count cmds)))
+    (info (format "Registering %s chatbot commands..." (count cmds)))
     (apply h/handlers
            (into [(h/callback-fn msg/callback-handler-fn)]
                  (mapv cmd-handler cmds)))))
@@ -69,26 +69,20 @@
      (p/create-consumer updates handler)
      running)))
 
-(defn telegram [& args]
-  (let [msg (format "[telegram] starting with %s..."
-                    (if args (str "args: " args) "no args"))]
+(defn telegram [telegram-token]
+  (let [msg "[telegram] starting..."]
     (info msg)
-    (let [blank-prms (filter (fn [v] (-> v en/env s/blank?))
-                             [:telegram-token])]
-      (when (not-empty blank-prms)
-        (error (str "[" (te/tnow) " " co/bot-ver "]")
+    (when-not (= (count telegram-token) 45)
+      (throw (Exception.
+              (format "Undefined format of %s" (quote telegram-token))))
+      #_(error (str "[" (te/tnow) " " co/bot-ver "]")
                "Undefined environment var(s):" blank-prms)
-        (System/exit 1)))
+      #_(System/exit 1))
     (doall
-     (async/<!! (start-polling co/token (handler))))
+     (async/<!! (start-polling co/telegram-token (handler))))
     (fatal (format "%s done - this must not happen!" msg))))
 
-(def continue
-  "A flag to continue running the loop in the `endlessly` function.
-  Attention!
-  Value is reset to nil when reloading current buffer,
-  e.g. via `s-u` my=cider-save-and-load-current-buffer."
-  (atom true))
+(defonce continue (atom true))
 
 (defn endlessly
   "Invoke fun and put the thread to sleep for millis in an endless loop.
@@ -101,34 +95,35 @@
       (fun))
     (fatal (format "%s done - this must not happen!" msg))))
 
-(defn -main
-  "Fetch api service data and only then register the telegram commands."
-  [& args]
-  (data/request!)
-  (let [funs [(fn p-endlessly [] (endlessly data/request! co/ttl))
-              (fn p-telegram [] (telegram))]]
-    (debug (format "[-main] execute in parallel: %s..." funs))
-    (pmap (fn [fun] (fun))
-          funs
-          #_[(fn [] (endlessly data/request! co/ttl))
-           (fn [] (telegram))])))
-
 ;; TODO use com.stuartsierra.compoment for start / stop
 ;; For interactive development:
-(def component-running
-  "Attention!
-  Value is reset to nil when reloading current buffer,
-  e.g. via `s-u` my=cider-save-and-load-current-buffer."
-  (atom nil))
+(defonce component (atom nil))
 
-(defn start []
-  (info "Starting...")
-  (swap! component-running (fn [_] true))
-  (-main))
+(defn -main
+  "Fetch api service data and only then register the telegram commands."
+  [& [env-type]]
+  (let [starting "[-main] starting"
+        msg (format "%s version %s in environment %s..."
+                    starting
+                    (if co/env-devel? "<UNDEFINED>" co/bot-ver)
+                    env-type)]
+    (info msg)
+    (data/request!)
+    (let [funs [(fn p-endlessly [] (endlessly data/request! co/ttl))
+                (fn p-telegram []
+                  (let [telegram-server
+                        (telegram co/telegram-token)]
+                    ;; TODO I guess the telegram-server, i.e. morse.handler
+                    ;; should be set to the component atom
+                    (swap! component (fn [_] []))
+                    telegram-server))]]
+      (debug (format "[-main] execute in parallel: %s..." funs))
+      (pmap (fn [fun] (fun)) funs))
+    (info (format "%s... done" starting))))
 
 (defn stop []
-  (info "Stopping...")
-  (let [objs ['component-running 'data/cache 'continue]]
+  (info "[telegram] stopping...")
+  (let [objs ['component 'data/cache 'continue]]
     (run! (fn [obj-q]
             (let [obj (eval obj-q)]
               (swap! obj (fn [_] nil))
@@ -139,7 +134,7 @@
 
 (defn restart []
   (info "Restarting...")
-  (when @component-running
+  (when @component
     (stop)
     (Thread/sleep 400))
-  (start))
+  (-main co/env-type))

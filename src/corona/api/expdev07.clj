@@ -13,12 +13,7 @@
 
 (defn data [] (co/get-json url))
 
-(def cache
-  "Stores data received from the `url`.
-  Attention!
-  Value is reset to nil when reloading current buffer,
-  e.g. via `s-u` my=cider-save-and-load-current-buffer."
-  (atom nil))
+(defonce cache (atom nil))
 
 (defn request! []
   (doall
@@ -51,7 +46,7 @@
   sorting with the standard transducers, but also provides a slight performance
   increase over transducing, sorting, and then continuing to transduce.
 
-  Thanx to https://gist.github.com/matthewdowney/380dd28c1046d4919a8c59a523f804fd.js
+  Thanks to https://gist.github.com/matthewdowney/380dd28c1046d4919a8c59a523f804fd.js
   "
   ([]
    (xf-sort compare))

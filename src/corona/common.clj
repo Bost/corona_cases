@@ -15,6 +15,8 @@
    [corona.country-codes :refer :all]
    [taoensso.timbre :as timbre :refer :all]
    [clojure.core.cache :as cache]
+   [clojure.xml :as xml]
+   [clojure.zip :as zip]
    ))
 
 (defn ttt
@@ -29,24 +31,66 @@
                      (- (System/currentTimeMillis) tbeg)))
       r)))
 
-(def ^:const project-name "corona_cases") ;; see project.clj: defproject
+(defn zip-str
+  "Convenience function, first seen at nakkaya.com later in clj.zip src"
+  [s]
+  (zip/xml-zip
+   (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
 
-(def token (en/env :telegram-token))
-(def port "Needed only in the corona.web" (en/env :port))
+(def ^:const project-name
+  "From pom.xml tag: <name>"
+  (->> "pom.xml" (slurp) (zip-str) (first) :content
+       (filter (fn [elem]
+                 (= (:tag elem)
+                    (keyword "xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/name"))))
+       (map (fn [elem] (->> elem :content first)))
+       (first)))
+
+(def environment
+  "Mapping env-type -> bot-name"
+  {"PROD"  {:bot-name project-name}
+   "TEST"  {:bot-name "hokuspokus"}
+   "DEVEL" {:bot-name "hokuspokus"}})
 
 (def env-type (en/env :corona-env-type))
-(def env-prod?  (= env-type "PROD"))
-(def env-test?  (= env-type "TEST"))
-(def env-devel? (= env-type "DEVEL"))
+
+(let [env-types (set (keys environment))]
+  (if (in? env-types env-type)
+    (debug (format "env-type %s is valid" env-type))
+    (throw (Exception.
+            (format
+             "Invalid env-type: %s. It must be an element of %s"
+             env-type env-types)))))
+
+(def telegram-token (en/env :telegram-token))
+
+(def port "Needed only in the corona.web" (en/env :port))
+
+(def bot-name (get-in environment [env-type :bot-name]))
+
+(map (fn [env-var-q]
+       (debug (format "%s: %s"
+                      env-var-q
+                      (if-let [v (let [v (eval env-var-q)]
+                                   (if (in? ['telegram-token] env-var-q)
+                                     (s/replace v #"[a-zA-Z0-9]" "*")
+                                     v))]
+                        v "<UNDEFINED>"))))
+     ['env-type 'telegram-token 'port 'bot-name])
+
+(defn- define-env-predicates
+  "Defines vars: env-prod? env-test? env-devel?"
+  []
+  (let []
+    (run! (fn [v]
+            (let [symb-v (symbol (format "env-%s?" (s/lower-case v)))]
+              (reset-meta! (intern *ns* symb-v (= env-type v))
+                           {:const true :tag `Boolean})))
+          (keys environment))))
+
+(define-env-predicates)
 
 (def ^:const chat-id "112885364")
-(def bot-name (str "@"
-                   (cond
-                     env-prod? project-name
-                     env-test? "hokuspokus"
-                     env-devel? "hokuspokus"
-                     :else "undefined")
-                   "_bot"))
 
 (defn calculate-active [{:keys [c r d]}]
   (- c (+ r d)))
@@ -69,7 +113,7 @@
                p))))
 
 (defn telegram-token-suffix []
-  (let [suffix (.substring token (- (count token) 3))]
+  (let [suffix (.substring telegram-token (- (count telegram-token) 3))]
     (if (or (= suffix "Fq8") (= suffix "MR8"))
       suffix
       (throw (Exception.
