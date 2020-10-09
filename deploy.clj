@@ -14,9 +14,11 @@
   (zip/xml-zip
    (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
 
-;; TODO getting project-version-number from pom.properties may be simpler
 ;; see corona.common/project-version-number
-(defn project-version-number []
+(defn project-version-number
+  "From ./pom.xml tag: <version>. See also the implementation in the common.clj
+  TODO getting project-version-number from pom.properties may be simpler"
+  []
   (->> "pom.xml" (slurp) (zip-str) (first) :content
        (filter (fn [elem] (= (:tag elem)
                             (keyword "xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version"))))
@@ -62,6 +64,7 @@
 (sh "heroku" "ps:scale" "web=0" "--app" app)
 (sh "git" "push" (str/join " " rest-args) remote "master")
 (sh "heroku" "config:set" (str "BOT_VER=" commit) "--app" app)
+;; TODO read CLOJURE_CLI_VERSION from the .env file ???
 (sh "heroku" "config:set" "CLOJURE_CLI_VERSION=1.10.1.697" "--app" app)
 (sh "heroku" "ps:scale" "web=1" "--app" app)
 

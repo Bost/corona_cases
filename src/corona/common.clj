@@ -15,8 +15,7 @@
    [corona.country-codes :refer :all]
    [taoensso.timbre :as timbre :refer :all]
    [clojure.core.cache :as cache]
-   [clojure.xml :as xml]
-   [clojure.zip :as zip]
+   [clojurewerkz.propertied.properties :as p]
    ))
 
 (defn ttt
@@ -31,20 +30,7 @@
                      (- (System/currentTimeMillis) tbeg)))
       r)))
 
-(defn zip-str
-  "Convenience function, first seen at nakkaya.com later in clj.zip src"
-  [s]
-  (zip/xml-zip
-   (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
-
-(def ^:const project-name
-  "From pom.xml tag: <name>"
-  (->> "pom.xml" (slurp) (zip-str) (first) :content
-       (filter (fn [elem]
-                 (= (:tag elem)
-                    (keyword "xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/name"))))
-       (map (fn [elem] (->> elem :content first)))
-       (first)))
+(def ^:const project-name "corona_cases")
 
 (def environment
   "Mapping env-type -> bot-name"
@@ -67,16 +53,6 @@
 (def port "Needed only in the corona.web" (en/env :port))
 
 (def bot-name (get-in environment [env-type :bot-name]))
-
-(map (fn [env-var-q]
-       (debug (format "%s: %s"
-                      env-var-q
-                      (if-let [v (let [v (eval env-var-q)]
-                                   (if (in? ['telegram-token] env-var-q)
-                                     (s/replace v #"[a-zA-Z0-9]" "*")
-                                     v))]
-                        v "<UNDEFINED>"))))
-     ['env-type 'telegram-token 'port 'bot-name])
 
 (defn- define-env-predicates
   "Defines vars: env-prod? env-test? env-devel?"
@@ -125,22 +101,33 @@
                       recognized-token-suffixes))))))
 
 (def project-version-number
-  "From META-INF/maven/%s/%s/pom.properties in uberjar; see the depstar plugin"
-  (let [url (format "META-INF/maven/%s/%s/pom.properties"
-                    project-name project-name)]
-    (if-let [props (try (with-open
-                          [reader (some-> url (io/resource) (io/reader))]
-                          (doto (java.util.Properties.)
-                            (.load reader)))
-                        (catch NullPointerException ex
-                          (if-not env-devel?
-                            (error "Can't read resource" url))))]
-      (get props "version"))))
+  "See also the implementation in the deploy.clj"
+  (:version
+   (let [file (format "META-INF/maven/%s/%s/pom.properties"
+                      project-name project-name)]
+     (if-let [resource (io/resource file)]
+       (p/properties->map (p/load-from resource) true)
+       (if env-devel?
+         nil ;; no version defined when deving
+         (error "Could not read from the resource %s" file))))))
 
 (def bot-ver
-  (format "%s-%s" project-version-number (en/env :bot-ver)))
+  (format "%s-%s" project-version-number
+          (if-let [ver (en/env :bot-ver)]
+            ver "<UNDEFINED>")))
 
 (def bot (str bot-ver ":" env-type))
+
+(run! (fn [env-var-q]
+        (debug (format "%s: %s"
+                       env-var-q
+                       (if-let [v (let [v (eval env-var-q)]
+                                    (if (in? ['telegram-token] env-var-q)
+                                      (s/replace v #"[a-zA-Z0-9]" "*")
+                                      v))]
+                         v "<UNDEFINED>"))))
+      ['env-type 'telegram-token 'port 'bot-name
+       'project-version-number 'bot-ver 'bot])
 
 (defn fix-octal-val
   "(read-string s-day \"08\") produces a NumberFormatException
