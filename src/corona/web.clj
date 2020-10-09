@@ -144,12 +144,12 @@
                      (.getID (TimeZone/getDefault)))))
     (webapp port)
     (doall
-     (pmap (fn [form]
-             (debug (format "[-main] evaluating %s..." form))
-             (eval form))
-           ['(corona.telegram/endlessly corona.api.expdev07/request!
-                                        corona.common/ttl)
-            '(corona.telegram/telegram)]))
+     (pmap (fn [fun]
+             (debug (format "[-main] invoking %s..." fun))
+             (fun))
+           [(fn [] (corona.telegram/endlessly corona.api.expdev07/request!
+                                            corona.common/ttl))
+            (fn [] (corona.telegram/telegram))]))
     #_(map (fn [fn-name] (fn-name))
            [
             ;; Seems like the webapp must be always started, otherwise I get:

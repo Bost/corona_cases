@@ -232,4 +232,5 @@
   "E.g.:
   (def foo-fun-memo (co/memo-ttl foo-fun))"
   [fun]
+  #_fun
   (memo/ttl fun {} :ttl/threshold ttl))

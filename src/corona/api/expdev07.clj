@@ -156,7 +156,6 @@
         )))
 
 (def all-affected-country-codes-memo
-  #_all-affected-country-codes
   (co/memo-ttl all-affected-country-codes))
 
 (defn dates
