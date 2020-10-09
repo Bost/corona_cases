@@ -72,7 +72,9 @@
 (defn telegram [telegram-token]
   (let [msg "[telegram] starting..."]
     (info msg)
-    (when-not (= (count telegram-token) 45)
+    (debug "(count telegram-token)" (count telegram-token))
+    ;; TODO verify telegram-token format
+    #_(when-not (= (count telegram-token) 45)
       (throw (Exception.
               (format "Undefined format of %s" (quote telegram-token))))
       #_(error (str "[" (te/tnow) " " co/bot-ver "]")
