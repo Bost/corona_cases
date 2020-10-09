@@ -38,10 +38,10 @@
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
               (let [chat (:chat (first args))]
-                (info (format msg "pre-hook" chat))))
+                #_(debug (format msg "pre-hook" chat))))
        :post (fn [& args]
                (let [[fn-result {:keys [chat]}] args]
-                 (info (format msg "post-hook" chat))
+                 #_(debug (format msg "post-hook" chat))
                  fn-result))}))))
 
 (defn handler
@@ -84,7 +84,10 @@
     (fatal (format "%s done - this must not happen!" msg))))
 
 (def continue
-  "A flag to continue running the loop in the `endlessly` function."
+  "A flag to continue running the loop in the `endlessly` function.
+  Attention!
+  Value is reset to nil when reloading current buffer,
+  e.g. via `s-u` my=cider-save-and-load-current-buffer."
   (atom true))
 
 (defn endlessly
@@ -94,11 +97,14 @@
   (let [msg "[endlessly] starting..."]
     (info msg)
     (while @continue
-      (fun)
-      (Thread/sleep ttl))
+      (Thread/sleep ttl)
+      (fun))
     (fatal (format "%s done - this must not happen!" msg))))
 
-(defn -main [& args]
+(defn -main
+  "Fetch api service data and only then register the telegram commands."
+  [& args]
+  (data/request!)
   (let [funs [(fn p-endlessly [] (endlessly data/request! co/ttl))
               (fn p-telegram [] (telegram))]]
     (debug (format "[-main] execute in parallel: %s..." funs))
@@ -109,20 +115,31 @@
 
 ;; TODO use com.stuartsierra.compoment for start / stop
 ;; For interactive development:
-(def test-obj (atom nil))
+(def component-running
+  "Attention!
+  Value is reset to nil when reloading current buffer,
+  e.g. via `s-u` my=cider-save-and-load-current-buffer."
+  (atom nil))
 
 (defn start []
-  (info "@test-obj" @test-obj)
-  (swap! test-obj (fn [_] true))
+  (info "Starting...")
+  (swap! component-running (fn [_] true))
   (-main))
 
 (defn stop []
-  (info "Stopping" @test-obj)
-  (swap! test-obj (fn [_] nil))
-  (swap! continue (fn [_] false)))
+  (info "Stopping...")
+  (let [objs ['component-running 'data/cache 'continue]]
+    (run! (fn [obj-q]
+            (let [obj (eval obj-q)]
+              (swap! obj (fn [_] nil))
+              (debug (format "%s new value: %s"
+                             obj-q (if-let [v (deref obj)]
+                                     v "nil")))))
+          objs)))
 
 (defn restart []
-  (when @test-obj
+  (info "Restarting...")
+  (when @component-running
     (stop)
     (Thread/sleep 400))
   (start))

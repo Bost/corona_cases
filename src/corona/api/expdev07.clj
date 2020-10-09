@@ -13,7 +13,12 @@
 
 (defn data [] (co/get-json url))
 
-(def cache (atom nil))
+(def cache
+  "Stores data received from the `url`.
+  Attention!
+  Value is reset to nil when reloading current buffer,
+  e.g. via `s-u` my=cider-save-and-load-current-buffer."
+  (atom nil))
 
 (defn request! []
   (doall
@@ -161,6 +166,7 @@
 (defn dates
   ([] (dates {:limit-fn identity}))
   ([{:keys [limit-fn] :as prm}]
+   #_(debug "dates" {:limit-fn limit-fn})
    (let [sdf (new SimpleDateFormat "MM/dd/yy")]
      (map (fn [rd] (.parse sdf (keyname rd)))
           (limit-fn (raw-dates))))))
@@ -199,7 +205,7 @@
 
 (defn get-counts
   "Returns a hash-map containing case-counts day-by-day. E.g.:
-  (get-counts {:pred (pred-fn sk)})
+  (get-counts {:pred-q '(pred-fn sk) :pred (pred-fn sk)})
   ;; => ;; last 5 values
   {
    :p (... 5456362 5456362 5456362 5456362 5456362)
@@ -208,7 +214,7 @@
    :d (...      31      31      31      31      31)
    :i (...     674     701     702     710     775)}
 
-  (get-counts {:pred (fn [_] true)})
+  (get-counts {:pred-q '(pred-fn true) :pred (fn [_] true)})
   "
   [prm]
   (let [pcrd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
@@ -232,20 +238,47 @@
   #_get-counts
   (co/memo-ttl get-counts))
 
-(defn population [prm] (:p (get-counts-memo prm)))
-(defn confirmed [prm]  (:c (get-counts-memo prm)))
-(defn deaths    [prm]  (:d (get-counts-memo prm)))
-(defn recovered [prm]  (:r (get-counts-memo prm)))
-(defn active    [prm]  (:i (get-counts-memo prm)))
-(defn active-per-100k    [prm] (:i100k (get-counts-memo prm)))
-(defn recovered-per-100k [prm] (:r100k (get-counts-memo prm)))
-(defn deaths-per-100k    [prm] (:d100k (get-counts-memo prm)))
-(defn closed-per-100k    [prm] (:c100k (get-counts-memo prm)))
+(defn population [prm]
+  #_(debug "population" prm)
+  (:p (get-counts-memo prm)))
+
+(defn confirmed [prm]
+  #_(debug "confirmed" prm)
+  (:c (get-counts-memo prm)))
+
+(defn deaths [prm]
+  #_(debug "deaths" prm)
+  (:d (get-counts-memo prm)))
+
+(defn recovered [prm]
+  #_(debug "recovered" prm)
+  (:r (get-counts-memo prm)))
+
+(defn active [prm]
+  #_(debug "active" prm)
+  (:i (get-counts-memo prm)))
+
+(defn active-per-100k [prm]
+  #_(debug "active-per-100k" prm)
+  (:i100k (get-counts-memo prm)))
+
+(defn recovered-per-100k [prm]
+  #_(debug "recovered-per-100k" prm)
+  (:r100k (get-counts-memo prm)))
+
+(defn deaths-per-100k [prm]
+  #_(debug "deaths-per-100k" prm)
+  (:d100k (get-counts-memo prm)))
+
+(defn closed-per-100k [prm]
+  #_(debug "closed-per-100k" prm)
+  (:c100k (get-counts-memo prm)))
+
 
 (defn eval-fun
   "E.g.:
-  (eval-fun {:fun get-last :pred (pred-fn sk)})
-  (eval-fun {:fun get-last :pred (fn [_] true)})
+  (eval-fun {:fun get-last :pred-q '(pred-fn sk) :pred (pred-fn sk)})
+  (eval-fun {:fun get-last :pred-q '(fn [_] true) :pred (fn [_] true)})
   "
   [{:keys [fun date] :as prm}]
   (into {:f (fun (dates-memo))}
@@ -254,8 +287,8 @@
 
 (defn delta
   "E.g.:
-  (delta {:pred (pred-fn cn)})
-  (delta {:pred (fn [_] true)})"
+  (delta {:pred-q '(pred-fn cn)  :pred (pred-fn cn)})
+  (delta {:pred-q '(fn [_] true) :pred (fn [_] true)})"
   [prm]
   (->> [get-prev get-last]
        (map (fn [fun] (eval-fun (assoc prm :fun fun))))
@@ -267,15 +300,15 @@
 
 (defn last-day
   "E.g.:
-  (last-day {:pred (pred-fn sk)})
-  (last-day {:pred (fn [_] true)})"
+  (last-day {:pred-q '(pred-fn sk) :pred (pred-fn sk)})
+  (last-day {:pred-q '(fn [_] true) :pred (fn [_] true)})"
   [prm]
   (eval-fun (assoc prm :fun get-last)))
 
 (defn last-8-reports
   "E.g.:
-  (last-8-reports {:pred (pred-fn sk)})
-  (last-8-reports {:pred (fn [_] true)})"
+  (last-8-reports {:pred-q '(pred-fn sk) :pred (pred-fn sk)})
+  (last-8-reports {:pred-q '(fn [_] true) :pred (fn [_] true)})"
   [prm]
   (eval-fun (assoc prm :fun (fn [coll] (take-last 8 coll)))))
 
@@ -293,7 +326,7 @@
 
 (defn stats-per-country [{:keys [cc] :as prm}]
   (conj
-   (last-day (assoc prm :pred (pred-fn cc)))
+   (last-day (assoc prm :pred-q '(pred-fn cc) :pred (pred-fn cc)))
    #_{:cn (cr/country-name-aliased cc)}
    {:cc cc}))
 

@@ -49,7 +49,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
          (data/all-affected-country-codes-memo))))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
-  (debug "world" prm)
+  #_(debug "world" prm)
   (let [prm (assoc prm :parse_mode "HTML")]
     (let [options (select-keys prm (keys msg/options))
           cnt-countries (count (data/all-affected-country-codes-memo))
@@ -144,6 +144,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
       (fn [chat-id]
         (world {:chat-id chat-id
                 :country-code country-code
+                :pred-q '(msg/pred-fn country-code)
                 :pred (msg/pred-fn country-code)}))})
    [#(s/lower-case %)  ;; /de
     #(s/upper-case %)  ;; /DE
@@ -158,6 +159,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
 (defn cmds-general []
   (let [prm
         (conj
+         {:pred-q '(fn [_] true)}
          {:pred (fn [_] true)}
          msg/options)
 
@@ -185,7 +187,10 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   (->> co/listing-cases-absolute
        (into co/listing-cases-per-100k)
        (map (fn [case-kw]
-              (let [prm (conj {:pred (fn [_] true)} msg/options)
+              (let [prm (conj
+                         {:pred-q '(fn [_] true)}
+                         {:pred (fn [_] true)}
+                         msg/options)
                     prm-country-code {:country-code (cr/country-code cc/worldwide)}]
                 {:name (l/list-sorted-by case-kw)
                  :f (fn [chat-id]

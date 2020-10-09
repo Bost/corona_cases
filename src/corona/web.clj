@@ -153,18 +153,22 @@
     (info (format "%s done" msg))))
 
 ;; For interactive development:
-(def test-obj (atom nil))
+(def component-running
+  "Attention!
+  Value is reset to nil when reloading current buffer,
+  e.g. via `s-u` my=cider-save-and-load-current-buffer."
+  (atom nil))
 
 (defn start []
-  (info "@test-obj" @test-obj)
-  (swap! test-obj (fn [_] (webapp))))
+  (info "@component-running" @component-running)
+  (swap! component-running (fn [_] (webapp))))
 
 (defn stop []
-  (info "Stopping" @test-obj)
-  (.stop @test-obj))
+  (info "Stopping...")
+  (.stop @component-running))
 
 (defn restart []
-  (when @test-obj
+  (when @component-running
     (stop)
     (Thread/sleep 400))
   (start))
