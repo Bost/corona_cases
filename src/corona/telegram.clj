@@ -61,25 +61,29 @@
   manner."
   ([token handler] (start-polling token handler {}))
   ([token handler opts]
-   (let [running (async/chan)
-         updates (p/create-producer
-                  running token opts (fn []
-                                       (when co/env-prod? (System/exit 2))))]
-     (info (format "Polling on handler %s ..." handler))
-     (p/create-consumer updates handler)
-     running)))
+   (debug "start-polling...")
+   (let [running (async/chan)]
+     (debug "running" running)
+     (let [updates (p/create-producer
+                    running token opts (fn []
+                                         (when co/env-prod?
+                                           (let [ret-code 2]
+                                             (debug "(System/exit ret-code)")
+                                             (System/exit ret-code)))))]
+       (info (format "Polling on handler %s ..." handler))
+       (p/create-consumer updates handler)
+       running))))
 
 (defn telegram [telegram-token]
   (let [msg "[telegram] starting..."]
     (info msg)
     (when-not (= (count telegram-token) 45)
       (throw (Exception.
-              (format "Undefined format of %s" (quote telegram-token))))
-      #_(error (str "[" (te/tnow) " " co/bot-ver "]")
-               "Undefined environment var(s):" blank-prms)
-      #_(System/exit 1))
+              (format "Undefined format of %s" (quote telegram-token)))))
     (doall
-     (async/<!! (start-polling co/telegram-token (handler))))
+     (let [port (start-polling co/telegram-token (handler))]
+       (debug "Polling started on port" port)
+       (async/<!! port)))
     (fatal (format "%s done - this must not happen!" msg))))
 
 (defonce continue (atom true))
