@@ -361,7 +361,7 @@
   "
   [{:keys [country-code rank cnt-countries] :as prm}]
   #_(debug "detailed-info" prm)
-  (let [r
+  (let [content
         (format-linewise
          [["%s\n"  ; extended header
            [(format-linewise
@@ -500,8 +500,9 @@
                                #_(debug "[detailed-info] (count worldwide-block)" (count worldwide-block))
                                worldwide-block))])))))))]])
           ["%s\n" [(footer prm)]]])]
-    (debug (format "[detailed-info] message-size %s chars" (count r)))
-    r))
+    (debug (format "[detailed-info] country-code %s; message-size %s chars"
+                   country-code (count content)))
+    content))
 
 #_(defn absolute-vals [{:keys [country-code] :as prm}]
   (let [line-style {:marker-type :none :render-style :line}

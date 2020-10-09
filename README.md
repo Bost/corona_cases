@@ -10,7 +10,7 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 ![Screenshot](/resources/pics/screenshot_1-50-percents.jpg)
 ![Screenshot](/resources/pics/screenshot_2-50-percents.jpg)
 
-## Running locally
+## Develop
 Start Clojure REPL:
 ```fish
 lein repl
@@ -27,8 +27,14 @@ Start web server:
 ```
 Then check the [http://localhost:5050/](http://localhost:5050/)
 
+## Run locally
+
+```fish
+heroku local -env=.heroku-local.env
+```
+
 ## Deploy to Heroku
-Using fish-shell: see [deploy.fish](./deploy.fish).
+Using [deploy.clj](./deploy.clj).
 
 ## TODOs
 - Graphs:

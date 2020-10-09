@@ -124,7 +124,7 @@
     (info (format "%s done" msg))))
 
 (defn -main [& [port]]
-  (let [msg (format "[-main] starting...")]
+  (let [msg (format "[-main] starting %s..." co/env-type)]
     (info msg)
     (if (= (str (t/default-time-zone))
            (str (ZoneId/systemDefault))
