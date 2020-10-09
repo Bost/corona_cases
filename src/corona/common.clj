@@ -112,12 +112,17 @@
                  :c c)
                p))))
 
-(defn telegram-token-suffix []
-  (let [suffix (.substring telegram-token (- (count telegram-token) 3))]
-    (if (or (= suffix "Fq8") (= suffix "MR8"))
+(defn telegram-token-suffix
+  "TODO hard coded `recognized-token-suffixes` make the code not portable"
+  []
+  (let [suffix (.substring telegram-token (- (count telegram-token) 3))
+        recognized-token-suffixes (set ["Fq8" "MR8"])]
+    (if (in? recognized-token-suffixes suffix)
       suffix
       (throw (Exception.
-              (format "Unrecognized TELEGRAM_TOKEN suffix: %s" suffix))))))
+              (format "TELEGRAM_TOKEN suffix %s must be an element of %s"
+                      suffix
+                      recognized-token-suffixes))))))
 
 (def project-version-number
   "From META-INF/maven/%s/%s/pom.properties in uberjar; see the depstar plugin"
