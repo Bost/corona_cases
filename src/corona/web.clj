@@ -9,10 +9,9 @@
    [compojure.handler :refer [site]]
    [compojure.route :as route]
    [corona.common :as co]
-   [corona.telegram]
+   [corona.telegram :as tgram]
    [ring.adapter.jetty :as jetty]
    [taoensso.timbre :as timbre :refer :all]
-   [corona.api.expdev07]
    )
   (:import
    java.time.ZoneId
@@ -142,35 +141,30 @@
                      (t/default-time-zone)
                      (ZoneId/systemDefault)
                      (.getID (TimeZone/getDefault)))))
+    ;; Seems like the webapp must be always started, otherwise I get:
+    ;; Error R10 (Boot timeout) -> Web process failed to bind to
+    ;; $PORT within 60 seconds of launch
+    ;; TODO try to change it in the Procfile. See in the console:
+    ;;     remote: -----> Discovering process types
+    ;;     remote:        Procfile declares types -> web
+    ;; during the deployment process
     (webapp port)
-    (doall
-     (pmap (fn [fun]
-             (debug (format "[-main] invoking %s..." fun))
-             (fun))
-           [(fn [] (corona.telegram/endlessly corona.api.expdev07/request!
-                                            corona.common/ttl))
-            (fn [] (corona.telegram/telegram))]))
-    #_(map (fn [fn-name] (fn-name))
-           [
-            ;; Seems like the webapp must be always started, otherwise I get:
-            ;; Error R10 (Boot timeout) -> Web process failed to bind to
-            ;; $PORT within 60 seconds of launch
-            ;; TODO try to change it in the Procfile. See in the console:
-            ;;     remote: -----> Discovering process types
-            ;;     remote:        Procfile declares types -> web
-            ;; during the deployment process
-            webapp
-            tgram/telegram])
+    (tgram/-main)
     (info (format "%s done" msg))))
 
 ;; For interactive development:
 (def test-obj (atom nil))
+
 (defn start []
   (info "@test-obj" @test-obj)
   (swap! test-obj (fn [_] (webapp))))
+
 (defn stop []
   (info "Stopping" @test-obj)
   (.stop @test-obj))
+
 (defn restart []
-  (when @test-obj (stop))
+  (when @test-obj
+    (stop)
+    (Thread/sleep 400))
   (start))

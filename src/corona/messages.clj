@@ -356,7 +356,7 @@
   TODO make an api service for the content shown in the message
   "
   [{:keys [country-code rank cnt-countries] :as prm}]
-  (debug (format "worldwide? %s" (worldwide? country-code)))
+  (debug "detailed-info" prm)
   (format-linewise
    [["%s\n"  ; extended header
      [(format-linewise

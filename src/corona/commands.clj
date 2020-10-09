@@ -49,7 +49,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
          (data/all-affected-country-codes-memo))))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
-  #_(debug "world" prm)
+  (debug "world" prm)
   (let [prm (assoc prm :parse_mode "HTML")]
     (let [options (select-keys prm (keys msg/options))
           cnt-countries (count (data/all-affected-country-codes-memo))

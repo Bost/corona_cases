@@ -34,14 +34,14 @@
    name
    (wrap-fn-pre-post-hooks
     (let [tbeg (te/tnow)
-          msg (format "[cmd-handler] telegram-cmd /%s" name)]
+          msg (format "[cmd-handler] cmd /%s; %%s; %%s" name)]
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
-              (let [chat (-> args first :chat)]
-                (info (format "%s; chat-info %s" msg chat))))
+              (let [chat (:chat (first args))]
+                (info (format msg "pre-hook" chat))))
        :post (fn [& args]
                (let [[fn-result {:keys [chat]}] args]
-                 (info (format "%s; chat-info %s" msg chat))
+                 (info (format msg "post-hook" chat))
                  fn-result))}))))
 
 (defn handler
@@ -83,13 +83,6 @@
      (async/<!! (start-polling co/token (handler))))
     (fatal (format "%s done - this must not happen!" msg))))
 
-(defn -main [& args]
-  (apply telegram args))
-
-;; TODO use com.stuartsierra.compoment for start / stop
-;; For interactive development:
-(def test-obj (atom nil))
-
 (def continue
   "A flag to continue running the loop in the `endlessly` function."
   (atom true))
@@ -105,13 +98,26 @@
       (Thread/sleep ttl))
     (fatal (format "%s done - this must not happen!" msg))))
 
+(defn -main [& args]
+  (let [funs [(fn p-endlessly [] (endlessly data/request! co/ttl))
+              (fn p-telegram [] (telegram))]]
+    (debug (format "[-main] execute in parallel: %s..." funs))
+    (pmap (fn [fun] (fun))
+          funs
+          #_[(fn [] (endlessly data/request! co/ttl))
+           (fn [] (telegram))])))
+
+;; TODO use com.stuartsierra.compoment for start / stop
+;; For interactive development:
+(def test-obj (atom nil))
+
 (defn start []
+  (info "@test-obj" @test-obj)
   (swap! test-obj (fn [_] true))
-  (->> ['(endlessly data/request! co/ttl)
-        '(start-polling co/token (handler))]
-       (pmap eval)))
+  (-main))
 
 (defn stop []
+  (info "Stopping" @test-obj)
   (swap! test-obj (fn [_] nil))
   (swap! continue (fn [_] false)))
 
