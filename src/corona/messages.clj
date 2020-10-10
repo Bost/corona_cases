@@ -380,7 +380,7 @@
           ["%s\n" [(str l/day " " (count (data/raw-dates)))]]
           (do
             ["%s\n" ; data
-             [(let [data-active (data/active pred)]
+             [(let [data-active (:i (data/get-counts-memo pred))]
                 (let [max-active-val (apply max data-active)
                       max-active-idx (.lastIndexOf data-active max-active-val)
                       max-active-date (nth (data/dates) max-active-idx)
@@ -508,34 +508,6 @@
     (debugf "[detailed-info] country-code %s; message-size %s chars"
             country-code (count content))
     content))
-
-#_(defn absolute-vals [{:keys [country-code pred] :as prm}]
-  (let [line-style {:marker-type :none :render-style :line}
-        dates {:x (data/dates)}]
-    (-> (chart/xy-chart
-         {l/active    (assoc dates :y (data/active pred)
-                             :style {:marker-type :none})
-          l/confirmed (assoc dates :y (data/confirmed pred)
-                             :style (assoc line-style :line-color :black))
-          l/deaths    (assoc dates :y (data/deaths pred)
-                             :style (assoc line-style :line-color :red))
-          l/recovered (assoc dates :y (data/recovered pred)
-                             :style (assoc line-style :line-color :green))}
-         {:title (format "%s; %s: %s; see %s"
-                         (format-last-day prm)
-                         co/bot-name
-                         (cr/country-name-aliased country-code)
-                         (co/encode-cmd l/explain))
-          :render-style :area
-          :legend {:position :inside-nw}
-          ;; :x-axis {:title "Date"}
-          ;; :y-axis {:title "Cases"}
-          ;; :theme :matlab
-          ;; :width 640 :height 500
-          :width 800 :height 600
-          :date-pattern "MMMd"})
-        #_(chart/view)
-        (chart/to-bytes :png))))
 
 (defn feedback [prm]
   (str "Just write a message to @RostislavSvoboda thanks."))

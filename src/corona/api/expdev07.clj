@@ -234,34 +234,6 @@
   #_get-counts
   (co/memo-ttl get-counts))
 
-(defn population [pred]
-  (:p (get-counts-memo pred)))
-
-(defn confirmed [pred]
-  (:c (get-counts-memo pred)))
-
-(defn deaths [pred]
-  (:d (get-counts-memo pred)))
-
-(defn recovered [pred]
-  (:r (get-counts-memo pred)))
-
-(defn active [pred]
-  (:i (get-counts-memo pred)))
-
-(defn active-per-100k [pred]
-  (:i100k (get-counts-memo pred)))
-
-(defn recovered-per-100k [pred]
-  (:r100k (get-counts-memo pred)))
-
-(defn deaths-per-100k [pred]
-  (:d100k (get-counts-memo pred)))
-
-(defn closed-per-100k [pred]
-  (:c100k (get-counts-memo pred)))
-
-
 (defn eval-fun
   "E.g.:
   (eval-fun {:fun get-last :pred-q '(pred-fn sk) :pred (pred-fn sk)})
