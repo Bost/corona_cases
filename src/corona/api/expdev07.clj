@@ -201,7 +201,7 @@
 
 (defn get-counts
   "Returns a hash-map containing case-counts day-by-day. E.g.:
-  (get-counts {:pred-q '(pred-fn sk) :pred (pred-fn sk)})
+  (get-counts (pred-fn sk))
   ;; => ;; last 5 values
   {
    :p (... 5456362 5456362 5456362 5456362 5456362)
@@ -210,9 +210,9 @@
    :d (...      31      31      31      31      31)
    :i (...     674     701     702     710     775)}
 
-  (get-counts {:pred-q '(pred-fn true) :pred (fn [_] true)})
+  (get-counts (fn [_] true))
   "
-  [{:keys [pred] :as prm}]
+  [pred]
   (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred))
                    [:population :confirmed :recovered :deaths])]
     (zipmap co/all-cases
@@ -234,41 +234,32 @@
   #_get-counts
   (co/memo-ttl get-counts))
 
-(defn population [prm]
-  #_(debug "population" prm)
-  (:p (get-counts-memo prm)))
+(defn population [{:keys [pred]}]
+  (:p (get-counts-memo pred)))
 
-(defn confirmed [prm]
-  #_(debug "confirmed" prm)
-  (:c (get-counts-memo prm)))
+(defn confirmed [{:keys [pred]}]
+  (:c (get-counts-memo pred)))
 
-(defn deaths [prm]
-  #_(debug "deaths" prm)
-  (:d (get-counts-memo prm)))
+(defn deaths [{:keys [pred]}]
+  (:d (get-counts-memo pred)))
 
-(defn recovered [prm]
-  #_(debug "recovered" prm)
-  (:r (get-counts-memo prm)))
+(defn recovered [{:keys [pred]}]
+  (:r (get-counts-memo pred)))
 
-(defn active [prm]
-  #_(debug "active" prm)
-  (:i (get-counts-memo prm)))
+(defn active [{:keys [pred]}]
+  (:i (get-counts-memo pred)))
 
-(defn active-per-100k [prm]
-  #_(debug "active-per-100k" prm)
-  (:i100k (get-counts-memo prm)))
+(defn active-per-100k [{:keys [pred]}]
+  (:i100k (get-counts-memo pred)))
 
-(defn recovered-per-100k [prm]
-  #_(debug "recovered-per-100k" prm)
-  (:r100k (get-counts-memo prm)))
+(defn recovered-per-100k [{:keys [pred]}]
+  (:r100k (get-counts-memo pred)))
 
-(defn deaths-per-100k [prm]
-  #_(debug "deaths-per-100k" prm)
-  (:d100k (get-counts-memo prm)))
+(defn deaths-per-100k [{:keys [pred]}]
+  (:d100k (get-counts-memo pred)))
 
-(defn closed-per-100k [prm]
-  #_(debug "closed-per-100k" prm)
-  (:c100k (get-counts-memo prm)))
+(defn closed-per-100k [{:keys [pred]}]
+  (:c100k (get-counts-memo pred)))
 
 
 (defn eval-fun
@@ -276,10 +267,10 @@
   (eval-fun {:fun get-last :pred-q '(pred-fn sk) :pred (pred-fn sk)})
   (eval-fun {:fun get-last :pred-q '(fn [_] true) :pred (fn [_] true)})
   "
-  [{:keys [fun date] :as prm}]
+  [{:keys [fun date pred] :as prm}]
   (into {:f (fun (dates-memo))}
         (map (fn [[k v]] {k (fun v)})
-             (get-counts-memo prm))))
+             (get-counts-memo pred))))
 
 (defn delta
   "E.g.:
