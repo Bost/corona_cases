@@ -25,9 +25,7 @@
   (debug fun #_args)
   (let [tbeg (System/currentTimeMillis)]
     (let [r (doall (apply fun args))]
-      (debug (format "%s took %s ms"
-                     fun
-                     (- (System/currentTimeMillis) tbeg)))
+      (debugf "%s took %s ms" fun (- (System/currentTimeMillis) tbeg))
       r)))
 
 (def ^:const project-name "corona_cases")
@@ -47,7 +45,7 @@
 
 (let [env-types (set (keys environment))]
   (if (in? env-types env-type)
-    (debug (format "env-type %s is valid" env-type))
+    (debugf "env-type %s is valid" env-type)
     (throw (Exception.
             (format
              "Invalid env-type: %s. It must be an element of %s"
@@ -122,17 +120,15 @@
   (if-let [shasum (en/env :bot-ver)]
     (when (and prj-vernum shasum)
       (format "%s-%s" prj-vernum shasum))
-    ;; if-let --> else
+    ;; if-let ... else
     undef))
 
 (run! (fn [env-var-q]
-        (debug (format "%s: %s"
-                       env-var-q
-                       (if-let [env-var (eval env-var-q)]
-                         (if (in? ['telegram-token] env-var-q)
-                           "<PRESENT>"
-                           env-var)
-                         undef))))
+        (debugf "%s: %s" env-var-q (if-let [env-var (eval env-var-q)]
+                                     (if (in? ['telegram-token] env-var-q)
+                                       "<PRESENT>" env-var)
+                                     ;; if-let ... else
+                                     undef)))
       ['env-type 'telegram-token 'webapp-port 'bot-name
        'prj-vernum 'commit])
 
@@ -164,7 +160,7 @@
         (s/join (repeat (- padding-len (count s)) with)))))
 
 (defn get-json [url]
-  (info (format "Requesting json-data from %s ..." url))
+  (infof "Requesting json-data from %s ..." url)
   (json/read-json
    (:body (client/get url {:accept :json}))))
 

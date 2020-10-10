@@ -39,10 +39,10 @@
        :pre (fn [& args]
               (let [chat (:chat (first args))]
                 ;; show who's doing what
-                (info (format msg :pre chat))))
+                (infof msg :pre chat)))
        :post (fn [& args]
                (let [[fn-result {:keys [chat]}] args]
-                 #_(debug (format msg :post chat))
+                 #_(debugf msg :post chat)
                  fn-result))}))))
 
 (defn create-handler
@@ -51,7 +51,7 @@
   An Array of Update-objects is returned."
   []
   (let [cmds (cm/cmds)]
-    (info (format "Registering %s chatbot commands..." (count cmds)))
+    (infof "Registering %s chatbot commands..." (count cmds))
     (apply h/handlers
            (into [(h/callback-fn msg/callback-handler-fn)]
                  (mapv cmd-handler cmds)))))
@@ -63,18 +63,18 @@
   ([token handler] (start-polling token handler {}))
   ([token handler opts]
    (let [channel (async/chan)]
-     (debug (format "(async/chan) returned %s" channel))
+     (debugf "(async/chan) returned %s" channel)
      (let [producer (p/create-producer
                      channel token opts (fn []
                                           (when co/env-prod? (System/exit 2))))]
        (when co/env-devel?
          (def producer producer))
-       (debug (format "Created producer %s" producer))
-       (info (format "Polling on handler %s ..." handler))
+       (debugf "Created producer %s" producer)
+       (infof "Polling on handler %s ..." handler)
        (let [consumer (p/create-consumer producer handler)]
          (when co/env-devel?
            (def consumer consumer))
-         (debug (format "Created consumer %s" producer))
+         (debugf "Created consumer %s" producer)
          channel)))))
 
 (defn telegram [telegram-token]
@@ -82,10 +82,9 @@
     (info msg)
     (let [port (start-polling co/telegram-token (create-handler))]
       (let [retval-async<!! (async/<!! port)]
-        (debug (format "%s done. retval-async<!! %s"
-                       msg (if-let [v retval-async<!!] v "nil")))
-        (fatal (format "Further telegram requests may NOT be answered!!!"
-                       msg))))))
+        (debugf "%s done. retval-async<!! %s"
+                msg (if-let [v retval-async<!!] v "nil"))
+        (fatalf "Further telegram requests may NOT be answered!!!" msg)))))
 
 (defonce continue (atom true))
 
@@ -98,7 +97,7 @@
     (while @continue
       (Thread/sleep ttl)
       (fun))
-    (debug (format "%s done" msg))
+    (debugf "%s done" msg)
     (warn "Displayed data will NOT be updated!")))
 
 ;; TODO use com.stuartsierra.compoment for start / stop
@@ -123,9 +122,9 @@
                     ;; should be set to the component atom
                     (swap! component (fn [_] []))
                     telegram-server))]]
-      (debug (format "[-main] execute in parallel: %s..." funs))
+      (debugf "[-main] execute in parallel: %s..." funs)
       (pmap (fn [fun] (fun)) funs))
-    (info (format "%s... done" starting))))
+    (infof "%s... done" starting)))
 
 (defn stop []
   (info "[telegram] stopping...")
@@ -133,9 +132,8 @@
     (run! (fn [obj-q]
             (let [obj (eval obj-q)]
               (swap! obj (fn [_] nil))
-              (debug (format "%s new value: %s"
-                             obj-q (if-let [v (deref obj)]
-                                     v "nil")))))
+              (debugf "%s new value: %s"
+                      obj-q (if-let [v (deref obj)] v "nil"))))
           objs)))
 
 (defn restart []

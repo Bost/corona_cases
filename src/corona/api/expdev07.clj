@@ -20,9 +20,8 @@
    (let [tbeg (System/currentTimeMillis)]
      (let [response (data)]
        (swap! cache (fn [_] response))
-       (debug (format "[request!] %s chars cached in %s ms"
-                      (count (str @cache))
-                      (- (System/currentTimeMillis) tbeg)))))))
+       (debugf "[request!] %s chars cached in %s ms"
+               (count (str @cache)) (- (System/currentTimeMillis) tbeg))))))
 
 (def data-memo
   (fn [] @cache)

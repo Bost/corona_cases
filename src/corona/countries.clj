@@ -350,10 +350,8 @@
                                 (cset/map-invert country-alias--country-code-inverted)))]
     (if-let [cc (get lcases-countries country)]
       cc
-      (do (error (format
-                  "\"%s\" has no country code. Using \"%s\""
-                  country-name
-                  default-2-country-code))
+      (do (errorf "\"%s\" has no country code. Using \"%s\""
+                  country-name default-2-country-code)
           default-2-country-code))))
 
 (defn country-alias

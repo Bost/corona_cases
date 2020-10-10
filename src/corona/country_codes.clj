@@ -60,13 +60,11 @@
 
 ;; (debug "Interning symbols for country-codes...")
 (intern-country-codes! country-code-strings)
-(info (format "%s country-code symbols interned"
-              (count country-code-strings)))
+(infof "%s country-code symbols interned" (count country-code-strings))
 
 ;; (debug "Setting docstrings on interned country-code symbols...")
 (set-docstrings! country-code-docs)
-(info (format "Docstrings set on %s country-code symbols"
-              (count country-code-docs)))
+(infof "Docstrings set on %s country-code symbols" (count country-code-docs))
 
 (def ^:const worldwide-country-codes {zz "ZZZ"})
 (def ^:const worldwide-2-country-code (-> worldwide-country-codes keys first))

@@ -133,7 +133,7 @@
     (info msg)
     (let [web-server (jetty/run-jetty (site #'app) {:port port :join? false})]
       (swap! component (fn [_] web-server))
-      (info (format "%s... done" starting))
+      (infof "%s... done" starting)
       web-server)))
 
 (defn -main [& [env-type port]]
@@ -149,18 +149,17 @@
     (if (= (str (t/default-time-zone))
            (str (ZoneId/systemDefault))
            (.getID (TimeZone/getDefault)))
-      (debug (let [zone-id "Europe/Berlin"]
-               (format "TimeZone: %s; current time: %s (%s in %s)"
-                       (str (t/default-time-zone))
-                       (te/tnow)
-                       (te/tnow zone-id)
-                       zone-id)))
-      (debug (format (str "t/default-time-zone %s; "
-                          "ZoneId/systemDefault: %s; "
-                          "TimeZone/getDefault: %s\n")
-                     (t/default-time-zone)
-                     (ZoneId/systemDefault)
-                     (.getID (TimeZone/getDefault)))))
+      (debugf "TimeZone: %s; current time: %s (%s in %s)"
+              (str (t/default-time-zone))
+              (te/tnow)
+              (te/tnow zone-id)
+              zone-id)
+      (debugf (str "t/default-time-zone %s; "
+                   "ZoneId/systemDefault: %s; "
+                   "TimeZone/getDefault: %s\n")
+              (t/default-time-zone)
+              (ZoneId/systemDefault)
+              (.getID (TimeZone/getDefault))))
     ;; Seems like the webapp must be always started, otherwise I get:
     ;; Error R10 (Boot timeout) -> Web process failed to bind to
     ;; $PORT within 60 seconds of launch
@@ -170,7 +169,7 @@
     ;; during the deployment process
     (webapp-start env-type port)
     (tgram/-main env-type)
-    (info (format "%s... done" starting))))
+    (infof "%s... done" starting)))
 
 (defn webapp-stop []
   (info "[webapp] stopping...")
@@ -179,9 +178,8 @@
     (run! (fn [obj-q]
             (let [obj (eval obj-q)]
               (swap! obj (fn [_] nil))
-              (debug (format "%s new value: %s"
-                             obj-q (if-let [v (deref obj)]
-                                     v "nil")))))
+              (debug "%s new value: %s"
+                     obj-q (if-let [v (deref obj)] v "nil"))))
           objs)))
 
 (defn webapp-restart []

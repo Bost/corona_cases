@@ -135,15 +135,15 @@
         ;; w/o the '--' every list element gets printed on a separate line
         ;; as if invoked in a for-loop. WTF?
         (let [env-names (keys env)]
-          (println (format "Usage: %s {%s}\n\nExamples:" file
-                           (str/join " | " env-names)))
+          (printf "Usage: %s {%s}\n\nExamples:\n"
+                  file (str/join " | " env-names))
           (doseq [en env-names]
-            (print (format "%s %s\n" file en))))
+            (printf "%s %s\n" file en)))
         ;; TODO proper return
         (System/exit 1))))
 
 (def app (str env-name "-bot"))
 (def remote (str "heroku-" app))
 
-(println (format "DBG: app: %s\nDBG: remote: %s\nDBG: rest-args: %s\n"
-                 app remote (str/join " " rest-args)))
+(printf "DBG: app: %s\nDBG: remote: %s\nDBG: rest-args: %s\n"
+        app remote (str/join " " rest-args))

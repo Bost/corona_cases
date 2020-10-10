@@ -164,7 +164,7 @@
   (with-open [out (new ByteArrayOutputStream)]
     (ImageIO/write image "png" out)
     (let [array (.toByteArray out)]
-      (debug (format "image-size %s" (count array)))
+      (debugf "image-size %s" (count array))
       array)))
 
 (defn buttons [prm]
@@ -186,7 +186,7 @@
 (defn worldwide? [country-code]
   (let [r (in? [cc/worldwide-2-country-code cc/worldwide-3-country-code
                 cc/worldwide] country-code)]
-    #_(debug (format "[worldwide?] (worldwide? %s) %s" country-code r))
+    #_(debugf "[worldwide?] (worldwide? %s) %s" country-code r)
     r))
 
 (defn callback-handler-fn [{:keys [data] :as prm}]
@@ -502,8 +502,8 @@
                                #_(debug "[detailed-info] (count worldwide-block)" (count worldwide-block))
                                worldwide-block))])))))))]])
           ["%s\n" [(footer prm)]]])]
-    (debug (format "[detailed-info] country-code %s; message-size %s chars"
-                   country-code (count content)))
+    (debugf "[detailed-info] country-code %s; message-size %s chars"
+            country-code (count content))
     content))
 
 #_(defn absolute-vals [{:keys [country-code] :as prm}]
