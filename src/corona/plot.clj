@@ -34,15 +34,29 @@
            (Exception. (format "Value %d must be < max %d" max-val 1e9)))))
 
 (defn- boiler-plate [{:keys [series y-axis-formatter legend label label-conf]}]
-  (-> series
-      (b/preprocess-series)
-      (b/add-axes :bottom)
-      (b/add-axes :left)
-      (b/update-scale :y :fmt y-axis-formatter)
-      (b/add-legend "" legend)
-      (b/add-label :top label label-conf)
-      (r/render-lattice {:width 800 :height 600})
-      (c2d/get-image)))
+  ;; (-> series
+  ;;     (b/preprocess-series)
+  ;;     (b/add-axes :bottom)
+  ;;     (b/add-axes :left)
+  ;;     (b/update-scale :y :fmt y-axis-formatter)
+  ;;     (b/add-legend "" legend)
+  ;;     (b/add-label :top label label-conf)
+  ;;     (r/render-lattice {:width 800 :height 600})
+  ;;     (c2d/get-image))
+  (c2d/get-image
+   (r/render-lattice
+    (b/add-label
+     (b/add-legend
+      (b/update-scale
+       (b/add-axes
+        (b/add-axes
+         (b/preprocess-series series)
+         :bottom)
+        :left)
+       :y :fmt y-axis-formatter)
+      "" legend)
+     :top label label-conf)
+    {:width 800 :height 600})))
 
 (defn to-java-time-local-date [java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date) (ZoneId/systemDefault)))

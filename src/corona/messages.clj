@@ -163,7 +163,9 @@
   [^BufferedImage image]
   (with-open [out (new ByteArrayOutputStream)]
     (ImageIO/write image "png" out)
-    (.toByteArray out)))
+    (let [array (.toByteArray out)]
+      (debug (format "image-size %s" (count array)))
+      array)))
 
 (defn buttons [prm]
   {:reply_markup

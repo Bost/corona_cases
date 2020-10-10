@@ -74,7 +74,6 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                       {:day (count (data/raw-dates-unsorted))
                        :cc country-code
                        :stats (v1/pic-data)}))]
-        (debug ("morse/send-photo - content-size %s bytes" (count content)))
         (morse/send-photo co/telegram-token chat-id options content)))))
 
 (def ^:const cnt-messages-in-listing

@@ -271,6 +271,11 @@
   (* 60 60 1000))
 
 ;; TODO reload only the latest N reports. e.g. try one week
+
+;; TODO country-plots are <= 45kB; world-plots are <= 68kb
+;; 8 top-10-plots, 1 world-plot + 252 countries;
+;; (+ (* 2 (+ 1 252)) (* 252 45) (* 68 8)) => 12390 kB ~12.5MB
+;; TODO listing-message-size: ~?kB
 (defn memo-ttl
   "E.g.:
   (def foo-fun-memo (co/memo-ttl foo-fun))"
