@@ -364,7 +364,7 @@
   TODO make an api service for the content shown in the message
   TODO Create API web service(s) for every field displayed in the messages
   "
-  [{:keys [country-code rank cnt-countries] :as prm}]
+  [{:keys [country-code rank cnt-countries pred] :as prm}]
   #_(debug "detailed-info" prm)
   (let [content
         (format-linewise
@@ -380,7 +380,7 @@
           ["%s\n" [(str l/day " " (count (data/raw-dates)))]]
           (do
             ["%s\n" ; data
-             [(let [data-active (data/active prm)]
+             [(let [data-active (data/active pred)]
                 (let [max-active-val (apply max data-active)
                       max-active-idx (.lastIndexOf data-active max-active-val)
                       max-active-date (nth (data/dates) max-active-idx)
@@ -509,17 +509,17 @@
             country-code (count content))
     content))
 
-#_(defn absolute-vals [{:keys [country-code] :as prm}]
+#_(defn absolute-vals [{:keys [country-code pred] :as prm}]
   (let [line-style {:marker-type :none :render-style :line}
         dates {:x (data/dates)}]
     (-> (chart/xy-chart
-         {l/active    (assoc dates :y (data/active prm)
+         {l/active    (assoc dates :y (data/active pred)
                              :style {:marker-type :none})
-          l/confirmed (assoc dates :y (data/confirmed prm)
+          l/confirmed (assoc dates :y (data/confirmed pred)
                              :style (assoc line-style :line-color :black))
-          l/deaths    (assoc dates :y (data/deaths prm)
+          l/deaths    (assoc dates :y (data/deaths pred)
                              :style (assoc line-style :line-color :red))
-          l/recovered (assoc dates :y (data/recovered prm)
+          l/recovered (assoc dates :y (data/recovered pred)
                              :style (assoc line-style :line-color :green))}
          {:title (format "%s; %s: %s; see %s"
                          (format-last-day prm)

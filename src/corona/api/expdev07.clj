@@ -234,31 +234,31 @@
   #_get-counts
   (co/memo-ttl get-counts))
 
-(defn population [{:keys [pred]}]
+(defn population [pred]
   (:p (get-counts-memo pred)))
 
-(defn confirmed [{:keys [pred]}]
+(defn confirmed [pred]
   (:c (get-counts-memo pred)))
 
-(defn deaths [{:keys [pred]}]
+(defn deaths [pred]
   (:d (get-counts-memo pred)))
 
-(defn recovered [{:keys [pred]}]
+(defn recovered [pred]
   (:r (get-counts-memo pred)))
 
-(defn active [{:keys [pred]}]
+(defn active [pred]
   (:i (get-counts-memo pred)))
 
-(defn active-per-100k [{:keys [pred]}]
+(defn active-per-100k [pred]
   (:i100k (get-counts-memo pred)))
 
-(defn recovered-per-100k [{:keys [pred]}]
+(defn recovered-per-100k [pred]
   (:r100k (get-counts-memo pred)))
 
-(defn deaths-per-100k [{:keys [pred]}]
+(defn deaths-per-100k [pred]
   (:d100k (get-counts-memo pred)))
 
-(defn closed-per-100k [{:keys [pred]}]
+(defn closed-per-100k [pred]
   (:c100k (get-counts-memo pred)))
 
 
