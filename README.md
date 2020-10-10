@@ -32,6 +32,10 @@ Then check the [http://localhost:5050/](http://localhost:5050/)
 ```fish
 heroku local --env=.heroku-local.env
 ```
+TODO `heroku local` - ask about setting environment variables on the CLI, i.e.:
+```fish
+heroku local --env=.heroku-local.env --set COMMIT=...`
+```
 
 ## Deploy to Heroku
 Using [deploy.clj](./deploy.clj).
