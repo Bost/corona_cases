@@ -18,6 +18,8 @@
    [clojurewerkz.propertied.properties :as p]
    ))
 
+(debugf "Loading namespace %s" *ns*)
+
 (defn ttt
   "For debugging.
   TODO move ttt to utils and make it monadic"

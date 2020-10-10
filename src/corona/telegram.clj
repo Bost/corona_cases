@@ -14,6 +14,8 @@
    [corona.api.expdev07 :as data]
    ))
 
+(debugf "Loading namespace %s" *ns*)
+
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
   Thanks to https://stackoverflow.com/a/10778647/5151982

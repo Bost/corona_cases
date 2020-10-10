@@ -9,6 +9,8 @@
    )
   (:import java.text.SimpleDateFormat))
 
+(debugf "Loading namespace %s" *ns*)
+
 (def ^:const url (format "http://%s/all" co/api-server))
 
 (defn data [] (co/get-json url))

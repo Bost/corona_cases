@@ -14,6 +14,8 @@
    [taoensso.timbre :as timbre :refer :all]
    ))
 
+(debugf "Loading namespace %s" *ns*)
+
 (defn deep-merge
   "Recursively merges maps. TODO see https://github.com/weavejester/medley
 Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2711849"

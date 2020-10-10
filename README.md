@@ -51,6 +51,5 @@ Using [deploy.clj](./deploy.clj).
 - Use buttons instead of `/<command-name>`
 - Don't panic: Compare data: Corona vs. Flu vs. World population and Show deaths
   rates distribution by age / age-groups; probability calculator
-- Create API web service(s) even for own use
 - Create home page providing extensive information
 - Tables - show: average recovery time, cases in % of population

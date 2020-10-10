@@ -1,7 +1,11 @@
 (ns corona.lang
   (:require
    [corona.common :as co]
-   [clojure.string :as s]))
+   [clojure.string :as s]
+   [taoensso.timbre :as timbre :refer :all]
+   ))
+
+(debugf "Loading namespace %s" *ns*)
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"

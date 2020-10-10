@@ -12,10 +12,12 @@
    [corona.telegram :as tgram]
    [ring.adapter.jetty :as jetty]
    [taoensso.timbre :as timbre :refer :all]
-   )
+   [corona.country-codes :as cc])
   (:import
    java.time.ZoneId
    java.util.TimeZone))
+
+(debugf "Loading namespace %s" *ns*)
 
 (def ^:const telegram-hook "telegram")
 (def ^:const google-hook "google")
@@ -152,8 +154,8 @@
       (debugf "TimeZone: %s; current time: %s (%s in %s)"
               (str (t/default-time-zone))
               (te/tnow)
-              (te/tnow zone-id)
-              zone-id)
+              (te/tnow cc/zone-id)
+              cc/zone-id)
       (debugf (str "t/default-time-zone %s; "
                    "ZoneId/systemDefault: %s; "
                    "TimeZone/getDefault: %s\n")

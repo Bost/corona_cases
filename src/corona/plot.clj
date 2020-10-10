@@ -18,6 +18,8 @@
    )
   (:import [java.time LocalDate ZoneId]))
 
+(debugf "Loading namespace %s" *ns*)
+
 (defn metrics-prefix-formatter [max-val]
   "Show 1k instead of 1000; i.e. kilo, mega etc.
       1 400 -> 1400

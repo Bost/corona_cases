@@ -1,5 +1,10 @@
 (ns corona.tables
-  (:require [corona.countries :as cr]))
+  (:require
+   [corona.countries :as cr]
+   [taoensso.timbre :as timbre :refer :all]
+   ))
+
+(debugf "Loading namespace %s" *ns*)
 
 (def ^:const regions
   "

@@ -21,6 +21,8 @@
            java.io.ByteArrayOutputStream
            javax.imageio.ImageIO))
 
+(debugf "Loading namespace %s" *ns*)
+
 (defn bot-name-formatted []
   (s/replace co/bot-name #"_" "\\\\_"))
 
@@ -360,6 +362,7 @@
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO make an api service for the content shown in the message
+  TODO Create API web service(s) for every field displayed in the messages
   "
   [{:keys [country-code rank cnt-countries] :as prm}]
   #_(debug "detailed-info" prm)

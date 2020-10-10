@@ -1,8 +1,51 @@
 (ns corona.country-codes
+  "This namespace seems to be the first one loaded by the class loader."
   (:refer-clojure :exclude [pr])
   (:require
-   [taoensso.timbre :as timbre :refer :all])
-  )
+   [taoensso.timbre :as timbre :refer :all]
+   ))
+
+(def log-level-map ^:const {:debug :dbg :info :inf :warn :wrn :error :err})
+
+(defn log-output-fn
+  "Default (fn [data]) -> string output fn.
+    Use`(partial log-output-fn <opts-map>)` to modify default opts."
+  ([     data] (log-output-fn nil data))
+  ([opts data] ; For partials
+   (let [{:keys [no-stacktrace? stacktrace-fonts]} opts
+         {:keys [level ?err #_vargs msg_ ?ns-str ?file hostname_
+                 timestamp_ ?line]} data]
+     ;; (println "no-stacktrace?" no-stacktrace?)
+     ;; (println "stacktrace-fonts" stacktrace-fonts)
+     ;; (println "level" level)
+     ;; (println "?err" ?err)
+     ;; (println "msg_" msg_)
+     ;; (println "?ns-str" ?ns-str)
+     ;; (println "?file" ?file)
+     ;; (println "hostname_" hostname_)
+     ;; (println "(force hostname_)" (force hostname_))
+     ;; (println "timestamp_" timestamp_)
+     ;; (println "?line" ?line)
+     (str
+      (force timestamp_)
+      " "
+      ;; #?(:clj (force hostname_))  #?(:clj " ")
+      (clojure.string/upper-case (name (or (level log-level-map)
+                                           level)))  " "
+      "[" (or ?ns-str ?file "?") ":" (or ?line "?") "] "
+      (force msg_)
+      (when-not no-stacktrace?
+        (when-let [err ?err]
+          (str taoensso.encore/system-newline (stacktrace err opts))))))))
+
+(def ^:const zone-id "Europe/Berlin")
+
+;; (set-config! default-config)
+(merge-config!
+ {:output-fn log-output-fn #_default-output-fn
+  :timestamp-opts {:timezone (java.util.TimeZone/getTimeZone zone-id) #_:utc}})
+
+(debugf "Loading namespace %s" *ns*)
 
 (def country-code-strings
   ["CR" "TG" "TJ" "ZA" "IM" "PE" "LC" "CH" "RU" "MP" "CK" "SI" "AU" "KR" "IT"
