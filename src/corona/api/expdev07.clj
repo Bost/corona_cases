@@ -187,16 +187,16 @@
                locations)))
 
 (defn sums-for-case
-  "Return sums for a given `case` calculated for every single day. E.g.
-  (sums-for-case {:case :confirmed :pred (pred-fn sk)})
+  "Return sums for a given `case-kw` calculated for every single day. E.g.
+  (sums-for-case :confirmed (pred-fn sk))
   "
-  [{:keys [case pred]}]
+  [case-kw pred]
   (let [locations (filter pred
-                          ((comp :locations case)
+                          ((comp :locations case-kw)
                            (data-with-pop-memo)
                            #_(data-memo)))]
     (map (fn [raw-date]
-           (sums-for-date case locations raw-date))
+           (sums-for-date case-kw locations raw-date))
          (raw-dates))))
 
 (defn get-counts
@@ -212,8 +212,8 @@
 
   (get-counts {:pred-q '(pred-fn true) :pred (fn [_] true)})
   "
-  [prm]
-  (let [pcrd (mapv (fn [case] (sums-for-case (conj prm {:case case})))
+  [{:keys [pred] :as prm}]
+  (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred))
                    [:population :confirmed :recovered :deaths])]
     (zipmap co/all-cases
             (apply

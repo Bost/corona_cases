@@ -33,8 +33,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
      (update-in (select-keys hm [:cc]) [:rank rank-kw] (fn [_] idx)))
    (sort-by rank-kw >
             ;; data/stats-all-affected-countries-memo - not passing the prm
-            (let [prm {}]
-              (data/stats-all-affected-countries-memo prm)))))
+            (data/stats-all-affected-countries-memo {}))))
 
 (defn calculate-rankings [prm]
   (let [rankings (u/transpose (map (fn [rank-kw]
