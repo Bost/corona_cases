@@ -45,7 +45,7 @@
                  #_(debug (format msg :post chat))
                  fn-result))}))))
 
-(defn handler
+(defn create-handler
   "Receiving incoming updates using long polling (getUpdates method)
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
@@ -64,21 +64,27 @@
   ([token handler opts]
    (let [channel (async/chan)]
      (debug (format "(async/chan) returned %s" channel))
-     (let [updates (p/create-producer
-                    channel token opts (fn []
-                                         (when co/env-prod? (System/exit 2))))]
+     (let [producer (p/create-producer
+                     channel token opts (fn []
+                                          (when co/env-prod? (System/exit 2))))]
+       (when co/env-devel?
+         (def producer producer))
+       (debug (format "Created producer %s" producer))
        (info (format "Polling on handler %s ..." handler))
-       (p/create-consumer updates handler)
-       channel))))
+       (let [consumer (p/create-consumer producer handler)]
+         (when co/env-devel?
+           (def consumer consumer))
+         (debug (format "Created consumer %s" producer))
+         channel)))))
 
 (defn telegram [telegram-token]
   (let [msg "[telegram] starting..."]
     (info msg)
-    (let [port (start-polling co/telegram-token (handler))]
+    (let [port (start-polling co/telegram-token (create-handler))]
       (let [retval-async<!! (async/<!! port)]
         (debug (format "%s done. retval-async<!! %s"
                        msg (if-let [v retval-async<!!] v "nil")))
-        (fatal (format "Further telegram requests will NOT be answered!!!"
+        (fatal (format "Further telegram requests may NOT be answered!!!"
                        msg))))))
 
 (defonce continue (atom true))
