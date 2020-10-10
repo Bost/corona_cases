@@ -19,14 +19,15 @@
 
 (def ^:const telegram-hook "telegram")
 (def ^:const google-hook "google")
+(def ^:const undef "<UNDEF>")
 
 (defn home-page []
   {:status 200
    :headers {"Content-Type" "text/plain"}
    :body (s/join "\n" ["home page"])})
 
-(def ^:const project-version-number "See `co/project-version-number`" nil)
-(def ^:const ws-path (format "ws/%s" project-version-number))
+(def ^:const prj-vernum "See `co/prj-vernum`" nil)
+(def ^:const ws-path (format "ws/%s" prj-vernum))
 
 (defn web-service [{:keys [type] :as prm}]
   (info "web-service" prm)
@@ -39,7 +40,7 @@
          :names (conj {"desc" co/desc-ws})
          :codes (conj {"desc" co/desc-ws})
          (format "Error. Wrong type %s" type))
-     (conj (when-not project-version-number
+     (conj (when-not prj-vernum
              {"warn" "Under construction. Don't use it in PROD env"}))
      (conj {"source" "https://github.com/Bost/corona_cases"})
      ;; swapped order x y -> y x
@@ -118,7 +119,7 @@
   (atom nil))
 
 (defn webapp-start [& [env-type port]]
-  (let [port (Integer. (or port co/port
+  (let [port (Integer. (or port co/webapp-port
                            (cond co/env-prod? 5000
                                  ;; keep port-nr in sync with README.md
                                  :else 5050)))
@@ -126,7 +127,7 @@
         starting "[webapp] starting"
         msg (format "%s version %s in environment %s on port %s..."
                     starting
-                    (if co/env-devel? "<UNDEFINED>" co/bot-ver)
+                    (if co/env-devel? undef co/commit)
                     env-type
                     port)]
     (info msg)
@@ -137,11 +138,11 @@
 
 (defn -main [& [env-type port]]
   (let [env-type (or env-type co/env-type)
-        port (or port co/port)
+        port (or port co/webapp-port)
         starting "[-main] starting"
         msg (format "%s version %s in environment %s on port %s..."
                     starting
-                    (if co/env-devel? "<UNDEFINED>" co/bot-ver)
+                    (if co/env-devel? undef co/commit)
                     env-type
                     port)]
     (info msg)
@@ -187,7 +188,7 @@
   (when @component
     (webapp-stop)
     (Thread/sleep 400))
-  (webapp-start co/env-type co/port))
+  (webapp-start co/env-type co/webapp-port))
 
 ;; TODO defonce - add metadata
 #_(let [doc

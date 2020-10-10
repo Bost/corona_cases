@@ -73,17 +73,9 @@
 (defn telegram [telegram-token]
   (let [msg "[telegram] starting..."]
     (info msg)
-    (debug "(count telegram-token)" (count telegram-token))
-    ;; TODO verify telegram-token format
-    #_(when-not (= (count telegram-token) 45)
-      (throw (Exception.
-              (format "Undefined format of %s" (quote telegram-token))))
-      #_(error (str "[" (te/tnow) " " co/bot-ver "]")
-               "Undefined environment var(s):" blank-prms)
-      #_(System/exit 1))
     (doall
      (async/<!! (start-polling co/telegram-token (handler))))
-    (fatal (format "%s done - this must not happen!" msg))))
+    (warn (format "%s done - this should not happen?!?" msg))))
 
 (defonce continue (atom true))
 
@@ -96,7 +88,7 @@
     (while @continue
       (Thread/sleep ttl)
       (fun))
-    (fatal (format "%s done - this must not happen!" msg))))
+    (warn (format "%s done - this should not happen?!?" msg))))
 
 ;; TODO use com.stuartsierra.compoment for start / stop
 ;; For interactive development:
@@ -108,7 +100,7 @@
   (let [starting "[-main] starting"
         msg (format "%s version %s in environment %s..."
                     starting
-                    (if co/env-devel? "<UNDEFINED>" co/bot-ver)
+                    co/commit
                     env-type)]
     (info msg)
     (data/request!)

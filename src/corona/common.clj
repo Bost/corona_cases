@@ -31,6 +31,7 @@
       r)))
 
 (def ^:const project-name "corona_cases")
+(def ^:const undef "<UNDEF>")
 
 (def environment
   "Mapping env-type -> bot-name"
@@ -38,7 +39,11 @@
    "TEST"  {:bot-name "hokuspokus"}
    "DEVEL" {:bot-name "hokuspokus"}})
 
-(def env-type (en/env :corona-env-type))
+(def env-type
+  "When deving check: echo $CORONA_ENV_TYPE
+  When testing locally via `heroku local --env=.heroku-local.env` check
+  the file .heroku-local.env"
+  (en/env :corona-env-type))
 
 (let [env-types (set (keys environment))]
   (if (in? env-types env-type)
@@ -50,7 +55,7 @@
 
 (def telegram-token (en/env :telegram-token))
 
-(def port "Needed only in the corona.web" (en/env :port))
+(def webapp-port (en/env :port))
 
 (def bot-name (get-in environment [env-type :bot-name]))
 
@@ -66,7 +71,9 @@
 
 (define-env-predicates)
 
-(def ^:const chat-id "112885364")
+(def ^:const chat-id
+  "Telegram chat-id."
+  "112885364")
 
 (defn calculate-active [{:keys [c r d]}]
   (- c (+ r d)))
@@ -100,7 +107,7 @@
                       suffix
                       recognized-token-suffixes))))))
 
-(def project-version-number
+(def prj-vernum
   "See also the implementation in the deploy.clj"
   (:version
    (let [file (format "META-INF/maven/%s/%s/pom.properties"
@@ -111,23 +118,23 @@
          nil ;; no version defined when deving
          (error "Could not read from the resource %s" file))))))
 
-(def bot-ver
-  (format "%s-%s" project-version-number
-          (if-let [ver (en/env :bot-ver)]
-            ver "<UNDEFINED>")))
-
-(def bot (str bot-ver ":" env-type))
+(def commit
+  (if-let [shasum (en/env :bot-ver)]
+    (when (and prj-vernum shasum)
+      (format "%s-%s" prj-vernum shasum))
+    ;; if-let --> else
+    undef))
 
 (run! (fn [env-var-q]
         (debug (format "%s: %s"
                        env-var-q
-                       (if-let [v (let [v (eval env-var-q)]
-                                    (if (in? ['telegram-token] env-var-q)
-                                      (s/replace v #"[a-zA-Z0-9]" "*")
-                                      v))]
-                         v "<UNDEFINED>"))))
-      ['env-type 'telegram-token 'port 'bot-name
-       'project-version-number 'bot-ver 'bot])
+                       (if-let [env-var (eval env-var-q)]
+                         (if (in? ['telegram-token] env-var-q)
+                           "<PRESENT>"
+                           env-var)
+                         undef))))
+      ['env-type 'telegram-token 'webapp-port 'bot-name
+       'prj-vernum 'commit])
 
 (defn fix-octal-val
   "(read-string s-day \"08\") produces a NumberFormatException

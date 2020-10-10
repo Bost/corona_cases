@@ -1,5 +1,8 @@
 (ns corona.country-codes
-  (:refer-clojure :exclude [pr]))
+  (:refer-clojure :exclude [pr])
+  (:require
+   [taoensso.timbre :as timbre :refer :all])
+  )
 
 (def country-code-strings
   ["CR" "TG" "TJ" "ZA" "IM" "PE" "LC" "CH" "RU" "MP" "CK" "SI" "AU" "KR" "IT"
@@ -22,13 +25,6 @@
 
    "XD" "XE" "XS" "XX"])
 
-;; Undefine: (map #(ns-unmap *ns* %) (keys (ns-interns *ns*)))
-(->> country-code-strings
-     (run! (fn [v]
-             (let [symb-v (symbol (clojure.string/lower-case v))]
-               (reset-meta! (intern *ns* symb-v v)
-                            {:const true :tag `String})))))
-
 (def country-code-docs
   {'xd
    "United Nations Neutral Zone. User-assigned.
@@ -46,8 +42,31 @@
    "Disputed territory or unknown state or other entity or organization.
 \"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#XX\""})
 
-(->> country-code-docs
-     (run! (fn [[k v]] (alter-meta! (get (ns-interns *ns*) k) assoc :doc v))))
+;; Undefine: (map #(ns-unmap *ns* %) (keys (ns-interns *ns*)))
+(defn intern-country-codes!
+  "TODO clarify artificially setting ':tag `String' since:
+  (def f ^String \"f\")
+  produces error: Metadata can only be applied to IMetas"
+  [strings]
+  (run! (fn [v]
+          (let [symb-v (symbol (clojure.string/lower-case v))]
+            (reset-meta! (intern *ns* symb-v v)
+                         {:const true :tag `String})))
+        strings))
+
+(defn set-docstrings! [docstring-hm]
+  (run! (fn [[k v]] (alter-meta! (get (ns-interns *ns*) k) assoc :doc v))
+        docstring-hm))
+
+;; (debug "Interning symbols for country-codes...")
+(intern-country-codes! country-code-strings)
+(info (format "%s country-code symbols interned"
+              (count country-code-strings)))
+
+;; (debug "Setting docstrings on interned country-code symbols...")
+(set-docstrings! country-code-docs)
+(info (format "Docstrings set on %s country-code symbols"
+              (count country-code-docs)))
 
 (def ^:const worldwide-country-codes {zz "ZZZ"})
 (def ^:const worldwide-2-country-code (-> worldwide-country-codes keys first))

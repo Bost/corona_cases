@@ -14,10 +14,10 @@
   (zip/xml-zip
    (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
 
-;; see corona.common/project-version-number
-(defn project-version-number
+;; see corona.common/prj-vernum
+(defn prj-vernum
   "From ./pom.xml tag: <version>. See also the implementation in the common.clj
-  TODO getting project-version-number from pom.properties may be simpler"
+  TODO getting prj-vernum from pom.properties may be simpler"
   []
   (->> "pom.xml" (slurp) (zip-str) (first) :content
        (filter (fn [elem] (= (:tag elem)
@@ -55,7 +55,7 @@
         (sh "git commit -m \"Add new csv file(s)\""))))
 
 (def commit (sh "git" "rev-parse" "--short" "master"))
-(def version-number (project-version-number))
+(def version-number (prj-vernum))
 
 (printf "%s: %s\n" 'version-number version-number)
 

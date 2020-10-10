@@ -23,7 +23,7 @@ Start telegram chatbot:
 Start web server:
 ```clojure
 (require '[corona.telegram] '[corona.common :as co])
-(corona.web/webapp-start co/env-type co/port)
+(corona.web/webapp-start co/env-type co/webapp-port)
 ```
 Then check the [http://localhost:5050/](http://localhost:5050/)
 
