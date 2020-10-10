@@ -34,14 +34,15 @@
    name
    (wrap-fn-pre-post-hooks
     (let [tbeg (te/tnow)
-          msg (format "[cmd-handler] cmd /%s; %%s; %%s" name)]
+          msg (format "[cmd-handler] hook %%s; cmd /%s; chat %%s" name)]
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
               (let [chat (:chat (first args))]
-                #_(debug (format msg "pre-hook" chat))))
+                ;; show who's doing what
+                (info (format msg :pre chat))))
        :post (fn [& args]
                (let [[fn-result {:keys [chat]}] args]
-                 #_(debug (format msg "post-hook" chat))
+                 #_(debug (format msg :post chat))
                  fn-result))}))))
 
 (defn handler
