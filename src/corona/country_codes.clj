@@ -47,7 +47,7 @@
 
 (debugf "Loading namespace %s" *ns*)
 
-(def country-code-strings
+(def country-codes
   ["CR" "TG" "TJ" "ZA" "IM" "PE" "LC" "CH" "RU" "MP" "CK" "SI" "AU" "KR" "IT"
    "FI" "GF" "SC" "SX" "ZZ" "TT" "TK" "MY" "SY" "MN" "TF" "KP" "AM" "DZ" "UY"
    "TD" "DJ" "BI" "MK" "MU" "LI" "NU" "GR" "GY" "CG" "NF" "ML" "AX" "GM" "SA"
@@ -102,8 +102,8 @@
         docstring-hm))
 
 ;; (debug "Interning symbols for country-codes...")
-(intern-country-codes! country-code-strings)
-(infof "%s country-code symbols interned" (count country-code-strings))
+(intern-country-codes! country-codes)
+(infof "%s country-code symbols interned" (count country-codes))
 
 ;; (debug "Setting docstrings on interned country-code symbols...")
 (set-docstrings! country-code-docs)
