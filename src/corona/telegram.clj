@@ -62,20 +62,24 @@
   manner."
   ([token handler] (start-polling token handler {}))
   ([token handler opts]
-   (let [running (async/chan)
-         updates (p/create-producer
-                  running token opts (fn []
-                                       (when co/env-prod? (System/exit 2))))]
-     (info (format "Polling on handler %s ..." handler))
-     (p/create-consumer updates handler)
-     running)))
+   (let [channel (async/chan)]
+     (debug (format "(async/chan) returned %s" channel))
+     (let [updates (p/create-producer
+                    channel token opts (fn []
+                                         (when co/env-prod? (System/exit 2))))]
+       (info (format "Polling on handler %s ..." handler))
+       (p/create-consumer updates handler)
+       channel))))
 
 (defn telegram [telegram-token]
   (let [msg "[telegram] starting..."]
     (info msg)
-    (doall
-     (async/<!! (start-polling co/telegram-token (handler))))
-    (warn (format "%s done - this should not happen?!?" msg))))
+    (let [port (start-polling co/telegram-token (handler))]
+      (let [retval-async<!! (async/<!! port)]
+        (debug (format "%s done. retval-async<!! %s"
+                       msg (if-let [v retval-async<!!] v "nil")))
+        (fatal (format "Further telegram requests will NOT be answered!!!"
+                       msg))))))
 
 (defonce continue (atom true))
 
@@ -88,7 +92,8 @@
     (while @continue
       (Thread/sleep ttl)
       (fun))
-    (warn (format "%s done - this should not happen?!?" msg))))
+    (debug (format "%s done" msg))
+    (warn "Displayed data will NOT be updated!")))
 
 ;; TODO use com.stuartsierra.compoment for start / stop
 ;; For interactive development:
