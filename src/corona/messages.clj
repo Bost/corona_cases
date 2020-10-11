@@ -284,10 +284,6 @@
        "")
      (footer parse_mode))))
 
-(def list-countries-memo
-  #_list-countries
-  (com/memo-ttl list-countries))
-
 (defn list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
@@ -334,10 +330,6 @@
        (str "\n\n" (l/list-sorted-by-desc sort-by-case))
        "")
      (footer parse_mode))))
-
-(def list-per-100k-memo
-  #_list-per-100k
-  (com/memo-ttl list-per-100k))
 
 (defn diff-coll-vals
   "Differences between values. E.g.:

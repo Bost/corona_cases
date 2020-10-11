@@ -57,10 +57,10 @@
   ;; this may be not needed in the end
   #_{:pre [(s/valid? #{
                      ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
-                     msg/list-countries-memo
+                     msg/list-countries
 
                      ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
-                     msg/list-per-100k-memo
+                     msg/list-per-100k
                      }
                    listing-fn)]}
   (let [coll (sort-by sort-by-case < data/stats-countries)
@@ -81,10 +81,10 @@
             contents)))))
 
 (defn list-countries [prm]
-  (listing (assoc prm :listing-fn msg/list-countries-memo)))
+  (listing (assoc prm :listing-fn msg/list-countries)))
 
 (defn list-per-100k [prm]
-  (listing (assoc prm :listing-fn msg/list-per-100k-memo)))
+  (listing (assoc prm :listing-fn msg/list-per-100k)))
 
 (defn explain [{:keys [chat-id parse_mode]}]
   (doall

@@ -28,9 +28,7 @@
        (debugf "[request!] %s chars cached in %s ms"
                (count (str @cache)) (- (System/currentTimeMillis) tbeg))))))
 
-(def data-memo
-  (fn [] @cache)
-  #_(com/memo-ttl data))
+(def data-memo (fn [] @cache))
 
 (defn raw-dates-unsorted []
   #_[(keyword "2/22/20") (keyword "2/2/20")]
@@ -39,11 +37,6 @@
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
 (defn left-pad [s] (com/left-pad s 2))
-
-#_(require '[ clojure.inspector :as i])
-#_(i/inspect
-   (data-with-pop-memo)
-   #_(data-memo))
 
 (defn xf-sort
   "A sorting transducer. Mostly a syntactic improvement to allow composition of
@@ -155,8 +148,7 @@
   [case-kw pred]
   (let [locations (filter pred
                           ((comp :locations case-kw)
-                           (data-with-pop-memo)
-                           #_(data-memo)))]
+                           (data-with-pop-memo)))]
     (map (fn [raw-date]
            (sums-for-date case-kw locations raw-date))
          (raw-dates))))
