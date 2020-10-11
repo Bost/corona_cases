@@ -121,47 +121,6 @@
 (def data-with-pop-memo
   (com/memo-ttl data-with-pop))
 
-(defn all-affected-country-codes
-  "Countries with some confirmed, deaths or recovered cases"
-  ([] (all-affected-country-codes {:limit-fn identity}))
-  ([{:keys [limit limit-fn] :as prm}]
-   (let [coll (transduce (map (fn [case]
-                                #_(set (map :country_code (:locations (case
-                                                                          (data-with-pop-memo)
-                                                                          #_(data-memo)))))
-                                (transduce (map :country_code)
-                                           conj #{}
-                                           ((comp :locations case)
-                                            (data-with-pop-memo)
-                                            #_(data-memo)))))
-                         cset/union #{}
-                         [:population :confirmed :deaths :recovered])]
-     (transduce (comp (map (fn [cc] (if (= ccc/xx cc)
-                                     ccc/default-2-country-code
-                                     cc)))
-                      (distinct)
-                      limit-fn)
-                conj []
-                coll))
-
-   #_(->> [:population :confirmed :deaths :recovered]
-          (map (fn [case] (->>
-                            (data-with-pop-memo)
-                            #_(data-memo)
-                            case :locations
-                            (map :country_code)
-                            set)))
-        (reduce cset/union)
-        (mapv (fn [cc] (if (= xx cc)
-                        d/default-2-country-code
-                        cc)))
-        (distinct)
-        (limit-fn)
-        )))
-
-(def all-affected-country-codes-memo
-  (com/memo-ttl all-affected-country-codes))
-
 (defn dates
   ([] (dates {:limit-fn identity}))
   ([{:keys [limit-fn] :as prm}]
@@ -294,15 +253,8 @@
 
       (= country-code (:country_code loc)))))
 
-(defn stats-per-country [cc]
-  (conj
-   (last-nn-day (pred-fn cc))
-   #_{:cn (ccr/country-name-aliased cc)}
-   {:cc cc}))
-
-(defn stats-all-affected-countries [prm]
-  (map stats-per-country (all-affected-country-codes-memo)))
-
-(def stats-all-affected-countries-memo
-  #_stats-all-affected-countries
-  (com/memo-ttl stats-all-affected-countries))
+(def stats-countries
+  "Attention - lazy evaluated!"
+  (map (fn [cc] (conj {:cc cc}
+                     (last-nn-day (pred-fn cc))))
+       ccc/country-codes))

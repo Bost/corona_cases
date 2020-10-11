@@ -29,13 +29,10 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
          maps))
 
 (defn rank [{:keys [rank-kw] :as prm}]
-  #_(defn sort-fn [coll] (sort-by rank-kw > coll))
   (map-indexed
    (fn [idx hm]
      (update-in (select-keys hm [:cc]) [:rank rank-kw] (fn [_] idx)))
-   (sort-by rank-kw >
-            ;; data/stats-all-affected-countries-memo - not passing the prm
-            (data/stats-all-affected-countries-memo {}))))
+   (sort-by rank-kw > data/stats-countries)))
 
 (defn calculate-rankings [prm]
   (let [rankings (u/transpose (map (fn [rank-kw]
@@ -49,13 +46,13 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                                            (= cc affected-cc))
                                          ranking))
                                rankings))))
-         (data/all-affected-country-codes-memo))))
+         ccc/country-codes)))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   #_(debug "world" prm)
   (let [prm (assoc prm :parse_mode "HTML")]
     (let [options (select-keys prm (keys msg/options))
-          cnt-countries (count (data/all-affected-country-codes-memo))
+          cnt-countries (count ccc/country-codes)
           content (-> (assoc prm
                              :disable_web_page_preview true
                              :cnt-countries cnt-countries)
@@ -65,7 +62,8 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                                    (filter (fn [{:keys [cc]}] (= cc country-code))
                                            (calculate-rankings prm)))))
                       (msg/detailed-info))]
-      (morse/send-text com/telegram-token chat-id options content))
+      (doall
+       (morse/send-text com/telegram-token chat-id options content)))
 
     (if
         false
@@ -79,15 +77,15 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                       {:day (count (data/raw-dates-unsorted))
                        :cc country-code
                        :stats (v1/pic-data)}))]
-        (morse/send-photo com/telegram-token chat-id options content)))))
+        (doall
+         (morse/send-photo com/telegram-token chat-id options content))))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
 (defn listing [{:keys [listing-fn chat-id sort-by-case] :as prm}]
-  (let [coll (sort-by sort-by-case <
-                      (data/stats-all-affected-countries-memo prm))
+  (let [coll (sort-by sort-by-case < data/stats-countries)
         ;; Split the long list of all countries into smaller subparts
         sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
         cnt-msgs (count sub-msgs)]
@@ -102,7 +100,6 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                                              :cnt-msgs cnt-msgs))))
                   sub-msgs))))
 
-
 (defn list-countries [prm]
   (listing (assoc prm :listing-fn msg/list-countries-memo)))
 
@@ -110,18 +107,22 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   (listing (assoc prm :listing-fn msg/list-per-100k-memo)))
 
 (defn explain [{:keys [chat-id] :as prm}]
-  (morse/send-text com/telegram-token chat-id msg/options (msg/explain prm)))
+  (doall
+   (morse/send-text com/telegram-token chat-id msg/options (msg/explain prm))))
 
 (defn feedback [{:keys [chat-id] :as prm}]
-  (morse/send-text com/telegram-token chat-id msg/options (msg/feedback prm)))
+  (doall
+   (morse/send-text com/telegram-token chat-id msg/options (msg/feedback prm))))
 
 ;; (defn language [{:keys [chat-id] :as prm}]
-;;   (morse/send-text com/telegram-token chat-id msg/options (msg/language prm)))
+;;   (doall
+;;    (morse/send-text com/telegram-token chat-id msg/options (msg/language prm))))
 
 (defn contributors [{:keys [chat-id] :as prm}]
-  (morse/send-text
-   com/telegram-token chat-id msg/options
-   (msg/contributors prm)))
+  (doall
+   (morse/send-text
+    com/telegram-token chat-id msg/options
+    (msg/contributors prm))))
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""

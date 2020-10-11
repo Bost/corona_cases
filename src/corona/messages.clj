@@ -199,16 +199,17 @@
          type :type
          case :case} (edn/read-string data)]
     (when (worldwide? country-code)
-      (morse/send-photo
-       co/telegram-token chat-id
-       (buttons {:chat-id chat-id :cc country-code})
-       (toByteArrayAutoClosable
-        (let [plot-fn (if (= type :sum) p/plot-all-by-case p/plot-all-absolute)]
-          (plot-fn
-           {:day (count (data/raw-dates-unsorted)) :case case :type type
-            :threshold (co/min-threshold case)
-            :threshold-increase (co/threshold-increase case)
-            :stats (v1/pic-data)})))))))
+      (doall
+       (morse/send-photo
+        co/telegram-token chat-id
+        (buttons {:chat-id chat-id :cc country-code})
+        (toByteArrayAutoClosable
+         (let [plot-fn (if (= type :sum) p/plot-all-by-case p/plot-all-absolute)]
+           (plot-fn
+            {:day (count (data/raw-dates-unsorted)) :case case :type type
+             :threshold (co/min-threshold case)
+             :threshold-increase (co/threshold-increase case)
+             :stats (v1/pic-data)}))))))))
 
 ;; (defn language [prm]
 ;;   (format
