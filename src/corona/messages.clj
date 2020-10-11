@@ -218,7 +218,7 @@
 ;;    "en"
 ;;    (footer prm)))
 
-(defn last-day-val [prm] (:f (data/last-day prm)))
+(defn last-day-val [prm] (:f (data/last-nn-day (:pred prm))))
 (defn format-last-day [prm] (co/fmt-date (last-day-val prm)))
 
 (defn header [{:keys [parse_mode] :as prm}]
@@ -386,7 +386,7 @@
                 (let [max-active-val (apply max data-active)
                       max-active-idx (.lastIndexOf data-active max-active-val)
                       max-active-date (nth (data/dates) max-active-idx)
-                      last-day (data/last-day prm)
+                      last-day (data/last-nn-day (:pred prm))
                       {confirmed :c population :p} last-day
                       population-rounded (un/round-div-precision population 1e6 1)
                       delta (data/delta prm)

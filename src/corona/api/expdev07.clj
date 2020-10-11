@@ -264,11 +264,11 @@
                      com/all-cases)))
        (reduce into {})))
 
-(defn last-day
+(defn last-nn-day
   "E.g.:
-  (last-day {:pred-q '(pred-fn sk) :pred (pred-fn sk)})
-  (last-day {:pred-q '(fn [_] true) :pred (fn [_] true)})"
-  [{:keys [pred] :as prm}]
+  (last-nn-day (pred-fn sk))
+  (last-nn-day (fn [_] true))"
+  [pred]
   (eval-fun get-last pred))
 
 (defn last-8-reports
@@ -292,7 +292,7 @@
 
 (defn stats-per-country [{:keys [cc] :as prm}]
   (conj
-   (last-day (assoc prm :pred-q '(pred-fn cc) :pred (pred-fn cc)))
+   (last-nn-day (pred-fn cc))
    #_{:cn (ccr/country-name-aliased cc)}
    {:cc cc}))
 
