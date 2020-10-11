@@ -544,7 +544,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
             country-code (count content))
     content))
 
-(defn feedback [prm]
+(defn feedback [parse_mode]
   (str "Just write a message to @RostislavSvoboda thanks."))
 
 (defn contributors [parse_mode]
@@ -561,14 +561,14 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
            "approved their inclusion to this list yet. 🙏 Thanks folks.")
           (footer parse_mode)))
 
-(defn explain [{:keys [parse_mode] :as prm}]
+(defn explain [parse_mode]
   (str
    ;; escape underscores for the markdown parsing
    (bot-name-formatted)
    " " com/commit " "
    (str
-    (link "GitHub" "https://github.com/Bost/corona_cases" prm) ", "
-    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" prm)
+    (link "GitHub" "https://github.com/Bost/corona_cases" parse_mode) ", "
+    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" parse_mode)
     "\n")
    "\n"
    (format "- %s cases = %s + %s\n" l/closed l/recovered l/deaths)
@@ -602,7 +602,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                       com/env-prod? "https://corona-cases-bot.herokuapp.com/"
                       com/env-test? "https://hokuspokus-bot.herokuapp.com/"
                       :else "http://localhost:5050"))
-                  prm))
+                  parse_mode))
    ;; (abbreviated) content of the former reference message
    (format (str "- %s, %s, %s, %s:\n"
                 "  %s\n")
@@ -615,15 +615,15 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
    (format "%s %s\n"
            "- Robert Koch-Institut "
            (link "COVID-19 (Coronavirus SARS-CoV-2)"
-                 ref-rober-koch prm))
+                 ref-rober-koch parse_mode))
    (format "- 3Blue1Brown: %s\n"
            (link "Exponential growth and epidemics"
                  ref-3blue1brown-exp-growth
-                 prm))
+                 parse_mode))
    (format "%s\n  %s\n  %s\n"
            "- Worldometer - COVID-19 Coronavirus"
-           (link "Coronavirus Age Sex Demographics" ref-age-sex prm)
-           (link "Mortality rate" ref-mortality-rate prm))
+           (link "Coronavirus Age Sex Demographics" ref-age-sex parse_mode)
+           (link "Mortality rate" ref-mortality-rate parse_mode))
    (format "- Thanks goes to %s. Please send %s \n"
            (com/encode-cmd l/contributors)
            (com/encode-cmd l/feedback))

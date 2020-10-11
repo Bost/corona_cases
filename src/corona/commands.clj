@@ -20,7 +20,9 @@
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   #_(debug "world" prm)
-  (let [prm (assoc prm :parse_mode "HTML")]
+  (let [prm
+        ;; override default parse_mode
+        (assoc prm :parse_mode "HTML")]
     (let [options (select-keys prm (keys msg/options))
           content (msg/detailed-info (assoc prm
                                             :disable_web_page_preview true))]
@@ -68,23 +70,21 @@
 (defn list-per-100k [prm]
   (listing (assoc prm :listing-fn msg/list-per-100k-memo)))
 
-(defn explain [{:keys [chat-id] :as prm}]
+(defn explain [{:keys [chat-id parse_mode]}]
   (doall
-   (morse/send-text com/telegram-token chat-id msg/options (msg/explain prm))))
+   (morse/send-text com/telegram-token chat-id msg/options (msg/explain parse_mode))))
 
-(defn feedback [{:keys [chat-id] :as prm}]
+(defn feedback [{:keys [chat-id parse_mode]}]
   (doall
-   (morse/send-text com/telegram-token chat-id msg/options (msg/feedback prm))))
+   (morse/send-text com/telegram-token chat-id msg/options (msg/feedback parse_mode))))
 
-;; (defn language [{:keys [chat-id] :as prm}]
+;; (defn language [{:keys [chat-id parse_mode]}]
 ;;   (doall
-;;    (morse/send-text com/telegram-token chat-id msg/options (msg/language prm))))
+;;    (morse/send-text com/telegram-token chat-id msg/options (msg/language parse_mode))))
 
-(defn contributors [{:keys [chat-id] :as prm}]
+(defn contributors [{:keys [chat-id parse_mode]}]
   (doall
-   (morse/send-text
-    com/telegram-token chat-id msg/options
-    (msg/contributors "HTML"))))
+   (morse/send-text com/telegram-token chat-id msg/options (msg/contributors parse_mode))))
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
@@ -125,23 +125,17 @@
     #(normalize %)]))
 
 (defn cmds-general []
-  (let [prm
-        (conj
-         {:pred-q '(fn [_] true)}
-         {:pred (fn [_] true)}
-         msg/options)
-
-        prm-country-code {:country-code (ccr/country-code ccc/worldwide)}]
+  (let [prm (conj {:pred (fn [_] true)
+                   :country-code (ccr/country-code ccc/worldwide)}
+             msg/options)]
     [{:name l/contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
      {:name l/world
-      :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
-                                   prm-country-code)))
+      :f (fn [chat-id] (world (assoc prm :chat-id chat-id)))
       :desc l/world-desc}
      {:name l/start
-      :f (fn [chat-id] (world (conj (assoc prm :chat-id chat-id)
-                                   prm-country-code)))
+      :f (fn [chat-id] (world (assoc prm :chat-id chat-id)))
       :desc l/world-desc}
      {:name l/explain
       :f (fn [chat-id] (explain (assoc prm :chat-id chat-id)))
