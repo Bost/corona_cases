@@ -271,10 +271,14 @@
   [pred]
   (eval-fun get-last pred))
 
-(defn last-8-reports
+(defn last-nn-8-reports
   "E.g.:
-  (last-8-reports {:pred-q '(pred-fn sk) :pred (pred-fn sk)})
-  (last-8-reports {:pred-q '(fn [_] true) :pred (fn [_] true)})"
+  (last-nn-8-reports (pred-fn sk))
+  (last-nn-8-reports (fn [_] true))"
+  [pred]
+  (eval-fun (fn [coll] (take-last 8 coll)) pred))
+
+(defn last-8-reports
   [{:keys [pred] :as prm}]
   (eval-fun (fn [coll] (take-last 8 coll)) pred))
 

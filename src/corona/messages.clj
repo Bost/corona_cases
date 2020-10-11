@@ -412,7 +412,7 @@
                                deaths-per-100k    :d100k
                                closed-per-100k    :c100k
                                } last-day
-                              {last-8-reports :i} (data/last-8-reports prm)
+                              {last-8-reports :i} (data/last-nn-8-reports (:pred prm))
                               [last-8th-report & last-7-reports] last-8-reports
                               [last-7th-report & _] last-7-reports
                               closed (+ deaths recovered)
