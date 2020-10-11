@@ -84,7 +84,7 @@
   (doall
    (morse/send-text
     com/telegram-token chat-id msg/options
-    (msg/contributors prm))))
+    (msg/contributors "HTML"))))
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""

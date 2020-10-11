@@ -141,7 +141,7 @@
 (def ^:const ref-age-sex
   "https://www.worldometers.info/coronavirus/coronavirus-age-sex-demographics/")
 
-(defn link [name url {:keys [parse_mode] :as prm}]
+(defn link [name url parse_mode]
   (if (= parse_mode "HTML")
     (format "<a href=\"%s\">%s</a>" url name)
     (format "[%s](%s)" name url)))
@@ -149,7 +149,7 @@
 (defn footer
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `list-countries`, `bot-father-edit-cmds`."
-  [{:keys [parse_mode]}]
+  [parse_mode]
   (let [spacer "   "]
     (str
      ;; "Try" spacer
@@ -238,7 +238,7 @@
 (defn list-countries
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  [{:keys [data msg-idx cnt-msgs sort-by-case parse-mode pred] :as prm}]
+  [{:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred] :as prm}]
   (let [
         ;; TODO calculate count of reports only once
         cnt-reports (count (data/raw-dates))
@@ -249,7 +249,7 @@
         omag-deaths (dec omag-active)]
     (format
      (format-linewise
-      [["%s\n"   [(header parse-mode pred)]]
+      [["%s\n"   [(header parse_mode pred)]]
        ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
        ["    %s "[(str l/active    (if (= :i sort-by-case) sort-indicator " "))]]
        ["%s"     [spacer]]
@@ -282,7 +282,7 @@
      #_(if (= msg-idx cnt-msgs)
        (str "\n\n" (l/list-sorted-by-desc sort-by-case))
        "")
-     (footer prm))))
+     (footer parse_mode))))
 
 (def list-countries-memo
   #_list-countries
@@ -291,7 +291,7 @@
 (defn list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  [{:keys [data msg-idx cnt-msgs sort-by-case parse-mode pred] :as prm}]
+  [{:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred] :as prm}]
   (let [spacer " "
         sort-indicator "▴" ;; " " "▲"
         ;; omag - order of magnitude i.e. number of digits
@@ -301,7 +301,7 @@
         ]
     (format
      (format-linewise
-      [["%s\n" [(header parse-mode pred)]]
+      [["%s\n" [(header parse_mode pred)]]
        ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/raw-dates)) msg-idx cnt-msgs)]]
        ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
        ["%s"   [spacer]]
@@ -333,7 +333,7 @@
      #_(if (= msg-idx cnt-msgs)
        (str "\n\n" (l/list-sorted-by-desc sort-by-case))
        "")
-     (footer prm))))
+     (footer parse_mode))))
 
 (def list-per-100k-memo
   #_list-per-100k
@@ -392,7 +392,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   TODO make an api service for the content shown in the message
   TODO Create API web service(s) for every field displayed in the messages
   "
-  [{:keys [country-code parse-mode pred] :as prm}]
+  [{:keys [country-code parse_mode pred] :as prm}]
   #_(debug "detailed-info" prm)
   ;; (println "all-rankings" (count all-rankings))
   (let [rank (first
@@ -404,7 +404,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
         (format-linewise
          [["%s\n"  ; extended header
            [(format-linewise
-             [["%s  " [(header parse-mode pred)]]
+             [["%s  " [(header parse_mode pred)]]
               ["%s "  [(ccr/country-name-aliased country-code)]]
               ["%s"   [;; country commands
                        (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
@@ -421,7 +421,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                       last-day (data/last-nn-day pred)
                       {confirmed :c population :p} last-day
                       population-rounded (utn/round-div-precision population 1e6 1)
-                      delta (data/delta prm)
+                      delta (data/delta pred)
                       {delta-confirmed :c} delta]
                   (format-linewise
                    (apply
@@ -539,7 +539,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                                                             (get rank (last args))))))]])]
                                #_(debug "[detailed-info] (count worldwide-block)" (count worldwide-block))
                                worldwide-block))])))))))]])
-          ["%s\n" [(footer prm)]]])]
+          ["%s\n" [(footer parse_mode)]]])]
     (debugf "[detailed-info] country-code %s; message-size %s chars"
             country-code (count content))
     content))
@@ -547,10 +547,10 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
 (defn feedback [prm]
   (str "Just write a message to @RostislavSvoboda thanks."))
 
-(defn contributors [prm]
+(defn contributors [parse_mode]
   (format "%s\n\n%s\n\n%s"
           (s/join "\n" ["@DerAnweiser"
-                        (link "maty535" "https://github.com/maty535" prm)
+                        (link "maty535" "https://github.com/maty535" parse_mode)
                         "@kostanjsek"
                         "@DistrictBC"
                         "Michael J."
@@ -559,7 +559,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
           (str
            "The rest of the contributors prefer anonymity or haven't "
            "approved their inclusion to this list yet. 🙏 Thanks folks.")
-          (footer prm)))
+          (footer parse_mode)))
 
 (defn explain [{:keys [parse_mode] :as prm}]
   (str
@@ -628,7 +628,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
            (com/encode-cmd l/contributors)
            (com/encode-cmd l/feedback))
    "\n"
-   (footer prm)))
+   (footer parse_mode)))
 
 (def ^:const bot-description
   "Keep it in sync with README.md"

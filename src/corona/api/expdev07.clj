@@ -211,12 +211,12 @@
              (get-counts-memo pred))))
 (defn delta
   "E.g.:
-  (delta {:pred-q '(pred-fn cn)  :pred (pred-fn cn)})
-  (delta {:pred-q '(fn [_] true) :pred (fn [_] true)})"
-  [prm]
+  (delta (pred-fn cn))
+  (delta (fn [_] true))"
+  [pred]
   (->> [get-prev get-last]
        (map (fn [fun]
-              (eval-fun fun (:pred prm))))
+              (eval-fun fun pred)))
        (apply (fn [prv lst]
                 (map (fn [k]
                        {k (- (k lst) (k prv))})
