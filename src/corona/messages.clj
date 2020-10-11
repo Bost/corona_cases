@@ -219,10 +219,7 @@
 ;;    "en"
 ;;    (footer prm)))
 
-(defn last-day-val [prm] (:f (data/last-nn-day (:pred prm))))
-(defn format-last-day [prm] (com/fmt-date (last-day-val prm)))
-
-(defn header [{:keys [parse_mode] :as prm}]
+(defn header [parse_mode pred]
   (format
    (str
     (condp = parse_mode
@@ -230,7 +227,7 @@
       ;; i.e. "Markdown"
       "*%s*")
     " %s")
-   (format-last-day prm)
+   (com/fmt-date (:f (data/last-nn-day pred)))
    (condp = parse_mode
      "HTML" com/bot-name
      ;; i.e. "Markdown"
@@ -241,7 +238,7 @@
 (defn list-countries
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  [{:keys [data msg-idx cnt-msgs sort-by-case] :as prm}]
+  [{:keys [data msg-idx cnt-msgs sort-by-case parse-mode pred] :as prm}]
   (let [
         ;; TODO calculate count of reports only once
         cnt-reports (count (data/raw-dates))
@@ -252,7 +249,7 @@
         omag-deaths (dec omag-active)]
     (format
      (format-linewise
-      [["%s\n"   [(header prm)]]
+      [["%s\n"   [(header parse-mode pred)]]
        ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
        ["    %s "[(str l/active    (if (= :i sort-by-case) sort-indicator " "))]]
        ["%s"     [spacer]]
@@ -294,7 +291,7 @@
 (defn list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  [{:keys [data msg-idx cnt-msgs sort-by-case] :as prm}]
+  [{:keys [data msg-idx cnt-msgs sort-by-case parse-mode pred] :as prm}]
   (let [spacer " "
         sort-indicator "▴" ;; " " "▲"
         ;; omag - order of magnitude i.e. number of digits
@@ -304,7 +301,7 @@
         ]
     (format
      (format-linewise
-      [["%s\n" [(header prm)]]
+      [["%s\n" [(header parse-mode pred)]]
        ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/raw-dates)) msg-idx cnt-msgs)]]
        ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
        ["%s"   [spacer]]
@@ -353,6 +350,34 @@
       (recur tail (conj result (- (first tail) head)))
       result)))
 
+(defn deep-merge
+  "Recursively merges maps. TODO see https://github.com/weavejester/medley
+Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2711849"
+  [& maps]
+  (apply merge-with (fn [& args]
+                      (if (every? map? args)
+                        (apply deep-merge args)
+                        (last args)))
+         maps))
+
+(defn calc-rank [rank-kw]
+  (map-indexed
+   (fn [idx hm]
+     (update-in (select-keys hm [:cc]) [:rank rank-kw] (fn [_] idx)))
+   (sort-by rank-kw > data/stats-countries)))
+
+(def all-rankings
+  (map (fn [affected-cc]
+         (apply deep-merge
+                (reduce into []
+                        (map (fn [ranking]
+                               (filter (fn [{:keys [cc]}]
+                                         (= cc affected-cc))
+                                       ranking))
+                             (u/transpose (map calc-rank
+                                               [:p :c100k :r100k :d100k :i100k]))))))
+       ccc/country-codes))
+
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread
 ;; they obey a stack discipline:
@@ -367,17 +392,19 @@
   TODO make an api service for the content shown in the message
   TODO Create API web service(s) for every field displayed in the messages
   "
-  [{:keys [country-code pred] :as prm}]
+  [{:keys [country-code parse-mode pred] :as prm}]
   #_(debug "detailed-info" prm)
-  (let [rank (first (map (fn [m] (select-keys m [:rank]))
-                         (filter (fn [{:keys [cc]}] (= cc country-code))
-                                 all-rankings)))
+  ;; (println "all-rankings" (count all-rankings))
+  (let [rank (first
+              (map :rank
+                   (filter (fn [{:keys [cc]}] (= cc country-code))
+                           all-rankings)))
         cnt-countries (count ccc/country-codes)
         content
         (format-linewise
          [["%s\n"  ; extended header
            [(format-linewise
-             [["%s  " [(header prm)]]
+             [["%s  " [(header parse-mode pred)]]
               ["%s "  [(ccr/country-name-aliased country-code)]]
               ["%s"   [;; country commands
                        (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
@@ -391,7 +418,7 @@
                 (let [max-active-val (apply max data-active)
                       max-active-idx (.lastIndexOf data-active max-active-val)
                       max-active-date (nth (data/dates) max-active-idx)
-                      last-day (data/last-nn-day (:pred prm))
+                      last-day (data/last-nn-day pred)
                       {confirmed :c population :p} last-day
                       population-rounded (utn/round-div-precision population 1e6 1)
                       delta (data/delta prm)
@@ -417,16 +444,16 @@
                                deaths-per-100k    :d100k
                                closed-per-100k    :c100k
                                } last-day
-                              {last-8-reports :i} (data/last-nn-8-reports (:pred prm))
+                              {last-8-reports :i} (data/last-nn-8-reports pred)
                               [last-8th-report & last-7-reports] last-8-reports
                               [last-7th-report & _] last-7-reports
                               closed (+ deaths recovered)
                               {delta-deaths :d delta-recov :r delta-active :i} delta
                               delta-closed (+ delta-deaths delta-recov)]
                           #_(debug "[detailed-info]"
-                                 "delta-closed" delta-closed
-                                 "delta-confirmed" delta-confirmed
-                                 "(= delta-confirmed delta-closed)" (= delta-confirmed delta-closed))
+                                   "delta-closed" delta-closed
+                                   "delta-confirmed" delta-confirmed
+                                   "(= delta-confirmed delta-closed)" (= delta-confirmed delta-closed))
                           [["%s\n" [(fmt-to-cols
                                      {:s l/active :n active :total confirmed :diff delta-active
                                       :calc-rate true
@@ -508,7 +535,8 @@
                                                           (s/join "" fmts)))
                                         :fn-args
                                         (fn [args] (update args (dec (count args))
-                                                          (fn [_] (get rank (last args))))))]])]
+                                                          (fn [_]
+                                                            (get rank (last args))))))]])]
                                #_(debug "[detailed-info] (count worldwide-block)" (count worldwide-block))
                                worldwide-block))])))))))]])
           ["%s\n" [(footer prm)]]])]
