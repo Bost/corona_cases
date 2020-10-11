@@ -2,7 +2,7 @@
 
 (ns corona.tables
   (:require
-   [corona.countries :as cr]
+   [corona.countries :as ccr]
    [taoensso.timbre :as timbre :refer :all]
    ))
 
@@ -509,7 +509,7 @@
        (map (fn [[Country Population YearlyChangeRate NetChange Density LandArea
                  Migrants FertilityRate MedianAge UrbanPopulationRate
                  WorldShareRate]]
-              [(cr/country-code Country) Population]))
+              [(ccr/country-code Country) Population]))
        conj (sorted-map)
        population-table))
 

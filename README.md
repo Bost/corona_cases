@@ -17,13 +17,13 @@ lein repl
 ```
 Start telegram chatbot:
 ```clojure
-(require '[corona.telegram] '[corona.common :as co])
-(corona.telegram/-main co/env-type)
+(require '[corona.telegram] '[corona.common :as com])
+(corona.telegram/-main com/env-type)
 ```
 Start web server:
 ```clojure
-(require '[corona.telegram] '[corona.common :as co])
-(corona.web/webapp-start co/env-type co/webapp-port)
+(require '[corona.telegram] '[corona.common :as com])
+(corona.web/webapp-start com/env-type com/webapp-port)
 ```
 Then check the [http://localhost:5050/](http://localhost:5050/)
 

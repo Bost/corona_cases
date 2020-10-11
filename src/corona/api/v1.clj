@@ -4,8 +4,7 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require
-   [corona.common :as co]
-   [corona.countries :as cr]
+   [corona.common :as com]
    [corona.country-codes :refer :all]
    [utils.core :refer [in?] :exclude [id]]
    [corona.tables :as t]
@@ -153,8 +152,8 @@
                (assoc
                 prm
                 #_(dissoc prm :c)
-                :i (co/calculate-active prm)
-                :i100k ((co/calculate-cases-per-100k :i) prm)
-                :r100k ((co/calculate-cases-per-100k :r) prm)
-                :d100k ((co/calculate-cases-per-100k :d) prm))))
+                :i (com/calculate-active prm)
+                :i100k ((com/calculate-cases-per-100k :i) prm)
+                :r100k ((com/calculate-cases-per-100k :r) prm)
+                :d100k ((com/calculate-cases-per-100k :d) prm))))
          (map xf-for-case [:population :confirmed :recovered :deaths])))

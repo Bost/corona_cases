@@ -11,9 +11,9 @@
    [clojure.set :as cset]
    [clojure2d.color :as c]
    [clojure2d.core :as c2d]
-   [corona.common :as co]
-   [corona.countries :as cr]
-   [corona.country-codes :as cc]
+   [corona.common :as com]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc]
    [corona.lang :as l]
    [utils.core :refer [in?] :exclude [id]]
    [taoensso.timbre :as timbre :refer :all]
@@ -83,7 +83,7 @@
   "Calculate sums for a given country code or all countries if the country code
   is unspecified."
   [cc stats]
-  (let [pred-fn (fn [hm] (if (= cc cc/worldwide-2-country-code)
+  (let [pred-fn (fn [hm] (if (= cc ccc/worldwide-2-country-code)
                           true
                           (= cc (:cc hm))))]
     (->> stats
@@ -118,7 +118,7 @@
                         [:i :r :d :c :p]))))
 
 (defn fmt-last-date [stats]
-  ((comp co/fmt-date :f last) (sort-by :f stats)))
+  ((comp com/fmt-date :f last) (sort-by :f stats)))
 
 (defn fmt-day [day] (format "%s %s" l/day day))
 
@@ -130,11 +130,11 @@
   (format "%s; %s; %s: %s"
           (fmt-day day)
           (fmt-last-date stats)
-          co/bot-name
+          com/bot-name
           (format "%s %s %s"
                   l/stats
-                  (cr/country-name-aliased cc)
-                  (co/encode-cmd cc))))
+                  (ccr/country-name-aliased cc)
+                  (com/encode-cmd cc))))
 
 (defn palette-colors [n]
   "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
@@ -225,12 +225,12 @@
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
-  `cc/default-2-country-code` so that max 10 countries are displayed in the
+  `ccc/default-2-country-code` so that max 10 countries are displayed in the
   plot"
   [{:keys [case threshold threshold-increase stats] :as prm}]
   (let [max-plot-lines 10
         res (map (fn [hm] (if (< (case hm) threshold)
-                           (assoc hm :cc cc/default-2-country-code)
+                           (assoc hm :cc ccc/default-2-country-code)
                            hm))
                  stats)]
     ;; TODO implement recalculation for decreasing case numbers (e.g. sics)
@@ -297,11 +297,11 @@
                (map #(vector :rect %2 {:color %1})
                     (cycle (c/palette-presets :category20b))
                     (map
-                     cr/country-alias
+                     ccr/country-alias
                      ;; XXX b/add-legend doesn't accept newline char \n
                      #_(fn [cc] (format "%s %s"
                                        cc
-                                       (co/country-alias cc)))
+                                       (com/country-alias cc)))
                      (keys json-data))))
       :y-axis-formatter (metrics-prefix-formatter
                          ;; `+` means: sum up all active cases
@@ -309,9 +309,9 @@
       :label (format "%s; %s; %s: %s > %s"
                      (fmt-day day)
                      (fmt-last-date stats)
-                     co/bot-name
+                     com/bot-name
                      (->> [l/confirmed l/recovered l/deaths l/active-cases ]
-                          (zipmap co/basic-cases)
+                          (zipmap com/basic-cases)
                           case)
                      #_(case {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
                      threshold)
@@ -349,12 +349,12 @@
                          (max-y-val + data))
       :legend (map (fn [c r] (vector :rect r {:color c}))
                    palette
-                   (map cr/country-alias (keys data)))
+                   (map ccr/country-alias (keys data)))
       :label (format
               "%s; %s; %s: %s > %s"
               (fmt-day day)
               (fmt-last-date stats)
-              co/bot-name
+              com/bot-name
               (str (case {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
                    " " l/absolute)
               threshold)

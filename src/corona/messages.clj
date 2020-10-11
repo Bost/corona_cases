@@ -7,14 +7,14 @@
    [clojure.string :as s]
    [corona.api.expdev07 :as data]
    [corona.api.v1 :as v1]
-   [corona.common :as co]
-   [corona.countries :as cr]
-   [corona.country-codes :as cc]
+   [corona.common :as com]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc]
    [corona.lang :as l]
    [corona.plot :as p]
    [morse.api :as morse]
    [utils.core :as u :refer [in? dbg dbgv dbgi] :exclude [id]]
-   [utils.num :as un]
+   [utils.num :as utn]
    [incanter.stats :as istats]
    [incanter.zoo :as izoo]
    [taoensso.timbre :as timbre :refer :all]
@@ -26,20 +26,20 @@
 ;; (debugf "Loading namespace %s" *ns*)
 
 (defn bot-name-formatted []
-  (s/replace co/bot-name #"_" "\\\\_"))
+  (s/replace com/bot-name #"_" "\\\\_"))
 
 (def ^:const options {:parse_mode "Markdown" :disable_web_page_preview true})
 
 (defn pred-fn [country-code] (data/pred-fn country-code))
 
-(defn round-nr [value] (int (un/round-precision value 0)))
+(defn round-nr [value] (int (utn/round-precision value 0)))
 
 (def ^:const max-diff-order-of-magnitude 7)
 
 (defn plus-minus
   "Display \"+0\" when n is zero"
   [n]
-  (co/left-pad
+  (com/left-pad
    (if (zero? n)
      "+0"
      (str
@@ -99,16 +99,16 @@
     :or {show-n true calc-diff true
          desc ""}}]
   (format "<code>%s %s</code> %s"
-          (co/right-pad s " " (- padding-s 2))
-          (co/left-pad (if show-n n "") " " (+ padding-n 2))
+          (com/right-pad s " " (- padding-s 2))
+          (com/left-pad (if show-n n "") " " (+ padding-n 2))
           desc))
 
 (defn fmt-val-to-cols
   [{:keys [s n show-n desc]
     :or {show-n true desc ""}}]
   (format "<code>%s %s</code> %s"
-          (co/right-pad s " " padding-s)
-          (co/left-pad (if show-n n "") " " padding-n)
+          (com/right-pad s " " padding-s)
+          (com/left-pad (if show-n n "") " " padding-n)
           desc))
 
 (defn fmt-to-cols
@@ -118,16 +118,16 @@
     :or {show-n true calc-diff true
          s1 "" n1 "" cmd1 ""}}]
   (format "<code>%s %s %s %s  %s %s </code>%s"
-          (co/right-pad s " " padding-s)
-          (co/left-pad (if show-n n "") " " padding-n)
-          (co/left-pad (if calc-rate (str (un/percentage n total) "%") " ")
+          (com/right-pad s " " padding-s)
+          (com/left-pad (if show-n n "") " " padding-n)
+          (com/left-pad (if calc-rate (str (utn/percentage n total) "%") " ")
                       " " 4)
           (if calc-diff
             (plus-minus diff)
-            (co/left-pad "" " " max-diff-order-of-magnitude))
+            (com/left-pad "" " " max-diff-order-of-magnitude))
           s1
-          (co/left-pad n1 " " 4)
-          (co/encode-cmd cmd1)))
+          (com/left-pad n1 " " 4)
+          (com/encode-cmd cmd1)))
 
 (def ^:const ref-mortality-rate
   "https://www.worldometers.info/coronavirus/coronavirus-death-rate/")
@@ -154,12 +154,12 @@
     (str
      ;; "Try" spacer
      (->> [l/world l/explain]
-          (map co/encode-cmd)
-          (map (fn [cmd] (co/encode-pseudo-cmd cmd parse_mode)))
+          (map com/encode-cmd)
+          (map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
           (s/join spacer))
      spacer l/listings ":  "
-     (->> (mapv l/list-sorted-by co/listing-cases-absolute)
-          (map co/encode-cmd)
+     (->> (mapv l/list-sorted-by com/listing-cases-absolute)
+          (map com/encode-cmd)
           (s/join spacer)))))
 
 (defn toByteArrayAutoClosable
@@ -184,12 +184,12 @@
                         :callback_data (pr-str (assoc prm
                                                       :case case-kw
                                                       :type type))})
-                     co/absolute-cases))
+                     com/absolute-cases))
              [:sum :abs]))]})})
 
 (defn worldwide? [country-code]
-  (let [r (in? [cc/worldwide-2-country-code cc/worldwide-3-country-code
-                cc/worldwide] country-code)]
+  (let [r (in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
+                ccc/worldwide] country-code)]
     #_(debugf "[worldwide?] (worldwide? %s) %s" country-code r)
     r))
 
@@ -201,14 +201,14 @@
     (when (worldwide? country-code)
       (doall
        (morse/send-photo
-        co/telegram-token chat-id
+        com/telegram-token chat-id
         (buttons {:chat-id chat-id :cc country-code})
         (toByteArrayAutoClosable
          (let [plot-fn (if (= type :sum) p/plot-all-by-case p/plot-all-absolute)]
            (plot-fn
             {:day (count (data/raw-dates-unsorted)) :case case :type type
-             :threshold (co/min-threshold case)
-             :threshold-increase (co/threshold-increase case)
+             :threshold (com/min-threshold case)
+             :threshold-increase (com/threshold-increase case)
              :stats (v1/pic-data)}))))))))
 
 ;; (defn language [prm]
@@ -220,7 +220,7 @@
 ;;    (footer prm)))
 
 (defn last-day-val [prm] (:f (data/last-nn-day (:pred prm))))
-(defn format-last-day [prm] (co/fmt-date (last-day-val prm)))
+(defn format-last-day [prm] (com/fmt-date (last-day-val prm)))
 
 (defn header [{:keys [parse_mode] :as prm}]
   (format
@@ -232,9 +232,9 @@
     " %s")
    (format-last-day prm)
    (condp = parse_mode
-     "HTML" co/bot-name
+     "HTML" com/bot-name
      ;; i.e. "Markdown"
-     (s/replace co/bot-name #"_" "\\\\_"))))
+     (s/replace com/bot-name #"_" "\\\\_"))))
 
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 
@@ -268,15 +268,15 @@
      (s/join
       "\n"
       (map (fn [{:keys [i r d cc] :as stats}]
-             (let [cn (cr/country-name-aliased cc)]
+             (let [cn (ccr/country-name-aliased cc)]
                (format "<code>%s%s%s%s%s %s</code>  %s"
-                       (co/left-pad i " " omag-active)
+                       (com/left-pad i " " omag-active)
                        spacer
-                       (co/left-pad r " " omag-recov)
+                       (com/left-pad r " " omag-recov)
                        spacer
-                       (co/left-pad d " " omag-deaths)
-                       (co/right-pad cn 17)
-                       (s/lower-case (co/encode-cmd cc)))))
+                       (com/left-pad d " " omag-deaths)
+                       (com/right-pad cn 17)
+                       (s/lower-case (com/encode-cmd cc)))))
            (->> data
                 #_(take-last 11)
                 #_(partition-all 2)
@@ -289,7 +289,7 @@
 
 (def list-countries-memo
   #_list-countries
-  (co/memo-ttl list-countries))
+  (com/memo-ttl list-countries))
 
 (defn list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
@@ -319,15 +319,15 @@
      (s/join
       "\n"
       (map (fn [{:keys [i100k r100k d100k cc] :as stats}]
-             (let [cn (cr/country-name-aliased cc)]
+             (let [cn (ccr/country-name-aliased cc)]
                (format "<code>   %s%s   %s%s    %s %s</code>  %s"
-                       (co/left-pad i100k " " omag-active-per-100k)
+                       (com/left-pad i100k " " omag-active-per-100k)
                        spacer
-                       (co/left-pad r100k " " omag-recovered-per-100k)
+                       (com/left-pad r100k " " omag-recovered-per-100k)
                        spacer
-                       (co/left-pad d100k " " omag-deaths-per-100k)
-                       (co/right-pad cn 17)
-                       (s/lower-case (co/encode-cmd cc)))))
+                       (com/left-pad d100k " " omag-deaths-per-100k)
+                       (com/right-pad cn 17)
+                       (s/lower-case (com/encode-cmd cc)))))
            (->> data
                 #_(take-last 11)
                 #_(partition-all 2)
@@ -340,7 +340,7 @@
 
 (def list-per-100k-memo
   #_list-per-100k
-  (co/memo-ttl list-per-100k))
+  (com/memo-ttl list-per-100k))
 
 (defn diff-coll-vals
   "Differences between values. E.g.:
@@ -374,12 +374,12 @@
          [["%s\n"  ; extended header
            [(format-linewise
              [["%s  " [(header prm)]]
-              ["%s "  [(cr/country-name-aliased country-code)]]
+              ["%s "  [(ccr/country-name-aliased country-code)]]
               ["%s"   [;; country commands
                        (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
-                              (map (fn [s] (co/encode-cmd (s/lower-case s)))
+                              (map (fn [s] (com/encode-cmd (s/lower-case s)))
                                    [country-code
-                                    (cc/country-code-3-letter country-code)]))]]])]]
+                                    (ccc/country-code-3-letter country-code)]))]]])]]
           ["%s\n" [(str l/day " " (count (data/raw-dates)))]]
           (do
             ["%s\n" ; data
@@ -389,7 +389,7 @@
                       max-active-date (nth (data/dates) max-active-idx)
                       last-day (data/last-nn-day (:pred prm))
                       {confirmed :c population :p} last-day
-                      population-rounded (un/round-div-precision population 1e6 1)
+                      population-rounded (utn/round-div-precision population 1e6 1)
                       delta (data/delta prm)
                       {delta-confirmed :c} delta]
                   (format-linewise
@@ -431,7 +431,7 @@
                            ["%s\n" [(fmt-val-to-cols
                                      {:s l/active-max :n max-active-val :show-n true
                                       :desc (format "(%s)"
-                                                    (co/fmt-date max-active-date))})]]
+                                                    (com/fmt-date max-active-date))})]]
 
                            ;; TODO add effective reproduction number (R)
                            ["%s\n" [(fmt-to-cols
@@ -533,7 +533,7 @@
   (str
    ;; escape underscores for the markdown parsing
    (bot-name-formatted)
-   " " co/commit " "
+   " " com/commit " "
    (str
     (link "GitHub" "https://github.com/Bost/corona_cases" prm) ", "
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" prm)
@@ -567,8 +567,8 @@
       " - " (link "Home page"
                   (def home-page
                     (cond
-                      co/env-prod? "https://corona-cases-bot.herokuapp.com/"
-                      co/env-test? "https://hokuspokus-bot.herokuapp.com/"
+                      com/env-prod? "https://corona-cases-bot.herokuapp.com/"
+                      com/env-test? "https://hokuspokus-bot.herokuapp.com/"
                       :else "http://localhost:5050"))
                   prm))
    ;; (abbreviated) content of the former reference message
@@ -593,8 +593,8 @@
            (link "Coronavirus Age Sex Demographics" ref-age-sex prm)
            (link "Mortality rate" ref-mortality-rate prm))
    (format "- Thanks goes to %s. Please send %s \n"
-           (co/encode-cmd l/contributors)
-           (co/encode-cmd l/feedback))
+           (com/encode-cmd l/contributors)
+           (com/encode-cmd l/feedback))
    "\n"
    (footer prm)))
 

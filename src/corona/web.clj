@@ -2,19 +2,19 @@
 
 (ns corona.web
   (:require
-   [clj-time-ext.core :as te]
+   [clj-time-ext.core :as cte]
    [clj-time.core :as t]
    [clojure.data.json :as json]
-   [clojure.java.io :as io]
+   [clojure.java.io :as jio]
    [clojure.string :as s]
    [compojure.core :refer [ANY defroutes GET POST]]
    [compojure.handler :refer [site]]
    [compojure.route :as route]
-   [corona.common :as co]
+   [corona.common :as com]
    [corona.telegram :as tgram]
    [ring.adapter.jetty :as jetty]
    [taoensso.timbre :as timbre :refer :all]
-   [corona.country-codes :as cc])
+   [corona.country-codes :as ccc])
   (:import
    java.time.ZoneId
    java.util.TimeZone))
@@ -30,7 +30,7 @@
    :headers {"Content-Type" "text/plain"}
    :body (s/join "\n" ["home page"])})
 
-(def ^:const prj-vernum "See `co/prj-vernum`" nil)
+(def ^:const prj-vernum "See `com/prj-vernum`" nil)
 (def ^:const ws-path (format "ws/%s" prj-vernum))
 
 (defn web-service [{:keys [type] :as prm}]
@@ -41,8 +41,8 @@
    (json/write-str
     (->>
      (condp = type
-         :names (conj {"desc" co/desc-ws})
-         :codes (conj {"desc" co/desc-ws})
+         :names (conj {"desc" com/desc-ws})
+         :codes (conj {"desc" com/desc-ws})
          (format "Error. Wrong type %s" type))
      (conj (when-not prj-vernum
              {"warn" "Under construction. Don't use it in PROD env"}))
@@ -75,10 +75,10 @@
      "curl --request POST \"https://api.telegram.org/bot$TELEGRAM_TOKEN/getUpdates\" | jq .message.chat.id"
      ""
      (str "curl --request POST -H 'Content-Type: application/json' "
-          "-d '{\"chat_id\":" co/chat-id ",\"text\":\"curl test msg\",\"disable_notification\":true}' "
+          "-d '{\"chat_id\":" com/chat-id ",\"text\":\"curl test msg\",\"disable_notification\":true}' "
           "\"https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage\"")
      ""
-     (str "curl --request POST --form chat_id=" co/chat-id " "
+     (str "curl --request POST --form chat_id=" com/chat-id " "
           "--form photo=@/tmp/pic.png "
           "\"https://api.telegram.org/bot$TELEGRAM_TOKEN/sendPhoto\"")
      ])})
@@ -86,7 +86,7 @@
 (defroutes app
   (let [hook telegram-hook]
     (POST
-     (str "/" hook "/" co/telegram-token) req ;; {{input :input} :params}
+     (str "/" hook "/" com/telegram-token) req ;; {{input :input} :params}
      {:status 200
       :headers {"Content-Type" "text/plain"}
       :body
@@ -95,7 +95,7 @@
 
   (let [hook google-hook]
     (POST
-     (str "/" hook "/" co/telegram-token) req ;; {{input :input} :params}
+     (str "/" hook "/" com/telegram-token) req ;; {{input :input} :params}
      {:status 200
       :headers {"Content-Type" "text/plain"}
       :body
@@ -116,22 +116,22 @@
   (GET (format "/%s/codes" ws-path) []
        (web-service {:type :codes}))
   (ANY "*" []
-       (route/not-found (slurp (io/resource "404.html")))))
+       (route/not-found (slurp (jio/resource "404.html")))))
 
 ;; For interactive development:
 (defonce component
   (atom nil))
 
 (defn webapp-start [& [env-type port]]
-  (let [port (Integer. (or port co/webapp-port
-                           (cond co/env-prod? 5000
+  (let [port (Integer. (or port com/webapp-port
+                           (cond com/env-prod? 5000
                                  ;; keep port-nr in sync with README.md
                                  :else 5050)))
 
         starting "[webapp] starting"
         msg (format "%s version %s in environment %s on port %s..."
                     starting
-                    (if co/env-devel? undef co/commit)
+                    (if com/env-devel? undef com/commit)
                     env-type
                     port)]
     (info msg)
@@ -141,12 +141,12 @@
       web-server)))
 
 (defn -main [& [env-type port]]
-  (let [env-type (or env-type co/env-type)
-        port (or port co/webapp-port)
+  (let [env-type (or env-type com/env-type)
+        port (or port com/webapp-port)
         starting "[-main] starting"
         msg (format "%s version %s in environment %s on port %s..."
                     starting
-                    (if co/env-devel? undef co/commit)
+                    (if com/env-devel? undef com/commit)
                     env-type
                     port)]
     (info msg)
@@ -155,9 +155,9 @@
            (.getID (TimeZone/getDefault)))
       (debugf "TimeZone: %s; current time: %s (%s in %s)"
               (str (t/default-time-zone))
-              (te/tnow)
-              (te/tnow cc/zone-id)
-              cc/zone-id)
+              (cte/tnow)
+              (cte/tnow ccc/zone-id)
+              ccc/zone-id)
       (debugf (str "t/default-time-zone %s; "
                    "ZoneId/systemDefault: %s; "
                    "TimeZone/getDefault: %s\n")
@@ -190,7 +190,7 @@
   (when @component
     (webapp-stop)
     (Thread/sleep 400))
-  (webapp-start co/env-type co/webapp-port))
+  (webapp-start com/env-type com/webapp-port))
 
 ;; TODO defonce - add metadata
 #_(let [doc
