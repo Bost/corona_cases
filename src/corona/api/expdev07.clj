@@ -294,16 +294,14 @@
 
       (= country-code (:country_code loc)))))
 
-(defn stats-per-country [{:keys [cc] :as prm}]
+(defn stats-per-country [cc]
   (conj
    (last-nn-day (pred-fn cc))
    #_{:cn (ccr/country-name-aliased cc)}
    {:cc cc}))
 
 (defn stats-all-affected-countries [prm]
-  (map (fn [cc]
-         (stats-per-country (assoc prm :cc cc)))
-       (all-affected-country-codes-memo)))
+  (map stats-per-country (all-affected-country-codes-memo)))
 
 (def stats-all-affected-countries-memo
   #_stats-all-affected-countries
