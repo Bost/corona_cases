@@ -1,16 +1,18 @@
+(printf "Current-ns [%s] loading %s\n" *ns* 'corona.common)
+
 (ns corona.common
   (:require
    [clj-http.client :as client]
-   [clj-time-ext.core :as te]
-   [clj-time.coerce :as tc]
+   [clj-time-ext.core :as cte]
+   [clj-time.coerce :as ctc]
    [clj-time.core :as t]
-   [clj-time.format :as tf]
+   [clj-time.format :as ctf]
    [clojure.data.json :as json]
-   [clojure.java.io :as io]
+   [clojure.java.io :as jio]
    [clojure.core.memoize :as memo]
    [clojure.string :as s]
-   [environ.core :as en]
-   [utils.num :as un]
+   [environ.core :as env]
+   [utils.num :as utn]
    [utils.core :refer [in?] :exclude [id]]
    [corona.country-codes :refer :all]
    [taoensso.timbre :as timbre :refer :all]
@@ -18,7 +20,7 @@
    [clojurewerkz.propertied.properties :as p]
    ))
 
-(debugf "Loading namespace %s" *ns*)
+;; (debugf "Loading namespace %s" *ns*)
 
 (defn ttt
   "For debugging.
@@ -43,7 +45,7 @@
   "When deving check: echo $CORONA_ENV_TYPE
   When testing locally via `heroku local --env=.heroku-local.env` check
   the file .heroku-local.env"
-  (en/env :corona-env-type))
+  (env/env :corona-env-type))
 
 (let [env-types (set (keys environment))]
   (if (in? env-types env-type)
@@ -53,9 +55,9 @@
              "Invalid env-type: %s. It must be an element of %s"
              env-type env-types)))))
 
-(def telegram-token (en/env :telegram-token))
+(def telegram-token (env/env :telegram-token))
 
-(def webapp-port (en/env :port))
+(def webapp-port (env/env :port))
 
 (def bot-name (get-in environment [env-type :bot-name]))
 
@@ -82,7 +84,7 @@
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
   ([place total-count] (per-1e5 :normal place total-count))
   ([mode place total-count]
-   (un/round mode (/ (* place 1e5) total-count))))
+   (utn/round mode (/ (* place 1e5) total-count))))
 
 (defn calculate-cases-per-100k [case-kw]
   (fn [{:keys [p c r d] :as prm}]
@@ -112,14 +114,14 @@
   (:version
    (let [file (format "META-INF/maven/%s/%s/pom.properties"
                       project-name project-name)]
-     (if-let [resource (io/resource file)]
+     (if-let [resource (jio/resource file)]
        (p/properties->map (p/load-from resource) true)
        (if env-devel?
          nil ;; no version defined when deving
          (error "Could not read from the resource %s" file))))))
 
 (def commit
-  (if-let [shasum (en/env :bot-ver)]
+  (if-let [shasum (env/env :bot-ver)]
     (when (and prj-vernum shasum)
       (format "%s-%s" prj-vernum shasum))
     ;; if-let ... else
@@ -219,9 +221,9 @@
        (mapv :kw)))
 
 (defn fmt-date [date]
-  (tf/unparse (tf/with-zone (tf/formatter "dd MMM yyyy")
+  (ctf/unparse (ctf/with-zone (ctf/formatter "dd MMM yyyy")
                 (t/default-time-zone))
-              (tc/from-date date)))
+              (ctc/from-date date)))
 
 (defn- threshold [case-kw]
   (->> case-params

@@ -1,3 +1,5 @@
+(printf "Current-ns [%s] loading %s\n" *ns* 'corona.api.v1)
+
 (ns corona.api.v1
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
@@ -14,7 +16,7 @@
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
-(debugf "Loading namespace %s" *ns*)
+;; (debugf "Loading namespace %s" *ns*)
 
 ;; avoid creating new class each time the `fmt` function is called
 (def sdf

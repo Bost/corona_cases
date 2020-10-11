@@ -1,3 +1,5 @@
+(printf "Current-ns [%s] loading %s\n" *ns* 'corona.lang)
+
 (ns corona.lang
   (:require
    [corona.common :as co]
@@ -5,7 +7,7 @@
    [taoensso.timbre :as timbre :refer :all]
    ))
 
-(debugf "Loading namespace %s" *ns*)
+;; (debugf "Loading namespace %s" *ns*)
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"

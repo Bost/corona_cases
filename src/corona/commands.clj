@@ -1,20 +1,22 @@
+(printf "Current-ns [%s] loading %s\n" *ns* 'corona.commands)
+
 (ns corona.commands
   (:require
    [clojure.string :as s]
    [corona.api.expdev07 :as data]
    [corona.api.v1 :as v1]
-   [corona.countries :as cr]
-   [corona.country-codes :as cc]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc]
    [corona.lang :as l]
    [corona.messages :as msg]
    [corona.plot :as p]
    [morse.api :as morse]
    [utils.core :as u :refer [in?] :exclude [id]]
-   [corona.common :as co]
+   [corona.common :as com]
    [taoensso.timbre :as timbre :refer :all]
    ))
 
-(debugf "Loading namespace %s" *ns*)
+;; (debugf "Loading namespace %s" *ns*)
 
 (defn deep-merge
   "Recursively merges maps. TODO see https://github.com/weavejester/medley
@@ -63,11 +65,11 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                                    (filter (fn [{:keys [cc]}] (= cc country-code))
                                            (calculate-rankings prm)))))
                       (msg/detailed-info))]
-      (morse/send-text co/telegram-token chat-id options content))
+      (morse/send-text com/telegram-token chat-id options content))
 
     (if false
-        #_co/env-devel? ;; don't show the graph when developing
-      (debug "Plot not displayed. co/env-devel?" co/env-devel?)
+        #_com/env-devel? ;; don't show the graph when developing
+      (debug "Plot not displayed. com/env-devel?" com/env-devel?)
       (let [options (if (msg/worldwide? country-code)
                       (msg/buttons {:chat-id chat-id :cc country-code})
                       {})
@@ -76,7 +78,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                       {:day (count (data/raw-dates-unsorted))
                        :cc country-code
                        :stats (v1/pic-data)}))]
-        (morse/send-photo co/telegram-token chat-id options content)))))
+        (morse/send-photo com/telegram-token chat-id options content)))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
@@ -90,7 +92,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
         cnt-msgs (count sub-msgs)]
     (doall
      (map-indexed (fn [idx sub-msg]
-                    (morse/send-text co/telegram-token chat-id
+                    (morse/send-text com/telegram-token chat-id
                                      (select-keys prm (keys msg/options))
                                      (listing-fn
                                       (assoc prm
@@ -107,23 +109,23 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   (listing (assoc prm :listing-fn msg/list-per-100k-memo)))
 
 (defn explain [{:keys [chat-id] :as prm}]
-  (morse/send-text co/telegram-token chat-id msg/options (msg/explain prm)))
+  (morse/send-text com/telegram-token chat-id msg/options (msg/explain prm)))
 
 (defn feedback [{:keys [chat-id] :as prm}]
-  (morse/send-text co/telegram-token chat-id msg/options (msg/feedback prm)))
+  (morse/send-text com/telegram-token chat-id msg/options (msg/feedback prm)))
 
 ;; (defn language [{:keys [chat-id] :as prm}]
-;;   (morse/send-text co/telegram-token chat-id msg/options (msg/language prm)))
+;;   (morse/send-text com/telegram-token chat-id msg/options (msg/language prm)))
 
 (defn contributors [{:keys [chat-id] :as prm}]
   (morse/send-text
-   co/telegram-token chat-id msg/options
+   com/telegram-token chat-id msg/options
    (msg/contributors prm)))
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
   [country-code]
-  (-> (cr/country-name country-code)
+  (-> (ccr/country-name country-code)
       (s/replace " " "")))
 
 (defn cmds-country-code
@@ -151,9 +153,9 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
    [#(s/lower-case %)  ;; /de
     #(s/upper-case %)  ;; /DE
     #(s/capitalize %)  ;; /De
-    #(s/lower-case (cc/country-code-3-letter %)) ;; /deu
-    #(s/upper-case (cc/country-code-3-letter %)) ;; /DEU
-    #(s/capitalize (cc/country-code-3-letter %)) ;; /Deu
+    #(s/lower-case (ccc/country-code-3-letter %)) ;; /deu
+    #(s/upper-case (ccc/country-code-3-letter %)) ;; /DEU
+    #(s/capitalize (ccc/country-code-3-letter %)) ;; /Deu
     #(s/lower-case (normalize %))   ;; /unitedstates
     #(s/upper-case (normalize %))   ;; /UNITEDSTATES
     #(normalize %)]))
@@ -165,7 +167,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
          {:pred (fn [_] true)}
          msg/options)
 
-        prm-country-code {:country-code (cr/country-code cc/worldwide)}]
+        prm-country-code {:country-code (ccr/country-code ccc/worldwide)}]
     [{:name l/contributors
       :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
@@ -186,17 +188,17 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
 
 (defn cmds-listing []
   "Command map for list-sort-by-case. See also `footer`, `list-countries`."
-  (->> co/listing-cases-absolute
-       (into co/listing-cases-per-100k)
+  (->> com/listing-cases-absolute
+       (into com/listing-cases-per-100k)
        (map (fn [case-kw]
               (let [prm (conj
                          {:pred-q '(fn [_] true)}
                          {:pred (fn [_] true)}
                          msg/options)
-                    prm-country-code {:country-code (cr/country-code cc/worldwide)}]
+                    prm-country-code {:country-code (ccr/country-code ccc/worldwide)}]
                 {:name (l/list-sorted-by case-kw)
                  :f (fn [chat-id]
-                      (let [list-fn (if (in? co/listing-cases-per-100k case-kw)
+                      (let [list-fn (if (in? com/listing-cases-per-100k case-kw)
                                       list-per-100k
                                       list-countries)]
                         (list-fn (conj (assoc prm
@@ -212,7 +214,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   (transduce (map cmds-country-code)
              into (into (cmds-general)
                         (cmds-listing))
-             (cc/all-country-codes)))
+             (ccc/all-country-codes)))
 
 (defn bot-father-edit-cmds
   "Evaluate this function and upload the results under:

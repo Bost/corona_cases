@@ -1,3 +1,5 @@
+(printf "Current-ns [%s] loading %s\n" *ns* 'corona.web)
+
 (ns corona.web
   (:require
    [clj-time-ext.core :as te]
@@ -17,7 +19,7 @@
    java.time.ZoneId
    java.util.TimeZone))
 
-(debugf "Loading namespace %s" *ns*)
+;; (debugf "Loading namespace %s" *ns*)
 
 (def ^:const telegram-hook "telegram")
 (def ^:const google-hook "google")

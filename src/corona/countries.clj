@@ -1,3 +1,5 @@
+(printf "Current-ns [%s] loading %s\n" *ns* 'corona.countries)
+
 (ns corona.countries
   (:require
    [clojure.set :as cset]
@@ -9,7 +11,7 @@
   (:import com.neovisionaries.i18n.CountryCode
            com.neovisionaries.i18n.CountryCode$Assignment))
 
-(debugf "Loading namespace %s" *ns*)
+;; (debugf "Loading namespace %s" *ns*)
 
 ;; nothing should be default affected!!!
 (def ^:const default-affected-country-codes

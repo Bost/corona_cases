@@ -1,20 +1,21 @@
+(printf "Current-ns [%s] loading %s\n" *ns* 'corona.telegram)
+
 (ns corona.telegram
   (:gen-class)
   (:require
-   [clj-time-ext.core :as te]
+   [clj-time-ext.core :as cte]
    [clojure.core.async :as async]
    [clojure.string :as s]
-   [corona.commands :as cm]
-   [corona.common :as co]
+   [corona.common :as com]
+   [corona.commands :as cmd]
    [corona.messages :as msg]
-   [environ.core :as en]
    [morse.handlers :as h]
    [morse.polling :as p]
    [taoensso.timbre :as timbre :refer :all]
    [corona.api.expdev07 :as data]
    ))
 
-(debugf "Loading namespace %s" *ns*)
+;; (debugf "Loading namespace %s" *ns*)
 
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
@@ -35,7 +36,7 @@
   (h/command-fn
    name
    (wrap-fn-pre-post-hooks
-    (let [tbeg (te/tnow)
+    (let [tbeg (cte/tnow)
           msg (format "[cmd-handler] hook %%s; cmd /%s; chat %%s" name)]
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
@@ -52,7 +53,7 @@
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
   []
-  (let [cmds (cm/cmds)]
+  (let [cmds (cmd/cmds)]
     (infof "Registering %s chatbot commands..." (count cmds))
     (apply h/handlers
            (into [(h/callback-fn msg/callback-handler-fn)]
@@ -68,13 +69,13 @@
      (debugf "(async/chan) returned %s" channel)
      (let [producer (p/create-producer
                      channel token opts (fn []
-                                          (when co/env-prod? (System/exit 2))))]
-       (when co/env-devel?
+                                          (when com/env-prod? (System/exit 2))))]
+       (when com/env-devel?
          (def producer producer))
        (debugf "Created producer %s" producer)
        (infof "Polling on handler %s ..." handler)
        (let [consumer (p/create-consumer producer handler)]
-         (when co/env-devel?
+         (when com/env-devel?
            (def consumer consumer))
          (debugf "Created consumer %s" producer)
          channel)))))
@@ -82,7 +83,7 @@
 (defn telegram [telegram-token]
   (let [msg "[telegram] starting..."]
     (info msg)
-    (let [port (start-polling co/telegram-token (create-handler))]
+    (let [port (start-polling com/telegram-token (create-handler))]
       (let [retval-async<!! (async/<!! port)]
         (debugf "%s done. retval-async<!! %s"
                 msg (if-let [v retval-async<!!] v "nil"))
@@ -112,14 +113,14 @@
   (let [starting "[-main] starting"
         msg (format "%s version %s in environment %s..."
                     starting
-                    co/commit
+                    com/commit
                     env-type)]
     (info msg)
     (data/request!)
-    (let [funs [(fn p-endlessly [] (endlessly data/request! co/ttl))
+    (let [funs [(fn p-endlessly [] (endlessly data/request! com/ttl))
                 (fn p-telegram []
                   (let [telegram-server
-                        (telegram co/telegram-token)]
+                        (telegram com/telegram-token)]
                     ;; TODO I guess the telegram-server, i.e. morse.handler
                     ;; should be set to the component atom
                     (swap! component (fn [_] []))
@@ -143,4 +144,4 @@
   (when @component
     (stop)
     (Thread/sleep 400))
-  (-main co/env-type))
+  (-main com/env-type))

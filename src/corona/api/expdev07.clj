@@ -1,19 +1,21 @@
+(printf "Current-ns [%s] loading %s\n" *ns* 'corona.api.expdev07)
+
 (ns corona.api.expdev07
   (:require
    [clojure.set :as cset]
-   [corona.common :as co]
-   [corona.countries :as cr]
-   [corona.country-codes :as cc :refer :all]
+   [corona.common :as com]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc :refer :all]
    [utils.core :refer [dbgv dbgi] :exclude [id]]
    [taoensso.timbre :as timbre :refer :all]
    )
   (:import java.text.SimpleDateFormat))
 
-(debugf "Loading namespace %s" *ns*)
+;; (debugf "Loading namespace %s" *ns*)
 
-(def ^:const url (format "http://%s/all" co/api-server))
+(def ^:const url (format "http://%s/all" com/api-server))
 
-(defn data [] (co/get-json url))
+(defn data [] (com/get-json url))
 
 (defonce cache (atom nil))
 
@@ -27,7 +29,7 @@
 
 (def data-memo
   (fn [] @cache)
-  #_(co/memo-ttl data))
+  #_(com/memo-ttl data))
 
 (defn raw-dates-unsorted []
   #_[(keyword "2/22/20") (keyword "2/2/20")]
@@ -35,7 +37,7 @@
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
-(defn left-pad [s] (co/left-pad s 2))
+(defn left-pad [s] (com/left-pad s 2))
 
 #_(require '[ clojure.inspector :as i])
 #_(i/inspect
@@ -77,7 +79,7 @@
     (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
     (map (fn [[_ y m d]]
            (keyword
-            (transduce (comp (map co/read-number)
+            (transduce (comp (map com/read-number)
                              (interpose "/"))
                        str
                        [m d y])))))
@@ -85,7 +87,7 @@
    (raw-dates-unsorted)))
 
 (defn population-cnt [country-code]
-  (or (get cr/population country-code)
+  (or (get ccr/population country-code)
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]
@@ -102,11 +104,11 @@
    {:population
     {:locations
      (let [dates (raw-dates)]
-       (->> (cc/all-country-codes)
+       (->> (ccc/all-country-codes)
             ;; (take 0)
             (mapv (fn [country-code]
                     {
-                     :country (cr/country-name-aliased country-code)
+                     :country (ccr/country-name-aliased country-code)
                      :country_code country-code
                      :history
                      ;; {:1/23/20 1e6 ;; start number
@@ -116,7 +118,7 @@
                        (zipmap dates (repeat pop-cnt)))}))))}}))
 
 (def data-with-pop-memo
-  (co/memo-ttl data-with-pop))
+  (com/memo-ttl data-with-pop))
 
 (defn all-affected-country-codes
   "Countries with some confirmed, deaths or recovered cases"
@@ -133,8 +135,8 @@
                                             #_(data-memo)))))
                          cset/union #{}
                          [:population :confirmed :deaths :recovered])]
-     (transduce (comp (map (fn [cc] (if (= cc/xx cc)
-                                     cc/default-2-country-code
+     (transduce (comp (map (fn [cc] (if (= ccc/xx cc)
+                                     ccc/default-2-country-code
                                      cc)))
                       (distinct)
                       limit-fn)
@@ -157,7 +159,7 @@
         )))
 
 (def all-affected-country-codes-memo
-  (co/memo-ttl all-affected-country-codes))
+  (com/memo-ttl all-affected-country-codes))
 
 (defn dates
   ([] (dates {:limit-fn identity}))
@@ -168,7 +170,7 @@
           (limit-fn (raw-dates))))))
 
 (def dates-memo
-  (co/memo-ttl dates))
+  (com/memo-ttl dates))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -180,7 +182,7 @@
     0
     (transduce (map (comp
                      ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
-                     ;; str co/read-number
+                     ;; str com/read-number
                      raw-date
                      :history))
                + 0
@@ -215,14 +217,14 @@
   [pred]
   (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred))
                    [:population :confirmed :recovered :deaths])]
-    (zipmap co/all-cases
+    (zipmap com/all-cases
             (apply
              conj pcrd
-             (->> [co/calculate-active
-                   (co/calculate-cases-per-100k :i)
-                   (co/calculate-cases-per-100k :r)
-                   (co/calculate-cases-per-100k :d)
-                   (co/calculate-cases-per-100k :c)]
+             (->> [com/calculate-active
+                   (com/calculate-cases-per-100k :i)
+                   (com/calculate-cases-per-100k :r)
+                   (com/calculate-cases-per-100k :d)
+                   (com/calculate-cases-per-100k :c)]
                   #_(mapv (fn [f] (apply mapv f pcrd)))
                   (mapv (fn [f] (apply mapv (fn [p c r d]
                                              (->> [p c r d]
@@ -232,7 +234,7 @@
 
 (def get-counts-memo
   #_get-counts
-  (co/memo-ttl get-counts))
+  (com/memo-ttl get-counts))
 
 (defn eval-fun
   "E.g.:
@@ -254,7 +256,7 @@
        (apply (fn [prv lst]
                 (map (fn [k]
                        {k (- (k lst) (k prv))})
-                     co/all-cases)))
+                     com/all-cases)))
        (reduce into {})))
 
 (defn last-day
@@ -274,19 +276,19 @@
 (defn pred-fn [country-code]
   (fn [loc]
     (condp = country-code
-      cc/worldwide-2-country-code
+      ccc/worldwide-2-country-code
       true
 
-      cc/default-2-country-code
+      ccc/default-2-country-code
       ;; XX comes from the service
-      (= cc/xx (:country_code loc))
+      (= ccc/xx (:country_code loc))
 
       (= country-code (:country_code loc)))))
 
 (defn stats-per-country [{:keys [cc] :as prm}]
   (conj
    (last-day (assoc prm :pred-q '(pred-fn cc) :pred (pred-fn cc)))
-   #_{:cn (cr/country-name-aliased cc)}
+   #_{:cn (ccr/country-name-aliased cc)}
    {:cc cc}))
 
 (defn stats-all-affected-countries [prm]
@@ -296,4 +298,4 @@
 
 (def stats-all-affected-countries-memo
   #_stats-all-affected-countries
-  (co/memo-ttl stats-all-affected-countries))
+  (com/memo-ttl stats-all-affected-countries))

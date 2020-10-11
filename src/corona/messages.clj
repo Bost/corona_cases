@@ -1,3 +1,5 @@
+(printf "Current-ns [%s] loading %s\n" *ns* 'corona.messages)
+
 (ns corona.messages
   (:require
    [clojure.data.json :as json]
@@ -21,7 +23,7 @@
            java.io.ByteArrayOutputStream
            javax.imageio.ImageIO))
 
-(debugf "Loading namespace %s" *ns*)
+;; (debugf "Loading namespace %s" *ns*)
 
 (defn bot-name-formatted []
   (s/replace co/bot-name #"_" "\\\\_"))
