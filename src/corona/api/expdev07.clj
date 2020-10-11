@@ -8,6 +8,7 @@
    [corona.country-codes :as ccc :refer :all]
    [utils.core :refer [dbgv dbgi] :exclude [id]]
    [taoensso.timbre :as timbre :refer :all]
+   [clojure.spec.alpha :as s]
    )
   (:import java.text.SimpleDateFormat))
 
@@ -236,23 +237,27 @@
   #_get-counts
   (com/memo-ttl get-counts))
 
+(s/def ::fun clojure.core/fn?)
+(s/def ::pred-fn (s/or :nil nil? :fn clojure.core/fn?))
+
 (defn eval-fun
   "E.g.:
-  (eval-fun {:fun get-last :pred-q '(pred-fn sk) :pred (pred-fn sk)})
-  (eval-fun {:fun get-last :pred-q '(fn [_] true) :pred (fn [_] true)})
-  "
-  [{:keys [fun date pred] :as prm}]
+  (eval-fun get-last (pred-fn sk))
+  (eval-fun get-last (fn [_] true))"
+  [fun pred]
+  {:pre [(s/valid? ::fun fun)
+         (s/valid? ::pred-fn pred)]}
   (into {:f (fun (dates-memo))}
         (map (fn [[k v]] {k (fun v)})
              (get-counts-memo pred))))
-
 (defn delta
   "E.g.:
   (delta {:pred-q '(pred-fn cn)  :pred (pred-fn cn)})
   (delta {:pred-q '(fn [_] true) :pred (fn [_] true)})"
   [prm]
   (->> [get-prev get-last]
-       (map (fn [fun] (eval-fun (assoc prm :fun fun))))
+       (map (fn [fun]
+              (eval-fun fun (:pred prm))))
        (apply (fn [prv lst]
                 (map (fn [k]
                        {k (- (k lst) (k prv))})
@@ -263,15 +268,15 @@
   "E.g.:
   (last-day {:pred-q '(pred-fn sk) :pred (pred-fn sk)})
   (last-day {:pred-q '(fn [_] true) :pred (fn [_] true)})"
-  [prm]
-  (eval-fun (assoc prm :fun get-last)))
+  [{:keys [pred] :as prm}]
+  (eval-fun get-last pred))
 
 (defn last-8-reports
   "E.g.:
   (last-8-reports {:pred-q '(pred-fn sk) :pred (pred-fn sk)})
   (last-8-reports {:pred-q '(fn [_] true) :pred (fn [_] true)})"
-  [prm]
-  (eval-fun (assoc prm :fun (fn [coll] (take-last 8 coll)))))
+  [{:keys [pred] :as prm}]
+  (eval-fun (fn [coll] (take-last 8 coll)) pred))
 
 (defn pred-fn [country-code]
   (fn [loc]

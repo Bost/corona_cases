@@ -67,8 +67,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                       (msg/detailed-info))]
       (morse/send-text com/telegram-token chat-id options content))
 
-    (if false
-        #_com/env-devel? ;; don't show the graph when developing
+    (if com/env-devel? ;; don't show the graph when developing
       (debug "Plot not displayed. com/env-devel?" com/env-devel?)
       (let [options (if (msg/worldwide? country-code)
                       (msg/buttons {:chat-id chat-id :cc country-code})
