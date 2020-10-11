@@ -28,39 +28,35 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                         (last args)))
          maps))
 
-(defn rank [{:keys [rank-kw] :as prm}]
+(defn rank [rank-kw]
   (map-indexed
    (fn [idx hm]
      (update-in (select-keys hm [:cc]) [:rank rank-kw] (fn [_] idx)))
    (sort-by rank-kw > data/stats-countries)))
 
-(defn calculate-rankings [prm]
-  (let [rankings (u/transpose (map (fn [rank-kw]
-                                     (rank (assoc prm :rank-kw rank-kw)))
-                                   [:p :c100k :r100k :d100k :i100k]))]
-    (map (fn [affected-cc]
-           (apply deep-merge
-                  (reduce into []
-                          (map (fn [ranking]
-                                 (filter (fn [{:keys [cc]}]
-                                           (= cc affected-cc))
-                                         ranking))
-                               rankings))))
-         ccc/country-codes)))
+(def all-rankings
+  (map (fn [affected-cc]
+         (apply deep-merge
+                (reduce into []
+                        (map (fn [ranking]
+                               (filter (fn [{:keys [cc]}]
+                                         (= cc affected-cc))
+                                       ranking))
+                             (u/transpose (map rank
+                                               [:p :c100k :r100k :d100k :i100k]))))))
+       ccc/country-codes))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
   #_(debug "world" prm)
   (let [prm (assoc prm :parse_mode "HTML")]
     (let [options (select-keys prm (keys msg/options))
-          cnt-countries (count ccc/country-codes)
           content (-> (assoc prm
-                             :disable_web_page_preview true
-                             :cnt-countries cnt-countries)
+                             :disable_web_page_preview true)
                       (conj
                        ;; the order of countries should be calculated only once
                        (first (map (fn [m] (select-keys m [:rank]))
                                    (filter (fn [{:keys [cc]}] (= cc country-code))
-                                           (calculate-rankings prm)))))
+                                           all-rankings))))
                       (msg/detailed-info))]
       (doall
        (morse/send-text com/telegram-token chat-id options content)))
