@@ -48,21 +48,37 @@
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn listing [{:keys [listing-fn chat-id sort-by-case] :as prm}]
+(defn listing
+  [{:keys [
+           ;; sort-by-case
+           ;; parse_mode
+           ;; pred
+           listing-fn chat-id sort-by-case] :as prm}]
+  ;; this may be not needed in the end
+  #_{:pre [(s/valid? #{
+                     ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
+                     msg/list-countries-memo
+
+                     ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
+                     msg/list-per-100k-memo
+                     }
+                   listing-fn)]}
   (let [coll (sort-by sort-by-case < data/stats-countries)
         ;; Split the long list of all countries into smaller subparts
         sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
         cnt-msgs (count sub-msgs)]
-    (doall
-     (map-indexed (fn [idx sub-msg]
-                    (morse/send-text com/telegram-token chat-id
-                                     (select-keys prm (keys msg/options))
-                                     (listing-fn
-                                      (assoc prm
-                                             :data sub-msg
-                                             :msg-idx (inc idx)
-                                             :cnt-msgs cnt-msgs))))
-                  sub-msgs))))
+    (let [options (select-keys prm (keys msg/options))
+          contents (map-indexed (fn [idx sub-msg]
+                                  (listing-fn
+                                   (assoc prm
+                                          :data sub-msg
+                                          :msg-idx (inc idx)
+                                          :cnt-msgs cnt-msgs)))
+                                sub-msgs)]
+      (doall
+       (map (fn [content]
+              (morse/send-text com/telegram-token chat-id options content))
+            contents)))))
 
 (defn list-countries [prm]
   (listing (assoc prm :listing-fn msg/list-countries-memo)))

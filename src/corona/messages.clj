@@ -238,7 +238,7 @@
 (defn list-countries
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  [{:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred] :as prm}]
+  [{:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
   (let [
         ;; TODO calculate count of reports only once
         cnt-reports (count (data/raw-dates))
@@ -291,7 +291,7 @@
 (defn list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  [{:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred] :as prm}]
+  [{:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
   (let [spacer " "
         sort-indicator "▴" ;; " " "▲"
         ;; omag - order of magnitude i.e. number of digits
@@ -392,9 +392,8 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   TODO make an api service for the content shown in the message
   TODO Create API web service(s) for every field displayed in the messages
   "
-  [{:keys [country-code parse_mode pred] :as prm}]
-  #_(debug "detailed-info" prm)
-  ;; (println "all-rankings" (count all-rankings))
+  [{:keys [country-code parse_mode pred]}]
+  #_(debug "detailed-info")
   (let [rank (first
               (map :rank
                    (filter (fn [{:keys [cc]}] (= cc country-code))
