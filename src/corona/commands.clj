@@ -50,14 +50,8 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   #_(debug "world" prm)
   (let [prm (assoc prm :parse_mode "HTML")]
     (let [options (select-keys prm (keys msg/options))
-          content (-> (assoc prm
-                             :disable_web_page_preview true)
-                      (conj
-                       ;; the order of countries should be calculated only once
-                       (first (map (fn [m] (select-keys m [:rank]))
-                                   (filter (fn [{:keys [cc]}] (= cc country-code))
-                                           all-rankings))))
-                      (msg/detailed-info))]
+          content (msg/detailed-info (assoc prm
+                                            :disable_web_page_preview true))]
       (doall
        (morse/send-text com/telegram-token chat-id options content)))
 

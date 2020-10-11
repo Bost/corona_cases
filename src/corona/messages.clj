@@ -367,9 +367,12 @@
   TODO make an api service for the content shown in the message
   TODO Create API web service(s) for every field displayed in the messages
   "
-  [{:keys [country-code rank pred] :as prm}]
+  [{:keys [country-code pred] :as prm}]
   #_(debug "detailed-info" prm)
-  (let [cnt-countries (count ccc/country-codes)
+  (let [rank (first (map (fn [m] (select-keys m [:rank]))
+                         (filter (fn [{:keys [cc]}] (= cc country-code))
+                                 all-rankings)))
+        cnt-countries (count ccc/country-codes)
         content
         (format-linewise
          [["%s\n"  ; extended header
