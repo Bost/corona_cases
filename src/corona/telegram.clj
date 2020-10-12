@@ -119,8 +119,8 @@
                     com/commit
                     env-type)]
     (info msg)
-    (data/request!)
-    (let [funs [(fn p-endlessly [] (endlessly data/request! com/ttl))
+    (data/reset-cache!)
+    (let [funs [(fn p-endlessly [] (endlessly data/reset-cache! com/ttl))
                 (fn p-telegram []
                   (let [telegram-server
                         (telegram com/telegram-token)]

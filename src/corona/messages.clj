@@ -353,40 +353,6 @@
       (recur tail (conj result (- (first tail) head)))
       result)))
 
-(defn deep-merge
-  "Recursively merges maps. TODO see https://github.com/weavejester/medley
-Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2711849"
-  [& maps]
-  (apply merge-with (fn [& args]
-                      (if (every? map? args)
-                        (apply deep-merge args)
-                        (last args)))
-         maps))
-
-(defn calc-rank [rank-kw]
-  (map-indexed
-   (fn [idx hm]
-     (update-in (select-keys hm [:cc]) [:rank rank-kw] (fn [_] idx)))
-   (sort-by rank-kw >
-            (data/stats-countries))))
-
-(defn ranking-fn []
-  (map (fn [affected-cc]
-         (apply deep-merge
-                (reduce into []
-                        (map (fn [ranking]
-                               (filter (fn [{:keys [cc]}]
-                                         (= cc affected-cc))
-                                       ranking))
-                             (u/transpose (map calc-rank com/ranking-cases))))))
-       ccc/all-country-codes))
-
-(defn all-rankings []
-  (if-let [rankings (get-in @data/cache [:rankings])]
-    rankings
-    (let [rankings (ranking-fn)]
-      (data/cache! rankings [:rankings]))))
-
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread
 ;; they obey a stack discipline:
@@ -406,7 +372,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   (let [rank (first
               (map :rank
                    (filter (fn [{:keys [cc]}] (= cc country-code))
-                           (all-rankings))))]
+                           (data/all-rankings))))]
     (debugf "[detailed-info] rank %s" rank)
     (let [
           cnt-countries (count ccc/all-country-codes)
@@ -425,7 +391,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
             (do
                 ["%s\n" ; data
                  [(let [
-                        data-active (:i (data/get-counts-memo pred))
+                        data-active (:i (data/case-counts-report-by-report pred))
                         ]
                     #_(debugf "data-active %s" (count data-active))
                     ;; (debugf "max-active-val %s" max-active-val)

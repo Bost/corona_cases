@@ -6,7 +6,7 @@
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc :refer :all]
-   [utils.core :refer [dbgv dbgi] :exclude [id]]
+   [utils.core :as utc :refer [dbgv dbgi] :exclude [id]]
    [taoensso.timbre :as timbre :refer :all]
    [clojure.spec.alpha :as s]
    [clojure.core.memoize :as memo]
@@ -19,24 +19,12 @@
 
 (defonce cache (atom {}))
 
-(defn request! []
-  (doall
-   (let [tbeg (System/currentTimeMillis)]
-     (let [response (com/get-json url)]
-       (swap! cache (fn [_] response))
-       (debugf "[request!] %s chars cached in %s ms"
-               (count (str @cache)) (- (System/currentTimeMillis) tbeg))))))
-
-(defn reset-cache! []
-  (swap! cache (fn [_] {}))
-  (request!))
-
-(defn cache! [data ks]
-  (swap! cache update-in ks (fn [_] data))
-  #_(debugf "%s elems cached in %s" (count data) ks)
-  data)
-
-(defn data-memo [] @cache)
+(defn cache!
+  "Also return the cached value for further consumption."
+  [calc-data-fn ks]
+  (let [data (calc-data-fn)]
+    (swap! cache update-in ks (fn [_] data))
+    data))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
@@ -63,7 +51,14 @@
           (.add temp-list x)
           xs))))))
 
-(defn raw-dates-calc []
+(defn json-data []
+  (let [ks [:json]]
+    (if-let [v (get-in @cache ks)]
+      v
+      (cache! (fn [] (com/get-json url)) ks))))
+
+(defn calc-raw-dates-fn []
+  #_(debug "calc-raw-dates-fn")
   (transduce
    (comp
     (map keyname)
@@ -86,7 +81,7 @@
    (keys (:history
           (last
            (:locations
-            (:confirmed (data-memo))))))))
+            (:confirmed (json-data))))))))
 
 (defn raw-dates
   "Size:
@@ -107,7 +102,7 @@
   (let [ks [:raw-dates]]
     (if-let [rd (get-in @cache ks)]
       rd
-      (cache! (raw-dates-calc) ks))))
+      (cache! calc-raw-dates-fn ks))))
 
 (defn population-cnt [country-code]
   (or (get ccr/population country-code)
@@ -119,40 +114,44 @@
                        default-population))
         default-population)))
 
+(defn calc-dates-fn []
+  #_(debugf "calc-dates-fn")
+  (let [sdf (new SimpleDateFormat "MM/dd/yy")]
+    (map (fn [rd] (.parse sdf (keyname rd)))
+         (raw-dates))))
+
 (defn dates []
   (let [ks [:dates]]
     (if-let [d (get-in @cache ks)]
       d
-      (let [d
-            (let [sdf (new SimpleDateFormat "MM/dd/yy")]
-              (map (fn [rd] (.parse sdf (keyname rd)))
-                   (raw-dates)))]
-        (cache! d ks)))))
+      (cache! calc-dates-fn ks))))
+
+(defn calc-data-with-pop-fn []
+  #_(debugf "calc-data-with-pop-fn")
+  (conj
+   (json-data)
+   {:population
+    {:locations
+     (let [the-dates (raw-dates)]
+       (mapv (fn [country-code]
+               {
+                :country (ccr/country-name-aliased country-code)
+                :country_code country-code
+                :history
+                ;; {:1/23/20 1e6 ;; start number
+                ;;    ;; other days - calc diff
+                ;; }
+                (let [pop-cnt (population-cnt country-code)]
+                  (zipmap the-dates (repeat pop-cnt)))})
+             ccc/all-country-codes))}}))
 
 (defn data-with-pop
-  "Data with population numbers"
+  "Data with population numbers."
   []
   (let [ks [:data-with-pop]]
     (if-let [dwp (get-in @cache ks)]
       dwp
-      (let [dwp
-            (conj
-             (data-memo)
-             {:population
-              {:locations
-               (let [the-dates (raw-dates)]
-                 (mapv (fn [country-code]
-                         {
-                          :country (ccr/country-name-aliased country-code)
-                          :country_code country-code
-                          :history
-                          ;; {:1/23/20 1e6 ;; start number
-                          ;;    ;; other days - calc diff
-                          ;; }
-                          (let [pop-cnt (population-cnt country-code)]
-                            (zipmap the-dates (repeat pop-cnt)))})
-                       ccc/all-country-codes))}})]
-        (cache! dwp ks)))))
+      (cache! calc-data-with-pop-fn ks))))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -170,21 +169,26 @@
                + 0
                locations)))
 
+(defn calc-sums-for-case-fn [case-kw pred-fn]
+  #_(debugf "calc-sums-for-case-fn")
+  (let [locations (filter pred-fn
+                          ((comp :locations case-kw)
+                           (data-with-pop)))]
+    (map (fn [raw-date]
+           (sums-for-date case-kw locations raw-date))
+         (raw-dates))))
+
 (defn sums-for-case
-  "Return sums for a given `case-kw` calculated for every single day. E.g.
-  "
+  "Return sums for a given `case-kw` calculated for every single day."
   [case-kw {:keys [cc pred]}]
   ;; ignore predicate for the moment
-  (if-let [sfc (get-in @cache [:sums case-kw cc])]
-    sfc
-    (let [sfc
-          (let [locations (filter pred
-                                  ((comp :locations case-kw)
-                                   (data-with-pop)))]
-            (map (fn [raw-date]
-                   (sums-for-date case-kw locations raw-date))
-                 (raw-dates)))]
-      (cache! sfc [:sums case-kw]))))
+  (let [ks [:sums case-kw cc]]
+    (if-let [sfc (get-in @cache ks)]
+      sfc
+      (cache! (fn [] (calc-sums-for-case-fn case-kw pred))
+              ks
+              #_[:sums case-kw
+               cc]))))
 
 ;; TODO reload only the latest N reports. e.g. try one week
 
@@ -192,7 +196,27 @@
 ;; 8 top-10-plots, 1 world-plot + 252 countries;
 ;; (+ (* 2 (+ 1 252)) (* 252 45) (* 68 8)) => 12390 kB ~12.5MB
 ;; TODO listing-message-size: ~?kB
-(defn get-counts-memo
+
+(defn calc-case-counts-report-by-report-fn [pred-hm]
+  #_(debugf "calc-case-counts-report-by-report-fn")
+  (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
+                   [:population :confirmed :recovered :deaths])]
+    (zipmap com/all-cases
+            (apply
+             conj pcrd
+             (->> [com/calculate-active
+                   (com/calculate-cases-per-100k :i)
+                   (com/calculate-cases-per-100k :r)
+                   (com/calculate-cases-per-100k :d)
+                   (com/calculate-cases-per-100k :c)]
+                  #_(mapv (fn [f] (apply mapv f pcrd)))
+                  (mapv (fn [f] (apply mapv (fn [p c r d]
+                                              (->> [p c r d]
+                                                   (zipmap [:p :c :r :d])
+                                                   (f)))
+                                       pcrd))))))))
+
+(defn case-counts-report-by-report
   "Returns a hash-map containing case-counts day-by-day. E.g.:
   ;; => ;; last 5 values
   {
@@ -210,24 +234,7 @@
   (let [ks [:cnts (keyword cc)]]
     (if-let [cnts (get-in @cache ks)]
       cnts
-      (let [cnts
-            (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
-                             [:population :confirmed :recovered :deaths])]
-              (zipmap com/all-cases
-                      (apply
-                       conj pcrd
-                       (->> [com/calculate-active
-                             (com/calculate-cases-per-100k :i)
-                             (com/calculate-cases-per-100k :r)
-                             (com/calculate-cases-per-100k :d)
-                             (com/calculate-cases-per-100k :c)]
-                            #_(mapv (fn [f] (apply mapv f pcrd)))
-                            (mapv (fn [f] (apply mapv (fn [p c r d]
-                                                       (->> [p c r d]
-                                                            (zipmap [:p :c :r :d])
-                                                            (f)))
-                                                pcrd)))))))]
-        (cache! cnts ks)))))
+      (cache! (fn [] (calc-case-counts-report-by-report-fn pred-hm)) ks))))
 
 (s/def ::fun clojure.core/fn?)
 (s/def ::pred-fn (s/or :nil nil? :fn clojure.core/fn?))
@@ -239,7 +246,7 @@
   ;; (debugf "dates %s" (count (dates)))
   (into {:f (fun (dates))}
         (map (fn [[k v]] {k (fun v)})
-             (get-counts-memo pred-hm))))
+             (case-counts-report-by-report pred-hm))))
 
 (defn delta
   [pred-hm]
@@ -281,12 +288,59 @@
    :pred (old-pred-fn country-code)
    })
 
-(defn stats-countries
-  []
-  (if-let [stats (get-in @cache [:stats])]
-    stats
-    (let [stats
-          (map (fn [cc] (conj {:cc cc}
-                             (last-nn-day (create-pred-hm cc))))
-               ccc/all-country-codes)]
-      (cache! stats [:stats]))))
+(defn calc-stats-countries-fn []
+  #_(debugf "calc-stats-countries-fn")
+  (map (fn [cc] (conj {:cc cc}
+                      (last-nn-day (create-pred-hm cc))))
+       ccc/all-country-codes))
+
+(defn stats-countries []
+  (let [ks [:stats]]
+    (if-let [stats (get-in @cache ks)]
+      stats
+      (cache! calc-stats-countries-fn ks))))
+
+(defn deep-merge
+  "Recursively merges maps. TODO see https://github.com/weavejester/medley
+Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2711849"
+  [& maps]
+  (apply merge-with (fn [& args]
+                      (if (every? map? args)
+                        (apply deep-merge args)
+                        (last args)))
+         maps))
+
+(defn rank-for-case [rank-kw]
+  (map-indexed
+   (fn [idx hm]
+     (update-in (select-keys hm [:cc]) [:rank rank-kw] (fn [_] idx)))
+   (sort-by rank-kw >
+            (stats-countries))))
+
+(defn calc-all-rankings-fn []
+  #_(debugf "calc-all-rankings-fn")
+  (map (fn [affected-cc]
+         (apply deep-merge
+                (reduce into []
+                        (map (fn [ranking]
+                               (filter (fn [{:keys [cc]}]
+                                         (= cc affected-cc))
+                                       ranking))
+                             (utc/transpose (map rank-for-case
+                                                 com/ranking-cases))))))
+       ccc/all-country-codes))
+
+(defn all-rankings []
+  (let [ks [:rankings]]
+    (if-let [rankings (get-in @cache ks)]
+      rankings
+      (cache! calc-all-rankings-fn ks))))
+
+(defn reset-cache! []
+  (swap! cache (fn [_] {}))
+  (let [tbeg (System/currentTimeMillis)]
+     ;; enforce evaluation; can't be done by (force (all-rankings))
+    (dorun
+     (all-rankings))
+    (debugf "%s chars cached in %s ms"
+            (count (str @cache)) (- (System/currentTimeMillis) tbeg))))

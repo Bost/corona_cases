@@ -27,7 +27,7 @@
 (defn fmt [raw-date] (.parse sdf (srvc/keyname raw-date)))
 
 ;; (defn for-case [case]
-;;   (->> (get-in (data-memo) [case :locations])
+;;   (->> (get-in (json-data) [case :locations])
 ;;        (filter (fn [loc]
 ;;                  true
 ;;                  #_(in? ccs (:country_code loc))))
