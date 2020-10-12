@@ -445,4 +445,4 @@
   [cc]
   (get country-code-2-to-3-hm cc))
 
-(defn all-country-codes [] (keys country-code-2-to-3-hm))
+(def all-country-codes (keys country-code-2-to-3-hm))

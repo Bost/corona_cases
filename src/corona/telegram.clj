@@ -53,11 +53,10 @@
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
   []
-  (let [cmds (cmd/cmds)]
-    (infof "Registering %s chatbot commands..." (count cmds))
-    (apply h/handlers
-           (into [(h/callback-fn msg/callback-handler-fn)]
-                 (mapv cmd-handler cmds)))))
+  (infof "Registering %s chatbot commands..." (count cmd/cmds))
+  (apply h/handlers
+         (into [(h/callback-fn msg/callback-handler-fn)]
+               (mapv cmd-handler cmd/cmds))))
 
 (defn start-polling
   "Starts long-polling process.
@@ -83,11 +82,15 @@
 (defn telegram [telegram-token]
   (let [msg "[telegram] starting..."]
     (info msg)
-    (let [port (start-polling com/telegram-token (create-handler))]
-      (let [retval-async<!! (async/<!! port)]
-        (debugf "%s done. retval-async<!! %s"
-                msg (if-let [v retval-async<!!] v "nil"))
-        (fatalf "Further telegram requests may NOT be answered!!!" msg)))))
+    (if-let [telegram-handler (create-handler)]
+      (do
+        (debugf "Created telegram-handler %s" telegram-handler)
+        (let [port (start-polling com/telegram-token telegram-handler)]
+          (let [retval-async<!! (async/<!! port)]
+            (debugf "%s done. retval-async<!! %s"
+                    msg (if-let [v retval-async<!!] v "nil"))
+            (fatalf "Further telegram requests may NOT be answered!!!" msg))))
+      (errorf "telegram-handler not created"))))
 
 (defonce continue (atom true))
 

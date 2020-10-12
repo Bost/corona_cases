@@ -116,7 +116,7 @@
   ;; Transducers: how-to
   ;; https://www.astrecipes.net/blog/2016/11/24/transducers-how-to/
 
-  (->> (get-in (srvc/data-with-pop-memo) [case :locations])
+  (->> (get-in (srvc/data-with-pop) [case :locations])
        (transduce (comp
                    (filter (fn [loc]
                              true

@@ -19,7 +19,7 @@
 ;; (debugf "Loading namespace %s" *ns*)
 
 (defn world [{:keys [chat-id country-code] :as prm}]
-  #_(debug "world" prm)
+  (debug "[world]" prm)
   (let [prm
         ;; override default parse_mode
         (assoc prm :parse_mode "HTML")]
@@ -62,23 +62,26 @@
                      ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
                      msg/list-per-100k
                      }
-                   listing-fn)]}
-  (let [coll (sort-by sort-by-case < data/stats-countries)
-        ;; Split the long list of all countries into smaller subparts
-        sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
-        cnt-msgs (count sub-msgs)]
-    (let [options (select-keys prm (keys msg/options))
-          contents (map-indexed (fn [idx sub-msg]
-                                  (listing-fn
-                                   (assoc prm
-                                          :data sub-msg
-                                          :msg-idx (inc idx)
-                                          :cnt-msgs cnt-msgs)))
-                                sub-msgs)]
-      (doall
-       (map (fn [content]
-              (morse/send-text com/telegram-token chat-id options content))
-            contents)))))
+                     listing-fn)]}
+  #_(debugf "prm %s" prm)
+  (let [coll (sort-by sort-by-case < (data/stats-countries))]
+    #_(debugf "coll %s" (count coll))
+    (let [
+          ;; Split the long list of all countries into smaller subparts
+          sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
+          cnt-msgs (count sub-msgs)]
+      (let [options (select-keys prm (keys msg/options))
+            contents (map-indexed (fn [idx sub-msg]
+                                    (listing-fn
+                                     (assoc prm
+                                            :data sub-msg
+                                            :msg-idx (inc idx)
+                                            :cnt-msgs cnt-msgs)))
+                                  sub-msgs)]
+        (doall
+         (map (fn [content]
+                (morse/send-text com/telegram-token chat-id options content))
+              contents))))))
 
 (defn list-countries [prm]
   (listing (assoc prm :listing-fn msg/list-countries)))
@@ -128,8 +131,7 @@
       (fn [chat-id]
         (world {:chat-id chat-id
                 :country-code country-code
-                :pred-q '(msg/pred-fn country-code)
-                :pred (msg/pred-fn country-code)}))})
+                :pred (msg/create-pred-hm country-code)}))})
    [#(s/lower-case %)  ;; /de
     #(s/upper-case %)  ;; /DE
     #(s/capitalize %)  ;; /De
@@ -141,7 +143,7 @@
     #(normalize %)]))
 
 (defn cmds-general []
-  (let [prm (conj {:pred (fn [_] true)
+  (let [prm (conj {:pred (msg/create-pred-hm ccc/zz)
                    :country-code (ccr/country-code ccc/worldwide)}
              msg/options)]
     [{:name l/contributors
@@ -166,8 +168,7 @@
        (into com/listing-cases-per-100k)
        (map (fn [case-kw]
               (let [prm (conj
-                         {:pred-q '(fn [_] true)}
-                         {:pred (fn [_] true)}
+                         {:pred (msg/create-pred-hm ccc/zz)}
                          msg/options)
                     prm-country-code {:country-code (ccr/country-code ccc/worldwide)}]
                 {:name (l/list-sorted-by case-kw)
@@ -182,13 +183,12 @@
                                        prm-country-code))))
                  :desc (l/list-sorted-by-desc case-kw)})))))
 
-(defn cmds
+(def cmds
   "Create a vector of hash-maps for all available commands."
-  []
   (transduce (map cmds-country-code)
              into (into (cmds-general)
                         (cmds-listing))
-             (ccc/all-country-codes)))
+             ccc/all-country-codes))
 
 (defn bot-father-edit-cmds
   "Evaluate this function and upload the results under:

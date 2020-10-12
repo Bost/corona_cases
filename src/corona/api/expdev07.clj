@@ -9,6 +9,7 @@
    [utils.core :refer [dbgv dbgi] :exclude [id]]
    [taoensso.timbre :as timbre :refer :all]
    [clojure.spec.alpha :as s]
+   [clojure.core.memoize :as memo]
    )
   (:import java.text.SimpleDateFormat))
 
@@ -16,23 +17,37 @@
 
 (def ^:const url (format "http://%s/all" com/api-server))
 
-(defn data [] (com/get-json url))
-
-(defonce cache (atom nil))
+(defonce cache (atom {}))
 
 (defn request! []
   (doall
    (let [tbeg (System/currentTimeMillis)]
-     (let [response (data)]
+     (let [response (com/get-json url)]
        (swap! cache (fn [_] response))
        (debugf "[request!] %s chars cached in %s ms"
                (count (str @cache)) (- (System/currentTimeMillis) tbeg))))))
 
-(def data-memo (fn [] @cache))
+(defn reset-cache! []
+  (swap! cache (fn [_] {}))
+  (request!))
+
+(defn cache! [data ks]
+  (swap! cache update-in ks (fn [_] data))
+  #_(debugf "%s elems cached in %s" (count data) ks)
+  data)
+
+(defn data-memo [] @cache)
 
 (defn raw-dates-unsorted []
   #_[(keyword "2/22/20") (keyword "2/2/20")]
-  (keys (:history (last (:locations (:confirmed (data-memo)))))))
+  (let [ks [:raw-dates-unsorted]]
+    (if-let [rdu (get-in @cache ks)]
+      rdu
+      (let [rdu (keys (:history
+                       (last
+                        (:locations
+                         (:confirmed (data-memo))))))]
+        (cache! rdu ks)))))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
@@ -60,25 +75,30 @@
           xs))))))
 
 (defn raw-dates []
-  (transduce
-   (comp
-    (map keyname)
-    (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
-    (map (fn [[_ m d y]]
-           (transduce (comp (map left-pad)
-                            (interpose "/"))
-                      str
-                      [y m d])))
-    (xf-sort)
-    (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
-    (map (fn [[_ y m d]]
-           (keyword
-            (transduce (comp (map com/read-number)
-                             (interpose "/"))
-                       str
-                       [m d y])))))
-   conj []
-   (raw-dates-unsorted)))
+  (let [ks [:raw-dates]]
+    (if-let [rd (get-in @cache ks)]
+      rd
+      (let [rd
+            (transduce
+             (comp
+              (map keyname)
+              (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
+              (map (fn [[_ m d y]]
+                     (transduce (comp (map left-pad)
+                                      (interpose "/"))
+                                str
+                                [y m d])))
+              (xf-sort)
+              (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
+              (map (fn [[_ y m d]]
+                     (keyword
+                      (transduce (comp (map com/read-number)
+                                       (interpose "/"))
+                                 str
+                                 [m d y])))))
+             conj []
+             (raw-dates-unsorted))]
+        (cache! rd ks)))))
 
 (defn population-cnt [country-code]
   (or (get ccr/population country-code)
@@ -93,37 +113,37 @@
 (defn data-with-pop
   "Data with population numbers"
   []
-  (conj
-   (data-memo)
-   {:population
-    {:locations
-     (let [dates (raw-dates)]
-       (->> (ccc/all-country-codes)
-            ;; (take 0)
-            (mapv (fn [country-code]
-                    {
-                     :country (ccr/country-name-aliased country-code)
-                     :country_code country-code
-                     :history
-                     ;; {:1/23/20 1e6 ;; start number
-                     ;;    ;; other days - calc diff
-                     ;; }
-                     (let [pop-cnt (population-cnt country-code)]
-                       (zipmap dates (repeat pop-cnt)))}))))}}))
+  (let [ks [:data-with-pop]]
+    (if-let [dwp (get-in @cache ks)]
+      dwp
+      (let [dwp
+            (conj
+             (data-memo)
+             {:population
+              {:locations
+               (let [r-dates (raw-dates)]
+                 (mapv (fn [country-code]
+                         {
+                          :country (ccr/country-name-aliased country-code)
+                          :country_code country-code
+                          :history
+                          ;; {:1/23/20 1e6 ;; start number
+                          ;;    ;; other days - calc diff
+                          ;; }
+                          (let [pop-cnt (population-cnt country-code)]
+                            (zipmap r-dates (repeat pop-cnt)))})
+                       ccc/all-country-codes))}})]
+        (cache! dwp ks)))))
 
-(def data-with-pop-memo
-  (com/memo-ttl data-with-pop))
-
-(defn dates
-  ([] (dates {:limit-fn identity}))
-  ([{:keys [limit-fn] :as prm}]
-   #_(debug "dates" {:limit-fn limit-fn})
-   (let [sdf (new SimpleDateFormat "MM/dd/yy")]
-     (map (fn [rd] (.parse sdf (keyname rd)))
-          (limit-fn (raw-dates))))))
-
-(def dates-memo
-  (com/memo-ttl dates))
+(defn dates []
+  (let [ks [:dates]]
+    (if-let [d (get-in @cache ks)]
+      d
+      (let [d
+            (let [sdf (new SimpleDateFormat "MM/dd/yy")]
+              (map (fn [rd] (.parse sdf (keyname rd)))
+                   (raw-dates)))]
+        (cache! d ks)))))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -143,19 +163,28 @@
 
 (defn sums-for-case
   "Return sums for a given `case-kw` calculated for every single day. E.g.
-  (sums-for-case :confirmed (pred-fn sk))
   "
-  [case-kw pred]
-  (let [locations (filter pred
-                          ((comp :locations case-kw)
-                           (data-with-pop-memo)))]
-    (map (fn [raw-date]
-           (sums-for-date case-kw locations raw-date))
-         (raw-dates))))
+  [case-kw {:keys [cc pred]}]
+  ;; ignore predicate for the moment
+  (if-let [sfc (get-in @cache [:sums case-kw cc])]
+    sfc
+    (let [sfc
+          (let [locations (filter pred
+                                  ((comp :locations case-kw)
+                                   (data-with-pop)))]
+            (map (fn [raw-date]
+                   (sums-for-date case-kw locations raw-date))
+                 (raw-dates)))]
+      (cache! sfc [:sums case-kw]))))
 
-(defn get-counts
+;; TODO reload only the latest N reports. e.g. try one week
+
+;; TODO country-plots are <= 45kB; world-plots are <= 68kb
+;; 8 top-10-plots, 1 world-plot + 252 countries;
+;; (+ (* 2 (+ 1 252)) (* 252 45) (* 68 8)) => 12390 kB ~12.5MB
+;; TODO listing-message-size: ~?kB
+(defn get-counts-memo
   "Returns a hash-map containing case-counts day-by-day. E.g.:
-  (get-counts (pred-fn sk))
   ;; => ;; last 5 values
   {
    :p (... 5456362 5456362 5456362 5456362 5456362)
@@ -166,49 +195,48 @@
 
   (get-counts (fn [_] true))
   "
-  [pred]
-  (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred))
-                   [:population :confirmed :recovered :deaths])]
-    (zipmap com/all-cases
-            (apply
-             conj pcrd
-             (->> [com/calculate-active
-                   (com/calculate-cases-per-100k :i)
-                   (com/calculate-cases-per-100k :r)
-                   (com/calculate-cases-per-100k :d)
-                   (com/calculate-cases-per-100k :c)]
-                  #_(mapv (fn [f] (apply mapv f pcrd)))
-                  (mapv (fn [f] (apply mapv (fn [p c r d]
-                                             (->> [p c r d]
-                                                  (zipmap [:p :c :r :d])
-                                                  (f)))
-                                      pcrd))))))))
-
-(def get-counts-memo
-  #_get-counts
-  (com/memo-ttl get-counts))
+  [{:keys [cc pred] :as pred-hm}]
+  ;; ignore predicate for the moment
+  #_(debugf "cc %s" cc)
+  (let [ks [:cnts (keyword cc)]]
+    (if-let [cnts (get-in @cache ks)]
+      cnts
+      (let [cnts
+            (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
+                             [:population :confirmed :recovered :deaths])]
+              (zipmap com/all-cases
+                      (apply
+                       conj pcrd
+                       (->> [com/calculate-active
+                             (com/calculate-cases-per-100k :i)
+                             (com/calculate-cases-per-100k :r)
+                             (com/calculate-cases-per-100k :d)
+                             (com/calculate-cases-per-100k :c)]
+                            #_(mapv (fn [f] (apply mapv f pcrd)))
+                            (mapv (fn [f] (apply mapv (fn [p c r d]
+                                                       (->> [p c r d]
+                                                            (zipmap [:p :c :r :d])
+                                                            (f)))
+                                                pcrd)))))))]
+        (cache! cnts ks)))))
 
 (s/def ::fun clojure.core/fn?)
 (s/def ::pred-fn (s/or :nil nil? :fn clojure.core/fn?))
 
 (defn eval-fun
-  "E.g.:
-  (eval-fun get-last (pred-fn sk))
-  (eval-fun get-last (fn [_] true))"
-  [fun pred]
-  {:pre [(s/valid? ::fun fun)
+  [fun pred-hm]
+  #_{:pre [(s/valid? ::fun fun)
          (s/valid? ::pred-fn pred)]}
-  (into {:f (fun (dates-memo))}
+  ;; (debugf "dates %s" (count (dates)))
+  (into {:f (fun (dates))}
         (map (fn [[k v]] {k (fun v)})
-             (get-counts-memo pred))))
+             (get-counts-memo pred-hm))))
+
 (defn delta
-  "E.g.:
-  (delta (pred-fn cn))
-  (delta (fn [_] true))"
-  [pred]
+  [pred-hm]
   (->> [get-prev get-last]
        (map (fn [fun]
-              (eval-fun fun pred)))
+              (eval-fun fun pred-hm)))
        (apply (fn [prv lst]
                 (map (fn [k]
                        {k (- (k lst) (k prv))})
@@ -216,24 +244,18 @@
        (reduce into {})))
 
 (defn last-nn-day
-  "E.g.:
-  (last-nn-day (pred-fn sk))
-  (last-nn-day (fn [_] true))"
-  [pred]
-  (eval-fun get-last pred))
+  [pred-hm]
+  (eval-fun get-last pred-hm))
 
 (defn last-nn-8-reports
-  "E.g.:
-  (last-nn-8-reports (pred-fn sk))
-  (last-nn-8-reports (fn [_] true))"
-  [pred]
-  (eval-fun (fn [coll] (take-last 8 coll)) pred))
+  [pred-hm]
+  (eval-fun (fn [coll] (take-last 8 coll)) pred-hm))
 
 (defn last-8-reports
-  [{:keys [pred] :as prm}]
-  (eval-fun (fn [coll] (take-last 8 coll)) pred))
+  [pred-hm]
+  (eval-fun (fn [coll] (take-last 8 coll)) pred-hm))
 
-(defn pred-fn [country-code]
+(defn old-pred-fn [country-code]
   (fn [loc]
     (condp = country-code
       ccc/worldwide-2-country-code
@@ -245,8 +267,17 @@
 
       (= country-code (:country_code loc)))))
 
-(def stats-countries
-  "Attention - lazy evaluated!"
-  (map (fn [cc] (conj {:cc cc}
-                     (last-nn-day (pred-fn cc))))
-       ccc/country-codes))
+(defn create-pred-hm [country-code]
+  {:cc country-code
+   :pred (old-pred-fn country-code)
+   })
+
+(defn stats-countries
+  []
+  (if-let [stats (get-in @cache [:stats])]
+    stats
+    (let [stats
+          (map (fn [cc] (conj {:cc cc}
+                             (last-nn-day (create-pred-hm cc))))
+               ccc/all-country-codes)]
+      (cache! stats [:stats]))))

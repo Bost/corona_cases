@@ -9,7 +9,6 @@
    [clj-time.format :as ctf]
    [clojure.data.json :as json]
    [clojure.java.io :as jio]
-   [clojure.core.memoize :as memo]
    [clojure.string :as s]
    [environ.core :as env]
    [utils.num :as utn]
@@ -208,6 +207,8 @@
 (def ^:const all-cases (->> case-params
                             (mapv :kw)))
 
+(def ^:const ranking-cases [:p :c100k :r100k :d100k :i100k])
+
 (def ^:const listing-cases-per-100k
   "No listing of :c100k - Closed cases per 100k"
   (->> case-params
@@ -270,15 +271,3 @@
   "Time to live in (* <minutes> <seconds> <miliseconds>)."
   (* 60 60 1000))
 
-;; TODO reload only the latest N reports. e.g. try one week
-
-;; TODO country-plots are <= 45kB; world-plots are <= 68kb
-;; 8 top-10-plots, 1 world-plot + 252 countries;
-;; (+ (* 2 (+ 1 252)) (* 252 45) (* 68 8)) => 12390 kB ~12.5MB
-;; TODO listing-message-size: ~?kB
-(defn memo-ttl
-  "E.g.:
-  (def foo-fun-memo (co/memo-ttl foo-fun))"
-  [fun]
-  #_fun
-  (memo/ttl fun {} :ttl/threshold ttl))
