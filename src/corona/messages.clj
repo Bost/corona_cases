@@ -207,7 +207,7 @@
         (toByteArrayAutoClosable
          (let [plot-fn (if (= type :sum) p/plot-all-by-case p/plot-all-absolute)]
            (plot-fn
-            {:day (count (data/raw-dates-unsorted))
+            {:day (count (data/dates))
              :case case
              :type type
              :threshold (com/min-threshold case)
@@ -245,7 +245,7 @@
   #_(debugf "[list-countries]")
   (let [
         ;; TODO calculate count of reports only once
-        cnt-reports (count (data/raw-dates))
+        cnt-reports (count (data/dates))
         spacer " "
         sort-indicator "▴" ;; " " "▲"
         omag-active    7 ;; order of magnitude i.e. number of digits
@@ -309,7 +309,7 @@
     (format
      (format-linewise
       [["%s\n" [(header parse_mode pred)]]
-       ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/raw-dates)) msg-idx cnt-msgs)]]
+       ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/dates)) msg-idx cnt-msgs)]]
        ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
        ["%s"   [spacer]]
        ["%s "  [(str l/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
@@ -403,8 +403,6 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   "
   [{:keys [country-code parse_mode pred]}]
   (debugf "[detailed-info] %s" pred)
-  #_(debugf "data/raw-dates-unsorted %s" (count (data/raw-dates-unsorted)))
-  (debugf "[detailed-info] data/raw-dates %s" (count (data/raw-dates)))
   (let [rank (first
               (map :rank
                    (filter (fn [{:keys [cc]}] (= cc country-code))
@@ -423,7 +421,7 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
                                 (map (fn [s] (com/encode-cmd (s/lower-case s)))
                                      [country-code
                                       (ccc/country-code-3-letter country-code)]))]]])]]
-            ["%s\n" [(str l/day " " (count (data/raw-dates)))]]
+            ["%s\n" [(str l/day " " (count (data/dates)))]]
             (do
                 ["%s\n" ; data
                  [(let [

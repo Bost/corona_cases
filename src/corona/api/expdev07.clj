@@ -38,17 +38,6 @@
 
 (defn data-memo [] @cache)
 
-(defn raw-dates-unsorted []
-  #_[(keyword "2/22/20") (keyword "2/2/20")]
-  (let [ks [:raw-dates-unsorted]]
-    (if-let [rdu (get-in @cache ks)]
-      rdu
-      (let [rdu (keys (:history
-                       (last
-                        (:locations
-                         (:confirmed (data-memo))))))]
-        (cache! rdu ks)))))
-
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
 (defn left-pad [s] (com/left-pad s 2))
@@ -74,31 +63,51 @@
           (.add temp-list x)
           xs))))))
 
-(defn raw-dates []
+(defn raw-dates-calc []
+  (transduce
+   (comp
+    (map keyname)
+    (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
+    (map (fn [[_ m d y]]
+           (transduce (comp (map left-pad)
+                            (interpose "/"))
+                      str
+                      [y m d])))
+    (xf-sort)
+    (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
+    (map (fn [[_ y m d]]
+           (keyword
+            (transduce (comp (map com/read-number)
+                             (interpose "/"))
+                       str
+                       [m d y])))))
+   conj []
+   #_[(keyword "2/22/20") (keyword "2/2/20")]
+   (keys (:history
+          (last
+           (:locations
+            (:confirmed (data-memo))))))))
+
+(defn raw-dates
+  "Size:
+  (apply + (map (fn [rd] (count (str rd))) (get-in @cache [:raw-dates])))
+  ;; 2042 chars
+
+  (time ...) measurement:
+  (apply + rd-calc)  ;; no cache used
+  ;; 3250.596 msecs
+  (count rd-calc)
+  ;; 1010 items
+
+  (apply + rd-cached) ;; read from cache
+  ;; 4.040 msecs
+  (count rd-cached)
+  ;; 1010 items"
+  []
   (let [ks [:raw-dates]]
     (if-let [rd (get-in @cache ks)]
       rd
-      (let [rd
-            (transduce
-             (comp
-              (map keyname)
-              (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
-              (map (fn [[_ m d y]]
-                     (transduce (comp (map left-pad)
-                                      (interpose "/"))
-                                str
-                                [y m d])))
-              (xf-sort)
-              (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
-              (map (fn [[_ y m d]]
-                     (keyword
-                      (transduce (comp (map com/read-number)
-                                       (interpose "/"))
-                                 str
-                                 [m d y])))))
-             conj []
-             (raw-dates-unsorted))]
-        (cache! rd ks)))))
+      (cache! (raw-dates-calc) ks))))
 
 (defn population-cnt [country-code]
   (or (get ccr/population country-code)
@@ -109,6 +118,16 @@
                        country-code
                        default-population))
         default-population)))
+
+(defn dates []
+  (let [ks [:dates]]
+    (if-let [d (get-in @cache ks)]
+      d
+      (let [d
+            (let [sdf (new SimpleDateFormat "MM/dd/yy")]
+              (map (fn [rd] (.parse sdf (keyname rd)))
+                   (raw-dates)))]
+        (cache! d ks)))))
 
 (defn data-with-pop
   "Data with population numbers"
@@ -121,7 +140,7 @@
              (data-memo)
              {:population
               {:locations
-               (let [r-dates (raw-dates)]
+               (let [the-dates (raw-dates)]
                  (mapv (fn [country-code]
                          {
                           :country (ccr/country-name-aliased country-code)
@@ -131,19 +150,9 @@
                           ;;    ;; other days - calc diff
                           ;; }
                           (let [pop-cnt (population-cnt country-code)]
-                            (zipmap r-dates (repeat pop-cnt)))})
+                            (zipmap the-dates (repeat pop-cnt)))})
                        ccc/all-country-codes))}})]
         (cache! dwp ks)))))
-
-(defn dates []
-  (let [ks [:dates]]
-    (if-let [d (get-in @cache ks)]
-      d
-      (let [d
-            (let [sdf (new SimpleDateFormat "MM/dd/yy")]
-              (map (fn [rd] (.parse sdf (keyname rd)))
-                   (raw-dates)))]
-        (cache! d ks)))))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 

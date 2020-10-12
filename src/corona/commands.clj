@@ -38,7 +38,7 @@
                       {})
             content (msg/toByteArrayAutoClosable
                      (p/plot-country
-                      {:day (count (data/raw-dates-unsorted))
+                      {:day (count (data/dates))
                        :cc country-code
                        :stats (v1/pic-data)}))]
         (doall
