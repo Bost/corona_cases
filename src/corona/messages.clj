@@ -198,7 +198,7 @@
   (let [{country-code :cc
          chat-id :chat-id
          type :type
-         case :case} (edn/read-string data)]
+         case-kw :case} (edn/read-string data)]
     (when (worldwide? country-code)
       (doall
        (morse/send-photo
@@ -207,16 +207,17 @@
         (toByteArrayAutoClosable
          (let [plot-fn (if (= type :sum) p/plot-all-by-case p/plot-all-absolute)]
            (plot-fn
-            {
-             :case case
+            case-kw
+            #_{
+             :case case-kw
              :type type
              }
             #_{
              :day (count (data/dates))
-             :case case
+             :case case-kw
              :type type
-             :threshold (com/min-threshold case)
-             :threshold-increase (com/threshold-increase case)
+             :threshold (com/min-threshold case-kw)
+             :threshold-increase (com/threshold-increase case-kw)
              :stats (v1/pic-data)
              }
             ))))))))

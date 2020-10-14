@@ -244,14 +244,13 @@
 
 (defn sum-all-by-date-by-case
   "Group the country stats by day and sum up the active cases"
-  [{:keys [case] :as prm}]
-  (let [prm (group-below-threshold prm)
-        {data :data} prm]
+  [{:keys [case] :as prm-orig}]
+  (let [prm (group-below-threshold prm-orig)]
     (let [res (flatten (map (fn [[f hms]]
                               (map (fn [[cc hms]]
                                      {:cc cc :f f case (reduce + (map case hms))})
                                    (group-by :cc hms)))
-                            (group-by :f data)))]
+                            (group-by :f (:data prm))))]
       (update prm :data (fn [_] res)))))
 
 (defn fill-rest [{:keys [case] :as prm}]
@@ -290,19 +289,20 @@
 
 (defn plot-all-by-case
   "Case-specific plot for the sum of all countries."
-  [{:keys [case] :as prm-orig}]
+  [case-kw]
   (let [
         day (count (data/dates))
         stats (v1/pic-data)
 
-        prm (assoc prm-orig
-                   :day (count (data/dates))
-                   :stats (v1/pic-data)
-                   :threshold (com/min-threshold case)
-                   :threshold-increase (com/threshold-increase case)
-                   )
+        prm {
+             :day day
+             :stats stats
+             :threshold (com/min-threshold case-kw)
+             :threshold-increase (com/threshold-increase case-kw)
+             :case case-kw
+             }
 
-        {json-data :data threshold :threshold} (stats-all-by-case prm)]
+        {json-data :data threshold-recaltulated :threshold} (stats-all-by-case prm)]
     (boiler-plate
      {:series (b/series [:grid] [:sarea json-data])
       :legend (reverse
@@ -324,9 +324,9 @@
                      com/bot-name
                      (->> [l/confirmed l/recovered l/deaths l/active-cases ]
                           (zipmap com/basic-cases)
-                          case)
-                     #_(case {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
-                     threshold)
+                          case-kw)
+                     #_(case-kw {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
+                     threshold-recaltulated)
       :label-conf {:color (c/darken :steelblue) :font-size 14}})))
 
 (defn line-stroke [color]
@@ -338,49 +338,50 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn plot-all-absolute [{:keys [case] :as prm-orig}]
+(defn plot-all-absolute
+  [case-kw]
   (let [
         day (count (data/dates))
         stats (v1/pic-data)
-        threshold-orig (com/min-threshold case)
+        threshold (com/min-threshold case-kw)
 
-        prm (assoc prm-orig
-                   :day day
-                   :stats stats
-                   :threshold (com/min-threshold case)
-                   :threshold-increase (com/threshold-increase case)
-                   )
+        prm {
+             :day day
+             :stats stats
+             :threshold (com/min-threshold case-kw)
+             :threshold-increase (com/threshold-increase case-kw)
+             :case case-kw
+             }
 
-        {full-data :data threshold :threshold} (stats-all-by-case prm)
-        data (->> full-data
-                  #_(remove (fn [[cc _]] (= cc corona.country-codes/qq))))
+        json-data (->> (:data (stats-all-by-case prm))
+                       #_(remove (fn [[cc _]] (= cc corona.country-codes/qq))))
         palette (cycle (c/palette-presets
                         #_:tableau-10
                         #_:tableau-10-2
                         #_:color-blind-10
                         #_:category10
                         :category20b))]
-    (debugf "thresholds equal? %s" (= (com/min-threshold case) threshold-orig))
     (boiler-plate
      {:series (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
-                         data palette)
+                         json-data
+                         palette)
                    (into [[:grid]])
                    (apply b/series))
       :y-axis-formatter (metrics-prefix-formatter
                          ;; population numbers have the `max` values, all
                          ;; other numbers are derived from them
 
-                         ;; don't display the population data for the moment
-                         (max-y-val + data))
+                         ;; don't display the population json-data for the moment
+                         (max-y-val + json-data))
       :legend (map (fn [c r] (vector :rect r {:color c}))
                    palette
-                   (map ccr/country-alias (keys data)))
+                   (map ccr/country-alias (keys json-data)))
       :label (format
               "%s; %s; %s: %s > %s"
               (fmt-day day)
               (fmt-last-date stats)
               com/bot-name
-              (str (case {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
+              (str (case-kw {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
                    " " l/absolute)
               threshold)
       :label-conf {:color (c/darken :steelblue) :font-size 14}})))
