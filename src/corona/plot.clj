@@ -17,6 +17,8 @@
    [corona.lang :as l]
    [utils.core :refer [in?] :exclude [id]]
    [taoensso.timbre :as timbre :refer :all]
+   [corona.api.v1 :as v1]
+   [corona.api.expdev07 :as data]
    )
   (:import [java.time LocalDate ZoneId]))
 
@@ -87,7 +89,6 @@
                           true
                           (= cc (:cc hm))))]
     (->> stats
-         #_(v1/pic-data)
          (filter pred-fn)
          (group-by :f)
          (map (fn [[f hms]]
@@ -289,8 +290,19 @@
 
 (defn plot-all-by-case
   "Case-specific plot for the sum of all countries."
-  [{:keys [day case stats] :as prm}]
-  (let [{json-data :data threshold :threshold} (stats-all-by-case prm)]
+  [{:keys [case] :as prm-orig}]
+  (let [
+        day (count (data/dates))
+        stats (v1/pic-data)
+
+        prm (assoc prm-orig
+                   :day (count (data/dates))
+                   :stats (v1/pic-data)
+                   :threshold (com/min-threshold case)
+                   :threshold-increase (com/threshold-increase case)
+                   )
+
+        {json-data :data threshold :threshold} (stats-all-by-case prm)]
     (boiler-plate
      {:series (b/series [:grid] [:sarea json-data])
       :legend (reverse
@@ -326,8 +338,20 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn plot-all-absolute [{:keys [day case stats] :as prm}]
-  (let [{full-data :data threshold :threshold} (stats-all-by-case prm)
+(defn plot-all-absolute [{:keys [case] :as prm-orig}]
+  (let [
+        day (count (data/dates))
+        stats (v1/pic-data)
+        threshold-orig (com/min-threshold case)
+
+        prm (assoc prm-orig
+                   :day day
+                   :stats stats
+                   :threshold (com/min-threshold case)
+                   :threshold-increase (com/threshold-increase case)
+                   )
+
+        {full-data :data threshold :threshold} (stats-all-by-case prm)
         data (->> full-data
                   #_(remove (fn [[cc _]] (= cc corona.country-codes/qq))))
         palette (cycle (c/palette-presets
@@ -336,6 +360,7 @@
                         #_:color-blind-10
                         #_:category10
                         :category20b))]
+    (debugf "thresholds equal? %s" (= (com/min-threshold case) threshold-orig))
     (boiler-plate
      {:series (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
                          data palette)
