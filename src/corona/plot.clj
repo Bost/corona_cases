@@ -20,7 +20,10 @@
    [corona.api.v1 :as v1]
    [corona.api.expdev07 :as data]
    )
-  (:import [java.time LocalDate ZoneId]))
+  (:import java.awt.image.BufferedImage
+           java.io.ByteArrayOutputStream
+           javax.imageio.ImageIO
+           [java.time LocalDate ZoneId]))
 
 ;; (debugf "Loading namespace %s" *ns*)
 
@@ -181,6 +184,15 @@
                      into []
                      data)))
 
+(defn toByteArrayAutoClosable
+  "Thanks to https://stackoverflow.com/a/15414490"
+  [^BufferedImage image]
+  (with-open [out (new ByteArrayOutputStream)]
+    (ImageIO/write image "png" out)
+    (let [array (.toByteArray out)]
+      (debugf "image-size %s" (count array))
+      array)))
+
 (defn plot-country
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
@@ -200,29 +212,31 @@
     ;; :annotate? true
     ;; :annotate-fmt "%.1f"
     ;; {:label (plot-label day cc stats)}
-    (boiler-plate
-     {:series (b/series
-               [:grid]
-               [:sarea sarea-data {:palette palette}]
-               #_[:line (line-data :p base-data) stroke-population]
-               [:line (line-data :c base-data) stroke-confirmed]
-               [:line (line-data :i base-data) stroke-sick])
-      :y-axis-formatter  (metrics-prefix-formatter
-                          ;; population numbers have the `max` values, all
-                          ;; other numbers are derived from them
+    (let [img
+          (boiler-plate
+           {:series (b/series
+                     [:grid]
+                     [:sarea sarea-data {:palette palette}]
+                     #_[:line (line-data :p base-data) stroke-population]
+                     [:line (line-data :c base-data) stroke-confirmed]
+                     [:line (line-data :i base-data) stroke-sick])
+            :y-axis-formatter  (metrics-prefix-formatter
+                                ;; population numbers have the `max` values, all
+                                ;; other numbers are derived from them
 
-                          ;; don't display the population data for the moment
-                          (max-y-val + sarea-data))
-      :legend (reverse
-               (conj (map #(vector :rect %2 {:color %1})
-                          palette
-                          (map (fn [k] (get {:i l/active :d l/deaths :r l/recovered} k))
-                               curves))
-                     [:line l/confirmed     stroke-confirmed]
-                     [:line l/sick-absolute stroke-sick]
-                     #_[:line l/people    stroke-population]))
-      :label (plot-label day cc stats)
-      :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})))
+                                ;; don't display the population data for the moment
+                                (max-y-val + sarea-data))
+            :legend (reverse
+                     (conj (map #(vector :rect %2 {:color %1})
+                                palette
+                                (map (fn [k] (get {:i l/active :d l/deaths :r l/recovered} k))
+                                     curves))
+                           [:line l/confirmed     stroke-confirmed]
+                           [:line l/sick-absolute stroke-sick]
+                           #_[:line l/people    stroke-population]))
+            :label (plot-label day cc stats)
+            :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
+      (toByteArrayAutoClosable img))))
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
@@ -287,13 +301,10 @@
     #_(sort-by-country-name mapped-hm)
     (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
 
-(defn plot-all-by-case
+(defn calc-plot-sum-by-case-fn
   "Case-specific plot for the sum of all countries."
-  [case-kw]
+  [case-kw stats day]
   (let [
-        day (count (data/dates))
-        stats (v1/pic-data)
-
         prm {
              :day day
              :stats stats
@@ -303,31 +314,46 @@
              }
 
         {json-data :data threshold-recaltulated :threshold} (stats-all-by-case prm)]
-    (boiler-plate
-     {:series (b/series [:grid] [:sarea json-data])
-      :legend (reverse
-               (map #(vector :rect %2 {:color %1})
-                    (cycle (c/palette-presets :category20b))
-                    (map
-                     ccr/country-alias
-                     ;; XXX b/add-legend doesn't accept newline char \n
-                     #_(fn [cc] (format "%s %s"
-                                       cc
-                                       (com/country-alias cc)))
-                     (keys json-data))))
-      :y-axis-formatter (metrics-prefix-formatter
-                         ;; `+` means: sum up all active cases
-                         (max-y-val + json-data))
-      :label (format "%s; %s; %s: %s > %s"
-                     (fmt-day day)
-                     (fmt-last-date stats)
-                     com/bot-name
-                     (->> [l/confirmed l/recovered l/deaths l/active-cases ]
-                          (zipmap com/basic-cases)
-                          case-kw)
-                     #_(case-kw {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
-                     threshold-recaltulated)
-      :label-conf {:color (c/darken :steelblue) :font-size 14}})))
+    (let [img
+          (boiler-plate
+           {:series (b/series [:grid] [:sarea json-data])
+            :legend (reverse
+                     (map #(vector :rect %2 {:color %1})
+                          (cycle (c/palette-presets :category20b))
+                          (map
+                           ccr/country-alias
+                           ;; XXX b/add-legend doesn't accept newline char \n
+                           #_(fn [cc] (format "%s %s"
+                                             cc
+                                             (com/country-alias cc)))
+                           (keys json-data))))
+            :y-axis-formatter (metrics-prefix-formatter
+                               ;; `+` means: sum up all active cases
+                               (max-y-val + json-data))
+            :label (format "%s; %s; %s: %s > %s"
+                           (fmt-day day)
+                           (fmt-last-date stats)
+                           com/bot-name
+                           (->> [l/confirmed l/recovered l/deaths l/active-cases ]
+                                (zipmap com/basic-cases)
+                                case-kw)
+                           #_(case-kw {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
+                           threshold-recaltulated)
+            :label-conf {:color (c/darken :steelblue) :font-size 14}})]
+      (toByteArrayAutoClosable img))))
+
+(defn plot-sum-by-case
+  "The optional params `stats`, `day` are used only for the first calculation"
+  [case-kw & [stats day]]
+  (let [ks [:sum case-kw]]
+    (if-let [v (get-in @data/cache ks)]
+      v
+      (let [v (fn [] (calc-plot-sum-by-case-fn case-kw stats day))]
+        (debugf "ks %s size %s chars; stats %s"
+                ks
+                (count (str v))
+                (count (str stats)))
+        (data/cache! v ks)))))
 
 (defn line-stroke [color]
   (conj line-cfg {:color color
@@ -338,17 +364,14 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn plot-all-absolute
-  [case-kw]
+(defn calc-plot-absolute-by-case-fn
+  [case-kw stats day]
   (let [
-        day (count (data/dates))
-        stats (v1/pic-data)
         threshold (com/min-threshold case-kw)
-
         prm {
              :day day
              :stats stats
-             :threshold (com/min-threshold case-kw)
+             :threshold threshold
              :threshold-increase (com/threshold-increase case-kw)
              :case case-kw
              }
@@ -361,27 +384,37 @@
                         #_:color-blind-10
                         #_:category10
                         :category20b))]
-    (boiler-plate
-     {:series (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
-                         json-data
-                         palette)
-                   (into [[:grid]])
-                   (apply b/series))
-      :y-axis-formatter (metrics-prefix-formatter
-                         ;; population numbers have the `max` values, all
-                         ;; other numbers are derived from them
+    (let [img
+          (boiler-plate
+           {:series (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
+                               json-data
+                               palette)
+                         (into [[:grid]])
+                         (apply b/series))
+            :y-axis-formatter (metrics-prefix-formatter
+                               ;; population numbers have the `max` values, all
+                               ;; other numbers are derived from them
 
-                         ;; don't display the population json-data for the moment
-                         (max-y-val + json-data))
-      :legend (map (fn [c r] (vector :rect r {:color c}))
-                   palette
-                   (map ccr/country-alias (keys json-data)))
-      :label (format
-              "%s; %s; %s: %s > %s"
-              (fmt-day day)
-              (fmt-last-date stats)
-              com/bot-name
-              (str (case-kw {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
-                   " " l/absolute)
-              threshold)
-      :label-conf {:color (c/darken :steelblue) :font-size 14}})))
+                               ;; don't display the population json-data for the moment
+                               (max-y-val + json-data))
+            :legend (map (fn [c r] (vector :rect r {:color c}))
+                         palette
+                         (map ccr/country-alias (keys json-data)))
+            :label (format
+                    "%s; %s; %s: %s > %s"
+                    (fmt-day day)
+                    (fmt-last-date stats)
+                    com/bot-name
+                    (str (case-kw {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
+                         " " l/absolute)
+                    threshold)
+            :label-conf {:color (c/darken :steelblue) :font-size 14}})]
+      (toByteArrayAutoClosable img))))
+
+(defn plot-absolute-by-case
+  "The optional params `stats`, `day` are used only for the first calculation"
+  [case-kw & [stats day]]
+  (let [ks [:abs case-kw]]
+    (if-let [v (get-in @data/cache ks)]
+      v
+      (data/cache! (fn [] (calc-plot-absolute-by-case-fn case-kw stats day)) ks))))

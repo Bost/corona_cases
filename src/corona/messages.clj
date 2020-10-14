@@ -19,10 +19,7 @@
    [incanter.zoo :as izoo]
    [taoensso.timbre :as timbre :refer :all]
 
-   [corona.common :as co])
-  (:import java.awt.image.BufferedImage
-           java.io.ByteArrayOutputStream
-           javax.imageio.ImageIO))
+   [corona.common :as co]))
 
 ;; (debugf "Loading namespace %s" *ns*)
 
@@ -163,15 +160,6 @@
           (map com/encode-cmd)
           (s/join spacer)))))
 
-(defn toByteArrayAutoClosable
-  "Thanks to https://stackoverflow.com/a/15414490"
-  [^BufferedImage image]
-  (with-open [out (new ByteArrayOutputStream)]
-    (ImageIO/write image "png" out)
-    (let [array (.toByteArray out)]
-      (debugf "image-size %s" (count array))
-      array)))
-
 (defn buttons [prm]
   {:reply_markup
    (json/write-str
@@ -204,23 +192,13 @@
        (morse/send-photo
         com/telegram-token chat-id
         (buttons {:chat-id chat-id :cc country-code})
-        (toByteArrayAutoClosable
-         (let [plot-fn (if (= type :sum) p/plot-all-by-case p/plot-all-absolute)]
-           (plot-fn
-            case-kw
-            #_{
-             :case case-kw
-             :type type
-             }
-            #_{
-             :day (count (data/dates))
-             :case case-kw
-             :type type
-             :threshold (com/min-threshold case-kw)
-             :threshold-increase (com/threshold-increase case-kw)
-             :stats (v1/pic-data)
-             }
-            ))))))))
+        (let [plot-fn (if (= type :sum)
+                        p/plot-sum-by-case p/plot-absolute-by-case)]
+          ;; the plot is fetched from the cache, stats and day need not to be
+          ;; specified
+          
+          (plot-fn case-kw))
+        )))))
 
 ;; (defn language [prm]
 ;;   (format

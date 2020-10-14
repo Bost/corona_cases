@@ -11,9 +11,11 @@
    [corona.messages :as msg]
    [morse.handlers :as h]
    [morse.polling :as p]
+   [corona.plot :as plot]
    [taoensso.timbre :as timbre :refer :all]
    [corona.api.expdev07 :as data]
-   ))
+
+   [corona.api.v1 :as v1]))
 
 ;; (debugf "Loading namespace %s" *ns*)
 
@@ -110,6 +112,24 @@
 ;; For interactive development:
 (defonce component (atom nil))
 
+(defn reset-cache! []
+  (swap! data/cache (fn [_] {}))
+  (let [tbeg (System/currentTimeMillis)]
+    ;; enforce evaluation; can't be done by (force (all-rankings))
+    (doall
+     (data/all-rankings))
+    (let [stats (v1/pic-data)
+          day (count (data/dates))]
+      (doall
+       (run! (fn [plot-fn]
+              (run! (fn [case-kw]
+                      (debugf "Calculating %s %s" plot-fn case-kw)
+                      (plot-fn case-kw stats day))
+                    com/absolute-cases))
+            [plot/plot-sum-by-case plot/plot-absolute-by-case])))
+    (debugf "%s chars cached in %s ms"
+            (count (str @data/cache)) (- (System/currentTimeMillis) tbeg))))
+
 (defn -main
   "Fetch api service data and only then register the telegram commands."
   [& [env-type]]
@@ -119,8 +139,8 @@
                     com/commit
                     env-type)]
     (info msg)
-    (data/reset-cache!)
-    (let [funs [(fn p-endlessly [] (endlessly data/reset-cache! com/ttl))
+    (reset-cache!)
+    (let [funs [(fn p-endlessly [] (endlessly reset-cache! com/ttl))
                 (fn p-telegram []
                   (let [telegram-server
                         (telegram com/telegram-token)]

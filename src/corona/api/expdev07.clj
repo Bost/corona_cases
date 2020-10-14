@@ -335,12 +335,3 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
     (if-let [rankings (get-in @cache ks)]
       rankings
       (cache! calc-all-rankings-fn ks))))
-
-(defn reset-cache! []
-  (swap! cache (fn [_] {}))
-  (let [tbeg (System/currentTimeMillis)]
-     ;; enforce evaluation; can't be done by (force (all-rankings))
-    (dorun
-     (all-rankings))
-    (debugf "%s chars cached in %s ms"
-            (count (str @cache)) (- (System/currentTimeMillis) tbeg))))

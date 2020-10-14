@@ -36,11 +36,10 @@
       (let [options (if (msg/worldwide? country-code)
                       (msg/buttons {:chat-id chat-id :cc country-code})
                       {})
-            content (msg/toByteArrayAutoClosable
-                     (p/plot-country
-                      {:day (count (data/dates))
-                       :cc country-code
-                       :stats (v1/pic-data)}))]
+            content (p/plot-country
+                     {:day (count (data/dates))
+                      :cc country-code
+                      :stats (v1/pic-data)})]
         (doall
          (morse/send-photo com/telegram-token chat-id options content))))))
 
