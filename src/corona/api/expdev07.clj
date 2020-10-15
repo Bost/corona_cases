@@ -9,6 +9,7 @@
    [utils.core :as utc :refer [dbgv dbgi] :exclude [id]]
    [taoensso.timbre :as timbre :refer :all]
    [clojure.spec.alpha :as s]
+   [utils.core :as u :refer [in?] :exclude [id]]
    [clojure.core.memoize :as memo]
    )
   (:import java.text.SimpleDateFormat))
@@ -58,30 +59,30 @@
       (cache! (fn [] (com/get-json url)) ks))))
 
 (defn calc-raw-dates-fn []
-  #_(debug "calc-raw-dates-fn")
-  (transduce
-   (comp
-    (map keyname)
-    (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
-    (map (fn [[_ m d y]]
-           (transduce (comp (map left-pad)
-                            (interpose "/"))
-                      str
-                      [y m d])))
-    (xf-sort)
-    (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
-    (map (fn [[_ y m d]]
-           (keyword
-            (transduce (comp (map com/read-number)
-                             (interpose "/"))
-                       str
-                       [m d y])))))
-   conj []
-   #_[(keyword "2/22/20") (keyword "2/2/20")]
-   (keys (:history
-          (last
-           (:locations
-            (:confirmed (json-data))))))))
+  (->> (transduce
+        (comp
+         (map keyname)
+         (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
+         (map (fn [[_ m d y]]
+                (transduce (comp (map left-pad)
+                                 (interpose "/"))
+                           str
+                           [y m d])))
+         (xf-sort)
+         (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
+         (map (fn [[_ y m d]]
+                (keyword
+                 (transduce (comp (map com/read-number)
+                                  (interpose "/"))
+                            str
+                            [m d y])))))
+        conj []
+        #_[(keyword "2/22/20") (keyword "2/2/20")]
+        (keys (:history
+               (last
+                (:locations
+                 (:confirmed (json-data)))))))
+       #_(take-last 8)))
 
 (defn raw-dates
   "Size:
@@ -127,23 +128,47 @@
       (cache! calc-dates-fn ks))))
 
 (defn calc-data-with-pop-fn []
-  #_(debugf "calc-data-with-pop-fn")
   (conj
-   (json-data)
+   (->> (keys (json-data))
+        (map (fn [case-kw-full-name]
+               {case-kw-full-name
+                (let [case-m (get (json-data) case-kw-full-name)]
+                  (if (contains? case-m :locations)
+                    (update-in
+                     case-m [:locations]
+                     (fn [locs]
+                       #_(debugf "%s" (type locs))
+                       (->> locs
+                            #_(map (fn [m] (select-keys m [:country :country_code :history])))
+                            (filter (fn [{:keys [country_code]}]
+                                      #_true
+                                      (in? ccc/all-country-codes country_code)))
+                            (map (fn [m]
+                                   #_(debugf "%s" (keys m))
+                                   (update-in m [:history]
+                                              (fn [history]
+                                                (->> history
+                                                     (filter (fn [[raw-date _]]
+                                                               #_true
+                                                               (in? (raw-dates) raw-date)))
+                                                     (into {}))))))
+                            (into []))))
+                    case-m))}))
+        (into {}))
    {:population
-    {:locations
-     (let [the-dates (raw-dates)]
-       (mapv (fn [country-code]
-               {
-                :country (ccr/country-name-aliased country-code)
-                :country_code country-code
-                :history
-                ;; {:1/23/20 1e6 ;; start number
-                ;;    ;; other days - calc diff
-                ;; }
-                (let [pop-cnt (population-cnt country-code)]
-                  (zipmap the-dates (repeat pop-cnt)))})
-             ccc/all-country-codes))}}))
+      {:locations
+       (let [the-dates (raw-dates)]
+         (map (fn [country-code]
+                {
+                 :country (ccr/country-name-aliased country-code)
+                 :country_code country-code
+                 :history
+                 ;; {:1/23/20 1e6 ;; start number
+                 ;;    ;; other days - calc diff
+                 ;; }
+                 (let [pop-cnt (population-cnt country-code)]
+                   (zipmap the-dates (repeat pop-cnt)))})
+              ccc/all-country-codes))}}))
 
 (defn data-with-pop
   "Data with population numbers."
