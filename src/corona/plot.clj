@@ -192,7 +192,7 @@
       (ImageIO/write image fmt-name out)
       (.toByteArray out))))
 
-(defn plot-country
+(defn calc-plot-country-fn
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
   [{:keys [day cc stats]}]
@@ -238,6 +238,12 @@
       (let [img-byte-array (toByteArrayAutoClosable img)]
         (debugf "[plot-country] cc %s; image size %s" cc (count img-byte-array))
         img-byte-array))))
+
+(defn plot-country
+  "The optional params `stats`, `day` are used only for the first calculation"
+  [{:keys [day cc stats] :as prm}]
+  (data/from-cache [:plot (keyword cc)]
+                   (fn [] (calc-plot-country-fn prm))))
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the

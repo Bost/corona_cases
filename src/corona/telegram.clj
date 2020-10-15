@@ -3,6 +3,7 @@
 (ns corona.telegram
   (:gen-class)
   (:require
+   [utils.core :refer [in?] :exclude [id]]
    [clj-time-ext.core :as cte]
    [clojure.core.async :as async]
    [clojure.string :as s]
@@ -15,7 +16,8 @@
    [taoensso.timbre :as timbre :refer :all]
    [corona.api.expdev07 :as data]
 
-   [corona.api.v1 :as v1]))
+   [corona.api.v1 :as v1]
+   [corona.country-codes :as ccc :refer :all]))
 
 ;; (debugf "Loading namespace %s" *ns*)
 
@@ -120,6 +122,15 @@
      (data/all-rankings))
     (let [stats (v1/pic-data)
           day (count (data/dates))]
+      (doall
+       (let [ccodes
+             (clojure.set/difference
+              (set ccc/all-country-codes)
+              (set [im mp ck gf sx tk tf kp nu nf ax cx mf sj tm gu vu pf bm vg
+                    pn pr qq um gg bq mo ky nr aw fm cc ws to sh wf tv bl ms gp
+                    bv as fk gs mq fo aq mh vi gi nc yt tc re gl ki hk io cw je
+                    hm pm ai pw]))]
+         (map (fn [cc] (plot/plot-country {:day day :cc cc :stats stats})) ccodes)))
       (doall
        (run! (fn [plot-fn]
               (run! (fn [case-kw]
