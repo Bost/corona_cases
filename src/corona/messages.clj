@@ -196,9 +196,7 @@
                         p/plot-sum-by-case p/plot-absolute-by-case)]
           ;; the plot is fetched from the cache, stats and day need not to be
           ;; specified
-          
-          (plot-fn case-kw))
-        )))))
+          (plot-fn case-kw)))))))
 
 ;; (defn language [prm]
 ;;   (format
@@ -359,7 +357,7 @@
               (map :rank
                    (filter (fn [{:keys [cc]}] (= cc country-code))
                            (data/all-rankings))))]
-    (debugf "[detailed-info] rank %s" rank)
+    #_(debugf "[detailed-info] rank %s" rank)
     (let [
           cnt-countries (count ccc/all-country-codes)
           content

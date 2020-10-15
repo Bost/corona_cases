@@ -195,7 +195,7 @@
 (defn calc-plot-country-fn
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
-  [{:keys [day cc stats]}]
+  [cc & [stats day]]
   (let [base-data (stats-for-country cc stats)
         sarea-data (remove (fn [[case-kw vs]]
                              (in? #_[:c :i :r :d] [:c :p] case-kw))
@@ -241,9 +241,9 @@
 
 (defn plot-country
   "The optional params `stats`, `day` are used only for the first calculation"
-  [{:keys [day cc stats] :as prm}]
+  [country-code & [stats day]]
   (data/from-cache [:plot (keyword country-code)]
-                   (fn [] (calc-plot-country-fn country-code))))
+                   (fn [] (calc-plot-country-fn country-code stats day))))
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
@@ -413,4 +413,5 @@
 (defn plot-absolute-by-case
   "The optional params `stats`, `day` are used only for the first calculation"
   [case-kw & [stats day]]
-  (data/from-cache [:plot :abs case-kw] (fn [] (calc-plot-absolute-by-case-fn case-kw stats day))))
+  (data/from-cache [:plot :abs case-kw]
+                   (fn [] (calc-plot-absolute-by-case-fn case-kw stats day))))

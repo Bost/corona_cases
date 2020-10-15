@@ -130,7 +130,7 @@
                     pn pr qq um gg bq mo ky nr aw fm cc ws to sh wf tv bl ms gp
                     bv as fk gs mq fo aq mh vi gi nc yt tc re gl ki hk io cw je
                     hm pm ai pw]))]
-         (map (fn [cc] (plot/plot-country {:day day :cc cc :stats stats})) ccodes)))
+         (map (fn [ccode] (plot/plot-country ccode stats day)) ccodes)))
       (doall
        (run! (fn [plot-fn]
               (run! (fn [case-kw]

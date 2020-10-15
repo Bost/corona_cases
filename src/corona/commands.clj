@@ -36,10 +36,9 @@
       (let [options (if (msg/worldwide? country-code)
                       (msg/buttons {:chat-id chat-id :cc country-code})
                       {})
-            content (p/plot-country
-                     {:day (count (data/dates))
-                      :cc country-code
-                      :stats (v1/pic-data)})]
+            ;; the plot is fetched from the cache, stats and day need not to be
+            ;; specified
+            content (p/plot-country country-code)]
         (doall
          (morse/send-photo com/telegram-token chat-id options content))))))
 
