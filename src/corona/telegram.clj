@@ -123,7 +123,7 @@
       (doall
        (run! (fn [plot-fn]
               (run! (fn [case-kw]
-                      (debugf "Calculating %s %s" plot-fn case-kw)
+                      #_(debugf "Calculating %s %s" plot-fn case-kw)
                       (plot-fn case-kw stats day))
                     com/absolute-cases))
             [plot/plot-sum-by-case plot/plot-absolute-by-case])))

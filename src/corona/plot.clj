@@ -188,10 +188,9 @@
   "Thanks to https://stackoverflow.com/a/15414490"
   [^BufferedImage image]
   (with-open [out (new ByteArrayOutputStream)]
-    (ImageIO/write image "png" out)
-    (let [array (.toByteArray out)]
-      (debugf "image-size %s" (count array))
-      array)))
+    (let [fmt-name "png"] ;; png is an informal format name.
+      (ImageIO/write image fmt-name out)
+      (.toByteArray out))))
 
 (defn plot-country
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
@@ -236,7 +235,9 @@
                            #_[:line l/people    stroke-population]))
             :label (plot-label day cc stats)
             :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
-      (toByteArrayAutoClosable img))))
+      (let [img-byte-array (toByteArrayAutoClosable img)]
+        (debugf "[plot-country] cc %s; image size %s" cc (count img-byte-array))
+        img-byte-array))))
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
@@ -349,7 +350,7 @@
     (if-let [v (get-in @data/cache ks)]
       v
       (let [v (fn [] (calc-plot-sum-by-case-fn case-kw stats day))]
-        (debugf "ks %s size %s chars; stats %s"
+        #_(debugf "ks %s size %s chars; stats %s"
                 ks
                 (count (str v))
                 (count (str stats)))
