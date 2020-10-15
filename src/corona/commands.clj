@@ -24,8 +24,8 @@
         ;; override default parse_mode
         (assoc prm :parse_mode "HTML")]
     (let [options (select-keys prm (keys msg/options))
-          content (msg/detailed-info (assoc prm
-                                            :disable_web_page_preview true))]
+          ;; the message content is fetched from the cache
+          content (msg/detailed-info country-code)]
       (doall
        (morse/send-text com/telegram-token chat-id options content)))
 

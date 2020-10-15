@@ -122,15 +122,23 @@
      (data/all-rankings))
     (let [stats (v1/pic-data)
           day (count (data/dates))]
-      (doall
-       (let [ccodes
-             (clojure.set/difference
-              (set ccc/all-country-codes)
-              (set [im mp ck gf sx tk tf kp nu nf ax cx mf sj tm gu vu pf bm vg
-                    pn pr qq um gg bq mo ky nr aw fm cc ws to sh wf tv bl ms gp
-                    bv as fk gs mq fo aq mh vi gi nc yt tc re gl ki hk io cw je
-                    hm pm ai pw]))]
-         (map (fn [ccode] (plot/plot-country ccode stats day)) ccodes)))
+      (let [ccodes
+            (clojure.set/difference
+             (set ccc/all-country-codes)
+             (set [im mp ck gf sx tk tf kp nu nf ax cx mf sj tm gu vu pf bm vg
+                   pn pr qq um gg bq mo ky nr aw fm cc ws to sh wf tv bl ms gp
+                   bv as fk gs mq fo aq mh vi gi nc yt tc re gl ki hk io cw je
+                   hm pm ai pw]))]
+        (doall
+         (map (fn [ccode] (plot/plot-country ccode stats day)) ccodes))
+        (doall
+         (map (fn [ccode] (msg/detailed-info ccode
+                                            ;; parse_mode
+                                            "HTML"
+                                            ;; :pred
+                                            (msg/create-pred-hm ccode)
+                                            ))
+              ccodes)))
       (doall
        (run! (fn [plot-fn]
               (run! (fn [case-kw]
