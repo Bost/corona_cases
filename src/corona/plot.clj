@@ -242,8 +242,8 @@
 (defn plot-country
   "The optional params `stats`, `day` are used only for the first calculation"
   [{:keys [day cc stats] :as prm}]
-  (data/from-cache [:plot (keyword cc)]
-                   (fn [] (calc-plot-country-fn prm))))
+  (data/from-cache [:plot (keyword country-code)]
+                   (fn [] (calc-plot-country-fn country-code))))
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
@@ -352,15 +352,7 @@
 (defn plot-sum-by-case
   "The optional params `stats`, `day` are used only for the first calculation"
   [case-kw & [stats day]]
-  (let [ks [:sum case-kw]]
-    (if-let [v (get-in @data/cache ks)]
-      v
-      (let [v (fn [] (calc-plot-sum-by-case-fn case-kw stats day))]
-        #_(debugf "ks %s size %s chars; stats %s"
-                ks
-                (count (str v))
-                (count (str stats)))
-        (data/cache! v ks)))))
+  (data/from-cache [:plot :sum case-kw] (fn [] (calc-plot-sum-by-case-fn case-kw stats day))))
 
 (defn line-stroke [color]
   (conj line-cfg {:color color
@@ -421,7 +413,4 @@
 (defn plot-absolute-by-case
   "The optional params `stats`, `day` are used only for the first calculation"
   [case-kw & [stats day]]
-  (let [ks [:abs case-kw]]
-    (if-let [v (get-in @data/cache ks)]
-      v
-      (data/cache! (fn [] (calc-plot-absolute-by-case-fn case-kw stats day)) ks))))
+  (data/from-cache [:plot :abs case-kw] (fn [] (calc-plot-absolute-by-case-fn case-kw stats day))))
