@@ -9,8 +9,9 @@
    [utils.core :as utc :refer [dbgv dbgi] :exclude [id]]
    [taoensso.timbre :as timbre :refer :all]
    [clojure.spec.alpha :as s]
-   [utils.core :as u :refer [in?] :exclude [id]]
    [clojure.core.memoize :as memo]
+   [utils.core :as u :refer [in?] :exclude [id]]
+   [clojure.inspector :refer :all]
    )
   (:import java.text.SimpleDateFormat))
 
@@ -26,6 +27,12 @@
   (let [data (calc-data-fn)]
     (swap! cache update-in ks (fn [_] data))
     data))
+
+(defn from-cache [ks calc-data-fn]
+  #_(debugf "[from-cache] accessing %s" ks)
+  (if-let [v (get-in @cache ks)]
+    v
+    (cache! calc-data-fn ks)))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
@@ -53,10 +60,7 @@
           xs))))))
 
 (defn json-data []
-  (let [ks [:json]]
-    (if-let [v (get-in @cache ks)]
-      v
-      (cache! (fn [] (com/get-json url)) ks))))
+  (from-cache [:json] (fn [] (com/get-json url))))
 
 (defn calc-raw-dates-fn []
   (->> (transduce
@@ -100,10 +104,7 @@
   (count rd-cached)
   ;; 1010 items"
   []
-  (let [ks [:raw-dates]]
-    (if-let [rd (get-in @cache ks)]
-      rd
-      (cache! calc-raw-dates-fn ks))))
+  (from-cache [:raw-dates] calc-raw-dates-fn))
 
 (defn population-cnt [country-code]
   (or (get ccr/population country-code)
@@ -122,10 +123,7 @@
          (raw-dates))))
 
 (defn dates []
-  (let [ks [:dates]]
-    (if-let [d (get-in @cache ks)]
-      d
-      (cache! calc-dates-fn ks))))
+  (from-cache [:dates] calc-dates-fn))
 
 (defn calc-data-with-pop-fn []
   (conj
@@ -173,10 +171,7 @@
 (defn data-with-pop
   "Data with population numbers."
   []
-  (let [ks [:data-with-pop]]
-    (if-let [dwp (get-in @cache ks)]
-      dwp
-      (cache! calc-data-with-pop-fn ks))))
+  (from-cache [:data-with-pop] calc-data-with-pop-fn))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -207,13 +202,7 @@
   "Return sums for a given `case-kw` calculated for every single day."
   [case-kw {:keys [cc pred]}]
   ;; ignore predicate for the moment
-  (let [ks [:sums case-kw cc]]
-    (if-let [sfc (get-in @cache ks)]
-      sfc
-      (cache! (fn [] (calc-sums-for-case-fn case-kw pred))
-              ks
-              #_[:sums case-kw
-               cc]))))
+  (from-cache [:sums case-kw cc] (fn [] (calc-sums-for-case-fn case-kw pred))))
 
 ;; TODO reload only the latest N reports. e.g. try one week
 
@@ -255,11 +244,7 @@
   "
   [{:keys [cc pred] :as pred-hm}]
   ;; ignore predicate for the moment
-  #_(debugf "cc %s" cc)
-  (let [ks [:cnts (keyword cc)]]
-    (if-let [cnts (get-in @cache ks)]
-      cnts
-      (cache! (fn [] (calc-case-counts-report-by-report-fn pred-hm)) ks))))
+  (from-cache [:cnts (keyword cc)] (fn [] (calc-case-counts-report-by-report-fn pred-hm))))
 
 (s/def ::fun clojure.core/fn?)
 (s/def ::pred-fn (s/or :nil nil? :fn clojure.core/fn?))
@@ -320,10 +305,7 @@
        ccc/all-country-codes))
 
 (defn stats-countries []
-  (let [ks [:stats]]
-    (if-let [stats (get-in @cache ks)]
-      stats
-      (cache! calc-stats-countries-fn ks))))
+  (from-cache [:stats] calc-stats-countries-fn))
 
 (defn deep-merge
   "Recursively merges maps. TODO see https://github.com/weavejester/medley
@@ -338,11 +320,15 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
 (defn rank-for-case [rank-kw]
   (map-indexed
    (fn [idx hm]
-     (update-in (select-keys hm [:cc]) [:rank rank-kw] (fn [_] idx)))
+     (update-in (select-keys hm [:cc]) [:rank rank-kw]
+                ;; inc - ranking starts from 1, not from 0
+                (fn [_] (inc idx))))
    (sort-by rank-kw >
             (stats-countries))))
 
-(defn calc-all-rankings-fn []
+(defn calc-all-rankings-fn
+  "TODO verify ranking for one and zero countries"
+  []
   #_(debugf "calc-all-rankings-fn")
   (map (fn [affected-cc]
          (apply deep-merge
@@ -356,7 +342,4 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
        ccc/all-country-codes))
 
 (defn all-rankings []
-  (let [ks [:rankings]]
-    (if-let [rankings (get-in @cache ks)]
-      rankings
-      (cache! calc-all-rankings-fn ks))))
+  (from-cache [:rankings] calc-all-rankings-fn))
