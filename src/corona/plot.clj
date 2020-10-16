@@ -70,7 +70,7 @@
      :top label label-conf)
     {:width 800 :height 600})))
 
-(defn to-java-time-local-date [java-util-date]
+(defn to-java-time-local-date [^java.util.Date java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date) (ZoneId/systemDefault)))
 
 (defn sort-by-country-name [mapped-hm]

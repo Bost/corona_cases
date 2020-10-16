@@ -23,7 +23,7 @@
     (.setTimeZone sdf (TimeZone/getDefault))
     sdf))
 
-(defn fmt [raw-date] (.parse sdf (srvc/keyname raw-date)))
+(defn fmt [raw-date] (.parse ^SimpleDateFormat sdf (srvc/keyname raw-date)))
 
 ;; (defn for-case [case]
 ;;   (->> (get-in (json-data) [case :locations])

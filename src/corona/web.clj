@@ -177,7 +177,7 @@
 
 (defn webapp-stop []
   (info "[webapp] stopping...")
-  (.stop @component)
+  (.stop ^org.eclipse.jetty.server.Server @component)
   (let [objs ['component]]
     (run! (fn [obj-q]
             (let [obj (eval obj-q)]
@@ -199,7 +199,3 @@ Value is reset to nil when reloading current buffer,
 e.g. via `s-u` my=cider-save-and-load-current-buffer."]
   (->> ['component 'data/cache 'tgram/continue 'tgram/component]
        (run! (fn [v] (alter-meta! (get (ns-interns *ns*) v) assoc :doc doc)))))
-
-
-
-

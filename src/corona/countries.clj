@@ -28,9 +28,11 @@
   library: com.neovisionaries/nv-i18n \"1.27\""
   []
   (transduce (comp
-              (filter (fn [cc] (= (.getAssignment cc)
-                                 CountryCode$Assignment/OFFICIALLY_ASSIGNED)))
-              (map (fn [cc] [(str cc) (.getName cc)])))
+              (filter (fn [^com.neovisionaries.i18n.CountryCode cc]
+                        (= (.getAssignment cc)
+                           CountryCode$Assignment/OFFICIALLY_ASSIGNED)))
+              (map (fn [^com.neovisionaries.i18n.CountryCode cc]
+                     [(str cc) (.getName cc)])))
              conj {}
              (CountryCode/values))
   #_(->> (CountryCode/values)
