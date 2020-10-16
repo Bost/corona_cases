@@ -6,11 +6,10 @@
   (:require
    [corona.common :as com]
    [corona.country-codes :refer :all]
-   [utils.core :refer [in?] :exclude [id]]
-   [corona.tables :as t]
+   #_[utils.core :refer [in?] :exclude [id]]
    [corona.api.expdev07 :as srvc]
    [net.cgrand.xforms :as x]
-   [taoensso.timbre :as timbre :refer :all]
+   #_[taoensso.timbre :as timbre :refer [debug debugf info infof warn errorf fatalf]]
    )
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
@@ -140,10 +139,10 @@
   []
   (apply map
          (fn [
-               {:keys [population] :as pm}
-               {:keys [cc f confirmed] :as cm}
-               {:keys [recovered] :as rm}
-               {:keys [deaths] :as dm}]
+               {:keys [population]}
+               {:keys [cc f confirmed]}
+               {:keys [recovered]}
+               {:keys [deaths]}]
              (let [prm {:cc cc :f f :c confirmed :r recovered :d deaths
                         :p population
                         }]

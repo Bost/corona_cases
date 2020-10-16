@@ -4,7 +4,11 @@
   "This namespace seems to be the first one loaded by the class loader."
   (:refer-clojure :exclude [pr])
   (:require
-   [taoensso.timbre :as timbre :refer :all]
+   [clojure.string :as cstr]
+   [taoensso.encore]
+   [taoensso.timbre :as timbre
+    ;; :refer [debugf info infof warn errorf fatalf]
+    ]
    ))
 
 (def log-level-map ^:const {:debug :dbg :info :inf :warn :wrn :error :err})
@@ -14,8 +18,8 @@
     Use`(partial log-output-fn <opts-map>)` to modify default opts."
   ([     data] (log-output-fn nil data))
   ([opts data] ; For partials
-   (let [{:keys [no-stacktrace? stacktrace-fonts]} opts
-         {:keys [level ?err #_vargs msg_ ?ns-str ?file hostname_
+   (let [{:keys [no-stacktrace? #_stacktrace-fonts]} opts
+         {:keys [level ?err #_vargs msg_ ?ns-str ?file #_hostname_
                  timestamp_ ?line]} data]
      ;; (println "no-stacktrace?" no-stacktrace?)
      ;; (println "stacktrace-fonts" stacktrace-fonts)
@@ -32,18 +36,19 @@
       (force timestamp_)
       " "
       ;; #?(:clj (force hostname_))  #?(:clj " ")
-      (clojure.string/upper-case (name (or (level log-level-map)
-                                           level)))  " "
+      (cstr/upper-case (name (or (level log-level-map)
+                                 level)))  " "
       "[" (or ?ns-str ?file "?") ":" (or ?line "?") "] "
       (force msg_)
       (when-not no-stacktrace?
         (when-let [err ?err]
-          (str taoensso.encore/system-newline (stacktrace err opts))))))))
+          (str taoensso.encore/system-newline
+               (timbre/stacktrace err opts))))))))
 
 (def ^:const zone-id "Europe/Berlin")
 
 ;; (set-config! default-config)
-(merge-config!
+(timbre/merge-config!
  {:output-fn log-output-fn #_default-output-fn
   :timestamp-opts {:timezone (java.util.TimeZone/getTimeZone zone-id) #_:utc}})
 

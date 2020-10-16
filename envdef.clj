@@ -4,11 +4,9 @@
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [clojure.java.shell :as shell]
-   #_[babashka.process :refer [process]])
+   )
   (:import
    java.lang.ProcessBuilder$Redirect
-   java.io.File
    ))
 
 (def tst "--test")

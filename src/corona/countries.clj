@@ -3,18 +3,21 @@
 (ns corona.countries
   (:require
    [clojure.set :as cset]
-   [corona.country-codes :refer :all]
+   [corona.country-codes :as ccc :refer :all]
    [utils.core :refer [in?] :exclude [id]]
    [clojure.string :as s]
-   [taoensso.timbre :as timbre :refer :all]
+   [taoensso.timbre :as timbre :refer [
+                                       ;; debugf info infof warn
+                                       errorf
+                                       #_fatalf]]
    )
   (:import com.neovisionaries.i18n.CountryCode
            com.neovisionaries.i18n.CountryCode$Assignment))
 
 ;; nothing should be default affected!!!
 (def ^:const default-affected-country-codes
-  (->> [country-code-worldwide
-        country-code-others]
+  (->> [ccc/country-code-worldwide
+        ccc/country-code-others]
        (reduce into)
        (mapv (fn [[k _]] k))))
 
@@ -38,8 +41,8 @@
 (def ^:const country-code--country
   (conj
    (country-code--country-nv-i18n)
-    country-code-worldwide
-    country-code-others
+    ccc/country-code-worldwide
+    ccc/country-code-others
     ;; see
     ;; https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
     {
@@ -353,8 +356,8 @@
     (if-let [cc (get lcases-countries country)]
       cc
       (do (errorf "\"%s\" has no country code. Using \"%s\""
-                  country-name default-2-country-code)
-          default-2-country-code))))
+                  country-name ccc/default-2-country-code)
+          ccc/default-2-country-code))))
 
 (defn country-alias
   "Get a country alias or the normal name if an alias doesn't exist"
@@ -640,8 +643,7 @@
    ])
 
 (def population
-  "
-  Toggle between country-names and codes using:
+  "Toggle between country-names and codes using:
   => (clojure.set/rename-keys population
       (->> (keys population)
           (map (fn [k] {k (#_country-name country-code k)}))
@@ -653,8 +655,7 @@
                                       (- (get corona.countries/population k)
                                          n)
                                       nil)}))
-                     (reduce into)))
-  "
+                     (reduce into)))"
   #_corona.tables/population
   (->> population-table
        (map (fn [[c n]] {(country-code c) n}))

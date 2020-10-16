@@ -4,7 +4,6 @@
   (:require
    [clojure.string :as s]
    [corona.api.expdev07 :as data]
-   [corona.api.v1 :as v1]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
    [corona.lang :as l]
@@ -13,7 +12,9 @@
    [morse.api :as morse]
    [utils.core :as u :refer [in?] :exclude [id]]
    [corona.common :as com]
-   [taoensso.timbre :as timbre :refer :all]
+   [taoensso.timbre :as timbre :refer [debug
+                                       ;; debugf info infof warn errorf fatalf
+                                       ]]
    ))
 
 (defn world [{:keys [chat-id country-code] :as prm}]
@@ -89,9 +90,9 @@
   (doall
    (morse/send-text com/telegram-token chat-id msg/options (msg/explain parse_mode))))
 
-(defn feedback [{:keys [chat-id parse_mode]}]
+(defn feedback [{:keys [chat-id]}]
   (doall
-   (morse/send-text com/telegram-token chat-id msg/options (msg/feedback parse_mode))))
+   (morse/send-text com/telegram-token chat-id msg/options (msg/feedback))))
 
 ;; (defn language [{:keys [chat-id parse_mode]}]
 ;;   (doall
@@ -158,8 +159,9 @@
       :f (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}]))
 
-(defn cmds-listing []
+(defn cmds-listing
   "Command map for list-sort-by-case. See also `footer`, `list-countries`."
+  []
   (->> com/listing-cases-absolute
        (into com/listing-cases-per-100k)
        (map (fn [case-kw]

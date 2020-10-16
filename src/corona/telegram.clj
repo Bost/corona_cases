@@ -3,21 +3,19 @@
 (ns corona.telegram
   (:gen-class)
   (:require
-   [utils.core :refer [in?] :exclude [id]]
-   [clj-time-ext.core :as cte]
    [clojure.core.async :as async]
-   [clojure.string :as s]
    [corona.common :as com]
    [corona.commands :as cmd]
+   [clojure.set :as cset]
    [corona.messages :as msg]
    [morse.handlers :as h]
    [morse.polling :as p]
    [corona.plot :as plot]
-   [taoensso.timbre :as timbre :refer :all]
+   [taoensso.timbre :as timbre :refer [debugf info infof warn errorf fatalf]]
    [corona.api.expdev07 :as data]
-
    [corona.api.v1 :as v1]
-   [corona.country-codes :as ccc :refer :all]))
+   [corona.country-codes :as ccc :refer :all]
+   ))
 
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
@@ -37,12 +35,11 @@
 (defn cmd-handler
   "Use :pre and :post hooks to see in the log if and how request are made and
   responded"
-  [{:keys [name f] :as prm}]
+  [{:keys [name f]}]
   (h/command-fn
    name
    (wrap-fn-pre-post-hooks
-    (let [tbeg (cte/tnow)
-          msg (format "[cmd-handler] cmd /%s; hook %%s; chat %%s" name)]
+    (let [msg (format "[cmd-handler] cmd /%s; hook %%s; chat %%s" name)]
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
               (let [chat (:chat (first args))]
@@ -72,15 +69,12 @@
      (debugf "(async/chan) returned %s" channel)
      (let [producer (p/create-producer
                      channel token opts (fn []
-                                          (when com/env-prod? (System/exit 2))))]
-       (when com/env-devel?
-         (def producer producer))
+                                          (when com/env-prod?
+                                            (com/system-exit 2))))]
        (debugf "Created producer %s" producer)
        (infof "Polling on handler %s ..." handler)
        (let [consumer (p/create-consumer producer handler)]
-         (when com/env-devel?
-           (def consumer consumer))
-         (debugf "Created consumer %s" producer)
+         (debugf "Created consumer %s" consumer)
          channel)))))
 
 (defn telegram [telegram-token]
@@ -89,11 +83,13 @@
     (if-let [telegram-handler (create-handler)]
       (do
         (debugf "Created telegram-handler %s" telegram-handler)
-        (let [port (start-polling com/telegram-token telegram-handler)]
+        (let [port (start-polling telegram-token telegram-handler)]
           (let [retval-async<!! (async/<!! port)]
             (debugf "%s done. retval-async<!! %s"
                     msg (if-let [v retval-async<!!] v "nil"))
-            (fatalf "Further telegram requests may NOT be answered!!!" msg))))
+            (fatalf "Further telegram requests may NOT be answered!!!" msg)
+            (when com/env-prod?
+              (com/system-exit 2)))))
       (errorf "telegram-handler not created"))))
 
 (defonce continue (atom true))
@@ -123,7 +119,7 @@
     (let [stats (v1/pic-data)
           day (count (data/dates))]
       (let [ccodes
-            (clojure.set/difference
+            (cset/difference
              (set ccc/all-country-codes)
              (set [im mp ck gf sx tk tf kp nu nf ax cx mf sj tm gu vu pf bm vg
                    pn pr qq um gg bq mo ky nr aw fm cc ws to sh wf tv bl ms gp

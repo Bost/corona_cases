@@ -3,7 +3,6 @@
 (ns corona.common
   (:require
    [clj-http.client :as client]
-   [clj-time-ext.core :as cte]
    [clj-time.coerce :as ctc]
    [clj-time.core :as t]
    [clj-time.format :as ctf]
@@ -14,8 +13,12 @@
    [utils.num :as utn]
    [utils.core :refer [in?] :exclude [id]]
    [corona.country-codes :refer :all]
-   [taoensso.timbre :as timbre :refer :all]
-   [clojure.core.cache :as cache]
+   [taoensso.timbre :as timbre :refer [debug debugf
+                                       #_info infof
+                                       ;; warn
+                                       errorf
+                                       #_fatalf
+                                       ]]
    [clojurewerkz.propertied.properties :as p]
    ))
 
@@ -58,17 +61,23 @@
 
 (def bot-name (get-in environment [env-type :bot-name]))
 
+;; forward declarations
+(declare env-prod? env-test? env-devel?)
+
 (defn- define-env-predicates
-  "Defines vars: env-prod? env-test? env-devel?"
+  "Defines vars: `env-prod?`, `env-test?`, `env-devel?`"
   []
-  (let []
-    (run! (fn [v]
-            (let [symb-v (symbol (format "env-%s?" (s/lower-case v)))]
-              (reset-meta! (intern *ns* symb-v (= env-type v))
-                           {:const true :tag `Boolean})))
-          (keys environment))))
+  (run! (fn [v]
+          (let [symb-v (symbol (format "env-%s?" (s/lower-case v)))]
+            (reset-meta! (intern *ns* symb-v (= env-type v))
+                         {:const true :tag `Boolean})))
+        (keys environment)))
 
 (define-env-predicates)
+
+(defn system-exit [exit-status]
+  (debugf "Exiting with status %s ..." exit-status)
+  (System/exit exit-status))
 
 (def ^:const chat-id
   "Telegram chat-id."
@@ -115,7 +124,7 @@
        (p/properties->map (p/load-from resource) true)
        (if env-devel?
          nil ;; no version defined when deving
-         (error "Could not read from the resource %s" file))))))
+         (errorf "Could not read from the resource %s" file))))))
 
 (def commit
   (if-let [shasum (env/env :bot-ver)]
@@ -262,10 +271,11 @@
   "covid-tracker-us.herokuapp.com"
   #_"coronavirus-tracker-api.herokuapp.com")
 
-(def ^:const api-server (cond (or env-prod? env-test?) heroku-host-api-server
-                              :else                    "localhost:8000"))
+(def ^:const api-server
+  (cond (or env-prod? env-test?) heroku-host-api-server
+        :else                    "localhost:8000"))
 
 (def ttl
-  "Time to live in (* <minutes> <seconds> <miliseconds>)."
-  (* 60 60 1000))
+  "Time to live in (* <hours> <minutes> <seconds> <miliseconds>)."
+  (* 3 60 60 1000))
 

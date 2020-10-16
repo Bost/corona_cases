@@ -2,16 +2,17 @@
 
 (ns corona.api.expdev07
   (:require
-   [clojure.set :as cset]
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc :refer :all]
-   [utils.core :as utc :refer [dbgv dbgi] :exclude [id]]
-   [taoensso.timbre :as timbre :refer :all]
+   [utils.core :as utc :refer [in?]]
+   [taoensso.timbre :as timbre :refer [
+                                       ;; debug debugf info infof warn
+                                       errorf
+                                       #_fatalf
+                                       ]]
    [clojure.spec.alpha :as s]
-   [clojure.core.memoize :as memo]
-   [utils.core :as u :refer [in?] :exclude [id]]
-   [clojure.inspector :refer :all]
+   #_[clojure.inspector :refer :all]
    )
   (:import java.text.SimpleDateFormat))
 
@@ -109,9 +110,9 @@
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]
-        (error (format "population nr unknown; country-code: %s; using %s"
-                       country-code
-                       default-population))
+        (errorf "population nr unknown; country-code: %s; using %s"
+                country-code
+                default-population)
         default-population)))
 
 (defn calc-dates-fn []

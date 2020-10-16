@@ -13,7 +13,7 @@
    [corona.common :as com]
    [corona.telegram :as tgram]
    [ring.adapter.jetty :as jetty]
-   [taoensso.timbre :as timbre :refer :all]
+   [taoensso.timbre :as timbre :refer [debugf info infof]]
    [corona.country-codes :as ccc])
   (:import
    java.time.ZoneId
@@ -180,8 +180,8 @@
     (run! (fn [obj-q]
             (let [obj (eval obj-q)]
               (swap! obj (fn [_] nil))
-              (debug "%s new value: %s"
-                     obj-q (if-let [v (deref obj)] v "nil"))))
+              (debugf "%s new value: %s"
+                      obj-q (if-let [v (deref obj)] v "nil"))))
           objs)))
 
 (defn webapp-restart []

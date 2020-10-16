@@ -4,7 +4,6 @@
   (:require
    [corona.common :as co]
    [clojure.string :as s]
-   [taoensso.timbre :as timbre :refer :all]
    ))
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm

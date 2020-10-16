@@ -6,20 +6,20 @@
    [clojure.edn :as edn]
    [clojure.string :as s]
    [corona.api.expdev07 :as data]
-   [corona.api.v1 :as v1]
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc :refer :all]
    [corona.lang :as l]
    [corona.plot :as p]
    [morse.api :as morse]
-   [utils.core :as u :refer [in? dbg dbgv dbgi] :exclude [id]]
+   [utils.core :as u :refer [in?] :exclude [id]]
    [utils.num :as utn]
    [incanter.stats :as istats]
    [incanter.zoo :as izoo]
-   [taoensso.timbre :as timbre :refer :all]
-
-   [corona.common :as co]))
+   [taoensso.timbre :as timbre :refer [debugf
+                                       ;; info infof warn errorf fatalf
+                                       ]]
+   ))
 
 (defn bot-name-formatted []
   (s/replace com/bot-name #"_" "\\\\_"))
@@ -78,7 +78,7 @@
   [lines & {:keys [line-fmt fn-fmts fn-args]
             :or {line-fmt "%s"
                  fn-fmts identity
-                 fn-args identity} :as prm}]
+                 fn-args identity}}]
   {:pre [(let [cnt-fmt-specifiers (count (re-seq #"%s" line-fmt))]
            (and (pos? cnt-fmt-specifiers)
                 (apply = cnt-fmt-specifiers
@@ -91,9 +91,8 @@
 
 (defn fmt-to-cols-narrower
   "Info-message numbers of aligned to columns for better readability"
-  [{:keys [s n total diff desc calc-rate show-n calc-diff]
-    :or {show-n true calc-diff true
-         desc ""}}]
+  [{:keys [s n desc show-n]
+    :or {show-n true desc ""}}]
   (format "<code>%s %s</code> %s"
           (com/right-pad s " " (- padding-s 2))
           (com/left-pad (if show-n n "") " " (+ padding-n 2))
@@ -180,7 +179,7 @@
     #_(debugf "[worldwide?] (worldwide? %s) %s" country-code r)
     r))
 
-(defn callback-handler-fn [{:keys [data] :as prm}]
+(defn callback-handler-fn [{:keys [data]}]
   (let [{country-code :cc
          chat-id :chat-id
          type :type
@@ -255,8 +254,7 @@
                    )]]])
      (s/join
       "\n"
-      (map (fn [{:keys [i r d cc] :as stats}]
-             #_(debugf "stats %s" stats)
+      (map (fn [{:keys [i r d cc]}]
              (let [cn (ccr/country-name-aliased cc)]
                (format "<code>%s%s%s%s%s %s</code>  %s"
                        (com/left-pad i " " omag-active)
@@ -304,7 +302,7 @@
                  )]]])
      (s/join
       "\n"
-      (map (fn [{:keys [i100k r100k d100k cc] :as stats}]
+      (map (fn [{:keys [i100k r100k d100k cc]}]
              (let [cn (ccr/country-name-aliased cc)]
                (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                        (com/left-pad i100k " " omag-active-per-100k)
@@ -358,8 +356,7 @@
                    (filter (fn [{:keys [cc]}] (= cc country-code))
                            (data/all-rankings))))]
     #_(debugf "[detailed-info] rank %s" rank)
-    (let [
-          cnt-countries (count ccc/all-country-codes)
+    (let [cnt-countries (count ccc/all-country-codes)
           content
           (format-linewise
            [["%s\n"  ; extended header
@@ -419,7 +416,6 @@
                                  } last-day
                                 {last-8-reports :i} (data/last-nn-8-reports pred)
                                 [last-8th-report & last-7-reports] last-8-reports
-                                [last-7th-report & _] last-7-reports
                                 closed (+ deaths recovered)
                                 {delta-deaths :d delta-recov :r delta-active :i} delta
                                 delta-closed (+ delta-deaths delta-recov)]
@@ -524,7 +520,7 @@
                                                 parse_mode
                                                 pred))))
 
-(defn feedback [parse_mode]
+(defn feedback []
   (str "Just write a message to @RostislavSvoboda thanks."))
 
 (defn contributors [parse_mode]

@@ -16,8 +16,10 @@
    [corona.country-codes :as ccc]
    [corona.lang :as l]
    [utils.core :refer [in?] :exclude [id]]
-   [taoensso.timbre :as timbre :refer :all]
-   [corona.api.v1 :as v1]
+   [taoensso.timbre :as timbre :refer [debugf
+                                       #_info infof
+                                       ;; warn errorf fatalf
+                                       ]]
    [corona.api.expdev07 :as data]
    )
   (:import java.awt.image.BufferedImage
@@ -25,13 +27,14 @@
            javax.imageio.ImageIO
            [java.time LocalDate ZoneId]))
 
-(defn metrics-prefix-formatter [max-val]
+(defn metrics-prefix-formatter
   "Show 1k instead of 1000; i.e. kilo, mega etc.
       1 400 -> 1400
      14 000 ->   14k
     140 000 ->  140k
   1 400 000 -> 1400k
   See https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes"
+  [max-val]
   (cond
     (< max-val (dec (bigint 1e4)))  (fn [v] (str (bigint (/ v 1e0)) ""))
     (< max-val (dec (bigint 1e7)))  (fn [v] (str (bigint (/ v 1e3)) "k"))
@@ -138,8 +141,9 @@
                   (ccr/country-name-aliased cc)
                   (com/encode-cmd cc))))
 
-(defn palette-colors [n]
+(defn palette-colors
   "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
+  [n]
   (->> (c/palette-presets :gnbu-6)
        (take-last n)
        (reverse)
@@ -170,7 +174,7 @@
                            :dash [4.0] :dash-phase 2.0}}))
 
 (defn max-y-val [reducer data]
-  (transduce (comp (map (fn [[k v]] v))
+  (transduce (comp (map (fn [[_ v]] v))
                    (map (fn [v] (transduce
                                 identity
                                 max 0
@@ -178,7 +182,7 @@
              reducer 0 data))
 
 (defn line-data [kw data]
-  (second (transduce (filter (fn [[case vs]] (= kw case)))
+  (second (transduce (filter (fn [[case _]] (= kw case)))
                      into []
                      data)))
 
@@ -195,7 +199,7 @@
   cases."
   [cc & [stats day]]
   (let [base-data (stats-for-country cc stats)
-        sarea-data (remove (fn [[case-kw vs]]
+        sarea-data (remove (fn [[case-kw _]]
                              (in? #_[:c :i :r :d] [:c :p] case-kw))
                            base-data)
         curves (keys sarea-data)
@@ -293,7 +297,7 @@
 
 (defn stats-all-by-case [{:keys [case] :as prm}]
   (let [fill-rest-stats (fill-rest prm)
-        {data :data threshold :threshold} fill-rest-stats
+        data (:data fill-rest-stats)
         mapped-hm (plotcom/map-kv
                    (fn [entry]
                      (sort-by first
@@ -383,7 +387,7 @@
                         :category20b))]
     (let [img
           (boiler-plate
-           {:series (->> (mapv (fn [[cc cc-data] color] [:line cc-data (line-stroke color)])
+           {:series (->> (mapv (fn [[_ cc-data] color] [:line cc-data (line-stroke color)])
                                json-data
                                palette)
                          (into [[:grid]])

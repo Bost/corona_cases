@@ -3,7 +3,7 @@
 (ns corona.tables
   (:require
    [corona.countries :as ccr]
-   [taoensso.timbre :as timbre :refer :all]
+   #_[taoensso.timbre :as timbre :refer [debugf info infof warn errorf fatalf]]
    ))
 
 (def ^:const regions
