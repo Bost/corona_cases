@@ -335,6 +335,25 @@
       (recur tail (conj result (- (first tail) head)))
       result)))
 
+(defn last-index-of
+  "To find the last element in a collection the collection must be fully
+  computed and so this can't be lazy."
+  [coll elem]
+  ;; (->> coll
+  ;;      (map-indexed (fn [i v] [i v]))
+  ;;      (filter (fn [indexed-el] (= elem (second indexed-el))))
+  ;;      (last)
+  ;;      (first))
+  (first
+   (transduce
+    ;; the xform:
+    (comp (map-indexed (fn [i v] [i v]))
+          (filter (fn [indexed-el] (= elem (second indexed-el)))))
+    ;; the reducer:
+    (fn [& findings] (last findings))
+    ;; the collection
+    coll)))
+
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread
 ;; they obey a stack discipline:
@@ -376,9 +395,6 @@
                [(let [
                       data-active (:i (data/case-counts-report-by-report pred))
                       ]
-                  #_(debugf "data-active %s" (count data-active))
-                  ;; (debugf "max-active-val %s" max-active-val)
-                  ;; (debugf "max-active-idx %s" max-active-idx)
                   ;; (debugf "max-active-date %s" max-active-date)
                   ;; (debugf "last-day %s" last-day)
                   ;; (debugf "confirmed %s" confirmed)
@@ -386,7 +402,7 @@
                   ;; (debugf "delta %s" delta)
                   (let [
                         max-active-val (apply max data-active)
-                        max-active-idx (.lastIndexOf data-active max-active-val)
+                        max-active-idx (last-index-of data-active max-active-val)
                         max-active-date (nth (data/dates) max-active-idx)
                         last-day (data/last-nn-day pred)
                         {confirmed :c population :p} last-day
@@ -394,6 +410,10 @@
                         delta (data/delta pred)
                         {delta-confirmed :c} delta
                         ]
+                    ;; (debugf "(count data-active) %s" (count data-active))
+                    ;; (debugf "(type data-active) %s" (type data-active))
+                    ;; (debugf "max-active-val %s" max-active-val)
+                    ;; (debugf "max-active-idx %s" max-active-idx)
                     #_(debugf "delta-confirmed %s" delta-confirmed)
                     (format-linewise
                      (apply

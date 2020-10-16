@@ -57,11 +57,11 @@
              "Invalid env-type: %s. It must be an element of %s"
              env-type env-types)))))
 
-(def telegram-token (env/env :telegram-token))
+(def ^:const ^String telegram-token (env/env :telegram-token))
 
-(def webapp-port (env/env :port))
+(def ^:const webapp-port (env/env :port))
 
-(def bot-name (get-in environment [env-type :bot-name]))
+(def ^:const bot-name (get-in environment [env-type :bot-name]))
 
 ;; forward declarations
 (declare env-prod? env-test? env-devel?)
@@ -280,4 +280,3 @@
 (def ttl
   "Time to live in (* <hours> <minutes> <seconds> <miliseconds>)."
   (* 3 60 60 1000))
-

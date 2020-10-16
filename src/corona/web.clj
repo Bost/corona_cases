@@ -123,10 +123,10 @@
   (atom nil))
 
 (defn webapp-start [& [env-type port]]
-  (let [port (Integer. (or port com/webapp-port
-                           (cond com/env-prod? 5000
-                                 ;; keep port-nr in sync with README.md
-                                 :else 5050)))
+  (let [port (or port com/webapp-port
+                 (cond com/env-prod? 5000
+                       ;; keep port-nr in sync with README.md
+                       :else 5050))
 
         starting "[webapp] starting"
         msg (format "%s version %s in environment %s on port %s..."
