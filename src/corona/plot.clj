@@ -27,6 +27,8 @@
            javax.imageio.ImageIO
            [java.time LocalDate ZoneId]))
 
+(set! *warn-on-reflection* true)
+
 (defn metrics-prefix-formatter
   "Show 1k instead of 1000; i.e. kilo, mega etc.
       1 400 -> 1400
@@ -242,7 +244,10 @@
         img-byte-array))))
 
 (defn plot-country
-  "The optional params `stats`, `day` are used only for the first calculation"
+  "The optional params `stats`, `day` are used only for the first calculation
+  See http://clojure-goes-fast.com/ https://github.com/clojure-goes-fast/
+  TODO https://github.com/clojure-goes-fast/clj-async-profiler
+  "
   [country-code & [stats day]]
   (data/from-cache [:plot (keyword country-code)]
                    (fn [] (calc-plot-country-fn country-code stats day))))

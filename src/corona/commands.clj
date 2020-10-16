@@ -17,6 +17,8 @@
                                        ]]
    ))
 
+(set! *warn-on-reflection* true)
+
 (defn world [{:keys [chat-id country-code] :as prm}]
   #_(debug "[world]" prm)
   (let [prm

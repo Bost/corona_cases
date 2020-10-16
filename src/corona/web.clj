@@ -19,6 +19,8 @@
    java.time.ZoneId
    java.util.TimeZone))
 
+(set! *warn-on-reflection* true)
+
 (def ^:const telegram-hook "telegram")
 (def ^:const google-hook "google")
 (def ^:const undef "<UNDEF>")

@@ -17,6 +17,8 @@
    [corona.country-codes :as ccc :refer :all]
    ))
 
+(set! *warn-on-reflection* true)
+
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
   Thanks to https://stackoverflow.com/a/10778647/5151982

@@ -22,6 +22,8 @@
    [clojurewerkz.propertied.properties :as p]
    ))
 
+(set! *warn-on-reflection* true)
+
 (defn ttt
   "For debugging.
   TODO move ttt to utils and make it monadic"

@@ -11,6 +11,8 @@
     ]
    ))
 
+(set! *warn-on-reflection* true)
+
 (def log-level-map ^:const {:debug :dbg :info :inf :warn :wrn :error :err})
 
 (defn log-output-fn

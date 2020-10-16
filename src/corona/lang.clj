@@ -6,6 +6,8 @@
    [clojure.string :as s]
    ))
 
+(set! *warn-on-reflection* true)
+
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
 (def ^:const world           "world")

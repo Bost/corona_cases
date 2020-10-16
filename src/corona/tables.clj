@@ -6,6 +6,8 @@
    #_[taoensso.timbre :as timbre :refer [debugf info infof warn errorf fatalf]]
    ))
 
+(set! *warn-on-reflection* true)
+
 (def ^:const regions
   "
   Contains \"Americas\" which is not a standard name. Bloody hell!

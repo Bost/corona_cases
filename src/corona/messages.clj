@@ -21,6 +21,8 @@
                                        ]]
    ))
 
+(set! *warn-on-reflection* true)
+
 (defn bot-name-formatted []
   (s/replace com/bot-name #"_" "\\\\_"))
 
