@@ -4,7 +4,7 @@
   (:require
    [corona.common :as com]
    [corona.countries :as ccr]
-   [corona.country-codes :as ccc :refer :all]
+   [corona.country-codes :as ccc]
    [utils.core :as utc :refer [in?]]
    [taoensso.timbre :as timbre :refer [
                                        ;; debug debugf info infof warn
@@ -29,7 +29,9 @@
     (swap! cache update-in ks (fn [_] data))
     data))
 
-(defn from-cache [ks calc-data-fn]
+(defn from-cache
+  "TODO reverse the param order"
+  [ks calc-data-fn]
   #_(debugf "[from-cache] accessing %s" ks)
   (if-let [v (get-in @cache ks)]
     v

@@ -123,11 +123,7 @@
   (atom nil))
 
 (defn webapp-start [& [env-type port]]
-  (let [port (or port com/webapp-port
-                 (cond com/env-prod? 5000
-                       ;; keep port-nr in sync with README.md
-                       :else 5050))
-
+  (let [port (or port com/webapp-port)
         starting "[webapp] starting"
         msg (format "%s version %s in environment %s on port %s..."
                     starting
@@ -177,9 +173,9 @@
     (infof "%s... done" starting)))
 
 (defn webapp-stop []
-  (info "[webapp] stopping...")
+  (info "[webapp] Stopping...")
   (.stop ^org.eclipse.jetty.server.Server @component)
-  (let [objs ['component]]
+  (let [objs ['corona.web/component]]
     (run! (fn [obj-q]
             (let [obj (eval obj-q)]
               (swap! obj (fn [_] nil))

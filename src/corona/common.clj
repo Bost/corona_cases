@@ -12,7 +12,7 @@
    [environ.core :as env]
    [utils.num :as utn]
    [utils.core :refer [in?] :exclude [id]]
-   [corona.country-codes :refer :all]
+   #_[corona.country-codes :as ccc]
    [taoensso.timbre :as timbre :refer [debug debugf
                                        #_info infof
                                        ;; warn
@@ -59,8 +59,6 @@
 
 (def ^:const ^String telegram-token (env/env :telegram-token))
 
-(def ^:const ^Long webapp-port (read-string (env/env :port)))
-
 (def ^:const bot-name (get-in environment [env-type :bot-name]))
 
 ;; forward declarations
@@ -76,6 +74,12 @@
         (keys environment)))
 
 (define-env-predicates)
+
+(def ^:const ^Long webapp-port (if-let [env-port (env/env :port)]
+                                 (read-string env-port)
+                                 (cond env-prod? 5000
+                                       ;; keep port-nr in sync with README.md
+                                       :else 5050)))
 
 (defn system-exit [exit-status]
   (debugf "Exiting with status %s ..." exit-status)

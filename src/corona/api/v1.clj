@@ -5,7 +5,7 @@
   (:refer-clojure :exclude [pr])
   (:require
    [corona.common :as com]
-   [corona.country-codes :refer :all]
+   #_[corona.country-codes :as ccc]
    #_[utils.core :refer [in?] :exclude [id]]
    [corona.api.expdev07 :as srvc]
    [net.cgrand.xforms :as x]
@@ -117,9 +117,9 @@
 
   (->> (get-in (srvc/data-with-pop) [case :locations])
        (transduce (comp
-                   (filter (fn [loc]
-                             true
-                             #_(in? ccs (:country_code loc))))
+                   (filter
+                    (fn [_] true)
+                    #_(fn [loc] (in? ccs (:country_code loc))))
                    (map process-location))
                   ;; works as flatten by 1 level
                   into [])

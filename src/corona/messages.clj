@@ -8,7 +8,7 @@
    [corona.api.expdev07 :as data]
    [corona.common :as com]
    [corona.countries :as ccr]
-   [corona.country-codes :as ccc :refer :all]
+   [corona.country-codes :as ccc]
    [corona.lang :as l]
    [corona.plot :as p]
    [morse.api :as morse]

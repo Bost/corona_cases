@@ -3,13 +3,10 @@
 (ns corona.countries
   (:require
    [clojure.set :as cset]
-   [corona.country-codes :as ccc :refer :all]
+   [corona.country-codes :as ccc]
    [utils.core :refer [in?] :exclude [id]]
-   [clojure.string :as s]
-   [taoensso.timbre :as timbre :refer [
-                                       ;; debugf info infof warn
-                                       errorf
-                                       #_fatalf]]
+   [clojure.string :as cstr]
+   [taoensso.timbre :as timbre :refer [errorf]]
    )
   (:import com.neovisionaries.i18n.CountryCode
            com.neovisionaries.i18n.CountryCode$Assignment))
@@ -50,11 +47,11 @@
     ;; see
     ;; https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
     {
-     xk "Republic of Kosovo"
-     xd "United Nations Neutral Zone"
-     xe "Iraq-Saudi Arabia Neutral Zone"
-     xs "Spratly Islands"
-     xx "Disputed Territory"
+     ccc/xk "Republic of Kosovo"
+     ccc/xd "United Nations Neutral Zone"
+     ccc/xe "Iraq-Saudi Arabia Neutral Zone"
+     ccc/xs "Spratly Islands"
+     ccc/xx "Disputed Territory"
      }))
 
 ;; java.util.Locale doesn't show country names according to the ISO norm
@@ -63,7 +60,7 @@
 ;;   (->> (java.util.Locale/getISOCountries)
 ;;        (map (fn [cc] [cc
 ;;                      (-> (.getDisplayCountry (new Locale "" cc))
-;;                          #_(s/replace "&" "and"))]))
+;;                          #_(cstr/replace "&" "and"))]))
 ;;        (into {})))
 
 (def ^:const country--country-code
@@ -80,199 +77,199 @@
   "Mapping of alternative names, spelling, typos to the names of countries used by
   the ISO 3166-1 norm. \"Others\" has no mapping."
   {
-   "World"                            zz ; "Worldwide"
+   "World"                            ccc/zz ; "Worldwide"
 
-   "Czechia"                          cz ; "Czech Republic"
+   "Czechia"                          ccc/cz ; "Czech Republic"
 
-   "Mainland China"                   cn ; "China"
+   "Mainland China"                   ccc/cn ; "China"
 
-   "South Korea"                      kr ; "Korea, Republic of"
-   "Korea, South"                     kr ; "Korea, Republic of"
-   "Korea South"                      kr ; "Korea, Republic of"
-   "Republic of Korea"                kr ; "Korea, Republic of"
+   "South Korea"                      ccc/kr ; "Korea, Republic of"
+   "Korea, South"                     ccc/kr ; "Korea, Republic of"
+   "Korea South"                      ccc/kr ; "Korea, Republic of"
+   "Republic of Korea"                ccc/kr ; "Korea, Republic of"
 
-   "Taiwan"                           tw ; "Taiwan, Province of China"
-   "Taiwan*"                          tw ; "Taiwan, Province of China"
-   "Taipei and environs"              tw ; "Taiwan, Province of China"
+   "Taiwan"                           ccc/tw ; "Taiwan, Province of China"
+   "Taiwan*"                          ccc/tw ; "Taiwan, Province of China"
+   "Taipei and environs"              ccc/tw ; "Taiwan, Province of China"
 
-   "US"                               us ; "United States"
-   "Puerto Rico (US)"                 pr
-   "Guam (US)"                        gu
-   "American Samoa (US)"              as
-   "Northern Mariana Islands (US)"    mp
+   "US"                               ccc/us ; "United States"
+   "Puerto Rico (US)"                 ccc/pr
+   "Guam (US)"                        ccc/gu
+   "American Samoa (US)"              ccc/as
+   "Northern Mariana Islands (US)"    ccc/mp
 
-   "Macau"                            mo ; "Macao"
-   "Macao SAR"                        mo ; "Macao"
-   "Macau (China)"                    mo
+   "Macau"                            ccc/mo ; "Macao"
+   "Macao SAR"                        ccc/mo ; "Macao"
+   "Macau (China)"                    ccc/mo
 
-   "Vietnam"                          vn ; "Viet Nam"
+   "Vietnam"                          ccc/vn ; "Viet Nam"
 
-   "UK"                               gb ; "United Kingdom"
+   "UK"                               ccc/gb ; "United Kingdom"
    ;; Conjoin on United Kingdom
-   "North Ireland"                    gb
+   "North Ireland"                    ccc/gb
 
-   "Isle of Man (UK)"                 im
-   "Turks and Caicos Islands (UK)"    tc
-   "Gibraltar (UK)"                   gi
-   "Cayman Islands (UK)"              ky
-   "Bermuda (UK)"                     bm
-   "Anguilla (UK)"                    ai
-   "Montserrat (UK)"                  ms
+   "Isle of Man (UK)"                 ccc/im
+   "Turks and Caicos Islands (UK)"    ccc/tc
+   "Gibraltar (UK)"                   ccc/gi
+   "Cayman Islands (UK)"              ccc/ky
+   "Bermuda (UK)"                     ccc/bm
+   "Anguilla (UK)"                    ccc/ai
+   "Montserrat (UK)"                  ccc/ms
 
-   "Russia"                           ru ; "Russian Federation"
+   "Russia"                           ccc/ru ; "Russian Federation"
    ;; Conjoin on Russian Federation
-   "South Ossetia"                    ru
+   "South Ossetia"                    ccc/ru
 
-   "Iran"                             ir ; "Iran, Islamic Republic of"
-   "Iran (Islamic Republic of)"       ir ; "Iran, Islamic Republic of"
+   "Iran"                             ccc/ir ; "Iran, Islamic Republic of"
+   "Iran (Islamic Republic of)"       ccc/ir ; "Iran, Islamic Republic of"
 
-   "Saint Barthelemy"                 bl ; "Saint Barthélemy"
-   "Saint Barthélemy (France)"        bl
+   "Saint Barthelemy"                 ccc/bl ; "Saint Barthélemy"
+   "Saint Barthélemy (France)"        ccc/bl
 
-   "Palestine"                        ps ; "Palestine, State of"
-   "State of Palestine"               ps ; "Palestine, State of"
-   "occupied Palestinian territory"   ps ; "Palestine, State of"
+   "Palestine"                        ccc/ps ; "Palestine, State of"
+   "State of Palestine"               ccc/ps ; "Palestine, State of"
+   "occupied Palestinian territory"   ccc/ps ; "Palestine, State of"
 
-   "Vatican City"                     va ; "Holy See (Vatican City State)"
-   "Holy See"                         va ; "Holy See (Vatican City State)"
+   "Vatican City"                     ccc/va ; "Holy See (Vatican City State)"
+   "Holy See"                         ccc/va ; "Holy See (Vatican City State)"
 
-   "DR Congo"                         cd ; "Congo, the Democratic Republic of the"
-   "Congo (Kinshasa)"                 cd ; "Congo, the Democratic Republic of the"
-   "Democratic Republic of the Congo" cd ; "Congo, the Democratic Republic of the"
-   "Congo-Kinshasa"                   cd
+   "DR Congo"                         ccc/cd ; "Congo, the Democratic Republic of the"
+   "Congo (Kinshasa)"                 ccc/cd ; "Congo, the Democratic Republic of the"
+   "Democratic Republic of the Congo" ccc/cd ; "Congo, the Democratic Republic of the"
+   "Congo-Kinshasa"                   ccc/cd
 
-   "Congo (Brazzaville)"              cg ; "Congo"
-   "Republic of the Congo"            cg ; "Congo"
-   "Congo-Brazzaville"                cg
+   "Congo (Brazzaville)"              ccc/cg ; "Congo"
+   "Republic of the Congo"            ccc/cg ; "Congo"
+   "Congo-Brazzaville"                ccc/cg
 
-   "Tanzania"                         tz ; "Tanzania, United Republic of"
-   "Venezuela"                        ve ; "Venezuela, Bolivarian Republic of"
-   "North Korea"                      kp ; "Korea, Democratic People's Republic of"
-   "Syria"                            sy ; "Syrian Arab Republic"
-   "Bolivia"                          bo ; "Bolivia, Plurinational State of"
-   "Laos"                             la ; "Lao People's Democratic Republic"
+   "Tanzania"                         ccc/tz ; "Tanzania, United Republic of"
+   "Venezuela"                        ccc/ve ; "Venezuela, Bolivarian Republic of"
+   "North Korea"                      ccc/kp ; "Korea, Democratic People's Republic of"
+   "Syria"                            ccc/sy ; "Syrian Arab Republic"
+   "Bolivia"                          ccc/bo ; "Bolivia, Plurinational State of"
+   "Laos"                             ccc/la ; "Lao People's Democratic Republic"
 
-   "Moldova"                          md ; "Moldova, Republic of"
-   "Republic of Moldova"              md ; "Moldova, Republic of"
+   "Moldova"                          ccc/md ; "Moldova, Republic of"
+   "Republic of Moldova"              ccc/md ; "Moldova, Republic of"
 
-   "Swaziland"                        sz ; "Eswatini"
-   "Cabo Verde"                       cv ; "Cape Verde"
-   "Brunei"                           bn ; "Brunei Darussalam"
+   "Swaziland"                        ccc/sz ; "Eswatini"
+   "Cabo Verde"                       ccc/cv ; "Cape Verde"
+   "Brunei"                           ccc/bn ; "Brunei Darussalam"
 
-   "Sao Tome & Principe"              st ; "Sao Tome and Principe"
-   "São Tomé and Príncipe"            st ; "Sao Tome and Principe"
-   "Sao Tome and Principe"            st ; "Sao Tome and Principe"
+   "Sao Tome & Principe"              ccc/st ; "Sao Tome and Principe"
+   "São Tomé and Príncipe"            ccc/st ; "Sao Tome and Principe"
+   "Sao Tome and Principe"            ccc/st ; "Sao Tome and Principe"
 
-   "Micronesia"                       fm ; "Micronesia, Federated States of"
-   "F.S. Micronesia"                  fm ; "Micronesia, Federated States of"
-   "Federated States of Micronesia"   fm ; "Micronesia, Federated States of"
+   "Micronesia"                       ccc/fm ; "Micronesia, Federated States of"
+   "F.S. Micronesia"                  ccc/fm ; "Micronesia, Federated States of"
+   "Federated States of Micronesia"   ccc/fm ; "Micronesia, Federated States of"
 
-   "St. Vincent & Grenadines"         vc ; "Saint Vincent and the Grenadines"
-   "Saint Vincent"                    vc ; "Saint Vincent and the Grenadines"
+   "St. Vincent & Grenadines"         ccc/vc ; "Saint Vincent and the Grenadines"
+   "Saint Vincent"                    ccc/vc ; "Saint Vincent and the Grenadines"
 
-   "U.S. Virgin Islands"              vi ; "Virgin Islands, U.S."
-   "U.S. Virgin Islands (US)"         vi ; "Virgin Islands, U.S."
+   "U.S. Virgin Islands"              ccc/vi ; "Virgin Islands, U.S."
+   "U.S. Virgin Islands (US)"         ccc/vi ; "Virgin Islands, U.S."
 
-   "British Virgin Islands"           vg ; "Virgin Islands, British"
-   "British Virgin Islands (UK)"      vg
+   "British Virgin Islands"           ccc/vg ; "Virgin Islands, British"
+   "British Virgin Islands (UK)"      ccc/vg
 
    ;; Conjoin on France
-   "Saint Martin (France)"            fr ; "France"
+   "Saint Martin (France)"            ccc/fr ; "France"
 
-   "New Caledonia (France)"           nc
-   "French Polynesia (France)"        pf
+   "New Caledonia (France)"           ccc/nc
+   "French Polynesia (France)"        ccc/pf
 
-   "Saint Kitts & Nevis"              kn ; "Saint Kitts and Nevis"
-   "St. Kitts & Nevis"                kn ; "Saint Kitts and Nevis"
+   "Saint Kitts & Nevis"              ccc/kn ; "Saint Kitts and Nevis"
+   "St. Kitts & Nevis"                ccc/kn ; "Saint Kitts and Nevis"
 
-   "Faeroe Islands"                   fo ; "Faroe Islands"
+   "Faeroe Islands"                   ccc/fo ; "Faroe Islands"
 
-   "Sint Maarten"                     sx ; "Sint Maarten (Dutch part)"
-   "Sint Maarten (Netherlands)"       sx
+   "Sint Maarten"                     ccc/sx ; "Sint Maarten (Dutch part)"
+   "Sint Maarten (Netherlands)"       ccc/sx
 
-   "Aruba (Netherlands)"              aw
+   "Aruba (Netherlands)"              ccc/aw
 
-   "Turks and Caicos"                 tc ; "Turks and Caicos Islands"
+   "Turks and Caicos"                 ccc/tc ; "Turks and Caicos Islands"
 
-   "Wallis & Futuna"                  wf ; "Wallis and Futuna"
-   "Wallis and Futuna (France)"       wf
+   "Wallis & Futuna"                  ccc/wf ; "Wallis and Futuna"
+   "Wallis and Futuna (France)"       ccc/wf
 
-   "Saint Helena"                     sh ; "Saint Helena, Ascension and Tristan da Cunha"
-   "Saint Helena, Ascensionand Tristan da Cunha (UK)" sh
+   "Saint Helena"                                     ccc/sh
+   "Saint Helena, Ascensionand Tristan da Cunha (UK)" ccc/sh
 
-   "Saint Pierre & Miquelon"            pm ; "Saint Pierre and Miquelon"
-   "Saint Pierre and Miquelon (France)" pm
+   "Saint Pierre & Miquelon"            ccc/pm ; "Saint Pierre and Miquelon"
+   "Saint Pierre and Miquelon (France)" ccc/pm
 
-   "Falkland Islands"                 fk ; "Falkland Islands (Malvinas)"
-   "Falkland Islands (UK)"            fk
+   "Falkland Islands"                 ccc/fk ; "Falkland Islands (Malvinas)"
+   "Falkland Islands (UK)"            ccc/fk
 
-   "Republic of Ireland"              ie ; "Ireland"
-   " Azerbaijan"                      az ; "Azerbaijan"
+   "Republic of Ireland"              ccc/ie ; "Ireland"
+   " Azerbaijan"                      ccc/az ; "Azerbaijan"
 
-   "East Timor"                       tl ; "Timor-Leste"
+   "East Timor"                       ccc/tl ; "Timor-Leste"
 
    ;; Guernsey and Jersey form Channel Islands. They should have separate statistics.
    ;; https://en.wikipedia.org/wiki/Channel_Islands
    ;; "Guernsey and Jersey"
    ;; "Channel Islands"
 
-   "Jersey (UK)"                      je
-   "Guernsey (UK)"                    gg
+   "Jersey (UK)"                      ccc/je
+   "Guernsey (UK)"                    ccc/gg
 
-   "Caribbean Netherlands"            bq ; "Bonaire, Sint Eustatius and Saba"
+   "Caribbean Netherlands"            ccc/bq ; "Bonaire, Sint Eustatius and Saba"
 
-   "Emirates"                         ae ; "United Arab Emirates"
+   "Emirates"                         ccc/ae ; "United Arab Emirates"
 
-   "Bosnia–Herzegovina"               ba ; "Bosnia and Herzegovina"
-   "Bosnia"                           ba ; "Bosnia and Herzegovina"
+   "Bosnia–Herzegovina"               ccc/ba ; "Bosnia and Herzegovina"
+   "Bosnia"                           ccc/ba ; "Bosnia and Herzegovina"
 
-   "Dominican Rep"                    do ; "Dominican Republic"
+   "Dominican Rep"                    ccc/do ; "Dominican Republic"
 
-   "Macedonia"                        mk ; "North Macedonia, Republic of"
-   "North Macedonia"                  mk ; "North Macedonia, Republic of"
+   "Macedonia"                        ccc/mk ; "North Macedonia, Republic of"
+   "North Macedonia"                  ccc/mk ; "North Macedonia, Republic of"
 
-   "Ivory Coast"                      ci ; "Côte d'Ivoire"
-   "Cote d'Ivoire"                    ci ; "Côte d'Ivoire"
+   "Ivory Coast"                      ccc/ci ; "Côte d'Ivoire"
+   "Cote d'Ivoire"                    ccc/ci ; "Côte d'Ivoire"
 
-   "Saint Martin"                     mf ; "Saint Martin (French part)"
-   "St. Martin"                       mf ; "Saint Martin (French part)"
+   "Saint Martin"                     ccc/mf ; "Saint Martin (French part)"
+   "St. Martin"                       ccc/mf ; "Saint Martin (French part)"
 
-   "Hong Kong SAR"                    hk ; "Hong Kong"
-   "Hong Kong (China)"                hk
+   "Hong Kong SAR"                    ccc/hk ; "Hong Kong"
+   "Hong Kong (China)"                ccc/hk
 
-   ;; "Transnistria" recognized as part of Moldova `md` but may have a different
+   ;; "Transnistria" recognized as part of Moldova `ccc/md` but may have a different
    ;; medical system
 
-   ;; "Northern Cyprus" considered to be a part of Cyprus `cy` but may have a
+   ;; "Northern Cyprus" considered to be a part of Cyprus `ccc/cy` but may have a
    ;; different medical system
 
-   ;; "Abkhazia" recognized as part of Georgia `ge` but may have a different
+   ;; "Abkhazia" recognized as part of Georgia `ccc/ge` but may have a different
    ;; medical system
 
-   "Republic of Artsakh"              am ; "Armenia"
-   "Cook Islands (NZ)"                ck
-   "Christmas Island (Australia)"     cx
-   "Norfolk Island (Australia)"       nf
-   "Niue (NZ)"                        nu
-   "Tokelau (NZ)"                     tk
-   "Greenland (Denmark)"              gl
-   "Faroe Islands (Denmark)"          fo
-   "Åland Islands (Finland)"          ax
-   "Reunion"                          re ; "Réunion"
+   "Republic of Artsakh"              ccc/am ; "Armenia"
+   "Cook Islands (NZ)"                ccc/ck
+   "Christmas Island (Australia)"     ccc/cx
+   "Norfolk Island (Australia)"       ccc/nf
+   "Niue (NZ)"                        ccc/nu
+   "Tokelau (NZ)"                     ccc/tk
+   "Greenland (Denmark)"              ccc/gl
+   "Faroe Islands (Denmark)"          ccc/fo
+   "Åland Islands (Finland)"          ccc/ax
+   "Reunion"                          ccc/re ; "Réunion"
 
-   "Curacao"                          cw ; "Curaçao"
-   "Curaçao (Netherlands)"            cw
+   "Curacao"                          ccc/cw ; "Curaçao"
+   "Curaçao (Netherlands)"            ccc/cw
 
-   "The Bahamas"                      bs ; "Bahamas"
-   "Kosovo"                           xk ; "Kosovo, Republic of"
-   "Trinidad & Tobago"                tt ; "Trinidad and Tobago"
-   "Antigua & Barbuda"                ag ; "Antigua and Barbuda"
-   "Central African Rep"              cf ; "Central African Republic"
+   "The Bahamas"                      ccc/bs ; "Bahamas"
+   "Kosovo"                           ccc/xk ; "Kosovo, Republic of"
+   "Trinidad & Tobago"                ccc/tt ; "Trinidad and Tobago"
+   "Antigua & Barbuda"                ccc/ag ; "Antigua and Barbuda"
+   "Central African Rep"              ccc/cf ; "Central African Republic"
 
-   "Burma"                            mm ; Myanmar
+   "Burma"                            ccc/mm ; Myanmar
 
-   "Pitcairn Islands (UK)"               pn
-   "Cocos (Keeling) Islands (Australia)" cc
+   "Pitcairn Islands (UK)"               ccc/pn
+   "Cocos (Keeling) Islands (Australia)" ccc/cc
 
    ;; "Others" has no mapping
    ;; "Cruise Ship" is mapped to the default val
@@ -284,75 +281,72 @@
    ;; (clojure.set/map-invert country-alias--country-code)
    ;; select desired aliases
    {
-    va "Vatican"
-    tw "Taiwan"
-    do "Dom Rep"
-    ir "Iran"
-    ru "Russia"
-    ps "Palestine"
-    ae "UA Emirates"
-    kr "South Korea"
-    mk "Macedonia"
-    ba "Bosnia"
-    bo "Bolivia"
-    md "Moldova"
-    bn "Brunei"
-    ve "Venezuela"
-    vc "St Vincent"
-    kp "North Korea"
-    tz "Tanzania"
-    xk "Kosovo"
-    la "Laos"
-    sy "Syria"
-    kn "St Kitts Nevis"
-    tt "Trinidad Tobago"
-    ag "Antigua Barbuda"
-    cf "Central Africa"
-    us "USA"
-    gb "UK"
-    cz "Czechia"
-    ;; st "St Tome & Prin"
-    st "St Tome Principe"
-    pg "Papua N Guinea"
-    gq "Equat Guinea"
-    qq "Rest"
-    fm "Micronesia"
-
-    pm "St Pierre Miquelo"
-    sj "Svalbard J. Mayen"
-    tc "Turks Caicos Isla"
-    vi "Virgin Islands US"
-    hm "Heard McDonald Is"
-    sx "St Maarten, Dutch"
-    mf "St Martin, French"
-    sh "St He Ascen Cunha"
-    fk "Falklands/Malvina"
-    cc "Cocos/Keeling Isl"
-    mp "Northern Mariana"
-    vg "Brit Virgin Islan"
-    bq "Bona St Eust Saba"
-    io "Br Indian Ocean T"
-    um "US Min Outlying I"
-    tf "Fr Southern Terri"
-    gs "S Georgia Sandwic"
-
-    cg "Congo-Brazzaville"
-    cd "Congo-Kinshasa"
-
-    vn "Vietnam"
+    ccc/va "Vatican"
+    ccc/tw "Taiwan"
+    ccc/do "Dom Rep"
+    ccc/ir "Iran"
+    ccc/ru "Russia"
+    ccc/ps "Palestine"
+    ccc/ae "UA Emirates"
+    ccc/kr "South Korea"
+    ccc/mk "Macedonia"
+    ccc/ba "Bosnia"
+    ccc/bo "Bolivia"
+    ccc/md "Moldova"
+    ccc/bn "Brunei"
+    ccc/ve "Venezuela"
+    ccc/vc "St Vincent"
+    ccc/kp "North Korea"
+    ccc/tz "Tanzania"
+    ccc/xk "Kosovo"
+    ccc/la "Laos"
+    ccc/sy "Syria"
+    ccc/kn "St Kitts Nevis"
+    ccc/tt "Trinidad Tobago"
+    ccc/ag "Antigua Barbuda"
+    ccc/cf "Central Africa"
+    ccc/us "USA"
+    ccc/gb "UK"
+    ccc/cz "Czechia"
+    ;; ccc/st "St Tome & Prin"
+    ccc/st "St Tome Principe"
+    ccc/pg "Papua N Guinea"
+    ccc/gq "Equat Guinea"
+    ccc/qq "Rest"
+    ccc/fm "Micronesia"
+    ccc/pm "St Pierre Miquelo"
+    ccc/sj "Svalbard J. Mayen"
+    ccc/tc "Turks Caicos Isla"
+    ccc/vi "Virgin Islands US"
+    ccc/hm "Heard McDonald Is"
+    ccc/sx "St Maarten, Dutch"
+    ccc/mf "St Martin, French"
+    ccc/sh "St He Ascen Cunha"
+    ccc/fk "Falklands/Malvina"
+    ccc/cc "Cocos/Keeling Isl"
+    ccc/mp "Northern Mariana"
+    ccc/vg "Brit Virgin Islan"
+    ccc/bq "Bona St Eust Saba"
+    ccc/io "Br Indian Ocean T"
+    ccc/um "US Min Outlying I"
+    ccc/tf "Fr Southern Terri"
+    ccc/gs "S Georgia Sandwic"
+    ccc/cg "Congo-Brazzaville"
+    ccc/cd "Congo-Kinshasa"
+    ccc/vn "Vietnam"
     }))
 
 (defn- lower-case-keyword
   "ABC -> abc"
   [hm]
-  (into {} (map (fn [[k v]] [(s/lower-case k) v]) hm)))
+  (into {} (map (fn [[k v]] [(cstr/lower-case k) v]) hm)))
 
 (defn country-code
   "Return 2-letter country code (Alpha-2) according to
   https://en.wikipedia.org/wiki/ISO_3166-1
   Defaults to `default-2-country-code`."
   [country-name]
-  (let [country (s/lower-case country-name)
+  (let [country (cstr/lower-case country-name)
         lcases-countries (lower-case-keyword
                           (conj country--country-code
                                 country-alias--country-code
@@ -366,7 +360,7 @@
 (defn country-alias
   "Get a country alias or the normal name if an alias doesn't exist"
   [cc]
-  (let [up-cc (s/upper-case cc)
+  (let [up-cc (cstr/upper-case cc)
         country (get country-code--country up-cc)]
     (get country-alias--country-code-inverted up-cc country)))
 
@@ -375,9 +369,14 @@
   See `country-alias--country-code-inverted`"
   [country-code]
   (if (in?
-       [va tw do ir ru ps ae kr mk ba cd bo md bn ve vc kp tz xk la sy kn tt ag
-        cf cz st pg gq qq fm pm sj tc vi hm sx mf sh fk cc bq mp vg io um tf gs
-        cd cg vn]
+       [
+        ccc/va ccc/tw ccc/do ccc/ir ccc/ru ccc/ps ccc/ae ccc/kr ccc/mk ccc/ba
+        ccc/cd ccc/bo ccc/md ccc/bn ccc/ve ccc/vc ccc/kp ccc/tz ccc/xk ccc/la
+        ccc/sy ccc/kn ccc/tt ccc/ag ccc/cf ccc/cz ccc/st ccc/pg ccc/gq ccc/qq
+        ccc/fm ccc/pm ccc/sj ccc/tc ccc/vi ccc/hm ccc/sx ccc/mf ccc/sh ccc/fk
+        ccc/cc ccc/bq ccc/mp ccc/vg ccc/io ccc/um ccc/tf ccc/gs ccc/cd ccc/cg
+        ccc/vn
+        ]
        country-code)
     (country-alias country-code)
     (country-name country-code)))
