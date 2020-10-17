@@ -21,8 +21,6 @@
 
    [corona.common :as co]))
 
-;; (debugf "Loading namespace %s" *ns*)
-
 (defn bot-name-formatted []
   (s/replace com/bot-name #"_" "\\\\_"))
 

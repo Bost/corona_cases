@@ -16,10 +16,8 @@
    [taoensso.timbre :as timbre :refer :all]
    ))
 
-;; (debugf "Loading namespace %s" *ns*)
-
 (defn world [{:keys [chat-id country-code] :as prm}]
-  (debug "[world]" prm)
+  #_(debug "[world]" prm)
   (let [prm
         ;; override default parse_mode
         (assoc prm :parse_mode "HTML")]

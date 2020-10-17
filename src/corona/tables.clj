@@ -6,8 +6,6 @@
    [taoensso.timbre :as timbre :refer :all]
    ))
 
-;; (debugf "Loading namespace %s" *ns*)
-
 (def ^:const regions
   "
   Contains \"Americas\" which is not a standard name. Bloody hell!

@@ -19,8 +19,6 @@
    java.time.ZoneId
    java.util.TimeZone))
 
-;; (debugf "Loading namespace %s" *ns*)
-
 (def ^:const telegram-hook "telegram")
 (def ^:const google-hook "google")
 (def ^:const undef "<UNDEF>")

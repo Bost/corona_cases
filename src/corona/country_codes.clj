@@ -47,8 +47,6 @@
  {:output-fn log-output-fn #_default-output-fn
   :timestamp-opts {:timezone (java.util.TimeZone/getTimeZone zone-id) #_:utc}})
 
-;; (debugf "Loading namespace %s" *ns*)
-
 (def country-codes
   ["CR" "TG" "TJ" "ZA" "IM" "PE" "LC" "CH" "RU" "MP" "CK" "SI" "AU" "KR" "IT"
    "FI" "GF" "SC" "SX" "ZZ" "TT" "TK" "MY" "SY" "MN" "TF" "KP" "AM" "DZ" "UY"

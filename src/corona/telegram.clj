@@ -19,13 +19,11 @@
    [corona.api.v1 :as v1]
    [corona.country-codes :as ccc :refer :all]))
 
-;; (debugf "Loading namespace %s" *ns*)
-
 (defn wrap-fn-pre-post-hooks
   "Add :pre and :post hooks / advices around `function`
   Thanks to https://stackoverflow.com/a/10778647/5151982
-  TODO doesn't work for multiarity functions. E.g. (defn f ([] (f 1)) ([x] x))
-  "
+  TODO doesn't work for multiarity functions. E.g.
+  (defn f ([] (f 1)) ([x] x))"
   [{:keys [f pre post]}]
   (fn [& args]
     (apply pre args)

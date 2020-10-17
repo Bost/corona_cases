@@ -15,8 +15,6 @@
    )
   (:import java.text.SimpleDateFormat))
 
-;; (debugf "Loading namespace %s" *ns*)
-
 (def ^:const url (format "http://%s/all" com/api-server))
 
 (defonce cache (atom {}))

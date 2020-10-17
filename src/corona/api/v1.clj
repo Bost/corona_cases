@@ -15,8 +15,6 @@
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
-;; (debugf "Loading namespace %s" *ns*)
-
 ;; avoid creating new class each time the `fmt` function is called
 (def sdf
   "SimpleDateFormat"

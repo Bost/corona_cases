@@ -7,8 +7,6 @@
    [taoensso.timbre :as timbre :refer :all]
    ))
 
-;; (debugf "Loading namespace %s" *ns*)
-
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
 (def ^:const world           "world")
