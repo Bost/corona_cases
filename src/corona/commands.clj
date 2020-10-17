@@ -12,8 +12,8 @@
    [morse.api :as morse]
    [utils.core :as u :refer [in?] :exclude [id]]
    [corona.common :as com]
-   [taoensso.timbre :as timbre :refer [debug
-                                       ;; debugf info infof warn errorf fatalf
+   [taoensso.timbre :as timbre :refer [debug debugf
+                                       ;; info infof warn errorf fatalf
                                        ]]
    ))
 
@@ -28,7 +28,8 @@
           ;; the message content is fetched from the cache
           content (msg/detailed-info country-code)]
       (doall
-       (morse/send-text com/telegram-token chat-id options content)))
+       (morse/send-text com/telegram-token chat-id options content))
+      (debugf "[world] send-text: %s chars sent" (count content)))
 
     (if
         false
@@ -41,7 +42,8 @@
             ;; specified
             content (p/plot-country country-code)]
         (doall
-         (morse/send-photo com/telegram-token chat-id options content))))))
+         (morse/send-photo com/telegram-token chat-id options content))
+        (debugf "[world] send-photo: %s bytes sent" (count content))))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

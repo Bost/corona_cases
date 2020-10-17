@@ -187,15 +187,15 @@
          type :type
          case-kw :case} (edn/read-string data)]
     (when (worldwide? country-code)
-      (doall
-       (morse/send-photo
-        com/telegram-token chat-id
-        (buttons {:chat-id chat-id :cc country-code})
-        (let [plot-fn (if (= type :sum)
-                        p/plot-sum-by-case p/plot-absolute-by-case)]
-          ;; the plot is fetched from the cache, stats and day need not to be
-          ;; specified
-          (plot-fn case-kw)))))))
+      (let [options (buttons {:chat-id chat-id :cc country-code})
+            content (let [plot-fn (if (= type :sum)
+                                    p/plot-sum-by-case p/plot-absolute-by-case)]
+                      ;; the plot is fetched from the cache, stats and day need not to be
+                      ;; specified
+                      (plot-fn case-kw))]
+        (doall
+         (morse/send-photo com/telegram-token chat-id options content))
+        (debugf "[callback-handler-fn] send-photo: %s bytes sent" (count content))))))
 
 ;; (defn language [prm]
 ;;   (format
@@ -531,7 +531,7 @@
                                  #_(debug "[detailed-info] (count worldwide-block)" (count worldwide-block))
                                  worldwide-block))])))))))]])
             ["%s\n" [(footer parse_mode)]]])]
-      (debugf "[detailed-info] country-code %s; message-size %s"
+      (debugf "[detailed-info] country-code %s; msg-size %s"
               country-code (count content))
       content)))
 

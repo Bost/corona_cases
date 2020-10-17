@@ -240,7 +240,7 @@
             :label (plot-label day cc stats)
             :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
       (let [img-byte-array (toByteArrayAutoClosable img)]
-        (debugf "[plot-country] cc %s; image size %s" cc (count img-byte-array))
+        (debugf "[plot-country] cc %s; img-size %s" cc (count img-byte-array))
         img-byte-array))))
 
 (defn plot-country
@@ -354,7 +354,9 @@
                            #_(case-kw {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
                            threshold-recaltulated)
             :label-conf {:color (c/darken :steelblue) :font-size 14}})]
-      (toByteArrayAutoClosable img))))
+      (let [img-byte-array (toByteArrayAutoClosable img)]
+        (debugf "[plot-sum-by-case] case %s; img-size %s" case-kw (count img-byte-array))
+        img-byte-array))))
 
 (defn plot-sum-by-case
   "The optional params `stats`, `day` are used only for the first calculation"
@@ -415,7 +417,9 @@
                          " " l/absolute)
                     threshold)
             :label-conf {:color (c/darken :steelblue) :font-size 14}})]
-      (toByteArrayAutoClosable img))))
+      (let [img-byte-array (toByteArrayAutoClosable img)]
+        (debugf "[plot-absolute-by-case] case %s; img-size %s" case-kw (count img-byte-array))
+        img-byte-array))))
 
 (defn plot-absolute-by-case
   "The optional params `stats`, `day` are used only for the first calculation"

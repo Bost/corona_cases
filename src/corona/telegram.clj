@@ -41,7 +41,7 @@
   (h/command-fn
    name
    (wrap-fn-pre-post-hooks
-    (let [msg (format "[cmd-handler] cmd /%s; hook %%s; chat %%s" name)]
+    (let [msg (format "[command-fn-wrapper] /%s; hook %%s; chat %%s" name)]
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
               (let [chat (:chat (first args))]
@@ -58,7 +58,18 @@
   []
   (infof "Registering %s chatbot commands..." (count cmd/cmds))
   (apply h/handlers
-         (into [(h/callback-fn msg/callback-handler-fn)]
+         (into [(h/callback-fn
+                 (wrap-fn-pre-post-hooks
+                  (let [src "callback-fn-wrapper"]
+                    {:f msg/callback-handler-fn
+                     :pre (fn [& args]
+                            (let [data (:data (first args))]
+                              (infof "[%s] hook %s; data %s" src :pre data)))
+                     :post (fn [& args]
+                             (let [[fn-result {:keys [data]}] args]
+                               (infof "[%s] hook %s; data %s" src :post data)
+                               #_(debugf "fn-result %s; size %s" fn-result (count (str fn-result)))
+                               fn-result))})))]
                (mapv cmd-handler cmd/cmds))))
 
 (defn start-polling
@@ -138,7 +149,7 @@
                                             ))
               ccodes)))
       (doall
-       (run! (fn [plot-fn]
+       (map (fn [plot-fn]
               (run! (fn [case-kw]
                       #_(debugf "Calculating %s %s" plot-fn case-kw)
                       (plot-fn case-kw stats day))
