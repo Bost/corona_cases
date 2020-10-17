@@ -135,7 +135,8 @@
                     env-type
                     port)]
     (info msg)
-    (let [web-server (jetty/run-jetty (site #'app) {:port port :join? false})]
+    (let [web-server (jetty/run-jetty (site #'app)
+                                      {:port port :join? false})]
       (swap! component (fn [_] web-server))
       (infof "%s... done" starting)
       web-server)))

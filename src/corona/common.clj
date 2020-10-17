@@ -59,7 +59,7 @@
 
 (def ^:const ^String telegram-token (env/env :telegram-token))
 
-(def ^:const webapp-port (env/env :port))
+(def ^:const ^Long webapp-port (read-string (env/env :port)))
 
 (def ^:const bot-name (get-in environment [env-type :bot-name]))
 
