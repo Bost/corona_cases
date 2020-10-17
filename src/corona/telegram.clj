@@ -36,20 +36,22 @@
 ;; https://github.com/camsaul/methodical
 ;; https://github.com/technomancy/robert-hooke
 
-(defn cmd-handler [{:keys [name f] :as prm}]
+(defn cmd-handler
+  "Use :pre and :post hooks to see in the log if and how request are made and
+  responded"
+  [{:keys [name f] :as prm}]
   (h/command-fn
    name
    (wrap-fn-pre-post-hooks
     (let [tbeg (cte/tnow)
-          msg (format "[cmd-handler] hook %%s; cmd /%s; chat %%s" name)]
+          msg (format "[cmd-handler] cmd /%s; hook %%s; chat %%s" name)]
       {:f (fn [prm] (f (-> prm :chat :id)))
        :pre (fn [& args]
               (let [chat (:chat (first args))]
-                ;; show who's doing what
                 (infof msg :pre chat)))
        :post (fn [& args]
                (let [[fn-result {:keys [chat]}] args]
-                 #_(debugf msg :post chat)
+                 (infof msg :post chat)
                  fn-result))}))))
 
 (defn create-handler
