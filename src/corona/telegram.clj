@@ -72,15 +72,13 @@
                   (let [src "callback-fn-wrapper"]
                     {:f msg/callback-handler-fn
                      :pre (fn [& args]
-                            (let [data (:data (first args))
-                                  chat (:chat (first args))]
+                            (let [{:keys [data message]} (first args)]
                               (infof "[%s] hook %s; data %s; chat %s"
-                                     src :pre data chat)))
+                                     src :pre data (:chat message))))
                      :post (fn [& args]
-                             (let [[fn-result {:keys [data
-                                                      #_chat]}] args]
+                             (let [[fn-result {:keys [data message]}] args]
                                (infof "[%s] hook %s; data %s; chat %s"
-                                      src :post data args)
+                                      src :post data (:chat message))
                                #_(debugf "fn-result %s; size %s"
                                          fn-result (count (str fn-result)))
                                fn-result))})))]

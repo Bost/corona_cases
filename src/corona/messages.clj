@@ -225,104 +225,104 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   [{:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
-  #_(debugf "[list-countries]")
-  (let [
-        ;; TODO calculate count of reports only once
-        cnt-reports (count (data/dates))
-        spacer " "
-        sort-indicator "▴" ;; " " "▲"
-        omag-active    7 ;; order of magnitude i.e. number of digits
-        omag-recov  (inc omag-active)
-        omag-deaths (dec omag-active)]
-    #_(debugf "cnt-reports %s" cnt-reports)
-    #_(debugf "(count data) %s" (count data))
-    #_(debugf "data %s" data)
-    #_(debugf "pred %s" pred)
-    (format
-     (format-linewise
-      [
-       ["%s\n"   [(header parse_mode pred)]]
-       ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
-       ["    %s "[(str l/active    (if (= :i sort-by-case) sort-indicator " "))]]
-       ["%s"     [spacer]]
-       ["%s "    [(str l/recovered (if (= :r sort-by-case) sort-indicator " "))]]
-       ["%s"     [spacer]]
-       ["%s\n"   [(str l/deaths    (if (= :d sort-by-case) sort-indicator " "))]]
-       ["%s"     [(str
-                   "%s"   ; listing table
-                   "%s"   ; sorted-by description; has its own new-line
-                   "\n\n"
-                   "%s"   ; footer
-                   )]]])
-     (s/join
-      "\n"
-      (map (fn [{:keys [i r d cc]}]
-             (let [cn (ccr/country-name-aliased cc)]
-               (format "<code>%s%s%s%s%s %s</code>  %s"
-                       (com/left-pad i " " omag-active)
-                       spacer
-                       (com/left-pad r " " omag-recov)
-                       spacer
-                       (com/left-pad d " " omag-deaths)
-                       (com/right-pad cn 17)
-                       (s/lower-case (com/encode-cmd cc)))))
-           (->> data
-                #_(take-last 11)
-                #_(partition-all 2)
-                #_(map (fn [part] (s/join "       " part))))))
-     ""
-     #_(if (= msg-idx cnt-msgs)
-         (str "\n\n" (l/list-sorted-by-desc sort-by-case))
-         "")
-     (footer parse_mode))))
+  (let [msg-id "list-countries"]
+    (let [
+          ;; TODO calculate count of reports only once
+          cnt-reports (count (data/dates))
+          spacer " "
+          sort-indicator "▴" ;; " " "▲"
+          omag-active    7 ;; order of magnitude i.e. number of digits
+          omag-recov  (inc omag-active)
+          omag-deaths (dec omag-active)]
+      #_(debugf "[%s] cnt-reports %s" msg-id cnt-reports)
+      #_(debugf "[%s] (count data) %s" msg-id (count data))
+      #_(debugf "[%s] data %s" msg-id data)
+      #_(debugf "[%s] pred %s" msg-id pred)
+      (format
+       (format-linewise
+        [
+         ["%s\n"   [(header parse_mode pred)]]
+         ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
+         ["    %s "[(str l/active    (if (= :i sort-by-case) sort-indicator " "))]]
+         ["%s"     [spacer]]
+         ["%s "    [(str l/recovered (if (= :r sort-by-case) sort-indicator " "))]]
+         ["%s"     [spacer]]
+         ["%s\n"   [(str l/deaths    (if (= :d sort-by-case) sort-indicator " "))]]
+         ["%s"     [(str
+                     "%s"   ; listing table
+                     "%s"   ; sorted-by description; has its own new-line
+                     "\n\n"
+                     "%s"   ; footer
+                     )]]])
+       (s/join
+        "\n"
+        (map (fn [{:keys [i r d cc]}]
+               (let [cn (ccr/country-name-aliased cc)]
+                 (format "<code>%s%s%s%s%s %s</code>  %s"
+                         (com/left-pad i " " omag-active)
+                         spacer
+                         (com/left-pad r " " omag-recov)
+                         spacer
+                         (com/left-pad d " " omag-deaths)
+                         (com/right-pad cn 17)
+                         (s/lower-case (com/encode-cmd cc)))))
+             (->> data
+                  #_(take-last 11)
+                  #_(partition-all 2)
+                  #_(map (fn [part] (s/join "       " part))))))
+       ""
+       #_(if (= msg-idx cnt-msgs)
+           (str "\n\n" (l/list-sorted-by-desc sort-by-case))
+           "")
+       (footer parse_mode)))))
 
 (defn list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   [{:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
-  #_(debugf "list-per-100k")
-  (let [spacer " "
-        sort-indicator "▴" ;; " " "▲"
-        ;; omag - order of magnitude i.e. number of digits
-        omag-active-per-100k    4
-        omag-recovered-per-100k omag-active-per-100k
-        omag-deaths-per-100k    (dec omag-active-per-100k)
-        ]
-    (format
-     (format-linewise
-      [["%s\n" [(header parse_mode pred)]]
-       ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/dates)) msg-idx cnt-msgs)]]
-       ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
-       ["%s"   [spacer]]
-       ["%s "  [(str l/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
-       ["%s"   [spacer]]
-       ["%s"   [(str l/deaths-per-1e5    (if (= :d100k sort-by-case) sort-indicator " "))]]
-       ["\n%s" [(str
-                 "%s"     ; listing table
-                 "%s"     ; sorted-by description; has its own new-line
-                 "\n\n%s" ; footer
-                 )]]])
-     (s/join
-      "\n"
-      (map (fn [{:keys [i100k r100k d100k cc]}]
-             (let [cn (ccr/country-name-aliased cc)]
-               (format "<code>   %s%s   %s%s    %s %s</code>  %s"
-                       (com/left-pad i100k " " omag-active-per-100k)
-                       spacer
-                       (com/left-pad r100k " " omag-recovered-per-100k)
-                       spacer
-                       (com/left-pad d100k " " omag-deaths-per-100k)
-                       (com/right-pad cn 17)
-                       (s/lower-case (com/encode-cmd cc)))))
-           (->> data
-                #_(take-last 11)
-                #_(partition-all 2)
-                #_(map (fn [part] (s/join "       " part))))))
-     ""
-     #_(if (= msg-idx cnt-msgs)
-       (str "\n\n" (l/list-sorted-by-desc sort-by-case))
-       "")
-     (footer parse_mode))))
+  (let [msg-id "list-per-100k"]
+    (let [spacer " "
+          sort-indicator "▴" ;; " " "▲"
+          ;; omag - order of magnitude i.e. number of digits
+          omag-active-per-100k    4
+          omag-recovered-per-100k omag-active-per-100k
+          omag-deaths-per-100k    (dec omag-active-per-100k)
+          ]
+      (format
+       (format-linewise
+        [["%s\n" [(header parse_mode pred)]]
+         ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/dates)) msg-idx cnt-msgs)]]
+         ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
+         ["%s"   [spacer]]
+         ["%s "  [(str l/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
+         ["%s"   [spacer]]
+         ["%s"   [(str l/deaths-per-1e5    (if (= :d100k sort-by-case) sort-indicator " "))]]
+         ["\n%s" [(str
+                   "%s"     ; listing table
+                   "%s"     ; sorted-by description; has its own new-line
+                   "\n\n%s" ; footer
+                   )]]])
+       (s/join
+        "\n"
+        (map (fn [{:keys [i100k r100k d100k cc]}]
+               (let [cn (ccr/country-name-aliased cc)]
+                 (format "<code>   %s%s   %s%s    %s %s</code>  %s"
+                         (com/left-pad i100k " " omag-active-per-100k)
+                         spacer
+                         (com/left-pad r100k " " omag-recovered-per-100k)
+                         spacer
+                         (com/left-pad d100k " " omag-deaths-per-100k)
+                         (com/right-pad cn 17)
+                         (s/lower-case (com/encode-cmd cc)))))
+             (->> data
+                  #_(take-last 11)
+                  #_(partition-all 2)
+                  #_(map (fn [part] (s/join "       " part))))))
+       ""
+       #_(if (= msg-idx cnt-msgs)
+           (str "\n\n" (l/list-sorted-by-desc sort-by-case))
+           "")
+       (footer parse_mode)))))
 
 (defn diff-coll-vals
   "Differences between values. E.g.:
