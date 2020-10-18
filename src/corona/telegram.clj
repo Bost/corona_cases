@@ -124,9 +124,7 @@
           (fatalf "[%s] Further requests may NOT be answered!!!" msg-id)
           (when com/env-prod?
             (com/system-exit 2)))))
-    (fatalf "[%s] tgram-handler not created" msg-id))
-  #_(if-let [tgram-handler (create-handler)]
-    (do
+    #_(do
       (debugf "[%s] Created tgram-handler %s" msg-id tgram-handler)
       (let [port (start-polling tgram-token tgram-handler)]
         (swap! telegram-port (fn [_] port))
