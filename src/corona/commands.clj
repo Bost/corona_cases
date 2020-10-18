@@ -19,42 +19,39 @@
 
 (set! *warn-on-reflection* true)
 
-(defn world [{:keys [chat-id country-code] :as prm}]
-  (let [msg-id "world"]
-    (let [prm
-          ;; override default parse_mode
-          (assoc prm :parse_mode "HTML")]
-      (let [options (select-keys prm (keys msg/options))
-            ;; the message content is fetched from the cache
-            content (msg/detailed-info country-code)]
-        (doall
-         (morse/send-text com/telegram-token chat-id options content))
-        (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
+(defn world [msg-id {:keys [chat-id country-code] :as prm}]
+  (let [prm
+        ;; override default parse_mode
+        (assoc prm :parse_mode "HTML")]
+    (let [options (select-keys prm (keys msg/options))
+          ;; the message content is fetched from the cache
+          content (msg/detailed-info country-code)]
+      (doall
+       (morse/send-text com/telegram-token chat-id options content))
+      (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
 
-      (if
-          false
-        #_com/env-devel? ;; don't show the graph when developing
-        (debug "Plot not displayed. com/env-devel?" com/env-devel?)
-        (let [options (if (msg/worldwide? country-code)
-                        (msg/buttons {:chat-id chat-id :cc country-code})
-                        {})
-              ;; the plot is fetched from the cache, stats and day need not to be
-              ;; specified
-              content (p/plot-country country-code)]
-          (doall
-           (morse/send-photo com/telegram-token chat-id options content))
-          (debugf "[%s] send-photo: %s bytes sent" msg-id (count content)))))))
+    (if
+        false
+      #_com/env-devel? ;; don't show the graph when developing
+      (debug "Plot not displayed. com/env-devel?" com/env-devel?)
+      (let [options (if (msg/worldwide? country-code)
+                      (msg/buttons {:chat-id chat-id :cc country-code})
+                      {})
+            ;; the plot is fetched from the cache, stats and day need not to be
+            ;; specified
+            content (p/plot-country country-code)]
+        (doall
+         (morse/send-photo com/telegram-token chat-id options content))
+        (debugf "[%s] send-photo: %s bytes sent" msg-id (count content))))))
+
+(def world (partial world "defn partial "))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
 (defn listing
-  [{:keys [
-           ;; sort-by-case
-           ;; parse_mode
-           ;; pred
-           listing-fn chat-id sort-by-case] :as prm}]
+  [msg-id {:keys [listing-fn chat-id sort-by-case] :as prm}]
   ;; this may be not needed in the end
   #_{:pre [(s/valid? #{
                      ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
@@ -64,26 +61,27 @@
                      msg/list-per-100k
                      }
                      listing-fn)]}
-  (let [msg-id "listing"]
-    (let [coll (sort-by sort-by-case < (data/stats-countries))]
-      #_(debugf "[%s] coll %s" msg-id (count coll))
-      (let [
-            ;; Split the long list of all countries into smaller subparts
-            sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
-            cnt-msgs (count sub-msgs)]
-        (let [options (select-keys prm (keys msg/options))
-              contents (map-indexed (fn [idx sub-msg]
-                                      (listing-fn
-                                       (assoc prm
-                                              :data sub-msg
-                                              :msg-idx (inc idx)
-                                              :cnt-msgs cnt-msgs)))
-                                    sub-msgs)]
-          (doall
-           (map (fn [content]
-                  (morse/send-text com/telegram-token chat-id options content)
-                  (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
-                contents)))))))
+  (let [coll (sort-by sort-by-case < (data/stats-countries))]
+    #_(debugf "[%s] coll %s" msg-id (count coll))
+    (let [
+          ;; Split the long list of all countries into smaller subparts
+          sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
+          cnt-msgs (count sub-msgs)]
+      (let [options (select-keys prm (keys msg/options))
+            contents (map-indexed (fn [idx sub-msg]
+                                    (listing-fn
+                                     (assoc prm
+                                            :data sub-msg
+                                            :msg-idx (inc idx)
+                                            :cnt-msgs cnt-msgs)))
+                                  sub-msgs)]
+        (doall
+         (map (fn [content]
+                (morse/send-text com/telegram-token chat-id options content)
+                (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
+              contents))))))
+
+(def listing (partial listing "listing"))
 
 (defn list-countries [prm]
   (listing (assoc prm :listing-fn msg/list-countries)))
@@ -91,30 +89,33 @@
 (defn list-per-100k [prm]
   (listing (assoc prm :listing-fn msg/list-per-100k)))
 
-(defn explain [{:keys [chat-id parse_mode]}]
-  (let [msg-id "explain"]
-    (let [content (msg/explain parse_mode)]
-      (doall
-       (morse/send-text com/telegram-token chat-id msg/options content))
-      (debugf "[%s] send-text: %s chars sent" msg-id (count content)))))
+(defn explain [msg-id {:keys [chat-id parse_mode]}]
+  (let [content (msg/explain parse_mode)]
+    (doall
+     (morse/send-text com/telegram-token chat-id msg/options content))
+    (debugf "[%s] send-text: %s chars sent" msg-id (count content))))
 
-(defn feedback [{:keys [chat-id]}]
-  (let [msg-id "feedback"]
-    (let [content (msg/feedback)]
-      (doall
-       (morse/send-text com/telegram-token chat-id msg/options content))
-      (debugf "[%s] send-text: %s chars sent" msg-id (count content)))))
+(def explain (partial explain "explain"))
+
+(defn feedback [msg-id {:keys [chat-id]}]
+  (let [content (msg/feedback)]
+    (doall
+     (morse/send-text com/telegram-token chat-id msg/options content))
+    (debugf "[%s] send-text: %s chars sent" msg-id (count content))))
+
+(def feedback (partial feedback "feedback"))
 
 ;; (defn language [{:keys [chat-id parse_mode]}]
 ;;   (doall
 ;;    (morse/send-text com/telegram-token chat-id msg/options (msg/language parse_mode))))
 
-(defn contributors [{:keys [chat-id parse_mode]}]
-  (let [msg-id "contributors"]
-    (let [content (msg/contributors parse_mode)]
-      (doall
-       (morse/send-text com/telegram-token chat-id msg/options content))
-      (debugf "[%s] send-text: %s chars sent" msg-id (count content)))))
+(defn contributors [msg-id {:keys [chat-id parse_mode]}]
+  (let [content (msg/contributors parse_mode)]
+    (doall
+     (morse/send-text com/telegram-token chat-id msg/options content))
+    (debugf "[%s] send-text: %s chars sent" msg-id (count content))))
+
+(def contributors (partial contributors "contributors"))
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
