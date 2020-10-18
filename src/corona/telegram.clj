@@ -110,25 +110,24 @@
                   msg-id consumer producer handler)
            channel))))))
 
-;; (defn foo-main
-;;   [& args]
-;;   (println "Bot running!")
-;;   (async/go-loop [ch (p/start token bot-api)]
-;;     (<! (timeout 5000))
-;;     (if (nil? (<! ch))
-;;       (do
-;;         (println "Bot restarted")
-;;         (p/stop ch)
-;;         (recur (p/start token bot-api)))
-;;       (recur ch)))
-;;   (Thread/sleep Long/MAX_VALUE))
-
 (defn telegram
   "TODO see https://github.com/Otann/morse/issues/32"
   [tgram-token]
   (let [msg-id "telegram"]
     (infof "[%s] Starting..." msg-id)
     (if-let [tgram-handler (create-handler)]
+      (do
+        (debugf "[%s] Created tgram-handler %s" msg-id tgram-handler)
+        (let [port (start-polling tgram-token tgram-handler)]
+          (swap! telegram-port (fn [_] port))
+          (let [retval-async<!! (async/<!! port)]
+            (warnf "[%s] Taking vals on port %s stopped with retval-async<! %s"
+                   msg-id port (if-let [v retval-async<!!] v "nil"))
+            (fatalf "[%s] Further requests may NOT be answered!!!" msg-id)
+            (when com/env-prod?
+              (com/system-exit 2)))))
+      (fatalf "[%s] tgram-handler not created" msg-id))
+    #_(if-let [tgram-handler (create-handler)]
       (do
         (debugf "[%s] Created tgram-handler %s" msg-id tgram-handler)
         (let [port (start-polling tgram-token tgram-handler)]
