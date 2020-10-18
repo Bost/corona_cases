@@ -194,7 +194,9 @@
 
 (defn bot-father-edit-cmds
   "Evaluate this function and upload the results under:
-     @BotFather -> ... -> Edit Bot -> Edit Commands"
+     @BotFather -> ... -> Edit Bot -> Edit Commands
+
+  TODO can't type the '/re' command - collides with '/recov' "
   []
   (->> (cmds-general)
        (remove (fn [hm]
