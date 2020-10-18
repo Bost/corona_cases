@@ -20,30 +20,30 @@
 (set! *warn-on-reflection* true)
 
 (defn world [{:keys [chat-id country-code] :as prm}]
-  #_(debug "[world]" prm)
-  (let [prm
-        ;; override default parse_mode
-        (assoc prm :parse_mode "HTML")]
-    (let [options (select-keys prm (keys msg/options))
-          ;; the message content is fetched from the cache
-          content (msg/detailed-info country-code)]
-      (doall
-       (morse/send-text com/telegram-token chat-id options content))
-      (debugf "[world] send-text: %s chars sent" (count content)))
-
-    (if
-        false
-      #_com/env-devel? ;; don't show the graph when developing
-      (debug "Plot not displayed. com/env-devel?" com/env-devel?)
-      (let [options (if (msg/worldwide? country-code)
-                      (msg/buttons {:chat-id chat-id :cc country-code})
-                      {})
-            ;; the plot is fetched from the cache, stats and day need not to be
-            ;; specified
-            content (p/plot-country country-code)]
+  (let [msg-id "world"]
+    (let [prm
+          ;; override default parse_mode
+          (assoc prm :parse_mode "HTML")]
+      (let [options (select-keys prm (keys msg/options))
+            ;; the message content is fetched from the cache
+            content (msg/detailed-info country-code)]
         (doall
-         (morse/send-photo com/telegram-token chat-id options content))
-        (debugf "[world] send-photo: %s bytes sent" (count content))))))
+         (morse/send-text com/telegram-token chat-id options content))
+        (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
+
+      (if
+          false
+        #_com/env-devel? ;; don't show the graph when developing
+        (debug "Plot not displayed. com/env-devel?" com/env-devel?)
+        (let [options (if (msg/worldwide? country-code)
+                        (msg/buttons {:chat-id chat-id :cc country-code})
+                        {})
+              ;; the plot is fetched from the cache, stats and day need not to be
+              ;; specified
+              content (p/plot-country country-code)]
+          (doall
+           (morse/send-photo com/telegram-token chat-id options content))
+          (debugf "[%s] send-photo: %s bytes sent" msg-id (count content)))))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
@@ -196,7 +196,8 @@
   "Evaluate this function and upload the results under:
      @BotFather -> ... -> Edit Bot -> Edit Commands
 
-  TODO can't type the '/re' command - collides with '/recov' "
+  TODO can't type the '/re' command - collides with '/recov'
+  TODO /<char> show a list of countries under starting with this letter."
   []
   (->> (cmds-general)
        (remove (fn [hm]
