@@ -91,21 +91,21 @@
   Starts long-polling process.
   Handler is supposed to process immediately, as it will be called in a blocking
   manner."
-  ([msg-id token handler] (start-polling msg-id token handler {}))
-  ([msg-id token handler opts]
-   (let [channel (async/chan)]
-     (debugf "[%s] Started channel %s" msg-id channel)
-     (let [producer (p/create-producer
-                     channel token opts (fn api-error-handler []
-                                          (when com/env-prod?
-                                            (com/system-exit 2))))]
-       (infof "[%s] Created producer %s on channel %s" msg-id producer channel)
-       #_(debugf "[%s] Creating consumer for produced %s with handler %s ..."
-                 msg-id producer handler)
-       (let [consumer (p/create-consumer producer handler)]
-         (infof "[%s] Created consumer %s for producer %s with handler %s"
-                msg-id consumer producer handler)
-         channel)))))
+  [msg-id token handler]
+  (let [opts {}
+        channel (async/chan)]
+    (debugf "[%s] Started channel %s" msg-id channel)
+    (let [producer (p/create-producer
+                    channel token opts (fn api-error-handler []
+                                         (when com/env-prod?
+                                           (com/system-exit 2))))]
+      (infof "[%s] Created producer %s on channel %s" msg-id producer channel)
+      #_(debugf "[%s] Creating consumer for produced %s with handler %s ..."
+                msg-id producer handler)
+      (let [consumer (p/create-consumer producer handler)]
+        (infof "[%s] Created consumer %s for producer %s with handler %s"
+               msg-id consumer producer handler)
+        channel))))
 
 (def start-polling (partial start-polling "start-polling"))
 
