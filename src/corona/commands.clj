@@ -44,7 +44,7 @@
          (morse/send-photo com/telegram-token chat-id options content))
         (debugf "[%s] send-photo: %s bytes sent" msg-id (count content))))))
 
-(def world (partial world "defn partial "))
+(def world (partial world "world"))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

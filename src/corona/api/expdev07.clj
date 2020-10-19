@@ -276,7 +276,7 @@
   [pred-hm]
   (eval-fun get-last pred-hm))
 
-(defn last-nn-8-reports
+(defn last-8-reports
   [pred-hm]
   (eval-fun (fn [coll] (take-last 8 coll)) pred-hm))
 
