@@ -16,6 +16,7 @@
    [corona.api.expdev07 :as data]
    [corona.api.v1 :as v1]
    [corona.country-codes :as ccc]
+   ;; [com.stuartsierra.component :as component]
    ))
 
 (set! *warn-on-reflection* true)
