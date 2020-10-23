@@ -29,19 +29,17 @@
 
 (defonce telegram-port (atom nil))
 
-(defn wrap-fn-pre-post-hooks
+(defn wrap-in-hooks
   "Add :pre and :post hooks / advices around `function`
   Thanks to https://stackoverflow.com/a/10778647/5151982
   TODO doesn't work for multiarity functions. E.g.
   (defn fun ([] (fun 1)) ([x] x))"
-  [{:keys [fun pre post] :as prm}]
-  (fn [& args]
-    (apply pre args)
-    (debugf "[wrap-fn-pre-post-hooks] fun %s" fun)
-    (debugf "[wrap-fn-pre-post-hooks] args %s" args)
-    (let [result (apply fun args)]
-      (debugf "[wrap-fn-pre-post-hooks] result %s" result)
-      (apply post (cons result args)))))
+  ([prm fun] (wrap-in-hooks "wrap-in-hooks" prm fun))
+  ([msg-id {:keys [pre post]} fun]
+   (fn [& args]
+     (apply pre args)
+     (let [result (apply fun args)]
+       (apply post (cons result args))))))
 
 ;; logging alternatives - see also method advising (using multimethod):
 ;; https://github.com/camsaul/methodical
@@ -50,47 +48,46 @@
 (defn cmd-handler
   "Use :pre and :post hooks to see in the log if and how request are made and
   responded"
-  [{:keys [name fun]}]
-  (debugf "[cmd-handler] name %s; fun %s" name fun)
-  (h/command-fn
-   name
-   (wrap-fn-pre-post-hooks
-    (let [msg (format "[cmd-fn-wrapper] /%s; hook %%s; chat %%s" name)]
-      {:fun (fn [prm] (fun (-> prm :chat :id)))
-       :pre (fn [& args]
-              (let [chat (:chat (first args))]
-                (infof msg :pre chat)))
-       :post (fn [& args]
-               (let [[fn-result {:keys [chat]}] args]
-                 (infof msg :post chat)
-                 fn-result))}))))
+  ([prm] (cmd-handler "cmd-handler" prm))
+  ([msg-id {:keys [name fun]}]
+   (debugf "[%s] name %s; fun %s" msg-id name fun)
+   (->> (fn [prm] (fun (-> prm :chat :id)))
+        (wrap-in-hooks {:pre (fn [& args]
+                               (let [chat (:chat (first args))]
+                                 (infof "[%s] /%s; hook %s; chat %s" msg-id name :pre chat)))
+                        :post (fn [& args]
+                                (let [[fn-result {:keys [chat]}] args]
+                                  (infof "[%s] /%s; hook %s; chat %s" :post chat)
+                                  fn-result))})
+        (h/command-fn name))))
 
 (defn create-handlers
   "Receiving incoming updates using long polling (getUpdates method)
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
-  []
-  (let [callbacks [(h/callback-fn
-                    (wrap-fn-pre-post-hooks
-                     (let [src "callback-fn-wrapper"]
-                       {
-                        :fun msg/worldwide-plots
-                        :pre (fn [& args]
-                               (let [{:keys [data message]} (first args)]
-                                 (infof "[%s] hook %s; data %s; chat %s"
-                                        src :pre data (:chat message))))
-                        :post (fn [& args]
-                                (let [[fn-result {:keys [data message]}] args]
-                                  (infof "[%s] hook %s; data %s; chat %s"
-                                         src :post data (:chat message))
-                                  #_(debugf "fn-result %s; size %s"
-                                            fn-result (count (str fn-result)))
-                                  fn-result))})))]]
-    (let [commands (mapv cmd-handler cmd/cmds)]
-      (let [handlers (into callbacks commands)]
-        (infof "Registering %s chatbot commands and %s callbacks..."
-               (count cmd/cmds) (count callbacks))
-        (apply h/handlers handlers)))))
+  ([] (create-handlers "create-handlers"))
+  ([msg-id]
+   (let [callbacks
+         (->>
+          msg/worldwide-plots
+          (wrap-in-hooks {:pre (fn [& args]
+                                 (let [{:keys [data message]} (first args)]
+                                   (infof "[%s] hook %s; data %s; chat %s"
+                                          msg-id :pre data (:chat message))))
+                          :post (fn [& args]
+                                  (let [[fn-result {:keys [data message]}] args]
+                                    (infof "[%s] hook %s; data %s; chat %s"
+                                           msg-id :post data (:chat message))
+                                    #_(debugf "fn-result %s; size %s"
+                                              fn-result (count (str fn-result)))
+                                    fn-result))})
+          (h/callback-fn)
+          (vector))]
+     (let [commands (mapv cmd-handler cmd/cmds)]
+       (let [handlers (into callbacks commands)]
+         (infof "Registering %s chatbot commands and %s callbacks..."
+                (count cmd/cmds) (count callbacks))
+         (apply h/handlers handlers))))))
 
 (defn start-polling
   "
