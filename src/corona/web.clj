@@ -19,11 +19,10 @@
    java.time.ZoneId
    java.util.TimeZone))
 
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
 (def ^:const telegram-hook "telegram")
 (def ^:const google-hook "google")
-(def ^:const undef "<UNDEF>")
 
 (defn home-page []
   {:status 200
@@ -127,7 +126,7 @@
         starting "[webapp] starting"
         msg (format "%s version %s in environment %s on port %s..."
                     starting
-                    (if com/env-devel? undef com/commit)
+                    (if com/env-devel? com/undef com/commit)
                     env-type
                     port)]
     (info msg)
@@ -143,7 +142,7 @@
         starting "[-main] starting"
         msg (format "%s version %s in environment %s on port %s..."
                     starting
-                    (if com/env-devel? undef com/commit)
+                    (if com/env-devel? com/undef com/commit)
                     env-type
                     port)]
     (info msg)

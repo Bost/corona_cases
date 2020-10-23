@@ -16,7 +16,7 @@
    )
   (:import java.text.SimpleDateFormat))
 
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
 (def ^:const url (format "http://%s/all" com/api-server))
 

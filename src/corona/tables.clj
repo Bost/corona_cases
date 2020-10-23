@@ -6,7 +6,7 @@
    #_[taoensso.timbre :as timbre :refer [debugf info infof warn errorf fatalf]]
    ))
 
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
 (def ^:const regions
   "

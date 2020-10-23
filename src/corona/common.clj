@@ -22,7 +22,7 @@
    [clojurewerkz.propertied.properties :as p]
    ))
 
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
 (defn ttt
   "For debugging.

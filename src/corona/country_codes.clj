@@ -9,9 +9,10 @@
    [taoensso.timbre :as timbre
     ;; :refer [debugf info infof warn errorf fatalf]
     ]
-   ))
 
-(set! *warn-on-reflection* true)
+   [corona.common :as com]))
+
+;; (set! *warn-on-reflection* true)
 
 (def log-level-map ^:const {:debug :dbg :info :inf :warn :wrn :error :err})
 
@@ -52,7 +53,9 @@
 ;; (set-config! default-config)
 (timbre/merge-config!
  {:output-fn log-output-fn #_default-output-fn
-  :timestamp-opts {:timezone (java.util.TimeZone/getTimeZone zone-id) #_:utc}})
+  :timestamp-opts
+  (conj {:timezone (java.util.TimeZone/getTimeZone zone-id) #_:utc}
+        (when com/env-devel? {:pattern "HH:mm:ss.SSSX"}))})
 
 (def country-codes
   ["CR" "TG" "TJ" "ZA" "IM" "PE" "LC" "CH" "RU" "MP" "CK" "SI" "AU" "KR" "IT"
@@ -451,5 +454,5 @@
   (get country-code-2-to-3-hm cc))
 
 (def all-country-codes
-  #_[cz zz]
-  (keys country-code-2-to-3-hm))
+  [cz zz]
+  #_(keys country-code-2-to-3-hm))

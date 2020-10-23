@@ -14,7 +14,7 @@
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
 ;; avoid creating new class each time the `fmt` function is called
 (def sdf

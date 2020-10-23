@@ -11,7 +11,7 @@
   (:import com.neovisionaries.i18n.CountryCode
            com.neovisionaries.i18n.CountryCode$Assignment))
 
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
 ;; nothing should be default affected!!!
 (def ^:const default-affected-country-codes

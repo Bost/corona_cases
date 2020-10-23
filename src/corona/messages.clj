@@ -21,7 +21,7 @@
                                        ]]
    ))
 
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
 (defn bot-name-formatted []
   (s/replace com/bot-name #"_" "\\\\_"))
@@ -161,7 +161,7 @@
           (map com/encode-cmd)
           (s/join spacer)))))
 
-(defn buttons [prm]
+(defn reply-markup-btns [prm]
   {:reply_markup
    (json/write-str
     {:inline_keyboard
@@ -178,26 +178,25 @@
              [:sum :abs]))]})})
 
 (defn worldwide? [country-code]
-  (let [r (in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
-                ccc/worldwide] country-code)]
-    #_(debugf "[worldwide?] (worldwide? %s) %s" country-code r)
-    r))
+  (in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
+        ccc/worldwide] country-code))
 
-(defn callback-handler-fn [{:keys [data]}]
-  (let [{country-code :cc
-         chat-id :chat-id
-         type :type
-         case-kw :case} (edn/read-string data)]
-    (when (worldwide? country-code)
-      (let [options (buttons {:chat-id chat-id :cc country-code})
-            content (let [plot-fn (if (= type :sum)
-                                    p/plot-sum-by-case p/plot-absolute-by-case)]
-                      ;; the plot is fetched from the cache, stats and day need not to be
-                      ;; specified
-                      (plot-fn case-kw))]
-        (doall
-         (morse/send-photo com/telegram-token chat-id options content))
-        (debugf "[callback-handler-fn] send-photo: %s bytes sent" (count content))))))
+(defn worldwide-plots
+  ([prm] (worldwide-plots "worldwide-plots" prm))
+  ([msg-id {:keys [data]}]
+   (let [{country-code :cc
+          chat-id :chat-id
+          type :type
+          case-kw :case} (edn/read-string data)]
+     (let [options (reply-markup-btns {:chat-id chat-id :cc country-code})
+           content (let [plot-fn (if (= type :sum)
+                                   p/plot-sum-by-case p/plot-absolute-by-case)]
+                     ;; the plot is fetched from the cache, stats and day need not to be
+                     ;; specified
+                     (plot-fn case-kw))]
+       (doall
+        (morse/send-photo com/telegram-token chat-id options content))
+       (debugf "[%s] send-photo: %s bytes sent" msg-id (count content))))))
 
 ;; (defn language [prm]
 ;;   (format
@@ -226,107 +225,105 @@
 (defn list-countries
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  [msg-id {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
-  (let [
-        ;; TODO calculate count of reports only once
-        cnt-reports (count (data/dates))
-        spacer " "
-        sort-indicator "▴" ;; " " "▲"
-        omag-active    7 ;; order of magnitude i.e. number of digits
-        omag-recov  (inc omag-active)
-        omag-deaths (dec omag-active)]
-    #_(debugf "[%s] cnt-reports %s" msg-id cnt-reports)
-    #_(debugf "[%s] (count data) %s" msg-id (count data))
-    #_(debugf "[%s] data %s" msg-id data)
-    #_(debugf "[%s] pred %s" msg-id pred)
-    (format
-     (format-linewise
-      [
-       ["%s\n"   [(header parse_mode pred)]]
-       ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
-       ["    %s "[(str l/active    (if (= :i sort-by-case) sort-indicator " "))]]
-       ["%s"     [spacer]]
-       ["%s "    [(str l/recovered (if (= :r sort-by-case) sort-indicator " "))]]
-       ["%s"     [spacer]]
-       ["%s\n"   [(str l/deaths    (if (= :d sort-by-case) sort-indicator " "))]]
-       ["%s"     [(str
-                   "%s"   ; listing table
-                   "%s"   ; sorted-by description; has its own new-line
-                   "\n\n"
-                   "%s"   ; footer
-                   )]]])
-     (s/join
-      "\n"
-      (map (fn [{:keys [i r d cc]}]
-             (let [cn (ccr/country-name-aliased cc)]
-               (format "<code>%s%s%s%s%s %s</code>  %s"
-                       (com/left-pad i " " omag-active)
-                       spacer
-                       (com/left-pad r " " omag-recov)
-                       spacer
-                       (com/left-pad d " " omag-deaths)
-                       (com/right-pad cn 17)
-                       (s/lower-case (com/encode-cmd cc)))))
-           (->> data
-                #_(take-last 11)
-                #_(partition-all 2)
-                #_(map (fn [part] (s/join "       " part))))))
-     ""
-     #_(if (= msg-idx cnt-msgs)
-         (str "\n\n" (l/list-sorted-by-desc sort-by-case))
-         "")
-     (footer parse_mode))))
-
-(def list-countries (partial list-countries "list-countries"))
+  ([prm] (list-countries "list-countries" prm))
+  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
+   (let [
+         ;; TODO calculate count of reports only once
+         cnt-reports (count (data/dates))
+         spacer " "
+         sort-indicator "▴" ;; " " "▲"
+         omag-active    7 ;; order of magnitude i.e. number of digits
+         omag-recov  (inc omag-active)
+         omag-deaths (dec omag-active)]
+     #_(debugf "[%s] cnt-reports %s" msg-id cnt-reports)
+     #_(debugf "[%s] (count data) %s" msg-id (count data))
+     #_(debugf "[%s] data %s" msg-id data)
+     #_(debugf "[%s] pred %s" msg-id pred)
+     (format
+      (format-linewise
+       [
+        ["%s\n"   [(header parse_mode pred)]]
+        ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
+        ["    %s "[(str l/active    (if (= :i sort-by-case) sort-indicator " "))]]
+        ["%s"     [spacer]]
+        ["%s "    [(str l/recovered (if (= :r sort-by-case) sort-indicator " "))]]
+        ["%s"     [spacer]]
+        ["%s\n"   [(str l/deaths    (if (= :d sort-by-case) sort-indicator " "))]]
+        ["%s"     [(str
+                    "%s"   ; listing table
+                    "%s"   ; sorted-by description; has its own new-line
+                    "\n\n"
+                    "%s"   ; footer
+                    )]]])
+      (s/join
+       "\n"
+       (map (fn [{:keys [i r d cc]}]
+              (let [cn (ccr/country-name-aliased cc)]
+                (format "<code>%s%s%s%s%s %s</code>  %s"
+                        (com/left-pad i " " omag-active)
+                        spacer
+                        (com/left-pad r " " omag-recov)
+                        spacer
+                        (com/left-pad d " " omag-deaths)
+                        (com/right-pad cn 17)
+                        (s/lower-case (com/encode-cmd cc)))))
+            (->> data
+                 #_(take-last 11)
+                 #_(partition-all 2)
+                 #_(map (fn [part] (s/join "       " part))))))
+      ""
+      #_(if (= msg-idx cnt-msgs)
+          (str "\n\n" (l/list-sorted-by-desc sort-by-case))
+          "")
+      (footer parse_mode)))))
 
 (defn list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  [msg-id {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
-  (let [spacer " "
-        sort-indicator "▴" ;; " " "▲"
-        ;; omag - order of magnitude i.e. number of digits
-        omag-active-per-100k    4
-        omag-recovered-per-100k omag-active-per-100k
-        omag-deaths-per-100k    (dec omag-active-per-100k)
-        ]
-    (format
-     (format-linewise
-      [["%s\n" [(header parse_mode pred)]]
-       ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/dates)) msg-idx cnt-msgs)]]
-       ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
-       ["%s"   [spacer]]
-       ["%s "  [(str l/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
-       ["%s"   [spacer]]
-       ["%s"   [(str l/deaths-per-1e5    (if (= :d100k sort-by-case) sort-indicator " "))]]
-       ["\n%s" [(str
-                 "%s"     ; listing table
-                 "%s"     ; sorted-by description; has its own new-line
-                 "\n\n%s" ; footer
-                 )]]])
-     (s/join
-      "\n"
-      (map (fn [{:keys [i100k r100k d100k cc]}]
-             (let [cn (ccr/country-name-aliased cc)]
-               (format "<code>   %s%s   %s%s    %s %s</code>  %s"
-                       (com/left-pad i100k " " omag-active-per-100k)
-                       spacer
-                       (com/left-pad r100k " " omag-recovered-per-100k)
-                       spacer
-                       (com/left-pad d100k " " omag-deaths-per-100k)
-                       (com/right-pad cn 17)
-                       (s/lower-case (com/encode-cmd cc)))))
-           (->> data
-                #_(take-last 11)
-                #_(partition-all 2)
-                #_(map (fn [part] (s/join "       " part))))))
-     ""
-     #_(if (= msg-idx cnt-msgs)
-         (str "\n\n" (l/list-sorted-by-desc sort-by-case))
-         "")
-     (footer parse_mode))))
-
-(def list-per-100k (partial list-per-100k "list-per-100k"))
+  ([prm] (partial list-per-100k "list-per-100k" prm))
+  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
+   (let [spacer " "
+         sort-indicator "▴" ;; " " "▲"
+         ;; omag - order of magnitude i.e. number of digits
+         omag-active-per-100k    4
+         omag-recovered-per-100k omag-active-per-100k
+         omag-deaths-per-100k    (dec omag-active-per-100k)
+         ]
+     (format
+      (format-linewise
+       [["%s\n" [(header parse_mode pred)]]
+        ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/dates)) msg-idx cnt-msgs)]]
+        ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
+        ["%s"   [spacer]]
+        ["%s "  [(str l/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
+        ["%s"   [spacer]]
+        ["%s"   [(str l/deaths-per-1e5    (if (= :d100k sort-by-case) sort-indicator " "))]]
+        ["\n%s" [(str
+                  "%s"     ; listing table
+                  "%s"     ; sorted-by description; has its own new-line
+                  "\n\n%s" ; footer
+                  )]]])
+      (s/join
+       "\n"
+       (map (fn [{:keys [i100k r100k d100k cc]}]
+              (let [cn (ccr/country-name-aliased cc)]
+                (format "<code>   %s%s   %s%s    %s %s</code>  %s"
+                        (com/left-pad i100k " " omag-active-per-100k)
+                        spacer
+                        (com/left-pad r100k " " omag-recovered-per-100k)
+                        spacer
+                        (com/left-pad d100k " " omag-deaths-per-100k)
+                        (com/right-pad cn 17)
+                        (s/lower-case (com/encode-cmd cc)))))
+            (->> data
+                 #_(take-last 11)
+                 #_(partition-all 2)
+                 #_(map (fn [part] (s/join "       " part))))))
+      ""
+      #_(if (= msg-idx cnt-msgs)
+          (str "\n\n" (l/list-sorted-by-desc sort-by-case))
+          "")
+      (footer parse_mode)))))
 
 (defn diff-coll-vals
   "Differences between values. E.g.:
@@ -372,10 +369,10 @@
   TODO make an api service for the content shown in the message
   TODO Create API web service(s) for every field displayed in the messages
   "
-  [msg-id ccode & [parse_mode pred]]
-  ;; (debugf "[%s] ccode %s" msg-id ccode)
-  ;; (debugf "[%s] parse_mode %s" msg-id parse_mode)
-  ;; (debugf "[%s] pred %s" msg-id pred)
+  [msg-id ccode parse_mode pred]
+  (debugf "[%s] ccode %s" msg-id ccode)
+  (debugf "[%s] parse_mode %s" msg-id parse_mode)
+  (debugf "[%s] pred %s" msg-id pred)
   (format-linewise
    [["%s\n"  ; extended header
      [(format-linewise
@@ -537,9 +534,8 @@
                                  ["%s" [l/closed-per-1e5    :c100k]]]
                                 :line-fmt (str "<code>%s</code>: %s / " cnt-countries "\n")
                                 :fn-fmts
-                                (fn [fmts] (format "Ranking on the list of all %s countries:\n%s"
-                                                  cnt-countries
-                                                  (s/join "" fmts)))
+                                (fn [fmts] (format l/randking-desc
+                                                  cnt-countries (s/join "" fmts)))
                                 :fn-args
                                 (fn [args] (update args (dec (count args))
                                                   (fn [_]
@@ -549,18 +545,17 @@
     ["%s\n" [(footer parse_mode)]]]))
 
 (defn detailed-info
-  [msg-id ccode & [parse_mode pred]]
-  (let [content (data/from-cache
-                 [:msg (keyword ccode)]
-                 (fn [] (calc-detailed-info-fn msg-id
-                                              ccode
-                                              parse_mode
-                                              pred)))]
-    (debugf "[%s] ccode %s; msg-size %s"
-            msg-id ccode (count content))
-    content))
-
-(def detailed-info (partial detailed-info "detailed-info"))
+  ;; doesn't need to specify the parse_mode and pred
+  ;; - retval will be fetched from the cache
+  ([ccode]                 (detailed-info ccode nil nil))
+  ([ccode parse_mode pred] (detailed-info "detailed-info" ccode parse_mode pred))
+  ([msg-id ccode parse_mode pred]
+   (debugf "[%s] ccode %s; parse_mode %s; pred %s" msg-id ccode parse_mode pred)
+   (let [content (data/from-cache
+                  [:msg (keyword ccode)]
+                  (fn [] (calc-detailed-info-fn msg-id ccode parse_mode pred)))]
+     (debugf "[%s] ccode %s; msg-size %s" msg-id ccode (count content))
+     content)))
 
 (defn feedback []
   (str "Just write a message to @RostislavSvoboda thanks."))

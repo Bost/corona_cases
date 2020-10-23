@@ -27,7 +27,7 @@
            javax.imageio.ImageIO
            [java.time LocalDate ZoneId]))
 
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
 (defn metrics-prefix-formatter
   "Show 1k instead of 1000; i.e. kilo, mega etc.

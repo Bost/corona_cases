@@ -17,105 +17,100 @@
                                        ]]
    ))
 
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
-(defn world [msg-id {:keys [chat-id country-code] :as prm}]
-  (let [prm
-        ;; override default parse_mode
-        (assoc prm :parse_mode "HTML")]
-    (let [options (select-keys prm (keys msg/options))
-          ;; the message content is fetched from the cache
-          content (msg/detailed-info country-code)]
-      (doall
-       (morse/send-text com/telegram-token chat-id options content))
-      (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
-
-    (if
-        false
-      #_com/env-devel? ;; don't show the graph when developing
-      (debug "Plot not displayed. com/env-devel?" com/env-devel?)
-      (let [options (if (msg/worldwide? country-code)
-                      (msg/buttons {:chat-id chat-id :cc country-code})
-                      {})
-            ;; the plot is fetched from the cache, stats and day need not to be
-            ;; specified
-            content (p/plot-country country-code)]
-        (doall
-         (morse/send-photo com/telegram-token chat-id options content))
-        (debugf "[%s] send-photo: %s bytes sent" msg-id (count content))))))
-
-(def world (partial world "world"))
+(defn world
+  ([prm] (world "world" prm))
+  ([msg-id {:keys [chat-id country-code] :as prm}]
+   (let [prm
+         ;; override default parse_mode
+         (assoc prm :parse_mode "HTML")]
+     (let [options (select-keys prm (keys msg/options))
+           ;; the message content is fetched from the cache
+           content (msg/detailed-info country-code)]
+       (doall
+        (morse/send-text com/telegram-token chat-id options content))
+       (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
+     (let [options (if (msg/worldwide? country-code)
+                     (msg/reply-markup-btns {:chat-id chat-id :cc country-code})
+                     {})
+           ;; the plot is fetched from the cache, stats and day need not to be
+           ;; specified
+           content (p/plot-country country-code)]
+       (doall
+        (morse/send-photo com/telegram-token chat-id options content))
+       (debugf "[%s] send-photo: %s bytes sent" msg-id (count content))))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
 (defn listing
-  [msg-id {:keys [listing-fn chat-id sort-by-case] :as prm}]
-  ;; this may be not needed in the end
-  #_{:pre [(s/valid? #{
-                     ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
-                     msg/list-countries
+  ([prm] (listing "listing" prm))
+  ([msg-id {:keys [listing-fn chat-id sort-by-case] :as prm}]
+   ;; this may be not needed in the end
+   #_{:pre [(s/valid? #{
+                        ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
+                        msg/list-countries
 
-                     ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
-                     msg/list-per-100k
-                     }
-                     listing-fn)]}
-  (let [coll (sort-by sort-by-case < (data/stats-countries))]
-    #_(debugf "[%s] coll %s" msg-id (count coll))
-    (let [
-          ;; Split the long list of all countries into smaller subparts
-          sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
-          cnt-msgs (count sub-msgs)]
-      (let [options (select-keys prm (keys msg/options))
-            contents (map-indexed (fn [idx sub-msg]
-                                    (listing-fn
-                                     (assoc prm
-                                            :data sub-msg
-                                            :msg-idx (inc idx)
-                                            :cnt-msgs cnt-msgs)))
-                                  sub-msgs)]
-        (doall
-         (map (fn [content]
-                (morse/send-text com/telegram-token chat-id options content)
-                (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
-              contents))))))
-
-(def listing (partial listing "listing"))
+                        ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
+                        msg/list-per-100k
+                        }
+                      listing-fn)]}
+   (let [coll (sort-by sort-by-case < (data/stats-countries))]
+     #_(debugf "[%s] coll %s" msg-id (count coll))
+     (let [
+           ;; Split the long list of all countries into smaller subparts
+           sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
+           cnt-msgs (count sub-msgs)]
+       (let [options (select-keys prm (keys msg/options))
+             contents (map-indexed (fn [idx sub-msg]
+                                     (listing-fn
+                                      msg-id
+                                      (assoc prm
+                                             :data sub-msg
+                                             :msg-idx (inc idx)
+                                             :cnt-msgs cnt-msgs)))
+                                   sub-msgs)]
+         (doall
+          (map (fn [content]
+                 (morse/send-text com/telegram-token chat-id options content)
+                 #_(debugf "[%s] send-text: %s chars sent" msg-id (count content)))
+               contents)))))))
 
 (defn list-countries [prm]
-  (listing (assoc prm :listing-fn msg/list-countries)))
+  (listing "list-countries" (assoc prm :listing-fn msg/list-countries)))
 
 (defn list-per-100k [prm]
-  (listing (assoc prm :listing-fn msg/list-per-100k)))
+  (listing "list-per-100k" (assoc prm :listing-fn msg/list-per-100k)))
 
-(defn explain [msg-id {:keys [chat-id parse_mode]}]
-  (let [content (msg/explain parse_mode)]
-    (doall
-     (morse/send-text com/telegram-token chat-id msg/options content))
-    (debugf "[%s] send-text: %s chars sent" msg-id (count content))))
+(defn explain
+  ([prm] (explain "explain" prm))
+  ([msg-id {:keys [chat-id parse_mode]}]
+   (let [content (msg/explain parse_mode)]
+     (doall
+      (morse/send-text com/telegram-token chat-id msg/options content))
+     (debugf "[%s] send-text: %s chars sent" msg-id (count content)))))
 
-(def explain (partial explain "explain"))
-
-(defn feedback [msg-id {:keys [chat-id]}]
-  (let [content (msg/feedback)]
-    (doall
-     (morse/send-text com/telegram-token chat-id msg/options content))
-    (debugf "[%s] send-text: %s chars sent" msg-id (count content))))
-
-(def feedback (partial feedback "feedback"))
+(defn feedback
+  ([prm] (feedback "feedback" prm))
+  ([msg-id {:keys [chat-id]}]
+   (let [content (msg/feedback)]
+     (doall
+      (morse/send-text com/telegram-token chat-id msg/options content))
+     (debugf "[%s] send-text: %s chars sent" msg-id (count content)))))
 
 ;; (defn language [{:keys [chat-id parse_mode]}]
 ;;   (doall
 ;;    (morse/send-text com/telegram-token chat-id msg/options (msg/language parse_mode))))
 
-(defn contributors [msg-id {:keys [chat-id parse_mode]}]
-  (let [content (msg/contributors parse_mode)]
-    (doall
-     (morse/send-text com/telegram-token chat-id msg/options content))
-    (debugf "[%s] send-text: %s chars sent" msg-id (count content))))
-
-(def contributors (partial contributors "contributors"))
+(defn contributors
+  ([prm] (contributors "contributors" prm))
+  ([msg-id {:keys [chat-id parse_mode]}]
+   (let [content (msg/contributors parse_mode)]
+     (doall
+      (morse/send-text com/telegram-token chat-id msg/options content))
+     (debugf "[%s] send-text: %s chars sent" msg-id (count content)))))
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
@@ -126,20 +121,20 @@
 (defn cmds-country-code
   "E.g.
   (cmds-country-code \"DE\") =>
-  [{:name \"de\"      :f #function[...]}
-   {:name \"DE\"      :f #function[...]}
-   {:name \"De\"      :f #function[...]}
-   {:name \"deu\"     :f #function[...]}
-   {:name \"DEU\"     :f #function[...]}
-   {:name \"Deu\"     :f #function[...]}
-   {:name \"germany\" :f #function[...]}
-   {:name \"GERMANY\" :f #function[...]}
-   {:name \"Germany\" :f #function[...]}]"
+  [{:name \"de\"      :fun #function[...]}
+   {:name \"DE\"      :fun #function[...]}
+   {:name \"De\"      :fun #function[...]}
+   {:name \"deu\"     :fun #function[...]}
+   {:name \"DEU\"     :fun #function[...]}
+   {:name \"Deu\"     :fun #function[...]}
+   {:name \"germany\" :fun #function[...]}
+   {:name \"GERMANY\" :fun #function[...]}
+   {:name \"Germany\" :fun #function[...]}]"
   [country-code]
   (mapv
    (fn [fun]
      {:name (fun country-code)
-      :f
+      :fun
       (fn [chat-id]
         (world {:chat-id chat-id
                 :country-code country-code
@@ -159,19 +154,19 @@
                    :country-code (ccr/country-code ccc/worldwide)}
              msg/options)]
     [{:name l/contributors
-      :f (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
+      :fun (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
      {:name l/world
-      :f (fn [chat-id] (world (assoc prm :chat-id chat-id)))
+      :fun (fn [chat-id] (world (assoc prm :chat-id chat-id)))
       :desc l/world-desc}
      {:name l/start
-      :f (fn [chat-id] (world (assoc prm :chat-id chat-id)))
+      :fun (fn [chat-id] (world (assoc prm :chat-id chat-id)))
       :desc l/world-desc}
      {:name l/explain
-      :f (fn [chat-id] (explain (assoc prm :chat-id chat-id)))
+      :fun (fn [chat-id] (explain (assoc prm :chat-id chat-id)))
       :desc "Explain abbreviations & some additional info"}
      {:name l/feedback
-      :f (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
+      :fun (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}]))
 
 (defn cmds-listing
@@ -185,15 +180,15 @@
                          msg/options)
                     prm-country-code {:country-code (ccr/country-code ccc/worldwide)}]
                 {:name (l/list-sorted-by case-kw)
-                 :f (fn [chat-id]
-                      (let [list-fn (if (in? com/listing-cases-per-100k case-kw)
-                                      list-per-100k
-                                      list-countries)]
-                        (list-fn (conj (assoc prm
-                                              :parse_mode "HTML"
-                                              :chat-id chat-id
-                                              :sort-by-case case-kw)
-                                       prm-country-code))))
+                 :fun (fn [chat-id]
+                        (let [list-fn (if (in? com/listing-cases-per-100k case-kw)
+                                        list-per-100k
+                                        list-countries)]
+                          (list-fn (conj (assoc prm
+                                                :parse_mode "HTML"
+                                                :chat-id chat-id
+                                                :sort-by-case case-kw)
+                                         prm-country-code))))
                  :desc (l/list-sorted-by-desc case-kw)})))))
 
 (def cmds
