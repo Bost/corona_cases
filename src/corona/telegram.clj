@@ -45,21 +45,41 @@
 ;; https://github.com/camsaul/methodical
 ;; https://github.com/technomancy/robert-hooke
 
-(defn cmd-handler
-  "Use :pre and :post hooks to see in the log if and how request are made and
-  responded"
-  ([prm] (cmd-handler "cmd-handler" prm))
-  ([msg-id {:keys [name fun]}]
-   (debugf "[%s] name %s; fun %s" msg-id name fun)
-   (->> (fn [prm] (fun (-> prm :chat :id)))
-        (wrap-in-hooks {:pre (fn [& args]
-                               (let [chat (:chat (first args))]
-                                 (infof "[%s] /%s; hook %s; chat %s" msg-id name :pre chat)))
-                        :post (fn [& args]
-                                (let [[fn-result {:keys [chat]}] args]
-                                  (infof "[%s] /%s; hook %s; chat %s" :post chat)
-                                  fn-result))})
-        (h/command-fn name))))
+(defn create-commands
+  ([cmds] (create-commands "create-commands" cmds))
+  ([msg-id cmds]
+   (map
+    (fn [{:keys [name fun]}]
+      (->> (fn [prm] (fun (-> prm :chat :id)))
+           (wrap-in-hooks {:pre (fn [& args]
+                                  (let [chat (:chat (first args))]
+                                    (infof "[%s] :pre; /%s; chat %s" msg-id name chat)))
+                           :post (fn [& args]
+                                   (let [[fn-result {:keys [chat]}] args]
+                                     (infof "[%s] :post; /%s; chat %s" msg-id name chat)
+                                     fn-result))})
+           (h/command-fn name)))
+    cmds)))
+
+(defn create-callbacks
+  ([funs] (create-callbacks "create-callbacks" funs))
+  ([msg-id funs]
+   (map
+    (fn [fun]
+      (->> fun
+           (wrap-in-hooks {:pre (fn [& args]
+                                  (let [{:keys [data message]} (first args)]
+                                    (infof "[%s] :pre; data %s; chat %s"
+                                           msg-id data (:chat message))))
+                           :post (fn [& args]
+                                   (let [[fn-result {:keys [data message]}] args]
+                                     (infof "[%s] :post; data %s; chat %s"
+                                            msg-id data (:chat message))
+                                     #_(debugf "fn-result %s; size %s"
+                                               fn-result (count (str fn-result)))
+                                     fn-result))})
+           (h/callback-fn)))
+    funs)))
 
 (defn create-handlers
   "Receiving incoming updates using long polling (getUpdates method)
@@ -67,27 +87,11 @@
   An Array of Update-objects is returned."
   ([] (create-handlers "create-handlers"))
   ([msg-id]
-   (let [callbacks
-         (->>
-          msg/worldwide-plots
-          (wrap-in-hooks {:pre (fn [& args]
-                                 (let [{:keys [data message]} (first args)]
-                                   (infof "[%s] hook %s; data %s; chat %s"
-                                          msg-id :pre data (:chat message))))
-                          :post (fn [& args]
-                                  (let [[fn-result {:keys [data message]}] args]
-                                    (infof "[%s] hook %s; data %s; chat %s"
-                                           msg-id :post data (:chat message))
-                                    #_(debugf "fn-result %s; size %s"
-                                              fn-result (count (str fn-result)))
-                                    fn-result))})
-          (h/callback-fn)
-          (vector))]
-     (let [commands (mapv cmd-handler cmd/cmds)]
-       (let [handlers (into callbacks commands)]
-         (infof "Registering %s chatbot commands and %s callbacks..."
-                (count cmd/cmds) (count callbacks))
-         (apply h/handlers handlers))))))
+   (let [callbacks (create-callbacks [msg/worldwide-plots])
+         commands (create-commands cmd/cmds)]
+     (infof "[%s] registering %s chatbot commands and %s callbacks..."
+            msg-id (count commands) (count callbacks))
+     (apply h/handlers (into callbacks commands)))))
 
 (defn start-polling
   "
