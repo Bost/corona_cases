@@ -370,9 +370,9 @@
   TODO Create API web service(s) for every field displayed in the messages
   "
   [msg-id ccode parse_mode pred]
-  (debugf "[%s] ccode %s" msg-id ccode)
-  (debugf "[%s] parse_mode %s" msg-id parse_mode)
-  (debugf "[%s] pred %s" msg-id pred)
+  ;; (debugf "[%s] ccode %s" msg-id ccode)
+  ;; (debugf "[%s] parse_mode %s" msg-id parse_mode)
+  ;; (debugf "[%s] pred %s" msg-id pred)
   (format-linewise
    [["%s\n"  ; extended header
      [(format-linewise
@@ -550,7 +550,7 @@
   ([ccode]                 (detailed-info ccode nil nil))
   ([ccode parse_mode pred] (detailed-info "detailed-info" ccode parse_mode pred))
   ([msg-id ccode parse_mode pred]
-   (debugf "[%s] ccode %s; parse_mode %s; pred %s" msg-id ccode parse_mode pred)
+   ;; (debugf "[%s] ccode %s; parse_mode %s; pred %s" msg-id ccode parse_mode pred)
    (let [content (data/from-cache
                   [:msg (keyword ccode)]
                   (fn [] (calc-detailed-info-fn msg-id ccode parse_mode pred)))]
