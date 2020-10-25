@@ -209,11 +209,6 @@
 
 ;; TODO reload only the latest N reports. e.g. try one week
 
-;; TODO country-plots are <= 45kB; world-plots are <= 68kb
-;; 8 top-10-plots, 1 world-plot + 252 countries;
-;; (+ (* 2 (+ 1 252)) (* 252 45) (* 68 8)) => 12390 kB ~12.5MB
-;; TODO listing-message-size: ~?kB
-
 (defn calc-case-counts-report-by-report-fn [pred-hm]
   #_(debugf "calc-case-counts-report-by-report-fn")
   (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
