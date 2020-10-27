@@ -98,7 +98,7 @@
 ;; Undefine: (map #(ns-unmap *ns* %) (keys (ns-interns *ns*)))
 (defn intern-country-codes!
   "TODO clarify artificially setting ':tag `String' since:
-  (def f ^String \"f\")
+  (def foo ^String \"foo\")
   produces error: Metadata can only be applied to IMetas"
   [strings]
   (run! (fn [v]

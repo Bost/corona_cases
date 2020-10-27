@@ -236,11 +236,10 @@
                    (com/calculate-cases-per-100k :r)
                    (com/calculate-cases-per-100k :d)
                    (com/calculate-cases-per-100k :c)]
-                  #_(mapv (fn [f] (apply mapv f pcrd)))
-                  (mapv (fn [f] (apply mapv (fn [p c r d]
+                  (mapv (fn [fun] (apply mapv (fn [p c r d]
                                               (->> [p c r d]
                                                    (zipmap [:p :c :r :d])
-                                                   (f)))
+                                                   (fun)))
                                        pcrd))))))))
 
 (defn case-counts-report-by-report
