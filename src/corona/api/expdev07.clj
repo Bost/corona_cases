@@ -191,14 +191,14 @@
   []
   0)
 
-(defn dbg-recov [cc case-kw  raw-date v]
-  #_(debugf "%s %s %s: %s" cc case-kw (com/fmt-date-dbg (date raw-date)) v))
+(defn dbg-recov [ccode case-kw  raw-date v]
+  #_(debugf "%s %s %s: %s" ccode case-kw (com/fmt-date-dbg (date raw-date)) v))
 
-(defn check-zero [cc case-kw raw-date history]
+(defn check-zero [ccode case-kw raw-date history]
   (let [v (get history raw-date)]
     (when (and (= :recovered case-kw)
-               (not= cc ccc/zz))
-      (dbg-recov cc case-kw raw-date v))
+               (not= ccode ccc/zz))
+      (dbg-recov ccode case-kw raw-date v))
     v))
 
 ;; TODO reload only the latest N reports. e.g. try one week
@@ -262,7 +262,8 @@
   "
   [{:keys [cc pred] :as pred-hm}]
   ;; ignore predicate for the moment
-  (from-cache (fn [] (calc-case-counts-report-by-report-fn pred-hm)) [:cnts (keyword cc)]))
+  (from-cache (fn [] (calc-case-counts-report-by-report-fn pred-hm))
+              [:cnts (keyword cc)]))
 
 (defn eval-fun
   [fun pred-hm]
@@ -296,9 +297,9 @@
   [pred-hm]
   (eval-fun (fn [coll] (take-last 8 coll)) pred-hm))
 
-(defn old-pred-fn [country-code]
+(defn old-pred-fn [ccode]
   (fn [loc]
-    (condp = country-code
+    (condp = ccode
       ccc/worldwide-2-country-code
       true
 
@@ -306,17 +307,14 @@
       ;; XX comes from the service
       (= ccc/xx (:country_code loc))
 
-      (= country-code (:country_code loc)))))
+      (= ccode (:country_code loc)))))
 
-(defn create-pred-hm [country-code]
-  {:cc country-code
-   :pred (old-pred-fn country-code)
-   })
+(defn create-pred-hm [ccode] {:cc ccode :pred (old-pred-fn ccode)})
 
 (defn calc-stats-countries-fn []
   #_(debugf "calc-stats-countries-fn")
-  (map (fn [cc] (conj {:cc cc}
-                      (last-nn-day (create-pred-hm cc))))
+  (map (fn [ccode] (conj {:cc ccode}
+                      (last-nn-day (create-pred-hm ccode))))
        ccc/all-country-codes))
 
 (defn stats-countries []
@@ -345,12 +343,12 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
   "TODO verify ranking for one and zero countries"
   []
   #_(debugf "calc-all-rankings-fn")
-  (map (fn [affected-cc]
+  (map (fn [ccode]
          (apply deep-merge
                 (reduce into []
                         (map (fn [ranking]
                                (filter (fn [{:keys [cc]}]
-                                         (= cc affected-cc))
+                                         (= cc ccode))
                                        ranking))
                              (utc/transpose (map rank-for-case
                                                  com/ranking-cases))))))

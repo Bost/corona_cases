@@ -25,18 +25,18 @@
   library: com.neovisionaries/nv-i18n \"1.27\""
   []
   (transduce (comp
-              (filter (fn [^com.neovisionaries.i18n.CountryCode cc]
-                        (= (.getAssignment cc)
+              (filter (fn [^com.neovisionaries.i18n.CountryCode ccode]
+                        (= (.getAssignment ccode)
                            CountryCode$Assignment/OFFICIALLY_ASSIGNED)))
-              (map (fn [^com.neovisionaries.i18n.CountryCode cc]
-                     [(str cc) (.getName cc)])))
+              (map (fn [^com.neovisionaries.i18n.CountryCode ccode]
+                     [(str ccode) (.getName ccode)])))
              conj {}
              (CountryCode/values))
   #_(->> (CountryCode/values)
-       (filter (fn [cc] (= (.getAssignment cc)
+       (filter (fn [ccode] (= (.getAssignment ccode)
                           CountryCode$Assignment/OFFICIALLY_ASSIGNED)))
-       (map (fn [cc] [(str cc)
-                      (.getName cc)]))
+       (map (fn [ccode] [(str ccode)
+                      (.getName ccode)]))
        (into {})))
 
 (def ^:const country-code--country
@@ -58,8 +58,8 @@
 ;; (defn country-code--country-locale
 ;;   []
 ;;   (->> (java.util.Locale/getISOCountries)
-;;        (map (fn [cc] [cc
-;;                      (-> (.getDisplayCountry (new Locale "" cc))
+;;        (map (fn [ccode] [ccode
+;;                      (-> (.getDisplayCountry (new Locale "" ccode))
 ;;                          #_(cstr/replace "&" "and"))]))
 ;;        (into {})))
 
@@ -70,8 +70,8 @@
 
 (defn country-name
   "Country name from 2-letter country code: \"DE\" -> \"Germany\" "
-  [cc]
-  (get country-code--country cc))
+  [ccode]
+  (get country-code--country ccode))
 
 (def ^:const country-alias--country-code
   "Mapping of alternative names, spelling, typos to the names of countries used by
@@ -351,23 +351,23 @@
                           (conj country--country-code
                                 country-alias--country-code
                                 (cset/map-invert country-alias--country-code-inverted)))]
-    (if-let [cc (get lcases-countries country)]
-      cc
+    (if-let [ccode (get lcases-countries country)]
+      ccode
       (do (errorf "\"%s\" has no country code. Using \"%s\""
                   country-name ccc/default-2-country-code)
           ccc/default-2-country-code))))
 
 (defn country-alias
   "Get a country alias or the normal name if an alias doesn't exist"
-  [cc]
-  (let [up-cc (cstr/upper-case cc)
-        country (get country-code--country up-cc)]
-    (get country-alias--country-code-inverted up-cc country)))
+  [ccode]
+  (let [up-ccode (cstr/upper-case ccode)
+        country (get country-code--country up-ccode)]
+    (get country-alias--country-code-inverted up-ccode country)))
 
 (defn country-name-aliased
   "Use an alias; typically a shorter name for some countries.
   See `country-alias--country-code-inverted`"
-  [country-code]
+  [ccode]
   (if (in?
        [
         ccc/va ccc/tw ccc/do ccc/ir ccc/ru ccc/ps ccc/ae ccc/kr ccc/mk ccc/ba
@@ -377,9 +377,9 @@
         ccc/cc ccc/bq ccc/mp ccc/vg ccc/io ccc/um ccc/tf ccc/gs ccc/cd ccc/cg
         ccc/vn
         ]
-       country-code)
-    (country-alias country-code)
-    (country-name country-code)))
+       ccode)
+    (country-alias ccode)
+    (country-name ccode)))
 
 (def ^:const population-table
   "From

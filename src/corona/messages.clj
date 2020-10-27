@@ -184,11 +184,11 @@
 (defn worldwide-plots
   ([prm] (worldwide-plots "worldwide-plots" prm))
   ([msg-id {:keys [data]}]
-   (let [{country-code :cc
+   (let [{ccode :cc
           chat-id :chat-id
           type :type
           case-kw :case} (edn/read-string data)]
-     (let [options (reply-markup-btns {:chat-id chat-id :cc country-code})
+     (let [options (reply-markup-btns {:chat-id chat-id :cc ccode})
            content (let [plot-fn (if (= type :sum)
                                    p/plot-sum-by-case p/plot-absolute-by-case)]
                      ;; the plot is fetched from the cache, stats and day need not to be
@@ -258,15 +258,16 @@
       (s/join
        "\n"
        (map (fn [{:keys [i r d cc]}]
-              (let [cn (ccr/country-name-aliased cc)]
+              (let [ccode cc
+                    cname (ccr/country-name-aliased ccode)]
                 (format "<code>%s%s%s%s%s %s</code>  %s"
                         (com/left-pad i " " omag-active)
                         spacer
                         (com/left-pad r " " omag-recov)
                         spacer
                         (com/left-pad d " " omag-deaths)
-                        (com/right-pad cn 17)
-                        (s/lower-case (com/encode-cmd cc)))))
+                        (com/right-pad cname 17)
+                        (s/lower-case (com/encode-cmd ccode)))))
             (->> data
                  #_(take-last 11)
                  #_(partition-all 2)
@@ -306,15 +307,16 @@
       (s/join
        "\n"
        (map (fn [{:keys [i100k r100k d100k cc]}]
-              (let [cn (ccr/country-name-aliased cc)]
+              (let [ccode cc
+                    cname (ccr/country-name-aliased ccode)]
                 (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                         (com/left-pad i100k " " omag-active-per-100k)
                         spacer
                         (com/left-pad r100k " " omag-recovered-per-100k)
                         spacer
                         (com/left-pad d100k " " omag-deaths-per-100k)
-                        (com/right-pad cn 17)
-                        (s/lower-case (com/encode-cmd cc)))))
+                        (com/right-pad cname 17)
+                        (s/lower-case (com/encode-cmd ccode)))))
             (->> data
                  #_(take-last 11)
                  #_(partition-all 2)
@@ -377,7 +379,7 @@
        [["%s  " [(header parse_mode pred)]]
         ["%s "  [(ccr/country-name-aliased ccode)]]
         ["%s"   [;; country commands
-                 (apply (fn [cc ccc] (format "     %s    %s" cc ccc))
+                 (apply (fn [ccode c3code] (format "     %s    %s" ccode c3code))
                         (map (fn [s] (com/encode-cmd (s/lower-case s)))
                              [ccode
                               (ccc/country-code-3-letter ccode)]))]]])]]
@@ -517,7 +519,7 @@
                      #_(debug "[%s] worldwide?" msg-id (worldwide? ccode))
                      (let [rank (first
                                  (map :rank
-                                      (filter (fn [{:keys [cc]}] (= cc ccode))
+                                      (filter (fn [{:keys [ccode]}] (= ccode ccode))
                                               (data/all-rankings))))
                            cnt-countries (count ccc/all-country-codes)
                            worldwide-block

@@ -29,24 +29,24 @@
 ;;   (->> (get-in (json-data) [case :locations])
 ;;        (filter (fn [loc]
 ;;                  true
-;;                  #_(in? ccs (:country_code loc))))
+;;                  #_(in? ccodes (:country_code loc))))
 ;;        (map (fn [loc]
-;;               (let [cc (:country_code loc)]
+;;               (let [ccode (:country_code loc)]
 ;;                 (->> (sort-by
 ;;                       :t
-;;                       (map (fn [[t v]] {:cc cc :t (fmt t) case v})
+;;                       (map (fn [[t v]] {:cc ccode :t (fmt t) case v})
 ;;                            (:history loc)))
 ;;                      #_(take-last 3)))))
 ;;        (flatten)
 ;;        (group-by :t)
 ;;        (map (fn [[t hms]]
-;;               (map (fn [[cc hms]]
-;;                      {:cc cc :t t case (reduce + (map case hms))})
+;;               (map (fn [[ccode hms]]
+;;                      {:cc ccode :t t case (reduce + (map case hms))})
 ;;                    (group-by :cc hms))))
 ;;        (flatten)
 ;;        (sort-by :cc)))
 
-(def ^:const ccs
+(def ^:const ccodes
   #{
     ;; cr tg za pe lc ch ru si au kr it fi sc tt my sy mn am dz uy td dj bi mk
     ;; mu li gr gy cg ml gm sa bh ne bn xk cd dk bj me bo jo cv ve ci uz tn is
@@ -95,11 +95,11 @@
           (comp
            ;; group together provinces of the given country
            (x/by-key :cc (x/reduce conj)) ; (group-by :cc)
-           (map (fn [[cc hms]] {:cc cc :t t case (reduce + (map case hms))})))
+           (map (fn [[ccode hms]] {:cc ccode :t t case (reduce + (map case hms))})))
           hms)
 
     #_(->> (group-by :cc hms) ;; group together provinces of the given country
-           (map (fn [[cc hms]] {:cc cc :t t case (reduce + (map case hms))}))))
+           (map (fn [[ccode hms]] {:cc ccode :t t case (reduce + (map case hms))}))))
 
   ;; TODO see: "A transducer for clojure.core.flatten"
   ;; https://groups.google.com/forum/#!topic/clojure-dev/J442k0GsWoY
@@ -119,7 +119,7 @@
        (transduce (comp
                    (filter
                     (fn [_] true)
-                    #_(fn [loc] (in? ccs (:country_code loc))))
+                    #_(fn [loc] (in? ccodes (:country_code loc))))
                    (map process-location))
                   ;; works as flatten by 1 level
                   into [])
@@ -140,19 +140,19 @@
 )"
   []
   (apply map
-         (fn [
-               {:keys [population]}
-               {:keys [cc t confirmed]}
-               {:keys [recovered]}
-               {:keys [deaths]}]
-             (let [prm {:cc cc :t t :c confirmed :r recovered :d deaths
-                        :p population
-                        }]
-               (assoc
-                prm
-                #_(dissoc prm :c)
-                :i (com/calculate-active prm)
-                :i100k ((com/calculate-cases-per-100k :i) prm)
-                :r100k ((com/calculate-cases-per-100k :r) prm)
-                :d100k ((com/calculate-cases-per-100k :d) prm))))
+         (fn [{:keys [population]}
+             {:keys [cc t confirmed]}
+             {:keys [recovered]}
+             {:keys [deaths]}]
+           (let [ccode cc
+                 prm {:cc ccode :t t :c confirmed :r recovered :d deaths
+                      :p population
+                      }]
+             (assoc
+              prm
+              #_(dissoc prm :c)
+              :i (com/calculate-active prm)
+              :i100k ((com/calculate-cases-per-100k :i) prm)
+              :r100k ((com/calculate-cases-per-100k :r) prm)
+              :d100k ((com/calculate-cases-per-100k :d) prm))))
          (map xf-for-case [:population :confirmed :recovered :deaths])))

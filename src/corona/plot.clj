@@ -79,45 +79,45 @@
 
 (defn sort-by-last-val [mapped-hm]
   (let [order (->> mapped-hm
-                   (map (fn [[cc hms]] [cc (second (last hms))]))
+                   (map (fn [[ccode hms]] [ccode (second (last hms))]))
                    (sort-by second)
                    (reverse)
                    (map first))]
-    (transduce (map (fn [cc] {cc (get mapped-hm cc)}))
+    (transduce (map (fn [ccode] {ccode (get mapped-hm ccode)}))
                into []
                order)))
 
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
   is unspecified."
-  [cc stats]
-  (let [pred-fn (fn [hm] (if (= cc ccc/worldwide-2-country-code)
+  [ccode stats]
+  (let [pred-fn (fn [hm] (if (= ccode ccc/worldwide-2-country-code)
                           true
-                          (= cc (:cc hm))))]
+                          (= ccode (:cc hm))))]
     (->> stats
          (filter pred-fn)
          (group-by :t)
          (map (fn [[t hms]]
                   [
                    ;; confirmed cases is the sum of all others
-                   {:cc cc :t t :case :p :cnt
+                   {:cc ccode :t t :case :p :cnt
                     (bigint (/ (:p (first hms)) 1e3))
                     #_(reduce + (map :p hms))
-                    #_(bigint (/ (get population cc) (bigint 1e3)))}
-                   {:cc cc :t t :case :c :cnt (reduce + (map :c hms))}
-                   {:cc cc :t t :case :r :cnt (reduce + (map :r hms))}
-                   {:cc cc :t t :case :d :cnt (reduce + (map :d hms))}
-                   {:cc cc :t t :case :i :cnt (reduce + (map :i hms))}]))
+                    #_(bigint (/ (get population ccode) (bigint 1e3)))}
+                   {:cc ccode :t t :case :c :cnt (reduce + (map :c hms))}
+                   {:cc ccode :t t :case :r :cnt (reduce + (map :r hms))}
+                   {:cc ccode :t t :case :d :cnt (reduce + (map :d hms))}
+                   {:cc ccode :t t :case :i :cnt (reduce + (map :i hms))}]))
          flatten)))
 
-(defn stats-for-country [cc stats]
+(defn stats-for-country [ccode stats]
   (let [mapped-hm (plotcom/map-kv
                    (fn [entry]
                      (sort-by first
                               (map (fn [{:keys [t cnt]}]
                                      [(to-java-time-local-date t) cnt])
                                    entry)))
-                   (group-by :case (sum-for-pred cc stats)))]
+                   (group-by :case (sum-for-pred ccode stats)))]
     ;; sort - keep the "color order" of cases fixed; don't
     ;; recalculate it
     (reverse (transduce (map (fn [case-kw] {case-kw (get mapped-hm case-kw)}))
@@ -130,18 +130,18 @@
 (defn fmt-day [day] (format "%s %s" l/day day))
 
 (defn plot-label
-  "day - day since the outbreak
-  cc - country code
+  "report-nr - Nth report since the outbreak
+  ccode - country code
   stats - statistics active, confirmed, etc. for the given country code"
-  [day cc stats]
+  [report-nr ccode stats]
   (format "%s; %s; %s: %s"
-          (fmt-day day)
+          (fmt-day report-nr)
           (fmt-last-date stats)
           com/bot-name
           (format "%s %s %s"
                   l/stats
-                  (ccr/country-name-aliased cc)
-                  (com/encode-cmd cc))))
+                  (ccr/country-name-aliased ccode)
+                  (com/encode-cmd ccode))))
 
 (defn palette-colors
   "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
@@ -199,8 +199,8 @@
 (defn calc-plot-country-fn
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
-  [cc & [stats day]]
-  (let [base-data (stats-for-country cc stats)
+  [ccode & [stats day]]
+  (let [base-data (stats-for-country ccode stats)
         sarea-data (remove (fn [[case-kw _]]
                              (in? #_[:c :i :r :d] [:c :p] case-kw))
                            base-data)
@@ -214,7 +214,7 @@
     ;; TODO annotation by value and labeling doesn't work:
     ;; :annotate? true
     ;; :annotate-fmt "%.1f"
-    ;; {:label (plot-label day cc stats)}
+    ;; {:label (plot-label day ccode stats)}
     (let [img
           (boiler-plate
            {:series (b/series
@@ -237,10 +237,10 @@
                            [:line l/confirmed     stroke-confirmed]
                            [:line l/sick-absolute stroke-sick]
                            #_[:line l/people    stroke-population]))
-            :label (plot-label day cc stats)
+            :label (plot-label day ccode stats)
             :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
       (let [img-byte-array (toByteArrayAutoClosable img)]
-        (debugf "[plot-country] cc %s; img-size %s" cc (count img-byte-array))
+        (debugf "[plot-country] ccode %s; img-size %s" ccode (count img-byte-array))
         img-byte-array))))
 
 (defn plot-country
@@ -275,8 +275,8 @@
   [{:keys [case] :as prm-orig}]
   (let [prm (group-below-threshold prm-orig)]
     (let [res (flatten (map (fn [[t hms]]
-                              (map (fn [[cc hms]]
-                                     {:cc cc :t t case (reduce + (map case hms))})
+                              (map (fn [[ccode hms]]
+                                     {:cc ccode :t t case (reduce + (map case hms))})
                                    (group-by :cc hms)))
                             (group-by :t (:data prm))))]
       (update prm :data (fn [_] res)))))
@@ -289,13 +289,13 @@
                     (map (fn [[t hms]]
                            (cset/union
                             hms
-                            (map (fn [cc] {:cc cc :t t case 0})
+                            (map (fn [ccode] {:cc ccode :t t case 0})
                                  (cset/difference countries-threshold
                                                   (keys (group-by :cc hms)))))
                            #_(->> (group-by :cc hms)
                                   keys
                                   (cset/difference countries-threshold)
-                                  (map (fn [cc] {:cc cc :t t :i 0}))
+                                  (map (fn [ccode] {:cc ccode :t t :i 0}))
                                   (cset/union hms)))
                          (group-by :t sum-all-by-date-by-case-threshold)))]
     (update date-sums :data (fn [_] res))))
@@ -337,9 +337,9 @@
                           (map
                            ccr/country-alias
                            ;; XXX b/add-legend doesn't accept newline char \n
-                           #_(fn [cc] (format "%s %s"
-                                             cc
-                                             (com/country-alias cc)))
+                           #_(fn [ccode] (format "%s %s"
+                                             ccode
+                                             (com/country-alias ccode)))
                            (keys json-data))))
             :y-axis-formatter (metrics-prefix-formatter
                                ;; `+` means: sum up all active cases
@@ -386,7 +386,7 @@
              }
 
         json-data (->> (:data (stats-all-by-case prm))
-                       #_(remove (fn [[cc _]] (= cc corona.country-codes/qq))))
+                       #_(remove (fn [[ccode _]] (= ccode ccc/qq))))
         palette (cycle (c/palette-presets
                         #_:tableau-10
                         #_:tableau-10-2
@@ -395,7 +395,8 @@
                         :category20b))]
     (let [img
           (boiler-plate
-           {:series (->> (mapv (fn [[_ cc-data] color] [:line cc-data (line-stroke color)])
+           {:series (->> (mapv (fn [[_ ccode-data] color]
+                                 [:line ccode-data (line-stroke color)])
                                json-data
                                palette)
                          (into [[:grid]])
