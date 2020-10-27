@@ -266,7 +266,7 @@
   ;; {:pre [(spec/valid? ::fun fun)
   ;;        (spec/valid? ::pred-fn pred)]}
   ;; (debugf "dates %s" (count (dates)))
-  (into {:f (fun (dates))}
+  (into {:t (fun (dates))}
         (map (fn [[k v]] {k (fun v)})
              (case-counts-report-by-report pred-hm))))
 

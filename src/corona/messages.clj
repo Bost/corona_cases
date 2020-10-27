@@ -214,7 +214,7 @@
       ;; i.e. "Markdown"
       "*%s*")
     " %s")
-   (com/fmt-date (:f (data/last-nn-day pred-hm)))
+   (com/fmt-date (:t (data/last-nn-day pred-hm)))
    (condp = parse_mode
      "HTML" com/bot-name
      ;; i.e. "Markdown"

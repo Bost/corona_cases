@@ -96,26 +96,26 @@
                           (= cc (:cc hm))))]
     (->> stats
          (filter pred-fn)
-         (group-by :f)
-         (map (fn [[f hms]]
+         (group-by :t)
+         (map (fn [[t hms]]
                   [
                    ;; confirmed cases is the sum of all others
-                   {:cc cc :f f :case :p :cnt
+                   {:cc cc :t t :case :p :cnt
                     (bigint (/ (:p (first hms)) 1e3))
                     #_(reduce + (map :p hms))
                     #_(bigint (/ (get population cc) (bigint 1e3)))}
-                   {:cc cc :f f :case :c :cnt (reduce + (map :c hms))}
-                   {:cc cc :f f :case :r :cnt (reduce + (map :r hms))}
-                   {:cc cc :f f :case :d :cnt (reduce + (map :d hms))}
-                   {:cc cc :f f :case :i :cnt (reduce + (map :i hms))}]))
+                   {:cc cc :t t :case :c :cnt (reduce + (map :c hms))}
+                   {:cc cc :t t :case :r :cnt (reduce + (map :r hms))}
+                   {:cc cc :t t :case :d :cnt (reduce + (map :d hms))}
+                   {:cc cc :t t :case :i :cnt (reduce + (map :i hms))}]))
          flatten)))
 
 (defn stats-for-country [cc stats]
   (let [mapped-hm (plotcom/map-kv
                    (fn [entry]
                      (sort-by first
-                              (map (fn [{:keys [f cnt]}]
-                                     [(to-java-time-local-date f) cnt])
+                              (map (fn [{:keys [t cnt]}]
+                                     [(to-java-time-local-date t) cnt])
                                    entry)))
                    (group-by :case (sum-for-pred cc stats)))]
     ;; sort - keep the "color order" of cases fixed; don't
@@ -125,7 +125,7 @@
                         [:i :r :d :c :p]))))
 
 (defn fmt-last-date [stats]
-  ((comp com/fmt-date :f last) (sort-by :f stats)))
+  ((comp com/fmt-date :t last) (sort-by :t stats)))
 
 (defn fmt-day [day] (format "%s %s" l/day day))
 
@@ -274,11 +274,11 @@
   "Group the country stats by day and sum up the active cases"
   [{:keys [case] :as prm-orig}]
   (let [prm (group-below-threshold prm-orig)]
-    (let [res (flatten (map (fn [[f hms]]
+    (let [res (flatten (map (fn [[t hms]]
                               (map (fn [[cc hms]]
-                                     {:cc cc :f f case (reduce + (map case hms))})
+                                     {:cc cc :t t case (reduce + (map case hms))})
                                    (group-by :cc hms)))
-                            (group-by :f (:data prm))))]
+                            (group-by :t (:data prm))))]
       (update prm :data (fn [_] res)))))
 
 (defn fill-rest [{:keys [case] :as prm}]
@@ -286,18 +286,18 @@
         {sum-all-by-date-by-case-threshold :data} date-sums
         countries-threshold (set (map :cc sum-all-by-date-by-case-threshold))
         res (reduce into []
-                    (map (fn [[f hms]]
+                    (map (fn [[t hms]]
                            (cset/union
                             hms
-                            (map (fn [cc] {:cc cc :f f case 0})
+                            (map (fn [cc] {:cc cc :t t case 0})
                                  (cset/difference countries-threshold
                                                   (keys (group-by :cc hms)))))
                            #_(->> (group-by :cc hms)
                                   keys
                                   (cset/difference countries-threshold)
-                                  (map (fn [cc] {:cc cc :f f :i 0}))
+                                  (map (fn [cc] {:cc cc :t t :i 0}))
                                   (cset/union hms)))
-                         (group-by :f sum-all-by-date-by-case-threshold)))]
+                         (group-by :t sum-all-by-date-by-case-threshold)))]
     (update date-sums :data (fn [_] res))))
 
 (defn stats-all-by-case [{:keys [case] :as prm}]
@@ -308,7 +308,7 @@
                      (sort-by first
                               (map (fn [fill-rest-stats]
                                      [(to-java-time-local-date
-                                       (:f fill-rest-stats))
+                                       (:t fill-rest-stats))
                                       (case fill-rest-stats)])
                                    entry)))
                    (group-by :cc data))]
