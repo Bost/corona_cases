@@ -25,8 +25,8 @@
 
 (defn fmt [raw-date] (.parse ^SimpleDateFormat sdf (srvc/keyname raw-date)))
 
-;; (defn for-case [case]
-;;   (->> (get-in (json-data) [case :locations])
+;; (defn for-case [case-kw]
+;;   (->> (get-in (json-data) [case-kw :locations])
 ;;        (filter (fn [loc]
 ;;                  true
 ;;                  #_(in? ccodes (:country_code loc))))
@@ -34,14 +34,14 @@
 ;;               (let [ccode (:country_code loc)]
 ;;                 (->> (sort-by
 ;;                       :t
-;;                       (map (fn [[t v]] {:cc ccode :t (fmt t) case v})
+;;                       (map (fn [[t v]] {:cc ccode :t (fmt t) case-kw v})
 ;;                            (:history loc)))
 ;;                      #_(take-last 3)))))
 ;;        (flatten)
 ;;        (group-by :t)
 ;;        (map (fn [[t hms]]
 ;;               (map (fn [[ccode hms]]
-;;                      {:cc ccode :t t case (reduce + (map case hms))})
+;;                      {:cc ccode :t t case-kw (reduce + (map case-kw hms))})
 ;;                    (group-by :cc hms))))
 ;;        (flatten)
 ;;        (sort-by :cc)))
@@ -68,38 +68,38 @@
 
   TODO see (require '[clojure.core.reducers :as r])
   "
-  [case]
+  [case-kw]
 
   (defn process-location [{:keys [country_code history]}]
     ;; (def hms hms)
-    ;; (def case case)
+    ;; (def case-kw case-kw)
     ;; (def t t)
     ;; (def country_code country_code)
     ;; (def history history)
 
     #_(->> (sort-by :t history)
-           (map (fn [[t v]] {:cc country_code :t (fmt t) case v}))
+           (map (fn [[t v]] {:cc country_code :t (fmt t) case-kw v}))
            (take-last 2))
 
     (into [] (comp (x/sort-by :t)
-                   (map (fn [[t v]] {:cc country_code :t (fmt t) case v}))
+                   (map (fn [[t v]] {:cc country_code :t (fmt t) case-kw v}))
                    #_(x/take-last 2))
           history))
 
   (defn process-date [[t hms]]
     ;; (def hms hms)
-    ;; (def case case)
+    ;; (def case-kw case-kw)
     ;; (def t t)
     (into []
           ;; the xform for the `into []`
           (comp
            ;; group together provinces of the given country
            (x/by-key :cc (x/reduce conj)) ; (group-by :cc)
-           (map (fn [[ccode hms]] {:cc ccode :t t case (reduce + (map case hms))})))
+           (map (fn [[ccode hms]] {:cc ccode :t t case-kw (reduce + (map case-kw hms))})))
           hms)
 
     #_(->> (group-by :cc hms) ;; group together provinces of the given country
-           (map (fn [[ccode hms]] {:cc ccode :t t case (reduce + (map case hms))}))))
+           (map (fn [[ccode hms]] {:cc ccode :t t case-kw (reduce + (map case-kw hms))}))))
 
   ;; TODO see: "A transducer for clojure.core.flatten"
   ;; https://groups.google.com/forum/#!topic/clojure-dev/J442k0GsWoY
@@ -115,7 +115,7 @@
   ;; Transducers: how-to
   ;; https://www.astrecipes.net/blog/2016/11/24/transducers-how-to/
 
-  (->> (get-in (srvc/data-with-pop) [case :locations])
+  (->> (get-in (srvc/data-with-pop) [case-kw :locations])
        (transduce (comp
                    (filter
                     (fn [_] true)

@@ -117,13 +117,13 @@
                      #_(take-last 1)))
               [:raw-dates]))
 
-(defn population-cnt [country-code]
-  (or (get ccr/population country-code)
+(defn population-cnt [ccode]
+  (or (get ccr/population ccode)
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]
-        (errorf "population nr unknown; country-code: %s; using %s"
-                country-code
+        (errorf "population nr unknown; ccode: %s; using %s"
+                ccode
                 default-population)
         default-population)))
 
@@ -165,15 +165,15 @@
    {:population
       {:locations
        (let [the-dates (raw-dates)]
-         (map (fn [country-code]
+         (map (fn [ccode]
                 {
-                 :country (ccr/country-name-aliased country-code)
-                 :country_code country-code
+                 :country (ccr/country-name-aliased ccode)
+                 :country_code ccode
                  :history
                  ;; {:1/23/20 1e6 ;; start number
                  ;;    ;; other days - calc diff
                  ;; }
-                 (let [pop-cnt (population-cnt country-code)]
+                 (let [pop-cnt (population-cnt ccode)]
                    (zipmap the-dates (repeat pop-cnt)))})
               ccc/all-country-codes))}}))
 

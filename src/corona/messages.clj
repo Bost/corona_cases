@@ -28,7 +28,7 @@
 
 (def ^:const options {:parse_mode "Markdown" :disable_web_page_preview true})
 
-(defn create-pred-hm [country-code] (data/create-pred-hm country-code))
+(defn create-pred-hm [ccode] (data/create-pred-hm ccode))
 
 (defn round-nr [value] (int (utn/round-precision value 0)))
 
@@ -169,7 +169,7 @@
        into
        (mapv (fn [type]
                (mapv (fn [case-kw]
-                       {:text (str (case-kw l/buttons)
+                       {:text (str (get l/buttons case-kw)
                                    (type l/plot-type))
                         :callback_data (pr-str (assoc prm
                                                       :case case-kw
@@ -177,9 +177,9 @@
                      com/absolute-cases))
              [:sum :abs]))]})})
 
-(defn worldwide? [country-code]
+(defn worldwide? [ccode]
   (in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
-        ccc/worldwide] country-code))
+        ccc/worldwide] ccode))
 
 (defn worldwide-plots
   ([prm] (worldwide-plots "worldwide-plots" prm))
@@ -554,7 +554,7 @@
    (let [content (data/from-cache
                   (fn [] (calc-detailed-info-fn msg-id ccode parse_mode pred))
                   [:msg (keyword ccode)])]
-     (debugf "[%s] ccode %s; msg-size %s" msg-id ccode (count content))
+     (debugf "[%s] ccode %s msg-size %s" msg-id ccode (count content))
      content)))
 
 (defn feedback []

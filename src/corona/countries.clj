@@ -654,13 +654,14 @@
 
   Compare `corona.tables/population` with `corona.countries/population`
   => (def cdiff (->> (keys corona.countries/population)
-                     (map (fn [k] {k (if-let [n (get corona.tables/population k)]
+                     (map (fn [k] {k (if-let [population-nr (get corona.tables/population k)]
                                       (- (get corona.countries/population k)
-                                         n)
+                                         population-nr)
                                       nil)}))
                      (reduce into)))"
   #_corona.tables/population
   (->> population-table
-       (map (fn [[c n]] {(country-code c) n}))
+       (map (fn [[cname population-nr]]
+              {(country-code cname) population-nr}))
        ;; because e.g. population of Russia is mainland + South Ossetia
        (apply merge-with +)))

@@ -2,7 +2,8 @@
 
 (ns corona.commands
   (:require
-   [clojure.string :as s]
+   [clojure.spec.alpha :as spec]
+   [clojure.string :as cstr]
    [corona.api.expdev07 :as data]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
@@ -49,14 +50,15 @@
   ([prm] (listing "listing" prm))
   ([msg-id {:keys [listing-fn chat-id sort-by-case] :as prm}]
    ;; this may be not needed in the end
-   #_{:pre [(s/valid? #{
-                        ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
-                        msg/list-countries
+   #_
+   {:pre [(spec/valid? #{
+                         ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
+                         msg/list-countries
 
-                        ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
-                        msg/list-per-100k
-                        }
-                      listing-fn)]}
+                         ;; data msg-idx cnt-msgs sort-by-case parse_mode pred
+                         msg/list-per-100k
+                         }
+                       listing-fn)]}
    (let [coll (sort-by sort-by-case < (data/stats-countries))]
      #_(debugf "[%s] coll %s" msg-id (count coll))
      (let [
@@ -114,9 +116,8 @@
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
-  [country-code]
-  (-> (ccr/country-name country-code)
-      (s/replace " " "")))
+  [ccode]
+  (cstr/replace (ccr/country-name ccode) " " ""))
 
 (defn cmds-country-code
   "E.g.
@@ -130,23 +131,23 @@
    {:name \"germany\" :fun #function[...]}
    {:name \"GERMANY\" :fun #function[...]}
    {:name \"Germany\" :fun #function[...]}]"
-  [country-code]
+  [ccode]
   (mapv
    (fn [fun]
-     {:name (fun country-code)
+     {:name (fun ccode)
       :fun
       (fn [chat-id]
         (world {:chat-id chat-id
-                :country-code country-code
-                :pred (msg/create-pred-hm country-code)}))})
-   [#(s/lower-case %)  ;; /de
-    #(s/upper-case %)  ;; /DE
-    #(s/capitalize %)  ;; /De
-    #(s/lower-case (ccc/country-code-3-letter %)) ;; /deu
-    #(s/upper-case (ccc/country-code-3-letter %)) ;; /DEU
-    #(s/capitalize (ccc/country-code-3-letter %)) ;; /Deu
-    #(s/lower-case (normalize %))   ;; /unitedstates
-    #(s/upper-case (normalize %))   ;; /UNITEDSTATES
+                :country-code ccode
+                :pred (msg/create-pred-hm ccode)}))})
+   [#(cstr/lower-case %)  ;; /de
+    #(cstr/upper-case %)  ;; /DE
+    #(cstr/capitalize %)  ;; /De
+    #(cstr/lower-case (ccc/country-code-3-letter %)) ;; /deu
+    #(cstr/upper-case (ccc/country-code-3-letter %)) ;; /DEU
+    #(cstr/capitalize (ccc/country-code-3-letter %)) ;; /Deu
+    #(cstr/lower-case (normalize %))   ;; /unitedstates
+    #(cstr/upper-case (normalize %))   ;; /UNITEDSTATES
     #(normalize %)]))
 
 (defn cmds-general []

@@ -184,7 +184,7 @@
              reducer 0 data))
 
 (defn line-data [kw data]
-  (second (transduce (filter (fn [[case _]] (= kw case)))
+  (second (transduce (filter (fn [[case-kw _]] (= kw case-kw)))
                      into []
                      data)))
 
@@ -240,7 +240,7 @@
             :label (plot-label day ccode stats)
             :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
       (let [img-byte-array (toByteArrayAutoClosable img)]
-        (debugf "[plot-country] ccode %s; img-size %s" ccode (count img-byte-array))
+        (debugf "[plot-country] ccode %s img-size %s" ccode (count img-byte-array))
         img-byte-array))))
 
 (defn plot-country
@@ -248,48 +248,51 @@
   See http://clojure-goes-fast.com/ https://github.com/clojure-goes-fast/
   TODO https://github.com/clojure-goes-fast/clj-async-profiler
   "
-  [country-code & [stats day]]
-  (data/from-cache (fn [] (calc-plot-country-fn country-code stats day))
-                   [:plot (keyword country-code)]))
+  [ccode & [stats day]]
+  (data/from-cache (fn [] (calc-plot-country-fn ccode stats day))
+                   [:plot (keyword ccode)]))
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
   `ccc/default-2-country-code` so that max 10 countries are displayed in the
   plot"
   [{:keys [case threshold threshold-increase stats] :as prm}]
-  (let [max-plot-lines 10
-        res (map (fn [hm] (if (< (case hm) threshold)
+  (let [case-kw case
+        max-plot-lines 10
+        res (map (fn [hm] (if (< (get hm case-kw) threshold)
                            (assoc hm :cc ccc/default-2-country-code)
                            hm))
                  stats)]
-    ;; TODO implement recalculation for decreasing case numbers (e.g. sics)
+    ;; TODO implement recalculation for decreasing case-kw numbers (e.g. sics)
     (if (> (count (group-by :cc res)) max-plot-lines)
       (let [raised-threshold (+ threshold-increase threshold)]
         (infof "Case %s; %s countries above threshold. Raise to %s"
-               case (count (group-by :cc res)) raised-threshold)
+               case-kw (count (group-by :cc res)) raised-threshold)
         (group-below-threshold (assoc prm :threshold raised-threshold)))
       {:data res :threshold threshold})))
 
 (defn sum-all-by-date-by-case
   "Group the country stats by day and sum up the active cases"
   [{:keys [case] :as prm-orig}]
-  (let [prm (group-below-threshold prm-orig)]
+  (let [case-kw case
+        prm (group-below-threshold prm-orig)]
     (let [res (flatten (map (fn [[t hms]]
                               (map (fn [[ccode hms]]
-                                     {:cc ccode :t t case (reduce + (map case hms))})
+                                     {:cc ccode :t t case-kw (reduce + (map case-kw hms))})
                                    (group-by :cc hms)))
                             (group-by :t (:data prm))))]
       (update prm :data (fn [_] res)))))
 
 (defn fill-rest [{:keys [case] :as prm}]
-  (let [date-sums (sum-all-by-date-by-case prm)
+  (let [case-kw case
+        date-sums (sum-all-by-date-by-case prm)
         {sum-all-by-date-by-case-threshold :data} date-sums
         countries-threshold (set (map :cc sum-all-by-date-by-case-threshold))
         res (reduce into []
                     (map (fn [[t hms]]
                            (cset/union
                             hms
-                            (map (fn [ccode] {:cc ccode :t t case 0})
+                            (map (fn [ccode] {:cc ccode :t t case-kw 0})
                                  (cset/difference countries-threshold
                                                   (keys (group-by :cc hms)))))
                            #_(->> (group-by :cc hms)
@@ -301,7 +304,8 @@
     (update date-sums :data (fn [_] res))))
 
 (defn stats-all-by-case [{:keys [case] :as prm}]
-  (let [fill-rest-stats (fill-rest prm)
+  (let [case-kw case
+        fill-rest-stats (fill-rest prm)
         data (:data fill-rest-stats)
         mapped-hm (plotcom/map-kv
                    (fn [entry]
@@ -309,7 +313,7 @@
                               (map (fn [fill-rest-stats]
                                      [(to-java-time-local-date
                                        (:t fill-rest-stats))
-                                      (case fill-rest-stats)])
+                                      (get fill-rest-stats case-kw)])
                                    entry)))
                    (group-by :cc data))]
     #_(sort-by-country-name mapped-hm)
@@ -355,7 +359,7 @@
                            threshold-recaltulated)
             :label-conf {:color (c/darken :steelblue) :font-size 14}})]
       (let [img-byte-array (toByteArrayAutoClosable img)]
-        (debugf "[plot-sum-by-case] case %s; img-size %s" case-kw (count img-byte-array))
+        (debugf "[plot-sum-by-case] %s img-size %s" case-kw (count img-byte-array))
         img-byte-array))))
 
 (defn plot-sum-by-case
@@ -420,7 +424,7 @@
                     threshold)
             :label-conf {:color (c/darken :steelblue) :font-size 14}})]
       (let [img-byte-array (toByteArrayAutoClosable img)]
-        (debugf "[plot-absolute-by-case] case %s; img-size %s" case-kw (count img-byte-array))
+        (debugf "[plot-absolute-by-case] %s img-size %s" case-kw (count img-byte-array))
         img-byte-array))))
 
 (defn plot-absolute-by-case
