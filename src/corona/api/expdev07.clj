@@ -212,16 +212,17 @@
               (if (and (empty? locations)
                        (= :recovered case-kw))
                 (let [default 0]
-                  (warnf "Country %s; case-kw %s; missing locations; defaults to %s"
-                         cc case-kw default)
+                  (warnf "cc %s %s %s missing locations; defaults to %s"
+                         cc case-kw (com/fmt-date-dbg (date raw-date)) default)
                   default)
-                (transduce (map (comp
-                                 ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
-                                 ;; str com/read-number
-                                 (fn [history] (check-zero cc case-kw raw-date history))
-                                 :history))
-                           + 0
-                           locations)))
+                (transduce
+                 (map (comp
+                       ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
+                       ;; str com/read-number
+                       (fn [history] (check-zero cc case-kw raw-date history))
+                       :history))
+                 + 0
+                 locations)))
             (raw-dates))))))
 
 (defn calc-case-counts-report-by-report-fn [pred-hm]

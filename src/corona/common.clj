@@ -246,7 +246,7 @@
   "(fmt-date-dbg (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
                 \"4/26/20\"))"
   [date]
-  (ctf/unparse (ctf/with-zone (ctf/formatter "dd.MM")
+  (ctf/unparse (ctf/with-zone (ctf/formatter "dd.MM.")
                  (t/default-time-zone))
                (ctc/from-date date)))
 
