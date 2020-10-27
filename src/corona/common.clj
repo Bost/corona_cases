@@ -201,10 +201,10 @@
   :i ~ ill, i.e. active cases"
   [
    {:idx 0 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
-   {:idx 1 :kw :c                :threshold {:inc 5000      :val (int 835e3)}}
-   {:idx 2 :kw :r :listing-idx 1 :threshold {:inc 2500      :val (int 460e3)}}
-   {:idx 3 :kw :d :listing-idx 2 :threshold {:inc 500       :val (int 30e3)}}
-   {:idx 4 :kw :i :listing-idx 0 :threshold {:inc 1000      :val (int 170e3)}}
+   {:idx 1 :kw :c                :threshold {:inc 5000      :val (int 900e3)}}
+   {:idx 2 :kw :r :listing-idx 1 :threshold {:inc 2500      :val (int 480e3)}}
+   {:idx 3 :kw :d :listing-idx 2 :threshold {:inc 500       :val (int 33e3)}}
+   {:idx 4 :kw :i :listing-idx 0 :threshold {:inc 1000      :val (int 237e3)}}
    {:idx 5 :kw :i100k}
    {:idx 6 :kw :r100k}
    {:idx 7 :kw :d100k}
