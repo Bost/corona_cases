@@ -361,8 +361,6 @@
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 (defn calc-detailed-info-fn
   "Shows the table with the absolute and %-wise nr of cases, cases per-100k etc.
-  TODO 1. 'Country does not report recovered cases'
-  TODO 2. Estimate recovered cased (based on 1.) with avg recovery time 14 days
   TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)

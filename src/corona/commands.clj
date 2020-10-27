@@ -12,7 +12,7 @@
    [morse.api :as morse]
    [utils.core :as u :refer [in?] :exclude [id]]
    [corona.common :as com]
-   [taoensso.timbre :as timbre :refer [debug debugf
+   [taoensso.timbre :as timbre :refer [debugf
                                        ;; info infof warn errorf fatalf
                                        ]]
    ))

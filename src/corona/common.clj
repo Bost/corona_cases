@@ -234,10 +234,21 @@
        (sort-by :listing-idx)
        (mapv :kw)))
 
-(defn fmt-date [date]
+(defn fmt-date
+  "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
+            \"4/26/20\"))"
+  [date]
   (ctf/unparse (ctf/with-zone (ctf/formatter "dd MMM yyyy")
                 (t/default-time-zone))
               (ctc/from-date date)))
+
+(defn fmt-date-dbg
+  "(fmt-date-dbg (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
+                \"4/26/20\"))"
+  [date]
+  (ctf/unparse (ctf/with-zone (ctf/formatter "dd.MM")
+                 (t/default-time-zone))
+               (ctc/from-date date)))
 
 (defn- threshold [case-kw]
   (->> case-params

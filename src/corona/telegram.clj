@@ -215,6 +215,10 @@
       (data/all-rankings))
      (let [stats (v1/pic-data)
            day (count (data/dates))]
+       (let [form '(< (count (corona.api.expdev07/raw-dates)) 10)]
+         ;; TODO do not call calc-functions when the
+         (when (eval form)
+             (warnf "%s" form)))
        (doall
         (map (fn [ccode] (plot/plot-country ccode stats day))
              (cset/difference

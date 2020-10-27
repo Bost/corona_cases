@@ -7,11 +7,13 @@
    [corona.country-codes :as ccc]
    [utils.core :as utc :refer [in?]]
    [taoensso.timbre :as timbre :refer [
-                                       ;; debug debugf info infof warn
+                                       debugf infof
+                                       warnf
                                        errorf
                                        #_fatalf
                                        ]]
-   [clojure.spec.alpha :as s]
+   [clojure.spec.alpha :as spec]
+   #_[clojure.string :as cstr]
    #_[clojure.inspector :refer :all]
    )
   (:import java.text.SimpleDateFormat))
@@ -65,31 +67,23 @@
 (defn json-data []
   (from-cache [:json] (fn [] (com/get-json url))))
 
-(defn calc-raw-dates-fn []
-  (->> (transduce
-        (comp
-         (map keyname)
-         (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
-         (map (fn [[_ m d y]]
-                (transduce (comp (map left-pad)
-                                 (interpose "/"))
-                           str
-                           [y m d])))
-         (xf-sort)
-         (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
-         (map (fn [[_ y m d]]
-                (keyword
-                 (transduce (comp (map com/read-number)
-                                  (interpose "/"))
-                            str
-                            [m d y])))))
-        conj []
-        #_[(keyword "2/22/20") (keyword "2/2/20")]
-        (keys (:history
-               (last
-                (:locations
-                 (:confirmed (json-data)))))))
-       #_(take-last 8)))
+(def xform-raw-dates
+  (comp
+   (map keyname)
+   (map (fn [date] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" date))))
+   (map (fn [[_ m d y]]
+          (transduce (comp (map left-pad)
+                           (interpose "/"))
+                     str
+                     [y m d])))
+   (xf-sort)
+   (map (fn [kw] (re-find (re-matcher #"(\d+)/(\d+)/(\d+)" kw))))
+   (map (fn [[_ y m d]]
+          (keyword
+           (transduce (comp (map com/read-number)
+                            (interpose "/"))
+                      str
+                      [m d y]))))))
 
 (defn raw-dates
   "Size:
@@ -107,7 +101,16 @@
   (count rd-cached)
   ;; 1010 items"
   []
-  (from-cache [:raw-dates] calc-raw-dates-fn))
+  (from-cache [:raw-dates]
+              (fn []
+                (->> (transduce xform-raw-dates
+                                conj []
+                                #_[(keyword "2/22/20") (keyword "2/2/20")]
+                                (keys (:history
+                                       (last
+                                        (:locations
+                                         (:confirmed (json-data)))))))
+                     #_(take-last 1)))))
 
 (defn population-cnt [country-code]
   (or (get ccr/population country-code)
@@ -119,14 +122,12 @@
                 default-population)
         default-population)))
 
-(defn calc-dates-fn []
-  #_(debugf "calc-dates-fn")
-  (let [sdf (new SimpleDateFormat "MM/dd/yy")]
-    (map (fn [rd] (.parse sdf (keyname rd)))
-         (raw-dates))))
+(def date-format (new SimpleDateFormat "MM/dd/yy"))
+
+(defn date [rd] (.parse date-format (keyname rd)))
 
 (defn dates []
-  (from-cache [:dates] calc-dates-fn))
+  (from-cache [:dates] (fn [] (map date (raw-dates)))))
 
 (defn calc-data-with-pop-fn []
   (conj
@@ -180,6 +181,21 @@
 
 (defn get-prev [coll] (first (take-last 2 coll)))
 
+(defn estimate-recoverd
+  "TODO Estimate recovered cased (based on 1.) with avg recovery time 14 days."
+  []
+  0)
+
+(defn dbg-recov [cc case-kw  raw-date v]
+  #_(debugf "%s %s %s: %s" cc case-kw (com/fmt-date-dbg (date raw-date)) v))
+
+(defn check-zero [cc case-kw raw-date history]
+  (let [v (get history raw-date)]
+    (when (and (= :recovered case-kw)
+               (not= cc ccc/zz))
+      (dbg-recov cc case-kw raw-date v))
+    v))
+
 ;; TODO reload only the latest N reports. e.g. try one week
 (defn sums-for-case
   "Return sums for a given `case-kw` calculated for every single day."
@@ -191,14 +207,18 @@
      (let [locations (filter pred
                              ((comp :locations case-kw)
                               (data-with-pop)))]
+       ;; (debugf "locations %s" (cstr/join " " locations))
        (map (fn [raw-date]
               (if (and (empty? locations)
                        (= :recovered case-kw))
-                0
+                (let [default 0]
+                  (warnf "Country %s; case-kw %s; missing locations; defaults to %s"
+                         cc case-kw default)
+                  default)
                 (transduce (map (comp
                                  ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
                                  ;; str com/read-number
-                                 raw-date
+                                 (fn [history] (check-zero cc case-kw raw-date history))
                                  :history))
                            + 0
                            locations)))
@@ -239,13 +259,13 @@
   ;; ignore predicate for the moment
   (from-cache [:cnts (keyword cc)] (fn [] (calc-case-counts-report-by-report-fn pred-hm))))
 
-(s/def ::fun clojure.core/fn?)
-(s/def ::pred-fn (s/or :nil nil? :fn clojure.core/fn?))
+(spec/def ::fun clojure.core/fn?)
+(spec/def ::pred-fn (spec/or :nil nil? :fn clojure.core/fn?))
 
 (defn eval-fun
   [fun pred-hm]
-  #_{:pre [(s/valid? ::fun fun)
-         (s/valid? ::pred-fn pred)]}
+  ;; {:pre [(spec/valid? ::fun fun)
+  ;;        (spec/valid? ::pred-fn pred)]}
   ;; (debugf "dates %s" (count (dates)))
   (into {:f (fun (dates))}
         (map (fn [[k v]] {k (fun v)})
