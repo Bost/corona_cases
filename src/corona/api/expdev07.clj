@@ -180,34 +180,29 @@
 
 (defn get-prev [coll] (first (take-last 2 coll)))
 
-(defn sums-for-date [case locations raw-date]
-  (if (and (empty? locations)
-           (= :recovered case))
-    0
-    (transduce (map (comp
-                     ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
-                     ;; str com/read-number
-                     raw-date
-                     :history))
-               + 0
-               locations)))
-
-(defn calc-sums-for-case-fn [case-kw pred-fn]
-  #_(debugf "calc-sums-for-case-fn")
-  (let [locations (filter pred-fn
-                          ((comp :locations case-kw)
-                           (data-with-pop)))]
-    (map (fn [raw-date]
-           (sums-for-date case-kw locations raw-date))
-         (raw-dates))))
-
+;; TODO reload only the latest N reports. e.g. try one week
 (defn sums-for-case
   "Return sums for a given `case-kw` calculated for every single day."
   [case-kw {:keys [cc pred]}]
   ;; ignore predicate for the moment
-  (from-cache [:sums case-kw cc] (fn [] (calc-sums-for-case-fn case-kw pred))))
-
-;; TODO reload only the latest N reports. e.g. try one week
+  (from-cache
+   [:sums case-kw cc]
+   (fn []
+     (let [locations (filter pred
+                             ((comp :locations case-kw)
+                              (data-with-pop)))]
+       (map (fn [raw-date]
+              (if (and (empty? locations)
+                       (= :recovered case-kw))
+                0
+                (transduce (map (comp
+                                 ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
+                                 ;; str com/read-number
+                                 raw-date
+                                 :history))
+                           + 0
+                           locations)))
+            (raw-dates))))))
 
 (defn calc-case-counts-report-by-report-fn [pred-hm]
   #_(debugf "calc-case-counts-report-by-report-fn")
