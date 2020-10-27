@@ -249,8 +249,8 @@
   TODO https://github.com/clojure-goes-fast/clj-async-profiler
   "
   [country-code & [stats day]]
-  (data/from-cache [:plot (keyword country-code)]
-                   (fn [] (calc-plot-country-fn country-code stats day))))
+  (data/from-cache (fn [] (calc-plot-country-fn country-code stats day))
+                   [:plot (keyword country-code)]))
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
@@ -361,7 +361,8 @@
 (defn plot-sum-by-case
   "The optional params `stats`, `day` are used only for the first calculation"
   [case-kw & [stats day]]
-  (data/from-cache [:plot :sum case-kw] (fn [] (calc-plot-sum-by-case-fn case-kw stats day))))
+  (data/from-cache (fn [] (calc-plot-sum-by-case-fn case-kw stats day))
+                   [:plot :sum case-kw]))
 
 (defn line-stroke [color]
   (conj line-cfg {:color color
@@ -424,5 +425,5 @@
 (defn plot-absolute-by-case
   "The optional params `stats`, `day` are used only for the first calculation"
   [case-kw & [stats day]]
-  (data/from-cache [:plot :abs case-kw]
-                   (fn [] (calc-plot-absolute-by-case-fn case-kw stats day))))
+  (data/from-cache (fn [] (calc-plot-absolute-by-case-fn case-kw stats day))
+                   [:plot :abs case-kw]))

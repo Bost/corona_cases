@@ -24,20 +24,25 @@
 
 (defonce cache (atom {}))
 
+(spec/def ::fun clojure.core/fn?)
+(spec/def ::pred-fn (spec/or :nil nil? :fn clojure.core/fn?))
+
 (defn cache!
-  "Also return the cached value for further consumption."
-  [calc-data-fn ks]
-  (let [data (calc-data-fn)]
+  "Also return the cached value for further consumption.
+  First param must be a function in order to have lazy evaluation."
+  [fun ks]
+  {:pre [(spec/valid? ::fun fun)]}
+  (let [data (fun)]
     (swap! cache update-in ks (fn [_] data))
     data))
 
 (defn from-cache
-  "TODO reverse the param order"
-  [ks calc-data-fn]
-  #_(debugf "[from-cache] accessing %s" ks)
+  [fun ks]
+  {:pre [(spec/valid? ::fun fun)]}
+  ;; (debugf "[from-cache] accessing %s" ks)
   (if-let [v (get-in @cache ks)]
     v
-    (cache! calc-data-fn ks)))
+    (cache! fun ks)))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
@@ -65,7 +70,7 @@
           xs))))))
 
 (defn json-data []
-  (from-cache [:json] (fn [] (com/get-json url))))
+  (from-cache (fn [] (com/get-json url)) [:json]))
 
 (def xform-raw-dates
   (comp
@@ -101,8 +106,7 @@
   (count rd-cached)
   ;; 1010 items"
   []
-  (from-cache [:raw-dates]
-              (fn []
+  (from-cache (fn []
                 (->> (transduce xform-raw-dates
                                 conj []
                                 #_[(keyword "2/22/20") (keyword "2/2/20")]
@@ -110,7 +114,8 @@
                                        (last
                                         (:locations
                                          (:confirmed (json-data)))))))
-                     #_(take-last 1)))))
+                     #_(take-last 1)))
+              [:raw-dates]))
 
 (defn population-cnt [country-code]
   (or (get ccr/population country-code)
@@ -127,7 +132,7 @@
 (defn date [rd] (.parse date-format (keyname rd)))
 
 (defn dates []
-  (from-cache [:dates] (fn [] (map date (raw-dates)))))
+  (from-cache (fn [] (map date (raw-dates))) [:dates]))
 
 (defn calc-data-with-pop-fn []
   (conj
@@ -175,7 +180,7 @@
 (defn data-with-pop
   "Data with population numbers."
   []
-  (from-cache [:data-with-pop] calc-data-with-pop-fn))
+  (from-cache calc-data-with-pop-fn [:data-with-pop]))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -202,7 +207,6 @@
   [case-kw {:keys [cc pred]}]
   ;; ignore predicate for the moment
   (from-cache
-   [:sums case-kw cc]
    (fn []
      (let [locations (filter pred
                              ((comp :locations case-kw)
@@ -223,7 +227,8 @@
                        :history))
                  + 0
                  locations)))
-            (raw-dates))))))
+            (raw-dates))))
+   [:sums case-kw cc]))
 
 (defn calc-case-counts-report-by-report-fn [pred-hm]
   #_(debugf "calc-case-counts-report-by-report-fn")
@@ -257,10 +262,7 @@
   "
   [{:keys [cc pred] :as pred-hm}]
   ;; ignore predicate for the moment
-  (from-cache [:cnts (keyword cc)] (fn [] (calc-case-counts-report-by-report-fn pred-hm))))
-
-(spec/def ::fun clojure.core/fn?)
-(spec/def ::pred-fn (spec/or :nil nil? :fn clojure.core/fn?))
+  (from-cache (fn [] (calc-case-counts-report-by-report-fn pred-hm)) [:cnts (keyword cc)]))
 
 (defn eval-fun
   [fun pred-hm]
@@ -318,7 +320,7 @@
        ccc/all-country-codes))
 
 (defn stats-countries []
-  (from-cache [:stats] calc-stats-countries-fn))
+  (from-cache calc-stats-countries-fn [:stats]))
 
 (defn deep-merge
   "Recursively merges maps. TODO see https://github.com/weavejester/medley
@@ -355,4 +357,4 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
        ccc/all-country-codes))
 
 (defn all-rankings []
-  (from-cache [:rankings] calc-all-rankings-fn))
+  (from-cache calc-all-rankings-fn [:rankings]))

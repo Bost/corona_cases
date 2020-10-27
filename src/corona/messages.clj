@@ -550,8 +550,8 @@
   ([msg-id ccode parse_mode pred]
    ;; (debugf "[%s] ccode %s; parse_mode %s; pred %s" msg-id ccode parse_mode pred)
    (let [content (data/from-cache
-                  [:msg (keyword ccode)]
-                  (fn [] (calc-detailed-info-fn msg-id ccode parse_mode pred)))]
+                  (fn [] (calc-detailed-info-fn msg-id ccode parse_mode pred))
+                  [:msg (keyword ccode)])]
      (debugf "[%s] ccode %s; msg-size %s" msg-id ccode (count content))
      content)))
 
