@@ -114,7 +114,8 @@
                                        (last
                                         (:locations
                                          (:confirmed (json-data)))))))
-                     #_(take-last 1)))
+                     ;; I need at least 2 to calc difference
+                     #_(take-last 4)))
               [:raw-dates]))
 
 (defn population-cnt [ccode]
@@ -191,7 +192,7 @@
   []
   0)
 
-(defn dbg-recov [ccode case-kw  raw-date v]
+(defn dbg-recov [ccode case-kw raw-date v]
   #_(debugf "%s %s %s: %s" ccode case-kw (com/fmt-date-dbg (date raw-date)) v))
 
 (defn check-zero [ccode case-kw raw-date history]

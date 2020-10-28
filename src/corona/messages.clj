@@ -455,7 +455,7 @@
                                             (com/fmt-date max-active-date))})]]
 
                    ;; TODO add effective reproduction number (R)
-                   ["%s\n" [(fmt-to-cols
+                   #_["%s\n" [(fmt-to-cols
                              {:s l/active-last-7-med
                               :n (->> active-last-7-reports (izoo/roll-median 7) (first)
                                       (int))

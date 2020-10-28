@@ -16,7 +16,9 @@
    [corona.api.expdev07 :as data]
    [corona.api.v1 :as v1]
    [corona.country-codes :as ccc]
+   [net.cgrand.xforms :as x]
    ;; [com.stuartsierra.component :as component]
+   [clojure.inspector :refer :all]
    ))
 
 ;; (set! *warn-on-reflection* true)
@@ -205,6 +207,20 @@
    (debugf "[%s] Starting... done" msg-id)
    (warnf "[%s] Displayed data will NOT be updated!" msg-id)))
 
+(defn estimate-recov
+  "Warning: lucky coincidence 1 report per 1 day!"
+  [days stats]
+  (let [stats (map (fn [{:keys [c ]}] c) stats)
+        shifted-stats (into (drop-last days stats) (repeat days 0))]
+    shifted-stats))
+
+(defn estimate-recov-for-country [[ccode stats-country-unsorted]]
+  (let [stats-country (sort-by :t stats-country-unsorted)]
+    (mapv (fn [est-rec stats-hm]
+            (conj stats-hm {:e est-rec}))
+          (estimate-recov 14 stats-country)
+          stats-country)))
+
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
   ([msg-id]
@@ -213,42 +229,52 @@
      ;; enforce evaluation; can't be done by (force (all-rankings))
      (doall
       (data/all-rankings))
-     (let [stats (v1/pic-data)
-           day (count (data/dates))]
+     (let [stats (->> (v1/pic-data)
+                      (transduce (comp
+                                  ;; group together provinces of the given country
+                                  (x/by-key :cc (x/reduce conj)) ; (group-by :cc)
+                                  (map estimate-recov-for-country))
+                                 ;; the xform for the `into []`
+                                 into [])
+                      (sort-by :cc))
+           day (count (data/dates))
+           ]
+       (def stats stats)
        (let [form '(< (count (corona.api.expdev07/raw-dates)) 10)]
          ;; TODO do not call calc-functions when the
-         (when (eval form)
-             (warnf "%s" form)))
-       (doall
-        (map (fn [ccode] (plot/plot-country ccode stats day))
-             (cset/difference
-              (set ccc/all-country-codes)
-              ;; TODO have a look at the web service; there's no json-data
-              (set
-               [
-                ccc/im ccc/mp ccc/ck ccc/gf ccc/sx ccc/tk ccc/tf ccc/kp
-                ccc/nu ccc/nf ccc/ax ccc/cx ccc/mf ccc/sj ccc/tm ccc/gu
-                ccc/vu ccc/pf ccc/bm ccc/vg ccc/pn ccc/pr ccc/qq ccc/um
-                ccc/gg ccc/bq ccc/mo ccc/ky ccc/nr ccc/aw ccc/fm ccc/cc
-                ccc/ws ccc/to ccc/sh ccc/wf ccc/tv ccc/bl ccc/ms ccc/gp
+         (if (eval form)
+           (warnf "Some stuff may not be calculated: %s" form))
+         (do
+           (doall
+              (map (fn [ccode] (plot/plot-country ccode stats day))
+                   (cset/difference
+                    (set ccc/all-country-codes)
+                    ;; TODO have a look at the web service; there's no json-data
+                    (set
+                     [
+                      ccc/im ccc/mp ccc/ck ccc/gf ccc/sx ccc/tk ccc/tf ccc/kp
+                      ccc/nu ccc/nf ccc/ax ccc/cx ccc/mf ccc/sj ccc/tm ccc/gu
+                      ccc/vu ccc/pf ccc/bm ccc/vg ccc/pn ccc/pr ccc/qq ccc/um
+                      ccc/gg ccc/bq ccc/mo ccc/ky ccc/nr ccc/aw ccc/fm ccc/cc
+                      ccc/ws ccc/to ccc/sh ccc/wf ccc/tv ccc/bl ccc/ms ccc/gp
 
-                ccc/bv ccc/as ccc/fk ccc/gs ccc/mq ccc/fo ccc/aq ccc/mh
-                ccc/vi ccc/gi ccc/nc ccc/yt ccc/tc ccc/re ccc/gl ccc/ki
-                ccc/hk ccc/io ccc/cw ccc/je ccc/hm ccc/pm ccc/ai ccc/pw]))))
-       (doall
-        (map (fn [ccode] (msg/detailed-info ccode
-                                           ;; parse_mode
-                                           "HTML"
-                                           ;; :pred
-                                           (msg/create-pred-hm ccode)))
-             ccc/all-country-codes))
-       (doall
-        (map (fn [plot-fn]
-               (run! (fn [case-kw]
-                       #_(debugf "Calculating %s %s" plot-fn case-kw)
-                       (plot-fn case-kw stats day))
-                     com/absolute-cases))
-             [plot/plot-sum-by-case plot/plot-absolute-by-case])))
+                      ccc/bv ccc/as ccc/fk ccc/gs ccc/mq ccc/fo ccc/aq ccc/mh
+                      ccc/vi ccc/gi ccc/nc ccc/yt ccc/tc ccc/re ccc/gl ccc/ki
+                      ccc/hk ccc/io ccc/cw ccc/je ccc/hm ccc/pm ccc/ai ccc/pw]))))
+           (doall
+            (map (fn [ccode] (msg/detailed-info ccode
+                                               ;; parse_mode
+                                               "HTML"
+                                               ;; :pred
+                                               (msg/create-pred-hm ccode)))
+                 ccc/all-country-codes))
+           (doall
+              (map (fn [plot-fn]
+                     (run! (fn [case-kw]
+                             #_(debugf "Calculating %s %s" plot-fn case-kw)
+                             (plot-fn case-kw stats day))
+                           com/absolute-cases))
+                   [plot/plot-sum-by-case plot/plot-absolute-by-case])))))
      (debugf "[%s] %s chars cached in %s ms"
              msg-id
              (count (str @data/cache)) (- (System/currentTimeMillis) tbeg)))))

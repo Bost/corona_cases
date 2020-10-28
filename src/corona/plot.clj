@@ -104,6 +104,7 @@
                     (bigint (/ (:p (first hms)) 1e3))
                     #_(reduce + (map :p hms))
                     #_(bigint (/ (get population ccode) (bigint 1e3)))}
+                   {:cc ccode :t t :case :e :cnt (reduce + (map :e hms))}
                    {:cc ccode :t t :case :c :cnt (reduce + (map :c hms))}
                    {:cc ccode :t t :case :r :cnt (reduce + (map :r hms))}
                    {:cc ccode :t t :case :d :cnt (reduce + (map :d hms))}
@@ -122,7 +123,7 @@
     ;; recalculate it
     (reverse (transduce (map (fn [case-kw] {case-kw (get mapped-hm case-kw)}))
                         into []
-                        [:i :r :d :c :p]))))
+                        [:i :r :d :c :p :e]))))
 
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :t last) (sort-by :t stats)))
@@ -175,6 +176,14 @@
                            ;; :dash [10.0 5.0] :join :miter
                            :dash [4.0] :dash-phase 2.0}}))
 
+(def ^:const stroke-estimated
+  (conj line-cfg {:color :red
+                  :stroke {:size 1.5
+                           ;; :dash [20.0] :dash-phase 10
+                           ;; :dash [5.0 2.0 2.0 2.0]
+                           ;; :dash [10.0 5.0] :join :miter
+                           :dash [4.0] :dash-phase 2.0}}))
+
 (defn max-y-val [reducer data]
   (transduce (comp (map (fn [[_ v]] v))
                    (map (fn [v] (transduce
@@ -202,7 +211,7 @@
   [ccode & [stats day]]
   (let [base-data (stats-for-country ccode stats)
         sarea-data (remove (fn [[case-kw _]]
-                             (in? #_[:c :i :r :d] [:c :p] case-kw))
+                             (in? #_[:c :i :r :d] [:c :p :e] case-kw))
                            base-data)
         curves (keys sarea-data)
         palette (palette-colors (count curves))]
@@ -222,7 +231,8 @@
                      [:sarea sarea-data {:palette palette}]
                      #_[:line (line-data :p base-data) stroke-population]
                      [:line (line-data :c base-data) stroke-confirmed]
-                     [:line (line-data :i base-data) stroke-sick])
+                     [:line (line-data :i base-data) stroke-sick]
+                     [:line (line-data :e base-data) stroke-estimated])
             :y-axis-formatter  (metrics-prefix-formatter
                                 ;; population numbers have the `max` values, all
                                 ;; other numbers are derived from them
@@ -232,10 +242,12 @@
             :legend (reverse
                      (conj (map #(vector :rect %2 {:color %1})
                                 palette
-                                (map (fn [k] (get {:i l/active :d l/deaths :r l/recovered} k))
+                                (map (fn [k] (get {:i l/active :d l/deaths :r l/recovered
+                                                  :e l/recov-estim} k))
                                      curves))
                            [:line l/confirmed     stroke-confirmed]
                            [:line l/sick-absolute stroke-sick]
+                           [:line l/recov-estim   stroke-estimated]
                            #_[:line l/people    stroke-population]))
             :label (plot-label day ccode stats)
             :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
@@ -331,7 +343,8 @@
              :case case-kw
              }
 
-        {json-data :data threshold-recaltulated :threshold} (stats-all-by-case prm)]
+        {json-data :data threshold-recaltulated
+         :threshold} (stats-all-by-case prm)]
     (let [img
           (boiler-plate
            {:series (b/series [:grid] [:sarea json-data])
