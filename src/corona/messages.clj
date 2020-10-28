@@ -214,7 +214,7 @@
       ;; i.e. "Markdown"
       "*%s*")
     " %s")
-   (com/fmt-date (:t (data/last-nn-day pred-hm)))
+   (com/fmt-date (:t (data/last-day pred-hm)))
    (condp = parse_mode
      "HTML" com/bot-name
      ;; i.e. "Markdown"
@@ -398,7 +398,7 @@
               max-active-val (apply max data-active)
               max-active-idx (last-index-of data-active max-active-val)
               max-active-date (nth (data/dates) max-active-idx)
-              last-day (data/last-nn-day pred-hm)
+              last-day (data/last-day pred-hm)
               {confirmed :c population :p} last-day
               population-rounded (utn/round-div-precision population 1e6 1)
               delta (data/delta pred-hm)

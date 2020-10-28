@@ -283,7 +283,7 @@
                      com/all-cases)))
        (reduce into {})))
 
-(defn last-nn-day
+(defn last-day
   [pred-hm]
   (eval-fun get-last pred-hm))
 
@@ -295,24 +295,23 @@
   [pred-hm]
   (eval-fun (fn [coll] (take-last 8 coll)) pred-hm))
 
-(defn old-pred-fn [ccode]
-  (fn [loc]
-    (condp = ccode
-      ccc/worldwide-2-country-code
-      true
+(defn create-pred-hm [ccode]
+  {:cc ccode
+   :pred-fun (fn [loc]
+               (condp = ccode
+                 ccc/worldwide-2-country-code
+                 true
 
-      ccc/default-2-country-code
-      ;; XX comes from the service
-      (= ccc/xx (:country_code loc))
+                 ccc/default-2-country-code
+                 ;; XX comes from the service
+                 (= ccc/xx (:country_code loc))
 
-      (= ccode (:country_code loc)))))
-
-(defn create-pred-hm [ccode] {:cc ccode :pred-fun (old-pred-fn ccode)})
+                 (= ccode (:country_code loc))))})
 
 (defn calc-stats-countries-fn []
   #_(debugf "calc-stats-countries-fn")
   (map (fn [ccode] (conj {:cc ccode}
-                      (last-nn-day (create-pred-hm ccode))))
+                      (last-day (create-pred-hm ccode))))
        ccc/all-country-codes))
 
 (defn stats-countries []
