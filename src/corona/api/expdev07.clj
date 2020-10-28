@@ -244,7 +244,12 @@
                    (com/calculate-cases-per-100k :i)
                    (com/calculate-cases-per-100k :r)
                    (com/calculate-cases-per-100k :d)
-                   (com/calculate-cases-per-100k :c)]
+                   (com/calculate-cases-per-100k :c)
+                   ;; TODO com/calc-rate-active
+                   com/calc-rate-recovered
+                   com/calc-rate-deaths
+                   ;; TODO com/calc-rate-closed
+                   ]
                   (mapv (fn [fun] (apply mapv (fn [p c r d]
                                               (->> [p c r d]
                                                    (zipmap [:p :c :r :d])

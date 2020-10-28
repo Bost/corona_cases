@@ -92,6 +92,24 @@
 (defn calculate-active [{:keys [c r d]}]
   (- c (+ r d)))
 
+;; TODO
+#_(defn calc-rate-active
+  [{:keys [i c]}]
+  (utn/percentage i c))
+
+(defn calc-rate-recovered
+  [{:keys [r c]}]
+  (utn/percentage r c))
+
+(defn calc-rate-deaths
+  [{:keys [d c]}]
+  (utn/percentage d c))
+
+;; TODO
+#_(defn calc-rate-closed
+  [{:keys [d c]}]
+  (utn/percentage d c))
+
 (defn per-1e5
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
   ([place total-count] (per-1e5 :normal place total-count))
@@ -200,15 +218,21 @@
   :d ~ deaths
   :i ~ ill, i.e. active cases"
   [
-   {:idx 0 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
-   {:idx 1 :kw :c                :threshold {:inc 5000      :val (int 900e3)}}
-   {:idx 2 :kw :r :listing-idx 1 :threshold {:inc 2500      :val (int 480e3)}}
-   {:idx 3 :kw :d :listing-idx 2 :threshold {:inc 500       :val (int 33e3)}}
-   {:idx 4 :kw :i :listing-idx 0 :threshold {:inc 1000      :val (int 237e3)}}
-   {:idx 5 :kw :i100k}
-   {:idx 6 :kw :r100k}
-   {:idx 7 :kw :d100k}
-   {:idx 8 :kw :c100k}])
+   {:idx  0 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
+   {:idx  1 :kw :c                :threshold {:inc 5000      :val (int 900e3)}}
+   {:idx  2 :kw :r :listing-idx 1 :threshold {:inc 2500      :val (int 480e3)}}
+   {:idx  3 :kw :d :listing-idx 2 :threshold {:inc 500       :val (int 33e3)}}
+   {:idx  4 :kw :i :listing-idx 0 :threshold {:inc 1000      :val (int 237e3)}}
+   {:idx  5 :kw :i100k}
+   {:idx  6 :kw :r100k}
+   {:idx  7 :kw :d100k}
+   {:idx  8 :kw :c100k}
+
+   ;; {:idx  9 :kw :i-rate} ;; TODO active-rate
+   {:idx 10 :kw :r-rate}
+   {:idx 11 :kw :d-rate}
+   ;; {:idx 12 :kw :c-rate} ;; TODO closed-rate
+   ])
 
 (def ^:const absolute-cases (->> case-params
                                  (filter (fn [m] (in? [1 2 3 4] (:idx m))))
