@@ -226,7 +226,7 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   ([prm] (list-countries "list-countries" prm))
-  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred-hm]}]
+  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode]}]
    (let [
          ;; TODO calculate count of reports only once
          cnt-reports (count (data/dates))
@@ -242,7 +242,8 @@
      (format
       (format-linewise
        [
-        ["%s\n"   [(header parse_mode pred-hm)]]
+        ["%s\n"   [(header parse_mode
+                           (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
         ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
         ["    %s "[(str l/active    (if (= :i sort-by-case) sort-indicator " "))]]
         ["%s"     [spacer]]
@@ -282,7 +283,7 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   ([prm] (partial list-per-100k "list-per-100k" prm))
-  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred-hm]}]
+  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode]}]
    (let [spacer " "
          sort-indicator "▴" ;; " " "▲"
          ;; omag - order of magnitude i.e. number of digits
@@ -292,7 +293,8 @@
          ]
      (format
       (format-linewise
-       [["%s\n" [(header parse_mode pred-hm)]]
+       [["%s\n" [(header parse_mode
+                         (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
         ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/dates)) msg-idx cnt-msgs)]]
         ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
