@@ -91,11 +91,11 @@
   "Calculate sums for a given country code or all countries if the country code
   is unspecified."
   [ccode stats]
-  (let [pred-fn (fn [hm] (if (= ccode ccc/worldwide-2-country-code)
+  (let [pred-fun (fn [hm] (if (= ccode ccc/worldwide-2-country-code)
                           true
                           (= ccode (:cc hm))))]
     (->> stats
-         (filter pred-fn)
+         (filter pred-fun)
          (group-by :t)
          (map (fn [[t hms]]
                   [

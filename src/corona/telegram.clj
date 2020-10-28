@@ -55,10 +55,10 @@
       (->> (fn [prm] (fun (-> prm :chat :id)))
            (wrap-in-hooks {:pre (fn [& args]
                                   (let [chat (:chat (first args))]
-                                    (infof "[%s] :pre; /%s; chat %s" msg-id name chat)))
+                                    (infof "[%s] :pre /%s chat %s" msg-id name chat)))
                            :post (fn [& args]
                                    (let [[fn-result {:keys [chat]}] args]
-                                     (infof "[%s] :post; /%s; chat %s" msg-id name chat)
+                                     (infof "[%s] :post /%s chat %s" msg-id name chat)
                                      fn-result))})
            (h/command-fn name)))
     cmds)))
@@ -71,11 +71,11 @@
       (->> fun
            (wrap-in-hooks {:pre (fn [& args]
                                   (let [{:keys [data message]} (first args)]
-                                    (infof "[%s] :pre; data %s; chat %s"
+                                    (infof "[%s] :pre data %s chat %s"
                                            msg-id data (:chat message))))
                            :post (fn [& args]
                                    (let [[fn-result {:keys [data message]}] args]
-                                     (infof "[%s] :post; data %s; chat %s"
+                                     (infof "[%s] :post data %s chat %s"
                                             msg-id data (:chat message))
                                      #_(debugf "fn-result %s; size %s"
                                                fn-result (count (str fn-result)))
@@ -265,11 +265,7 @@
                       ccc/vi ccc/gi ccc/nc ccc/yt ccc/tc ccc/re ccc/gl ccc/ki
                       ccc/hk ccc/io ccc/cw ccc/je ccc/hm ccc/pm ccc/ai ccc/pw]))))
            (doall
-            (map (fn [ccode] (msg/detailed-info ccode
-                                               ;; parse_mode
-                                               "HTML"
-                                               ;; :pred
-                                               (msg/create-pred-hm ccode)))
+            (map (fn [ccode] (msg/detailed-info ccode))
                  ccc/all-country-codes))
            (doall
               (map (fn [plot-fn]

@@ -205,11 +205,11 @@
 ;; TODO reload only the latest N reports. e.g. try one week
 (defn sums-for-case
   "Return sums for a given `case-kw` calculated for every single day."
-  [case-kw {:keys [cc pred]}]
+  [case-kw {:keys [cc pred-fun]}]
   ;; ignore predicate for the moment
   (from-cache
    (fn []
-     (let [locations (filter pred
+     (let [locations (filter pred-fun
                              ((comp :locations case-kw)
                               (data-with-pop)))]
        ;; (debugf "locations %s" (cstr/join " " locations))
@@ -261,16 +261,13 @@
 
   (get-counts (fn [_] true))
   "
-  [{:keys [cc pred] :as pred-hm}]
+  [{:keys [cc pred-fun] :as pred-hm}]
   ;; ignore predicate for the moment
   (from-cache (fn [] (calc-case-counts-report-by-report-fn pred-hm))
               [:cnts (keyword cc)]))
 
 (defn eval-fun
   [fun pred-hm]
-  ;; {:pre [(spec/valid? ::fun fun)
-  ;;        (spec/valid? ::pred-fn pred)]}
-  ;; (debugf "dates %s" (count (dates)))
   (into {:t (fun (dates))}
         (map (fn [[k v]] {k (fun v)})
              (case-counts-report-by-report pred-hm))))
@@ -310,7 +307,7 @@
 
       (= ccode (:country_code loc)))))
 
-(defn create-pred-hm [ccode] {:cc ccode :pred (old-pred-fn ccode)})
+(defn create-pred-hm [ccode] {:cc ccode :pred-fun (old-pred-fn ccode)})
 
 (defn calc-stats-countries-fn []
   #_(debugf "calc-stats-countries-fn")

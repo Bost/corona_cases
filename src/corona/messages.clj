@@ -226,7 +226,7 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   ([prm] (list-countries "list-countries" prm))
-  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
+  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred-hm]}]
    (let [
          ;; TODO calculate count of reports only once
          cnt-reports (count (data/dates))
@@ -238,11 +238,11 @@
      #_(debugf "[%s] cnt-reports %s" msg-id cnt-reports)
      #_(debugf "[%s] (count data) %s" msg-id (count data))
      #_(debugf "[%s] data %s" msg-id data)
-     #_(debugf "[%s] pred %s" msg-id pred)
+     #_(debugf "[%s] pred-hm %s" msg-id pred-hm)
      (format
       (format-linewise
        [
-        ["%s\n"   [(header parse_mode pred)]]
+        ["%s\n"   [(header parse_mode pred-hm)]]
         ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
         ["    %s "[(str l/active    (if (= :i sort-by-case) sort-indicator " "))]]
         ["%s"     [spacer]]
@@ -282,7 +282,7 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   ([prm] (partial list-per-100k "list-per-100k" prm))
-  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred]}]
+  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode pred-hm]}]
    (let [spacer " "
          sort-indicator "▴" ;; " " "▲"
          ;; omag - order of magnitude i.e. number of digits
@@ -292,7 +292,7 @@
          ]
      (format
       (format-linewise
-       [["%s\n" [(header parse_mode pred)]]
+       [["%s\n" [(header parse_mode pred-hm)]]
         ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/dates)) msg-idx cnt-msgs)]]
         ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
@@ -361,7 +361,7 @@
 ;; allow per-thread bindings via the macro binding. Within each thread
 ;; they obey a stack discipline:
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
-(defn calc-detailed-info-fn
+(defn calc-detailed-info
   "Shows the table with the absolute and %-wise nr of cases, cases per-100k etc.
   TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
@@ -369,14 +369,14 @@
   TODO make an api service for the content shown in the message
   TODO Create API web service(s) for every field displayed in the messages
   "
-  [msg-id ccode parse_mode pred]
+  [msg-id ccode parse_mode pred-hm]
   ;; (debugf "[%s] ccode %s" msg-id ccode)
   ;; (debugf "[%s] parse_mode %s" msg-id parse_mode)
-  ;; (debugf "[%s] pred %s" msg-id pred)
+  ;; (debugf "[%s] pred-hm %s" msg-id pred-hm)
   (format-linewise
    [["%s\n"  ; extended header
      [(format-linewise
-       [["%s  " [(header parse_mode pred)]]
+       [["%s  " [(header parse_mode pred-hm)]]
         ["%s "  [(ccr/country-name-aliased ccode)]]
         ["%s"   [;; country commands
                  (apply (fn [ccode c3code] (format "     %s    %s" ccode c3code))
@@ -386,7 +386,7 @@
     ["%s\n" [(str l/day " " (count (data/dates)))]]
     ["%s\n" ; data
      [(let [
-            data-active (:i (data/case-counts-report-by-report pred))
+            data-active (:i (data/case-counts-report-by-report pred-hm))
             ]
         ;; (debugf "[%s] max-active-date %s" msg-id max-active-date)
         ;; (debugf "[%s] last-day %s" msg-id last-day)
@@ -398,10 +398,10 @@
               max-active-val (apply max data-active)
               max-active-idx (last-index-of data-active max-active-val)
               max-active-date (nth (data/dates) max-active-idx)
-              last-day (data/last-nn-day pred)
+              last-day (data/last-nn-day pred-hm)
               {confirmed :c population :p} last-day
               population-rounded (utn/round-div-precision population 1e6 1)
-              delta (data/delta pred)
+              delta (data/delta pred-hm)
               {delta-confirmed :c} delta
               ]
           ;; (debugf "[%s] delta %s" msg-id delta)
@@ -429,7 +429,7 @@
                        deaths-per-100k    :d100k
                        closed-per-100k    :c100k
                        } last-day
-                      {active-last-8-reports :i} (data/last-8-reports pred)
+                      {active-last-8-reports :i} (data/last-8-reports pred-hm)
                       [active-last-8th-report & active-last-7-reports] active-last-8-reports
                       closed (+ deaths recovered)
                       {delta-deaths :d delta-recov :r delta-active :i
@@ -540,19 +540,21 @@
                                 (fn [args] (update args (dec (count args))
                                                   (fn [_]
                                                     (get rank (last args))))))]])]
-                       #_(debug "[%s] (count worldwide-block)" msg-id (count worldwide-block))
+                       ;; (debugf "[%s] (count worldwide-block) %s"
+                       ;;         msg-id (count worldwide-block))
                        worldwide-block))])))))))]]
     ["%s\n" [(footer parse_mode)]]]))
 
 (defn detailed-info
-  ;; doesn't need to specify the parse_mode and pred
+  ;; doesn't need to specify the parse_mode and pred-hm
   ;; - retval will be fetched from the cache
-  ([ccode]                 (detailed-info ccode nil nil))
-  ([ccode parse_mode pred] (detailed-info "detailed-info" ccode parse_mode pred))
-  ([msg-id ccode parse_mode pred]
-   ;; (debugf "[%s] ccode %s; parse_mode %s; pred %s" msg-id ccode parse_mode pred)
+  ([ccode]
+   (detailed-info "detailed-info" ccode "HTML" (create-pred-hm ccode)))
+  ([msg-id ccode parse_mode pred-hm]
+   ;; (debugf "[%s] ccode %s; parse_mode %s; pred-hm %s"
+   ;;         msg-id ccode parse_mode pred-hm)
    (let [content (data/from-cache
-                  (fn [] (calc-detailed-info-fn msg-id ccode parse_mode pred))
+                  (fn [] (calc-detailed-info msg-id ccode parse_mode pred-hm))
                   [:msg (keyword ccode)])]
      (debugf "[%s] ccode %s msg-size %s" msg-id ccode (count content))
      content)))
