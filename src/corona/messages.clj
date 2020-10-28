@@ -363,7 +363,7 @@
 ;; allow per-thread bindings via the macro binding. Within each thread
 ;; they obey a stack discipline:
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
-(defn calc-detailed-info
+(defn create-detailed-info
   "Shows the table with the absolute and %-wise nr of cases, cases per-100k etc.
   TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
@@ -488,7 +488,8 @@
                               :show-n true :calc-diff false})]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/recovered :n recovered :total confirmed
-                              :diff delta-recov :calc-rate true})]]
+                              :diff delta-recov
+                              :calc-rate true})]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/recovered-per-1e5 :n recovered-per-100k :total confirmed
                               :diff delta-r100k :calc-rate false
@@ -548,15 +549,15 @@
     ["%s\n" [(footer parse_mode)]]]))
 
 (defn detailed-info
-  ;; doesn't need to specify the parse_mode and pred-hm
-  ;; - retval will be fetched from the cache
+  "Doesn't need to specify the rest of parameters. The retval will be fetched from
+  the cache."
   ([ccode]
    (detailed-info "detailed-info" ccode "HTML" (create-pred-hm ccode)))
   ([msg-id ccode parse_mode pred-hm]
    ;; (debugf "[%s] ccode %s; parse_mode %s; pred-hm %s"
    ;;         msg-id ccode parse_mode pred-hm)
    (let [content (data/from-cache
-                  (fn [] (calc-detailed-info msg-id ccode parse_mode pred-hm))
+                  (fn [] (create-detailed-info msg-id ccode parse_mode pred-hm))
                   [:msg (keyword ccode)])]
      (debugf "[%s] ccode %s msg-size %s" msg-id ccode (count content))
      content)))

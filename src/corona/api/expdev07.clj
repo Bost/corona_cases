@@ -136,34 +136,36 @@
   (from-cache (fn [] (map date (raw-dates))) [:dates]))
 
 (defn calc-data-with-pop-fn []
-  (conj
-   (->> (keys (json-data))
-        (map (fn [case-kw-full-name]
-               {case-kw-full-name
-                (let [case-m (get (json-data) case-kw-full-name)]
-                  (if (contains? case-m :locations)
-                    (update-in
-                     case-m [:locations]
-                     (fn [locs]
-                       #_(debugf "%s" (type locs))
-                       (->> locs
-                            #_(map (fn [m] (select-keys m [:country :country_code :history])))
-                            (filter (fn [{:keys [country_code]}]
-                                      #_true
-                                      (in? ccc/all-country-codes country_code)))
-                            (map (fn [m]
-                                   #_(debugf "%s" (keys m))
-                                   (update-in m [:history]
-                                              (fn [history]
-                                                (->> history
-                                                     (filter (fn [[raw-date _]]
-                                                               #_true
-                                                               (in? (raw-dates) raw-date)))
-                                                     (into {}))))))
-                            (into []))))
-                    case-m))}))
-        (into {}))
-   {:population
+  (let [json (json-data)]
+    (conj
+     (->> (keys json)
+          (map (fn [case-kw-full-name]
+                 {case-kw-full-name
+                  (let [case-m (get json case-kw-full-name)]
+                    (if (contains? case-m :locations)
+                      (update-in
+                       case-m [:locations]
+                       (fn [locs]
+                         #_(debugf "%s" (type locs))
+                         (->> locs
+                              #_(map (fn [m] (select-keys m [:country :country_code :history])))
+                              ;; here the country_code keyword comes from the json
+                              (filter (fn [{:keys [country_code]}]
+                                        #_true
+                                        (in? ccc/all-country-codes country_code)))
+                              (map (fn [m]
+                                     #_(debugf "%s" (keys m))
+                                     (update-in m [:history]
+                                                (fn [history]
+                                                  (->> history
+                                                       (filter (fn [[raw-date _]]
+                                                                 #_true
+                                                                 (in? (raw-dates) raw-date)))
+                                                       (into {}))))))
+                              (into []))))
+                      case-m))}))
+          (into {}))
+     {:population
       {:locations
        (let [the-dates (raw-dates)]
          (map (fn [ccode]
@@ -176,7 +178,7 @@
                  ;; }
                  (let [pop-cnt (population-cnt ccode)]
                    (zipmap the-dates (repeat pop-cnt)))})
-              ccc/all-country-codes))}}))
+              ccc/all-country-codes))}})))
 
 (defn data-with-pop
   "Data with population numbers."
