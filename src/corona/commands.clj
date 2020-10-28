@@ -22,22 +22,23 @@
 
 (defn world
   ([prm] (world "world" prm))
-  ([msg-id {:keys [chat-id country-code] :as prm}]
-   (let [prm
+  ([msg-id {:keys [chat-id cc] :as prm-orig}]
+   (let [ccode cc
+         prm
          ;; override default parse_mode
-         (assoc prm :parse_mode "HTML")]
+         (assoc prm-orig :parse_mode "HTML")]
      (let [options (select-keys prm (keys msg/options))
            ;; the message content is fetched from the cache
-           content (msg/detailed-info country-code)]
+           content (msg/detailed-info ccode)]
        (doall
         (morse/send-text com/telegram-token chat-id options content))
        (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
-     (let [options (if (msg/worldwide? country-code)
-                     (msg/reply-markup-btns {:chat-id chat-id :cc country-code})
+     (let [options (if (msg/worldwide? ccode)
+                     (msg/reply-markup-btns (select-keys prm [:chat-id :cc]))
                      {})
            ;; the plot is fetched from the cache, stats and day need not to be
            ;; specified
-           content (p/plot-country country-code)]
+           content (p/plot-country ccode)]
        (doall
         (morse/send-photo com/telegram-token chat-id options content))
        (debugf "[%s] send-photo: %s bytes sent" msg-id (count content))))))
@@ -107,7 +108,7 @@
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
   [ccode]
-  (cstr/replace (ccr/country-name ccode) " " ""))
+  (cstr/replace (ccr/get-country-name ccode) " " ""))
 
 (defn cmds-country-code
   "E.g.
@@ -125,11 +126,9 @@
   (mapv
    (fn [fun]
      {:name (fun ccode)
-      :fun
-      (fn [chat-id]
-        (world {:chat-id chat-id
-                :country-code ccode
-                :pred-hm (msg/create-pred-hm ccode)}))})
+      :fun (fn [chat-id] (world {:chat-id chat-id
+                                :cc ccode
+                                :pred-hm (msg/create-pred-hm ccode)}))})
    [#(cstr/lower-case %)  ;; /de
     #(cstr/upper-case %)  ;; /DE
     #(cstr/capitalize %)  ;; /De
@@ -141,8 +140,9 @@
     #(normalize %)]))
 
 (defn cmds-general []
-  (let [prm (conj {:pred-hm (msg/create-pred-hm ccc/zz)
-                   :country-code (ccr/country-code ccc/worldwide)}
+  (let [ccode (ccr/get-country-code ccc/worldwide)
+        prm (conj {:pred-hm (msg/create-pred-hm ccode)
+                   :cc ccode}
              msg/options)]
     [{:name l/contributors
       :fun (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
@@ -169,7 +169,7 @@
               (let [prm (conj
                          {:pred-hm (msg/create-pred-hm ccc/zz)}
                          msg/options)
-                    prm-country-code {:country-code (ccr/country-code ccc/worldwide)}]
+                    prm-country-code {:country-code (ccr/get-country-code ccc/worldwide)}]
                 {:name (l/list-sorted-by case-kw)
                  :fun (fn [chat-id]
                         (let [list-fn (if (in? com/listing-cases-per-100k case-kw)

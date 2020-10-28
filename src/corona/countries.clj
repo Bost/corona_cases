@@ -68,7 +68,7 @@
   https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
   (cset/map-invert country-code--country))
 
-(defn country-name
+(defn get-country-name
   "Country name from 2-letter country code: \"DE\" -> \"Germany\" "
   [ccode]
   (get country-code--country ccode))
@@ -341,7 +341,7 @@
   [hm]
   (into {} (map (fn [[k v]] [(cstr/lower-case k) v]) hm)))
 
-(defn country-code
+(defn get-country-code
   "Return 2-letter country code (Alpha-2) according to
   https://en.wikipedia.org/wiki/ISO_3166-1
   Defaults to `default-2-country-code`."
@@ -379,7 +379,7 @@
         ]
        ccode)
     (country-alias ccode)
-    (country-name ccode)))
+    (get-country-name ccode)))
 
 (def ^:const population-table
   "From
@@ -649,7 +649,7 @@
   "Toggle between country-names and codes using:
   => (clojure.set/rename-keys population
       (->> (keys population)
-          (map (fn [k] {k (#_country-name country-code k)}))
+          (map (fn [k] {k (#_country-name get-country-code k)}))
           (reduce into)))
 
   Compare `corona.tables/population` with `corona.countries/population`
@@ -662,6 +662,6 @@
   #_corona.tables/population
   (->> population-table
        (map (fn [[cname population-nr]]
-              {(country-code cname) population-nr}))
+              {(get-country-code cname) population-nr}))
        ;; because e.g. population of Russia is mainland + South Ossetia
        (apply merge-with +)))

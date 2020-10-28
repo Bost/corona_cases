@@ -509,7 +509,7 @@
        (map (fn [[Country Population YearlyChangeRate NetChange Density LandArea
                  Migrants FertilityRate MedianAge UrbanPopulationRate
                  WorldShareRate]]
-              [(ccr/country-code Country) Population]))
+              [(ccr/get-country-code Country) Population]))
        conj (sorted-map)
        population-table))
 
