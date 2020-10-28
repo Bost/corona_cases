@@ -214,7 +214,10 @@
         shifted-stats (into (drop-last days stats) (repeat days 0))]
     shifted-stats))
 
-(defn estimate-recov-for-country [[ccode stats-country-unsorted]]
+(defn estimate-recov-for-country
+  "TODO decrease estimation by the number of deaths - that can be derived from
+  the (country-specific) death percentage."
+  [[ccode stats-country-unsorted]]
   (let [stats-country (sort-by :t stats-country-unsorted)]
     (mapv (fn [est-rec stats-hm]
             (conj stats-hm {:e est-rec}))
