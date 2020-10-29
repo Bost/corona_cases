@@ -454,5 +454,5 @@
   (get country-code-2-to-3-hm ccode))
 
 (def all-country-codes
-  #_[gb sk de zz]
-  (keys country-code-2-to-3-hm))
+  [gb sk de zz]
+  #_(keys country-code-2-to-3-hm))

@@ -233,8 +233,8 @@
             (raw-dates))))
    [:sums case-kw cc]))
 
-(defn calc-case-counts-report-by-report-fn [pred-hm]
-  #_(debugf "calc-case-counts-report-by-report-fn")
+(defn calc-case-counts-report-by-report [pred-hm]
+  #_(debugf "calc-case-counts-report-by-report")
   (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
                    [:population :confirmed :recovered :deaths])]
     (zipmap com/all-cases
@@ -268,9 +268,9 @@
 
   (get-counts (fn [_] true))
   "
-  [{:keys [cc pred-fun] :as pred-hm}]
-  ;; ignore predicate for the moment
-  (from-cache (fn [] (calc-case-counts-report-by-report-fn pred-hm))
+  [{:keys [cc #_pred-fun] :as pred-hm}]
+  ;; ignore #_pred-fun for the moment
+  (from-cache (fn [] (calc-case-counts-report-by-report pred-hm))
               [:cnts (keyword cc)]))
 
 (defn eval-fun

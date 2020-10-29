@@ -19,6 +19,7 @@
    [net.cgrand.xforms :as x]
    ;; [com.stuartsierra.component :as component]
    [clojure.inspector :refer :all]
+   [utils.num :as utn]
    ))
 
 ;; (set! *warn-on-reflection* true)
@@ -210,9 +211,20 @@
 (defn estimate-recov
   "Warning: lucky coincidence 1 report per 1 day!"
   [days stats]
-  (let [stats (map (fn [{:keys [c ]}] c) stats)
-        shifted-stats (into (drop-last days stats) (repeat days 0))]
-    shifted-stats))
+  #_(debugf "%s" stats)
+  (let [stats-confirmed (map (fn [{:keys [c]}] c) stats)
+        stats-rate-deaths (map (fn [{:keys [d-rate]}] d-rate) stats)
+        shifted-stats-confirmed (into (drop-last days stats-confirmed) (repeat days 0))
+        shifted-stats-rate-deaths (into (drop-last days stats-rate-deaths) (repeat days 0))
+        ]
+    (map (fn [shifted-c d-rate]
+           (let [decrement (utn/round (* d-rate 0.01 shifted-c))
+                 res (- shifted-c decrement)]
+             (debugf "shifted-c %s, d-rate %s; decrement %s" shifted-c d-rate decrement)
+             res))
+         shifted-stats-confirmed
+         shifted-stats-rate-deaths
+         )))
 
 (defn estimate-recov-for-country
   "TODO decrease estimation by the number of deaths - that can be derived from
@@ -242,7 +254,7 @@
                       (sort-by :cc))
            day (count (data/dates))
            ]
-       (def stats stats)
+       ;; (def stats stats)
        (let [form '(< (count (corona.api.expdev07/raw-dates)) 10)]
          ;; TODO do not call calc-functions when the
          (if (eval form)

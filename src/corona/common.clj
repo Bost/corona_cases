@@ -166,6 +166,8 @@
       ['env-type 'telegram-token 'webapp-port 'bot-name
        'prj-vernum 'commit])
 
+;; TODO (System/exit <val>) if some var is undefined
+
 (defn fix-octal-val
   "(read-string s-day \"08\") produces a NumberFormatException
   https://clojuredocs.org/clojure.core/read-string#example-5ccee021e4b0ca44402ef71a"
