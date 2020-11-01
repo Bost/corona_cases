@@ -94,8 +94,8 @@
 
 ;; TODO
 #_(defn calc-rate-active
-  [{:keys [i c]}]
-  (utn/percentage i c))
+  [{:keys [a c]}]
+  (utn/percentage a c))
 
 (defn calc-rate-recovered
   [{:keys [r c]}]
@@ -121,7 +121,7 @@
     (if (zero? p)
       0
       (per-1e5 (case case-kw
-                 :i (calculate-active prm)
+                 :a (calculate-active prm)
                  :r r
                  :d d
                  :c c)
@@ -218,19 +218,19 @@
   :c ~ closed cased
   :r ~ recovered cased
   :d ~ deaths
-  :i ~ ill, i.e. active cases"
+  :a ~ active cases i.e. ill"
   [
    {:idx  0 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  1 :kw :c                :threshold {:inc 5000      :val (int 900e3)}}
    {:idx  2 :kw :r :listing-idx 1 :threshold {:inc 2500      :val (int 480e3)}}
    {:idx  3 :kw :d :listing-idx 2 :threshold {:inc 500       :val (int 33e3)}}
-   {:idx  4 :kw :i :listing-idx 0 :threshold {:inc 1000      :val (int 237e3)}}
-   {:idx  5 :kw :i100k}
+   {:idx  4 :kw :a :listing-idx 0 :threshold {:inc 1000      :val (int 237e3)}}
+   {:idx  5 :kw :a100k}
    {:idx  6 :kw :r100k}
    {:idx  7 :kw :d100k}
    {:idx  8 :kw :c100k}
 
-   ;; {:idx  9 :kw :i-rate} ;; TODO active-rate
+   ;; {:idx  9 :kw :a-rate} ;; TODO active-rate
    {:idx 10 :kw :r-rate}
    {:idx 11 :kw :d-rate}
    ;; {:idx 12 :kw :c-rate} ;; TODO closed-rate
@@ -246,7 +246,7 @@
 (def ^:const all-cases (->> case-params
                             (mapv :kw)))
 
-(def ^:const ranking-cases [:p :c100k :r100k :d100k :i100k])
+(def ^:const ranking-cases [:p :c100k :r100k :d100k :a100k])
 
 (def ^:const listing-cases-per-100k
   "No listing of :c100k - Closed cases per 100k"

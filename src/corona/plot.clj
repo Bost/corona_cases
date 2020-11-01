@@ -108,7 +108,7 @@
                    {:cc ccode :t t :case :c :cnt (reduce + (map :c hms))}
                    {:cc ccode :t t :case :r :cnt (reduce + (map :r hms))}
                    {:cc ccode :t t :case :d :cnt (reduce + (map :d hms))}
-                   {:cc ccode :t t :case :i :cnt (reduce + (map :i hms))}]))
+                   {:cc ccode :t t :case :a :cnt (reduce + (map :a hms))}]))
          flatten)))
 
 (defn stats-for-country [ccode stats]
@@ -123,7 +123,7 @@
     ;; recalculate it
     (reverse (transduce (map (fn [case-kw] {case-kw (get mapped-hm case-kw)}))
                         into []
-                        [:i :r :d :c :p :e]))))
+                        [:a :r :d :c :p :e]))))
 
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :t last) (sort-by :t stats)))
@@ -211,7 +211,7 @@
   [ccode & [stats day]]
   (let [base-data (stats-for-country ccode stats)
         sarea-data (remove (fn [[case-kw _]]
-                             (in? #_[:c :i :r :d] [:c :p :e] case-kw))
+                             (in? #_[:c :a :r :d] [:c :p :e] case-kw))
                            base-data)
         curves (keys sarea-data)
         palette (palette-colors (count curves))]
@@ -231,7 +231,7 @@
                      [:sarea sarea-data {:palette palette}]
                      #_[:line (line-data :p base-data) stroke-population]
                      [:line (line-data :c base-data) stroke-confirmed]
-                     [:line (line-data :i base-data) stroke-sick]
+                     [:line (line-data :a base-data) stroke-sick]
                      [:line (line-data :e base-data) stroke-estimated])
             :y-axis-formatter  (metrics-prefix-formatter
                                 ;; population numbers have the `max` values, all
@@ -242,7 +242,7 @@
             :legend (reverse
                      (conj (map #(vector :rect %2 {:color %1})
                                 palette
-                                (map (fn [k] (get {:i l/active :d l/deaths :r l/recovered
+                                (map (fn [k] (get {:a l/active :d l/deaths :r l/recovered
                                                   :e l/recov-estim} k))
                                      curves))
                            [:line l/confirmed     stroke-confirmed]
@@ -310,7 +310,7 @@
                            #_(->> (group-by :cc hms)
                                   keys
                                   (cset/difference countries-threshold)
-                                  (map (fn [ccode] {:cc ccode :t t :i 0}))
+                                  (map (fn [ccode] {:cc ccode :t t :a 0}))
                                   (cset/union hms)))
                          (group-by :t sum-all-by-date-by-case-threshold)))]
     (update date-sums :data (fn [_] res))))
@@ -368,7 +368,7 @@
                            (->> [l/confirmed l/recovered l/deaths l/active-cases ]
                                 (zipmap com/basic-cases)
                                 case-kw)
-                           #_(case-kw {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
+                           #_(case-kw {:c l/confirmed :a l/active-cases :r l/recovered :d l/deaths})
                            threshold-recaltulated)
             :label-conf {:color (c/darken :steelblue) :font-size 14}})]
       (let [img-byte-array (toByteArrayAutoClosable img)]
@@ -432,7 +432,7 @@
                     (fmt-day day)
                     (fmt-last-date stats)
                     com/bot-name
-                    (str (case-kw {:c l/confirmed :i l/active-cases :r l/recovered :d l/deaths})
+                    (str (case-kw {:c l/confirmed :a l/active-cases :r l/recovered :d l/deaths})
                          " " l/absolute)
                     threshold)
             :label-conf {:color (c/darken :steelblue) :font-size 14}})]

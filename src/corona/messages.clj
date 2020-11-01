@@ -248,7 +248,7 @@
         ["%s\n"   [(header parse_mode
                            (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
         ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
-        ["    %s "[(str l/active    (if (= :i sort-by-case) sort-indicator " "))]]
+        ["    %s "[(str l/active    (if (= :a sort-by-case) sort-indicator " "))]]
         ["%s"     [spacer]]
         ["%s "    [(str l/recovered (if (= :r sort-by-case) sort-indicator " "))]]
         ["%s"     [spacer]]
@@ -261,11 +261,11 @@
                     )]]])
       (s/join
        "\n"
-       (map (fn [{:keys [i r d cc]}]
+       (map (fn [{:keys [a r d cc]}]
               (let [ccode cc
                     cname (ccr/country-name-aliased ccode)]
                 (format "<code>%s%s%s%s%s %s</code>  %s"
-                        (com/left-pad i " " omag-active)
+                        (com/left-pad a " " omag-active)
                         spacer
                         (com/left-pad r " " omag-recov)
                         spacer
@@ -299,7 +299,7 @@
        [["%s\n" [(header parse_mode
                          (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
         ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/dates)) msg-idx cnt-msgs)]]
-        ["%s "  [(str l/active-per-1e5    (if (= :i100k sort-by-case) sort-indicator " "))]]
+        ["%s "  [(str l/active-per-1e5    (if (= :a100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
         ["%s "  [(str l/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
@@ -311,11 +311,11 @@
                   )]]])
       (s/join
        "\n"
-       (map (fn [{:keys [i100k r100k d100k cc]}]
+       (map (fn [{:keys [a100k r100k d100k cc]}]
               (let [ccode cc
                     cname (ccr/country-name-aliased ccode)]
                 (format "<code>   %s%s   %s%s    %s %s</code>  %s"
-                        (com/left-pad i100k " " omag-active-per-100k)
+                        (com/left-pad a100k " " omag-active-per-100k)
                         spacer
                         (com/left-pad r100k " " omag-recovered-per-100k)
                         spacer
@@ -348,14 +348,14 @@
   computed and so this can't be lazy."
   [coll elem]
   ;; (->> coll
-  ;;      (map-indexed (fn [i v] [i v]))
+  ;;      (map-indexed (fn [idx val] [idx val]))
   ;;      (filter (fn [indexed-el] (= elem (second indexed-el))))
   ;;      (last)
   ;;      (first))
   (first
    (transduce
     ;; the xform:
-    (comp (map-indexed (fn [i v] [i v]))
+    (comp (map-indexed (fn [idx val] [idx val]))
           (filter (fn [indexed-el] (= elem (second indexed-el)))))
     ;; the reducer:
     (fn [& findings] (last findings))
@@ -391,7 +391,7 @@
     ["%s\n" [(str l/day " " (count (data/dates)))]]
     ["%s\n" ; data
      [(let [
-            data-active (:i (data/case-counts-report-by-report pred-hm))
+            data-active (:a (data/case-counts-report-by-report pred-hm))
             ]
         ;; (debugf "[%s] max-active-date %s" msg-id max-active-date)
         ;; (debugf "[%s] last-day %s" msg-id last-day)
@@ -428,21 +428,21 @@
               (when (pos? confirmed)
                 (let [{deaths             :d
                        recovered          :r
-                       active             :i
-                       active-per-100k    :i100k
+                       active             :a
+                       active-per-100k    :a100k
                        recovered-per-100k :r100k
                        deaths-per-100k    :d100k
                        closed-per-100k    :c100k
-                       ;; i-rate :i-rate
+                       ;; a-rate :a-rate
                        r-rate :r-rate
                        d-rate :d-rate
                        ;; TODO c-rate :c-rate
                        } last-day
-                      {active-last-8-reports :i} (data/last-8-reports pred-hm)
+                      {active-last-8-reports :a} (data/last-8-reports pred-hm)
                       [active-last-8th-report & active-last-7-reports] active-last-8-reports
                       closed (+ deaths recovered)
-                      {delta-deaths :d delta-recov :r delta-active :i
-                       delta-d100k :d100k delta-r100k :r100k delta-i100k :i100k
+                      {delta-deaths :d delta-recov :r delta-active :a
+                       delta-d100k :d100k delta-r100k :r100k delta-a100k :a100k
                        } delta
                       delta-closed (+ delta-deaths delta-recov)]
                   #_(debugf "[%s] delta-closed" msg-id delta-closed)
@@ -452,11 +452,11 @@
                   [
                    ["%s\n" [(fmt-to-cols
                              {:s l/active :n active :total confirmed :diff delta-active
-                              :calc-rate true ;; TODO :rate i-rate
+                              :calc-rate true ;; TODO :rate a-rate
                               })]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/active-per-1e5 :n active-per-100k :total confirmed
-                              :diff delta-i100k :calc-rate false
+                              :diff delta-a100k :calc-rate false
                               ;; :cmd l/cmd-active-per-1e5
                               })]]
                    ["%s\n" [(fmt-val-to-cols
@@ -540,7 +540,7 @@
                              ["\n%s"
                               [(format-linewise
                                 [["%s" [l/people            :p]]
-                                 ["%s" [l/active-per-1e5    :i100k]]
+                                 ["%s" [l/active-per-1e5    :a100k]]
                                  ["%s" [l/recovered-per-1e5 :r100k]]
                                  ["%s" [l/deaths-per-1e5    :d100k]]
                                  ["%s" [l/closed-per-1e5    :c100k]]]

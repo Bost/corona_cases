@@ -133,10 +133,10 @@
 (defn pic-data
   "Returns a collection of hash-maps containing e.g.:
 (
-  {:cc \"SK\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :c 471    :r 10    :d 1    :p 5459642   :i 460}
-  {:cc \"SK\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :c 363    :r 3     :d 0    :p 5459642   :i 360}
-  {:cc \"US\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :c 308853 :r 14652 :d 8407 :p 331002651 :i 285794}
-  {:cc \"US\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :c 188172 :r 7024  :d 3873 :p 331002651 :i 177275}
+  {:cc \"SK\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :c 471    :r 10    :d 1    :p 5459642   :a 460}
+  {:cc \"SK\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :c 363    :r 3     :d 0    :p 5459642   :a 360}
+  {:cc \"US\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :c 308853 :r 14652 :d 8407 :p 331002651 :a 285794}
+  {:cc \"US\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :c 188172 :r 7024  :d 3873 :p 331002651 :a 177275}
 )"
   []
   (apply map
@@ -151,8 +151,8 @@
              (assoc
               prm
               #_(dissoc prm :c)
-              :i (com/calculate-active prm)
-              :i100k ((com/calculate-cases-per-100k :i) prm)
+              :a (com/calculate-active prm)
+              :a100k ((com/calculate-cases-per-100k :a) prm)
               :r100k ((com/calculate-cases-per-100k :r) prm)
               :d100k ((com/calculate-cases-per-100k :d) prm)
               :r-rate (com/calc-rate-recovered prm)

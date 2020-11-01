@@ -241,7 +241,7 @@
             (apply
              conj pcrd
              (->> [com/calculate-active
-                   (com/calculate-cases-per-100k :i)
+                   (com/calculate-cases-per-100k :a)
                    (com/calculate-cases-per-100k :r)
                    (com/calculate-cases-per-100k :d)
                    (com/calculate-cases-per-100k :c)
@@ -264,7 +264,7 @@
    :c (...    2566    2596    2599    2615    2690)
    :r (...    1861    1864    1866    1874    1884)
    :d (...      31      31      31      31      31)
-   :i (...     674     701     702     710     775)}
+   :a (...     674     701     702     710     775)}
 
   (get-counts (fn [_] true))
   "
