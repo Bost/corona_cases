@@ -189,11 +189,6 @@
 
 (defn get-prev [coll] (first (take-last 2 coll)))
 
-(defn estimate-recoverd
-  "TODO Estimate recovered cased (based on 1.) with avg recovery time 14 days."
-  []
-  0)
-
 (defn dbg-recov [ccode case-kw raw-date v]
   #_(debugf "%s %s %s: %s" ccode case-kw (com/fmt-date-dbg (date raw-date)) v))
 
@@ -236,25 +231,35 @@
 (defn calc-case-counts-report-by-report [pred-hm]
   #_(debugf "calc-case-counts-report-by-report")
   (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
-                   [:population :confirmed :recovered :deaths])]
+                   [:population :confirmed :recovered :deaths])
+
+        ;; pre-calculate active numbers - needed for com/calc-rate-active
+        pcrda
+        (apply
+         conj pcrd
+         (->> [com/calculate-active]
+              (mapv (fn [fun] (apply mapv (fn [p c r d]
+                                            (->> [p c r d]
+                                                 (zipmap [:p :c :r :d])
+                                                 (fun)))
+                                     pcrd)))))]
     (zipmap com/all-cases
             (apply
-             conj pcrd
-             (->> [com/calculate-active
-                   (com/calculate-cases-per-100k :a)
+             conj pcrda
+             (->> [(com/calculate-cases-per-100k :a)
                    (com/calculate-cases-per-100k :r)
                    (com/calculate-cases-per-100k :d)
                    (com/calculate-cases-per-100k :c)
-                   ;; TODO com/calc-rate-active
+                   com/calc-rate-active
                    com/calc-rate-recovered
                    com/calc-rate-deaths
                    ;; TODO com/calc-rate-closed
                    ]
-                  (mapv (fn [fun] (apply mapv (fn [p c r d]
-                                              (->> [p c r d]
-                                                   (zipmap [:p :c :r :d])
-                                                   (fun)))
-                                       pcrd))))))))
+                  (mapv (fn [fun] (apply mapv (fn [p c r d a]
+                                               (->> [p c r d a]
+                                                    (zipmap [:p :c :r :d :a])
+                                                    (fun)))
+                                        pcrda))))))))
 
 (defn case-counts-report-by-report
   "Returns a hash-map containing case-counts day-by-day. E.g.:

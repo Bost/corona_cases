@@ -433,7 +433,7 @@
                        recovered-per-100k :r100k
                        deaths-per-100k    :d100k
                        closed-per-100k    :c100k
-                       ;; a-rate :a-rate
+                       a-rate :a-rate
                        r-rate :r-rate
                        d-rate :d-rate
                        ;; TODO c-rate :c-rate
@@ -452,8 +452,7 @@
                   [
                    ["%s\n" [(fmt-to-cols
                              {:s l/active :n active :total confirmed :diff delta-active
-                              :calc-rate true ;; TODO :rate a-rate
-                              })]]
+                              :rate a-rate})]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/active-per-1e5 :n active-per-100k :total confirmed
                               :diff delta-a100k :calc-rate false

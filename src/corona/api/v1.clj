@@ -145,16 +145,16 @@
              {:keys [recovered]}
              {:keys [deaths]}]
            (let [ccode cc
-                 prm {:cc ccode :t t :c confirmed :r recovered :d deaths
-                      :p population
-                      }]
+                 prm-basic {:cc ccode :t t :c confirmed :r recovered :d deaths
+                            :p population}
+                 prm (assoc prm-basic :a (com/calculate-active prm-basic))]
              (assoc
               prm
               #_(dissoc prm :c)
-              :a (com/calculate-active prm)
               :a100k ((com/calculate-cases-per-100k :a) prm)
               :r100k ((com/calculate-cases-per-100k :r) prm)
               :d100k ((com/calculate-cases-per-100k :d) prm)
+              :a-rate (com/calc-rate-active prm)
               :r-rate (com/calc-rate-recovered prm)
               :d-rate (com/calc-rate-deaths prm)
               )

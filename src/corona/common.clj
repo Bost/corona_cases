@@ -92,8 +92,7 @@
 (defn calculate-active [{:keys [c r d]}]
   (- c (+ r d)))
 
-;; TODO
-#_(defn calc-rate-active
+(defn calc-rate-active
   [{:keys [a c]}]
   (utn/percentage a c))
 
@@ -230,7 +229,7 @@
    {:idx  7 :kw :d100k}
    {:idx  8 :kw :c100k}
 
-   ;; {:idx  9 :kw :a-rate} ;; TODO active-rate
+   {:idx  9 :kw :a-rate}
    {:idx 10 :kw :r-rate}
    {:idx 11 :kw :d-rate}
    ;; {:idx 12 :kw :c-rate} ;; TODO closed-rate

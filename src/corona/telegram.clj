@@ -220,7 +220,7 @@
     (map (fn [shifted-c d-rate]
            (let [decrement (utn/round (* d-rate 0.01 shifted-c))
                  res (- shifted-c decrement)]
-             (debugf "shifted-c %s, d-rate %s; decrement %s" shifted-c d-rate decrement)
+             ;; (debugf "shifted-c %s, d-rate %s; decrement %s" shifted-c d-rate decrement)
              res))
          shifted-stats-confirmed
          shifted-stats-rate-deaths
