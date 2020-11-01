@@ -253,7 +253,7 @@
                    com/calc-rate-active
                    com/calc-rate-recovered
                    com/calc-rate-deaths
-                   ;; TODO com/calc-rate-closed
+                   com/calc-rate-closed
                    ]
                   (mapv (fn [fun] (apply mapv (fn [p c r d a]
                                                (->> [p c r d a]

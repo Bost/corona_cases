@@ -436,7 +436,7 @@
                        a-rate :a-rate
                        r-rate :r-rate
                        d-rate :d-rate
-                       ;; TODO c-rate :c-rate
+                       c-rate :c-rate ;; closed-rate
                        } last-day
                       {active-last-8-reports :a} (data/last-8-reports pred-hm)
                       [active-last-8th-report & active-last-7-reports] active-last-8-reports
@@ -512,8 +512,7 @@
                               })]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/closed :n closed :total confirmed :diff delta-closed
-                              :calc-rate true ;; TODO closed-rate
-                              })]]
+                              :rate c-rate})]]
                    ["%s\n\n" [(fmt-to-cols
                                {:s l/closed-per-1e5 :n closed-per-100k :total confirmed
                                 :diff delta-d100k :calc-rate false

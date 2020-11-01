@@ -157,6 +157,7 @@
               :a-rate (com/calc-rate-active prm)
               :r-rate (com/calc-rate-recovered prm)
               :d-rate (com/calc-rate-deaths prm)
+              :c-rate (com/calc-rate-closed prm)
               )
              ))
          (map xf-for-case [:population :confirmed :recovered :deaths])))

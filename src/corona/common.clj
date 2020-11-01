@@ -104,10 +104,9 @@
   [{:keys [d c]}]
   (utn/percentage d c))
 
-;; TODO
-#_(defn calc-rate-closed
-  [{:keys [d c]}]
-  (utn/percentage d c))
+(defn calc-rate-closed
+  [{:keys [d r c]}]
+  (utn/percentage (+ d r) c))
 
 (defn per-1e5
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
@@ -211,6 +210,7 @@
       s)
     s))
 
+
 (def ^:const case-params
   ":idx - defines an order in appearance
   :p ~ population
@@ -232,7 +232,7 @@
    {:idx  9 :kw :a-rate}
    {:idx 10 :kw :r-rate}
    {:idx 11 :kw :d-rate}
-   ;; {:idx 12 :kw :c-rate} ;; TODO closed-rate
+   {:idx 12 :kw :c-rate} ;; closed-rate
    ])
 
 (def ^:const absolute-cases (->> case-params
