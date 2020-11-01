@@ -110,7 +110,7 @@
 
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
-  [{:keys [s n total diff calc-rate show-n calc-diff
+  [{:keys [s n diff show-n calc-diff
            cmd rate]
     :or {show-n true calc-diff true
          cmd ""}}]
@@ -118,11 +118,7 @@
    "<code>%s %s %s %s </code>%s"
    (com/right-pad s " " padding-s)
    (com/left-pad (if show-n n "") " " padding-n)
-   (com/left-pad (cond
-                   calc-rate (str (utn/percentage n total) "%")
-                   rate (str rate "%")
-                   :else " ")
-                 " " 4)
+   (com/left-pad (if rate (str rate "%") " ") " " 4)
    (if calc-diff
      (plus-minus diff)
      (com/left-pad "" " " max-diff-order-of-magnitude))
@@ -417,12 +413,12 @@
            (apply
             conj
             [["%s\n" [(fmt-to-cols-narrower
-                       {:s l/people :n population :calc-rate false
+                       {:s l/people :n population
                         :calc-diff false
                         :desc (format "= %s %s" population-rounded
                                       l/millions-rounded)})]]
              ["%s\n" [(fmt-to-cols {:s l/confirmed :n confirmed
-                                    :diff delta-confirmed :calc-rate false})]]]
+                                    :diff delta-confirmed})]]]
             (do
               #_(debug "[%s] (pos? confirmed)" msg-id (pos? confirmed))
               (when (pos? confirmed)
@@ -451,11 +447,11 @@
                             msg-id (= delta-confirmed delta-closed))
                   [
                    ["%s\n" [(fmt-to-cols
-                             {:s l/active :n active :total confirmed :diff delta-active
+                             {:s l/active :n active :diff delta-active
                               :rate a-rate})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/active-per-1e5 :n active-per-100k :total confirmed
-                              :diff delta-a100k :calc-rate false
+                             {:s l/active-per-1e5 :n active-per-100k
+                              :diff delta-a100k
                               ;; :cmd l/cmd-active-per-1e5
                               })]]
                    ["%s\n" [(fmt-val-to-cols
@@ -468,13 +464,13 @@
                              {:s l/active-last-7-med
                               :n (->> active-last-7-reports (izoo/roll-median 7) (first)
                                       (int))
-                              :total population :diff "" :calc-rate false
+                              :diff ""
                               :show-n true :calc-diff false
                               })]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/active-last-7-avg
                               :n (-> active-last-7-reports istats/mean round-nr)
-                              :total population :diff "" :calc-rate false
+                              :diff ""
                               :show-n true :calc-diff false})]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/active-change-last-7-avg
@@ -491,31 +487,31 @@
                               ;; = (active(t0) - active(t0-7d)) / 7
                               :n (-> (/ (- active active-last-8th-report) 7.0)
                                      round-nr plus-minus)
-                              :total population :diff "" :calc-rate false
+                              :diff ""
                               :show-n true :calc-diff false})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/recovered :n recovered :total confirmed
+                             {:s l/recovered :n recovered
                               :diff delta-recov
                               :rate r-rate})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/recovered-per-1e5 :n recovered-per-100k :total confirmed
-                              :diff delta-r100k :calc-rate false
+                             {:s l/recovered-per-1e5 :n recovered-per-100k
+                              :diff delta-r100k
                               ;; :cmd l/cmd-recovered-per-1e5
                               })]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/deaths :n deaths :total confirmed :diff delta-deaths
+                             {:s l/deaths :n deaths :diff delta-deaths
                               :rate d-rate})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/deaths-per-1e5 :n deaths-per-100k :total confirmed
-                              :diff delta-d100k :calc-rate false
+                             {:s l/deaths-per-1e5 :n deaths-per-100k
+                              :diff delta-d100k
                               ;; :cmd l/cmd-deaths-per-1e5
                               })]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/closed :n closed :total confirmed :diff delta-closed
+                             {:s l/closed :n closed :diff delta-closed
                               :rate c-rate})]]
                    ["%s\n\n" [(fmt-to-cols
-                               {:s l/closed-per-1e5 :n closed-per-100k :total confirmed
-                                :diff delta-d100k :calc-rate false
+                               {:s l/closed-per-1e5 :n closed-per-100k
+                                :diff delta-d100k
                                 ;; TODO create command l/cmd-closed-per-1e5
                                 #_#_:desc (com/encode-cmd l/cmd-closed-per-1e5)})]]
                    ["%s\n" [(format
