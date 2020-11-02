@@ -209,37 +209,30 @@
    (warnf "[%s] Displayed data will NOT be updated!" msg-id)))
 
 (defn estimate-recov
-  "Warning: lucky coincidence 1 report per 1 day!"
-  [days stats]
-  #_(debugf "%s" stats)
-  (let [stats-confirmed (map (fn [{:keys [c]}] c) stats)
-        stats-rate-deaths (map (fn [{:keys [d-rate]}] d-rate) stats)
-        shifted-stats-confirmed (into (drop-last days stats-confirmed) (repeat days 0))
-        shifted-stats-rate-deaths (into (drop-last days stats-rate-deaths) (repeat days 0))
-        ]
-    (map (fn [shifted-c d-rate]
-           (let [decrement (utn/round (* d-rate 0.01 shifted-c))
-                 res (- shifted-c decrement)]
-             ;; (debugf "shifted-c %s, d-rate %s; decrement %s" shifted-c d-rate decrement)
-             res))
-         shifted-stats-confirmed
-         shifted-stats-rate-deaths
-         )))
+  "Warning: lucky coincidence of 1 report per 1 day!"
+  [days all-stats]
+  (apply map
+         ;; reducing two values into one... TODO identify here the transducer
+         (fn [confirmed deaths] (- confirmed deaths))
+         (map (comp
+               (fn [case-kw-stats] (into (drop-last days case-kw-stats) (repeat days 0)))
+               (fn [case-kw] (map case-kw all-stats)))
+              [:c :d])))
 
 (defn estimate-recov-for-country
   "TODO decrease estimation by the number of deaths - that can be derived from
   the (country-specific) death percentage.
 
-  Seems like the best estimate for
-  * Germany is 12 days/reports
-  * Slovakia is about 23 days
+  Seems like different countries have different recovery reporting policies:
+  * Germany  - 14 days/reports
+  * Slovakia - 23 days/reports
   "
   [[ccode stats-country-unsorted]]
   (let [stats-country (sort-by :t stats-country-unsorted)]
     (mapv (fn [est-rec stats-hm]
             (conj stats-hm {:e est-rec}))
           (estimate-recov
-           22
+           14
            #_(+ 3 (* 2 7)) stats-country)
           stats-country)))
 

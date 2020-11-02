@@ -214,7 +214,7 @@
               (if (and (empty? locations)
                        (= :recovered case-kw))
                 (let [default 0]
-                  (warnf "cc %s %s %s missing locations; defaults to %s"
+                  #_(warnf "cc %s %s %s missing locations; defaults to %s"
                          cc case-kw (com/fmt-date-dbg (date raw-date)) default)
                   default)
                 (transduce
