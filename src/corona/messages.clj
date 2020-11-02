@@ -91,38 +91,18 @@
                                (fn-args (second line))))
               lines)))
 
-(defn fmt-to-cols-narrower
-  "Info-message numbers of aligned to columns for better readability"
-  [{:keys [s n desc show-n]
-    :or {show-n true desc ""}}]
-  (format "<code>%s %s</code> %s"
-          (com/right-pad s " " (- padding-s 2))
-          (com/left-pad (if show-n n "") " " (+ padding-n 2))
-          desc))
-
-(defn fmt-val-to-cols
-  [{:keys [s n show-n desc]
-    :or {show-n true desc ""}}]
-  (format "<code>%s %s</code> %s"
-          (com/right-pad s " " padding-s)
-          (com/left-pad (if show-n n "") " " padding-n)
-          desc))
-
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
-  [{:keys [s n diff show-n calc-diff
-           cmd rate]
-    :or {show-n true calc-diff true
-         cmd ""}}]
+  [{:keys [s n diff calc-diff rate]
+    :or {calc-diff true}}]
   (format
-   "<code>%s %s %s %s </code>%s"
+   "<code>%s %s %s %s </code>"
    (com/right-pad s " " padding-s)
-   (com/left-pad (if show-n n "") " " padding-n)
+   (com/left-pad n " " padding-n)
    (com/left-pad (if rate (str rate "%") " ") " " 4)
    (if calc-diff
      (plus-minus diff)
-     (com/left-pad "" " " max-diff-order-of-magnitude))
-   (com/encode-cmd cmd)))
+     (com/left-pad "" " " max-diff-order-of-magnitude))))
 
 (def ^:const ref-mortality-rate
   "https://www.worldometers.info/coronavirus/coronavirus-death-rate/")
@@ -412,11 +392,11 @@
           (format-linewise
            (apply
             conj
-            [["%s\n" [(fmt-to-cols-narrower
-                       {:s l/people :n population
-                        :calc-diff false
-                        :desc (format "= %s %s" population-rounded
-                                      l/millions-rounded)})]]
+            [["%s\n" [(format "<code>%s %s</code> = %s %s"
+                              (com/right-pad l/people " " (- padding-s 2))
+                              (com/left-pad population " " (+ padding-n 2))
+                              population-rounded
+                              l/millions-rounded)]]
              ["%s\n" [(fmt-to-cols {:s l/confirmed :n confirmed
                                     :diff delta-confirmed})]]]
             (do
@@ -452,12 +432,12 @@
                    ["%s\n" [(fmt-to-cols
                              {:s l/active-per-1e5 :n active-per-100k
                               :diff delta-a100k
-                              ;; :cmd l/cmd-active-per-1e5
                               })]]
-                   ["%s\n" [(fmt-val-to-cols
-                             {:s l/active-max :n max-active-val :show-n true
-                              :desc (format "(%s)"
-                                            (com/fmt-date max-active-date))})]]
+                   ["%s\n" [(format "<code>%s %s</code> %s"
+                                    (com/right-pad l/active-max " " padding-s)
+                                    (com/left-pad max-active-val " " padding-n)
+                                    (format "(%s)"
+                                            (com/fmt-date max-active-date)))]]
 
                    ;; TODO add effective reproduction number (R)
                    #_["%s\n" [(fmt-to-cols
@@ -465,13 +445,13 @@
                               :n (->> active-last-7-reports (izoo/roll-median 7) (first)
                                       (int))
                               :diff ""
-                              :show-n true :calc-diff false
+                              :calc-diff false
                               })]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/active-last-7-avg
                               :n (-> active-last-7-reports istats/mean round-nr)
                               :diff ""
-                              :show-n true :calc-diff false})]]
+                              :calc-diff false})]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/active-change-last-7-avg
                               ;; ActC(t0)    = active(t0)    - active(t0-1d)
@@ -488,7 +468,7 @@
                               :n (-> (/ (- active active-last-8th-report) 7.0)
                                      round-nr plus-minus)
                               :diff ""
-                              :show-n true :calc-diff false})]]
+                              :calc-diff false})]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/recovered :n recovered
                               :diff delta-recov
@@ -496,7 +476,6 @@
                    ["%s\n" [(fmt-to-cols
                              {:s l/recovered-per-1e5 :n recovered-per-100k
                               :diff delta-r100k
-                              ;; :cmd l/cmd-recovered-per-1e5
                               })]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/deaths :n deaths :diff delta-deaths
@@ -504,7 +483,6 @@
                    ["%s\n" [(fmt-to-cols
                              {:s l/deaths-per-1e5 :n deaths-per-100k
                               :diff delta-d100k
-                              ;; :cmd l/cmd-deaths-per-1e5
                               })]]
                    ["%s\n" [(fmt-to-cols
                              {:s l/closed :n closed :diff delta-closed

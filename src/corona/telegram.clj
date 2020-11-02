@@ -228,12 +228,19 @@
 
 (defn estimate-recov-for-country
   "TODO decrease estimation by the number of deaths - that can be derived from
-  the (country-specific) death percentage."
+  the (country-specific) death percentage.
+
+  Seems like the best estimate for
+  * Germany is 12 days/reports
+  * Slovakia is about 23 days
+  "
   [[ccode stats-country-unsorted]]
   (let [stats-country (sort-by :t stats-country-unsorted)]
     (mapv (fn [est-rec stats-hm]
             (conj stats-hm {:e est-rec}))
-          (estimate-recov 14 stats-country)
+          (estimate-recov
+           22
+           #_(+ 3 (* 2 7)) stats-country)
           stats-country)))
 
 (defn reset-cache!
