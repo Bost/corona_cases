@@ -10,6 +10,8 @@
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
+(def ^:const percentage-calc "Percentage calculation")
+(def ^:const cases           "cases")
 (def ^:const randking-desc   "Ranking on the list of all %s countries:\n%s")
 (def ^:const world           "world")
 (def ^:const world-desc      "Start here")
@@ -35,6 +37,7 @@
 (def ^:const cmd-recovered-per-1e5 (str "r" hundred-k))
 (def ^:const cmd-deaths-per-1e5    (str "d" hundred-k))
 (def ^:const cmd-closed-per-1e5    (str "c" hundred-k))
+(def ^:const cases-per-1e5 "Cases per 100 000 people")
 
 (def ^:const active-per-1e5
   "Active cases per 100 000"

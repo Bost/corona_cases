@@ -4,27 +4,26 @@
   (:require
    [clojure.data.json :as json]
    [clojure.edn :as edn]
-   [clojure.string :as s]
+   [clojure.string :as cstr]
    [corona.api.expdev07 :as data]
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
-   [corona.lang :as l]
-   [corona.plot :as p]
+   [corona.lang :as lang]
+   [corona.plot :as plot]
    [morse.api :as morse]
-   [utils.core :as u :refer [in?] :exclude [id]]
+   [utils.core :as utl :refer [in?] :exclude [id]]
    [utils.num :as utn]
    [incanter.stats :as istats]
-   [incanter.zoo :as izoo]
+   ;; [incanter.zoo :as izoo]
    [taoensso.timbre :as timbre :refer [debugf
                                        ;; info infof warn errorf fatalf
-                                       ]]
-   ))
+                                       ]]))
 
 ;; (set! *warn-on-reflection* true)
 
 (defn bot-name-formatted []
-  (s/replace com/bot-name #"_" "\\\\_"))
+  (cstr/replace com/bot-name #"_" "\\\\_"))
 
 (def ^:const options {:parse_mode "Markdown" :disable_web_page_preview true})
 
@@ -104,18 +103,6 @@
      (plus-minus diff)
      (com/left-pad "" " " max-diff-order-of-magnitude))))
 
-(def ^:const ref-mortality-rate
-  "https://www.worldometers.info/coronavirus/coronavirus-death-rate/")
-
-(def ^:const ref-rober-koch
-  "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/nCoV.html")
-
-(def ^:const ref-3blue1brown-exp-growth
-  "https://youtu.be/Kas0tIxDvrg")
-
-(def ^:const ref-age-sex
-  "https://www.worldometers.info/coronavirus/coronavirus-age-sex-demographics/")
-
 (defn link [name url parse_mode]
   (if (= parse_mode "HTML")
     (format "<a href=\"%s\">%s</a>" url name)
@@ -128,17 +115,17 @@
   (let [spacer "  "]
     (str
      ;; "Try" spacer
-     (->> [l/world l/explain]
+     (->> [lang/world lang/explain]
           (map com/encode-cmd)
           (map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
-          (s/join spacer))
+          (cstr/join spacer))
      spacer
      "\n"
-     ;; l/listings ":  "
-     (->> (mapv l/list-sorted-by (into com/listing-cases-absolute
+     ;; lang/listings ":  "
+     (->> (mapv lang/list-sorted-by (into com/listing-cases-absolute
                                        com/listing-cases-per-100k))
           (map com/encode-cmd)
-          (s/join spacer)))))
+          (cstr/join spacer)))))
 
 (defn reply-markup-btns [prm]
   {:reply_markup
@@ -148,8 +135,8 @@
        into
        (mapv (fn [type]
                (mapv (fn [case-kw]
-                       {:text (str (get l/buttons case-kw)
-                                   (type l/plot-type))
+                       {:text (str (get lang/buttons case-kw)
+                                   (type lang/plot-type))
                         :callback_data (pr-str (assoc prm
                                                       :case case-kw
                                                       :type type))})
@@ -169,7 +156,7 @@
           case-kw :case} (edn/read-string data)]
      (let [options (reply-markup-btns {:chat-id chat-id :cc ccode})
            content (let [plot-fn (if (= type :sum)
-                                   p/plot-sum-by-case p/plot-absolute-by-case)]
+                                   plot/plot-sum-by-case plot/plot-absolute-by-case)]
                      ;; the plot is fetched from the cache, stats and day need not to be
                      ;; specified
                      (plot-fn case-kw))]
@@ -197,7 +184,7 @@
    (condp = parse_mode
      "HTML" com/bot-name
      ;; i.e. "Markdown"
-     (s/replace com/bot-name #"_" "\\\\_"))))
+     (cstr/replace com/bot-name #"_" "\\\\_"))))
 
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 
@@ -223,19 +210,19 @@
        [
         ["%s\n"   [(header parse_mode
                            (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
-        ["%s\n"   [(format "%s %s;  %s/%s" l/day cnt-reports msg-idx cnt-msgs)]]
-        ["    %s "[(str l/active    (if (= :a sort-by-case) sort-indicator " "))]]
+        ["%s\n"   [(format "%s %s;  %s/%s" lang/day cnt-reports msg-idx cnt-msgs)]]
+        ["    %s "[(str lang/active    (if (= :a sort-by-case) sort-indicator " "))]]
         ["%s"     [spacer]]
-        ["%s "    [(str l/recovered (if (= :r sort-by-case) sort-indicator " "))]]
+        ["%s "    [(str lang/recovered (if (= :r sort-by-case) sort-indicator " "))]]
         ["%s"     [spacer]]
-        ["%s\n"   [(str l/deaths    (if (= :d sort-by-case) sort-indicator " "))]]
+        ["%s\n"   [(str lang/deaths    (if (= :d sort-by-case) sort-indicator " "))]]
         ["%s"     [(str
                     "%s"   ; listing table
                     "%s"   ; sorted-by description; has its own new-line
                     "\n\n"
                     "%s"   ; footer
                     )]]])
-      (s/join
+      (cstr/join
        "\n"
        (map (fn [{:keys [a r d cc]}]
               (let [ccode cc
@@ -247,14 +234,14 @@
                         spacer
                         (com/left-pad d " " omag-deaths)
                         (com/right-pad cname 17)
-                        (s/lower-case (com/encode-cmd ccode)))))
+                        (cstr/lower-case (com/encode-cmd ccode)))))
             (->> data
                  #_(take-last 11)
                  #_(partition-all 2)
-                 #_(map (fn [part] (s/join "       " part))))))
+                 #_(map (fn [part] (cstr/join "       " part))))))
       ""
       #_(if (= msg-idx cnt-msgs)
-          (str "\n\n" (l/list-sorted-by-desc sort-by-case))
+          (str "\n\n" (lang/list-sorted-by-desc sort-by-case))
           "")
       (footer parse_mode)))))
 
@@ -274,18 +261,18 @@
       (format-linewise
        [["%s\n" [(header parse_mode
                          (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
-        ["%s\n" [(format "%s %s;  %s/%s" l/day (count (data/dates)) msg-idx cnt-msgs)]]
-        ["%s "  [(str l/active-per-1e5    (if (= :a100k sort-by-case) sort-indicator " "))]]
+        ["%s\n" [(format "%s %s;  %s/%s" lang/day (count (data/dates)) msg-idx cnt-msgs)]]
+        ["%s "  [(str lang/active-per-1e5    (if (= :a100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
-        ["%s "  [(str l/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
+        ["%s "  [(str lang/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
-        ["%s"   [(str l/deaths-per-1e5    (if (= :d100k sort-by-case) sort-indicator " "))]]
+        ["%s"   [(str lang/deaths-per-1e5    (if (= :d100k sort-by-case) sort-indicator " "))]]
         ["\n%s" [(str
                   "%s"     ; listing table
                   "%s"     ; sorted-by description; has its own new-line
                   "\n\n%s" ; footer
                   )]]])
-      (s/join
+      (cstr/join
        "\n"
        (map (fn [{:keys [a100k r100k d100k cc]}]
               (let [ccode cc
@@ -297,14 +284,14 @@
                         spacer
                         (com/left-pad d100k " " omag-deaths-per-100k)
                         (com/right-pad cname 17)
-                        (s/lower-case (com/encode-cmd ccode)))))
+                        (cstr/lower-case (com/encode-cmd ccode)))))
             (->> data
                  #_(take-last 11)
                  #_(partition-all 2)
-                 #_(map (fn [part] (s/join "       " part))))))
+                 #_(map (fn [part] (cstr/join "       " part))))))
       ""
       #_(if (= msg-idx cnt-msgs)
-          (str "\n\n" (l/list-sorted-by-desc sort-by-case))
+          (str "\n\n" (lang/list-sorted-by-desc sort-by-case))
           "")
       (footer parse_mode)))))
 
@@ -361,10 +348,10 @@
         ["%s "  [(ccr/country-name-aliased ccode)]]
         ["%s"   [;; country commands
                  (apply (fn [ccode c3code] (format "     %s    %s" ccode c3code))
-                        (map (fn [s] (com/encode-cmd (s/lower-case s)))
+                        (map (fn [s] (com/encode-cmd (cstr/lower-case s)))
                              [ccode
                               (ccc/country-code-3-letter ccode)]))]]])]]
-    ["%s\n" [(str l/day " " (count (data/dates)))]]
+    ["%s\n" [(str lang/day " " (count (data/dates)))]]
     ["%s\n" ; data
      [(let [
             data-active (:a (data/case-counts-report-by-report pred-hm))
@@ -393,11 +380,11 @@
            (apply
             conj
             [["%s\n" [(format "<code>%s %s</code> = %s %s"
-                              (com/right-pad l/people " " (- padding-s 2))
+                              (com/right-pad lang/people " " (- padding-s 2))
                               (com/left-pad population " " (+ padding-n 2))
                               population-rounded
-                              l/millions-rounded)]]
-             ["%s\n" [(fmt-to-cols {:s l/confirmed :n confirmed
+                              lang/millions-rounded)]]
+             ["%s\n" [(fmt-to-cols {:s lang/confirmed :n confirmed
                                     :diff delta-confirmed})]]]
             (do
               #_(debug "[%s] (pos? confirmed)" msg-id (pos? confirmed))
@@ -427,33 +414,33 @@
                             msg-id (= delta-confirmed delta-closed))
                   [
                    ["%s\n" [(fmt-to-cols
-                             {:s l/active :n active :diff delta-active
+                             {:s lang/active :n active :diff delta-active
                               :rate a-rate})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/active-per-1e5 :n active-per-100k
+                             {:s lang/active-per-1e5 :n active-per-100k
                               :diff delta-a100k
                               })]]
                    ["%s\n" [(format "<code>%s %s</code> %s"
-                                    (com/right-pad l/active-max " " padding-s)
+                                    (com/right-pad lang/active-max " " padding-s)
                                     (com/left-pad max-active-val " " padding-n)
                                     (format "(%s)"
                                             (com/fmt-date max-active-date)))]]
 
                    ;; TODO add effective reproduction number (R)
                    #_["%s\n" [(fmt-to-cols
-                             {:s l/active-last-7-med
+                             {:s lang/active-last-7-med
                               :n (->> active-last-7-reports (izoo/roll-median 7) (first)
                                       (int))
                               :diff ""
                               :calc-diff false
                               })]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/active-last-7-avg
+                             {:s lang/active-last-7-avg
                               :n (-> active-last-7-reports istats/mean round-nr)
                               :diff ""
                               :calc-diff false})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/active-change-last-7-avg
+                             {:s lang/active-change-last-7-avg
                               ;; ActC(t0)    = active(t0)    - active(t0-1d)
                               ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
                               ;; ActC(t0-2d) = active(t0-2d) - active(t0-3d)
@@ -470,33 +457,33 @@
                               :diff ""
                               :calc-diff false})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/recovered :n recovered
+                             {:s lang/recovered :n recovered
                               :diff delta-recov
                               :rate r-rate})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/recovered-per-1e5 :n recovered-per-100k
+                             {:s lang/recovered-per-1e5 :n recovered-per-100k
                               :diff delta-r100k
                               })]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/deaths :n deaths :diff delta-deaths
+                             {:s lang/deaths :n deaths :diff delta-deaths
                               :rate d-rate})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/deaths-per-1e5 :n deaths-per-100k
+                             {:s lang/deaths-per-1e5 :n deaths-per-100k
                               :diff delta-d100k
                               })]]
                    ["%s\n" [(fmt-to-cols
-                             {:s l/closed :n closed :diff delta-closed
+                             {:s lang/closed :n closed :diff delta-closed
                               :rate c-rate})]]
                    ["%s\n\n" [(fmt-to-cols
-                               {:s l/closed-per-1e5 :n closed-per-100k
+                               {:s lang/closed-per-1e5 :n closed-per-100k
                                 :diff delta-d100k
-                                ;; TODO create command l/cmd-closed-per-1e5
-                                #_#_:desc (com/encode-cmd l/cmd-closed-per-1e5)})]]
+                                ;; TODO create command lang/cmd-closed-per-1e5
+                                #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})]]
                    ["%s\n" [(format
                              #_"%s\n%s"
                              "<code>%s</code>\n%s"
-                             #_"<code>%s\n%s</code>" l/active-last-7
-                             (u/sjoin active-last-7-reports))]]
+                             #_"<code>%s\n%s</code>" lang/active-last-7
+                             (utl/sjoin active-last-7-reports))]]
 
                    ;; no country ranking can be displayed for worldwide statistics
                    (do
@@ -511,15 +498,15 @@
                              ["" [""]]
                              ["\n%s"
                               [(format-linewise
-                                [["%s" [l/people            :p]]
-                                 ["%s" [l/active-per-1e5    :a100k]]
-                                 ["%s" [l/recovered-per-1e5 :r100k]]
-                                 ["%s" [l/deaths-per-1e5    :d100k]]
-                                 ["%s" [l/closed-per-1e5    :c100k]]]
+                                [["%s" [lang/people            :p]]
+                                 ["%s" [lang/active-per-1e5    :a100k]]
+                                 ["%s" [lang/recovered-per-1e5 :r100k]]
+                                 ["%s" [lang/deaths-per-1e5    :d100k]]
+                                 ["%s" [lang/closed-per-1e5    :c100k]]]
                                 :line-fmt (str "<code>%s</code>: %s / " cnt-countries "\n")
                                 :fn-fmts
-                                (fn [fmts] (format l/randking-desc
-                                                  cnt-countries (s/join "" fmts)))
+                                (fn [fmts] (format lang/randking-desc
+                                                  cnt-countries (cstr/join "" fmts)))
                                 :fn-args
                                 (fn [args] (update args (dec (count args))
                                                   (fn [_]
@@ -548,7 +535,7 @@
 
 (defn contributors [parse_mode]
   (format "%s\n\n%s\n\n%s"
-          (s/join "\n" ["@DerAnweiser"
+          (cstr/join "\n" ["@DerAnweiser"
                         (link "maty535" "https://github.com/maty535" parse_mode)
                         "@kostanjsek"
                         "@DistrictBC"
@@ -570,29 +557,30 @@
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" parse_mode)
     "\n")
    "\n"
-   (format "- %s cases = %s + %s\n" l/closed l/recovered l/deaths)
-   (format "- Percentage calculation: <cases> / %s\n" l/confirmed)
+   (format "- %s %s = %s + %s\n"
+           lang/closed lang/cases lang/recovered lang/deaths)
+   (format "- %s: <%s> / %s\n" lang/percentage-calc lang/cases lang/confirmed)
    (format (str "- %s:\n"
                 "  %s\n")
-           l/active-max
-           (:doc (meta #'l/active-max)))
+           lang/active-max
+           (:doc (meta #'lang/active-max)))
    (format (str "- %s:\n"
                 "  %s\n")
-           l/active-last-7
-           (:doc (meta #'l/active-last-7)))
+           lang/active-last-7
+           (:doc (meta #'lang/active-last-7)))
    (format (str "- %s:\n"
                 "  %s\n")
-           l/active-last-7-med
-           (:doc (meta #'l/active-last-7-med)))
+           lang/active-last-7-med
+           (:doc (meta #'lang/active-last-7-med)))
    (format (str "- %s:\n"
                 "  %s\n")
-           l/active-last-7-avg
-           (:doc (meta #'l/active-last-7-avg)))
+           lang/active-last-7-avg
+           (:doc (meta #'lang/active-last-7-avg)))
    (format (str "- %s = (%s - %s) / 7\n"
                 "  %s\n")
-           l/active-change-last-7-avg
-           l/active l/active-last-8th
-           (:doc (meta #'l/active-change-last-7-avg)))
+           lang/active-change-last-7-avg
+           lang/active lang/active-last-8th
+           (:doc (meta #'lang/active-change-last-7-avg)))
    #_(str
       "\n"
       " - " (link "Home page"
@@ -605,27 +593,15 @@
    ;; (abbreviated) content of the former reference message
    (format (str "- %s, %s, %s, %s:\n"
                 "  %s\n")
-           l/active-per-1e5
-           l/recovered-per-1e5
-           l/deaths-per-1e5
-           l/closed-per-1e5
-           "Cases per 100 000 people")
+           lang/active-per-1e5
+           lang/recovered-per-1e5
+           lang/deaths-per-1e5
+           lang/closed-per-1e5
+           lang/cases-per-1e5)
    "\n"
-   (format "%s %s\n"
-           "- Robert Koch-Institut "
-           (link "COVID-19 (Coronavirus SARS-CoV-2)"
-                 ref-rober-koch parse_mode))
-   (format "- 3Blue1Brown: %s\n"
-           (link "Exponential growth and epidemics"
-                 ref-3blue1brown-exp-growth
-                 parse_mode))
-   (format "%s\n  %s\n  %s\n"
-           "- Worldometer - COVID-19 Coronavirus"
-           (link "Coronavirus Age Sex Demographics" ref-age-sex parse_mode)
-           (link "Mortality rate" ref-mortality-rate parse_mode))
    (format "- Thanks goes to %s. Please send %s \n"
-           (com/encode-cmd l/contributors)
-           (com/encode-cmd l/feedback))
+           (com/encode-cmd lang/contributors)
+           (com/encode-cmd lang/feedback))
    "\n"
    (footer parse_mode)))
 
