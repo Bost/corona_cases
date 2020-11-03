@@ -33,16 +33,16 @@
 (def ^:const estimated       "Estimated")
 (def ^:const estimated-cases "Estimated cases")
 (def ^:const hundred-k       "100k")
-(def ^:const cmd-active-per-1e5    (str "a" hundred-k))
-(def ^:const cmd-recovered-per-1e5 (str "r" hundred-k))
-(def ^:const cmd-deaths-per-1e5    (str "d" hundred-k))
-(def ^:const cmd-closed-per-1e5    (str "c" hundred-k))
+(def ^:const cmd-active-per-1e5 (str "a" hundred-k))
+(def ^:const cmd-recove-per-1e5 (str "r" hundred-k))
+(def ^:const cmd-deaths-per-1e5 (str "d" hundred-k))
+(def ^:const cmd-closed-per-1e5 (str "c" hundred-k))
 (def ^:const cases-per-1e5 "Cases per 100 000 people")
 
 (def ^:const active-per-1e5
   "Active cases per 100 000"
   (str "Act" hundred-k))
-(def ^:const recovered-per-1e5
+(def ^:const recove-per-1e5
   "Recovered cases per 100 000"
   (str "Rec" hundred-k))
 (def ^:const deaths-per-1e5
@@ -100,7 +100,7 @@
 
 (defn list-sorted-by [case-kw]
   (->> [conf recov deaths active
-        cmd-active-per-1e5 cmd-recovered-per-1e5 cmd-deaths-per-1e5]
+        cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5]
        (map s/lower-case)
        (zipmap co/basic-cases)
        case-kw))
@@ -112,7 +112,7 @@
                                 [confirmed-cases recovered-cases deaths
                                  active-cases
                                  active-per-1e5
-                                 recovered-per-1e5
+                                 recove-per-1e5
                                  deaths-per-1e5])))))
 
 (def ^:const buttons "Shortened button names"

@@ -92,16 +92,15 @@
 
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
-  [{:keys [s n diff calc-diff rate]
-    :or {calc-diff true}}]
+  [{:keys [s n diff rate]}]
   (format
    "<code>%s %s %s %s </code>"
    (com/right-pad s " " padding-s)
    (com/left-pad n " " padding-n)
    (com/left-pad (if rate (str rate "%") " ") " " 4)
-   (if calc-diff
-     (plus-minus diff)
-     (com/left-pad "" " " max-diff-order-of-magnitude))))
+   (if (nil? diff)
+     (com/left-pad "" " " max-diff-order-of-magnitude)
+     (plus-minus diff))))
 
 (defn link [name url parse_mode]
   (if (= parse_mode "HTML")
@@ -254,7 +253,7 @@
          sort-indicator "▴" ;; " " "▲"
          ;; omag - order of magnitude i.e. number of digits
          omag-active-per-100k    4
-         omag-recovered-per-100k omag-active-per-100k
+         omag-recove-per-100k omag-active-per-100k
          omag-deaths-per-100k    (dec omag-active-per-100k)
          ]
      (format
@@ -264,7 +263,7 @@
         ["%s\n" [(format "%s %s;  %s/%s" lang/day (count (data/dates)) msg-idx cnt-msgs)]]
         ["%s "  [(str lang/active-per-1e5    (if (= :a100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
-        ["%s "  [(str lang/recovered-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
+        ["%s "  [(str lang/recove-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
         ["%s"   [(str lang/deaths-per-1e5    (if (= :d100k sort-by-case) sort-indicator " "))]]
         ["\n%s" [(str
@@ -280,7 +279,7 @@
                 (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                         (com/left-pad a100k " " omag-active-per-100k)
                         spacer
-                        (com/left-pad r100k " " omag-recovered-per-100k)
+                        (com/left-pad r100k " " omag-recove-per-100k)
                         spacer
                         (com/left-pad d100k " " omag-deaths-per-100k)
                         (com/right-pad cname 17)
@@ -389,37 +388,41 @@
             (do
               #_(debug "[%s] (pos? confirmed)" msg-id (pos? confirmed))
               (when (pos? confirmed)
-                (let [{deaths             :d
-                       recovered          :r
-                       active             :a
-                       active-per-100k    :a100k
-                       recovered-per-100k :r100k
-                       deaths-per-100k    :d100k
-                       closed-per-100k    :c100k
-                       a-rate :a-rate
-                       r-rate :r-rate
-                       d-rate :d-rate
-                       c-rate :c-rate ;; closed-rate
+                (let [{deaths          :d
+                       recove          :r
+                       active          :a
+                       active-per-100k :a100k
+                       recove-per-100k :r100k
+                       deaths-per-100k :d100k
+                       closed-per-100k :c100k
+                       a-rate          :a-rate
+                       r-rate          :r-rate
+                       d-rate          :d-rate
+                       c-rate          :c-rate ;; closed-rate
                        } last-day
                       {active-last-8-reports :a} (data/last-8-reports pred-hm)
                       [active-last-8th-report & active-last-7-reports] active-last-8-reports
-                      closed (+ deaths recovered)
-                      {delta-deaths :d delta-recov :r delta-active :a
-                       delta-d100k :d100k delta-r100k :r100k delta-a100k :a100k
+                      closed (+ deaths recove)
+                      {
+                       delta-deaths :d
+                       delta-recove :r
+                       delta-active :a
+                       delta-d100k  :d100k
+                       delta-r100k  :r100k
+                       delta-a100k  :a100k
                        } delta
-                      delta-closed (+ delta-deaths delta-recov)]
+                      delta-closed (+ delta-deaths delta-recove)]
                   #_(debugf "[%s] delta-closed" msg-id delta-closed)
                   #_(debugf "[%s] delta-confirmed" msg-id delta-confirmed)
                   #_(debugf "[%s] (= delta-confirmed delta-closed)"
                             msg-id (= delta-confirmed delta-closed))
                   [
                    ["%s\n" [(fmt-to-cols
-                             {:s lang/active :n active :diff delta-active
-                              :rate a-rate})]]
+                             {:s lang/active :n active
+                              :diff delta-active :rate a-rate})]]
                    ["%s\n" [(fmt-to-cols
                              {:s lang/active-per-1e5 :n active-per-100k
-                              :diff delta-a100k
-                              })]]
+                              :diff delta-a100k})]]
                    ["%s\n" [(format "<code>%s %s</code> %s"
                                     (com/right-pad lang/active-max " " padding-s)
                                     (com/left-pad max-active-val " " padding-n)
@@ -430,15 +433,10 @@
                    #_["%s\n" [(fmt-to-cols
                              {:s lang/active-last-7-med
                               :n (->> active-last-7-reports (izoo/roll-median 7) (first)
-                                      (int))
-                              :diff ""
-                              :calc-diff false
-                              })]]
+                                      (int))})]]
                    ["%s\n" [(fmt-to-cols
                              {:s lang/active-last-7-avg
-                              :n (-> active-last-7-reports istats/mean round-nr)
-                              :diff ""
-                              :calc-diff false})]]
+                              :n (-> active-last-7-reports istats/mean round-nr)})]]
                    ["%s\n" [(fmt-to-cols
                              {:s lang/active-change-last-7-avg
                               ;; ActC(t0)    = active(t0)    - active(t0-1d)
@@ -453,27 +451,22 @@
                               ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
                               ;; = (active(t0) - active(t0-7d)) / 7
                               :n (-> (/ (- active active-last-8th-report) 7.0)
-                                     round-nr plus-minus)
-                              :diff ""
-                              :calc-diff false})]]
+                                     round-nr plus-minus)})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s lang/recovered :n recovered
-                              :diff delta-recov
-                              :rate r-rate})]]
+                             {:s lang/recovered :n recove
+                              :diff delta-recove :rate r-rate})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s lang/recovered-per-1e5 :n recovered-per-100k
-                              :diff delta-r100k
-                              })]]
+                             {:s lang/recove-per-1e5 :n recove-per-100k
+                              :diff delta-r100k})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s lang/deaths :n deaths :diff delta-deaths
-                              :rate d-rate})]]
+                             {:s lang/deaths :n deaths
+                              :diff delta-deaths :rate d-rate})]]
                    ["%s\n" [(fmt-to-cols
                              {:s lang/deaths-per-1e5 :n deaths-per-100k
-                              :diff delta-d100k
-                              })]]
+                              :diff delta-d100k})]]
                    ["%s\n" [(fmt-to-cols
-                             {:s lang/closed :n closed :diff delta-closed
-                              :rate c-rate})]]
+                             {:s lang/closed :n closed
+                              :diff delta-closed :rate c-rate})]]
                    ["%s\n\n" [(fmt-to-cols
                                {:s lang/closed-per-1e5 :n closed-per-100k
                                 :diff delta-d100k
@@ -498,11 +491,11 @@
                              ["" [""]]
                              ["\n%s"
                               [(format-linewise
-                                [["%s" [lang/people            :p]]
-                                 ["%s" [lang/active-per-1e5    :a100k]]
-                                 ["%s" [lang/recovered-per-1e5 :r100k]]
-                                 ["%s" [lang/deaths-per-1e5    :d100k]]
-                                 ["%s" [lang/closed-per-1e5    :c100k]]]
+                                [["%s" [lang/people         :p]]
+                                 ["%s" [lang/active-per-1e5 :a100k]]
+                                 ["%s" [lang/recove-per-1e5 :r100k]]
+                                 ["%s" [lang/deaths-per-1e5 :d100k]]
+                                 ["%s" [lang/closed-per-1e5 :c100k]]]
                                 :line-fmt (str "<code>%s</code>: %s / " cnt-countries "\n")
                                 :fn-fmts
                                 (fn [fmts] (format lang/randking-desc
@@ -594,7 +587,7 @@
    (format (str "- %s, %s, %s, %s:\n"
                 "  %s\n")
            lang/active-per-1e5
-           lang/recovered-per-1e5
+           lang/recove-per-1e5
            lang/deaths-per-1e5
            lang/closed-per-1e5
            lang/cases-per-1e5)
