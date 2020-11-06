@@ -8,8 +8,8 @@
    [corona.commands :as cmd]
    [clojure.set :as cset]
    [corona.messages :as msg]
-   [morse.handlers :as h]
-   [morse.polling :as p]
+   [morse.handlers :as moh]
+   [morse.polling :as mop]
    [corona.plot :as plot]
    [taoensso.timbre :as timbre
     :refer [debugf #_info infof #_warn warnf #_errorf fatalf]]
@@ -61,7 +61,7 @@
                                    (let [[fn-result {:keys [chat]}] args]
                                      (infof "[%s] :post /%s chat %s" msg-id name chat)
                                      fn-result))})
-           (h/command-fn name)))
+           (moh/command-fn name)))
     cmds)))
 
 (defn create-callbacks
@@ -81,7 +81,7 @@
                                      #_(debugf "fn-result %s; size %s"
                                                fn-result (count (str fn-result)))
                                      fn-result))})
-           (h/callback-fn)))
+           (moh/callback-fn)))
     funs)))
 
 (defn create-handlers
@@ -94,7 +94,7 @@
          commands (create-commands cmd/cmds)]
      (infof "[%s] registering %s chatbot commands and %s callbacks..."
             msg-id (count commands) (count callbacks))
-     (apply h/handlers (into callbacks commands)))))
+     (apply moh/handlers (into callbacks commands)))))
 
 (defn start-polling
   "
@@ -112,14 +112,14 @@
    (let [opts {}
          channel (async/chan)]
      (debugf "[%s] Started channel %s" msg-id channel)
-     (let [producer (p/create-producer
+     (let [producer (mop/create-producer
                      channel token opts (fn api-error-handler []
                                           (when com/env-prod?
                                             (com/system-exit 2))))]
        (infof "[%s] Created producer %s on channel %s" msg-id producer channel)
        #_(debugf "[%s] Creating consumer for produced %s with handler %s ..."
                  msg-id producer handler)
-       (let [consumer (p/create-consumer producer handler)]
+       (let [consumer (mop/create-consumer producer handler)]
          (infof "[%s] Created consumer %s for producer %s with handler %s"
                 msg-id consumer producer handler)
          channel)))))
