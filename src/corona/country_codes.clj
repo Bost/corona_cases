@@ -454,5 +454,8 @@
   (get country-code-2-to-3-hm ccode))
 
 (def all-country-codes
+  #_[sk zz]
   #_[gb sk de at cz us fr pl it es se ua hu zz]
   (keys country-code-2-to-3-hm))
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.country-codes)

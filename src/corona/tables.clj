@@ -521,3 +521,5 @@
   (int
    (/ (* Population (/ YearlyChangeRate 100))
       365)))
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.tables)

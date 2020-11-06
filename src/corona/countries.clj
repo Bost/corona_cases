@@ -665,3 +665,5 @@
               {(get-country-code cname) population-nr}))
        ;; because e.g. population of Russia is mainland + South Ossetia
        (apply merge-with +)))
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.countries)

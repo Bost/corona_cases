@@ -201,3 +201,5 @@
        (into (cmds-listing))
        (map (fn [{:keys [name desc]}] (println name "-" desc)))
        (doall)))
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.commands)

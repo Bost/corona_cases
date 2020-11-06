@@ -161,3 +161,5 @@
               )
              ))
          (map xf-for-case [:population :confirmed :recovered :deaths])))
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.v1)

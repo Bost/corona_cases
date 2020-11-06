@@ -445,3 +445,5 @@
   [case-kw & [stats day]]
   (data/from-cache (fn [] (calc-plot-absolute-by-case-fn case-kw stats day))
                    [:plot :abs case-kw]))
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.plot)

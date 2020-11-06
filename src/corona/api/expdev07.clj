@@ -365,3 +365,5 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
 
 (defn all-rankings []
   (from-cache calc-all-rankings-fn [:rankings]))
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.expdev07)

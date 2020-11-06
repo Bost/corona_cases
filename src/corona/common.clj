@@ -37,14 +37,22 @@
 (def ^:const project-name "corona_cases")
 (def ^:const undef "<UNDEF>")
 
+#_(def home-page
+  (cond
+    com/env-prod? "https://corona-cases-bot.herokuapp.com/"
+    com/env-test? "https://hokuspokus-bot.herokuapp.com/"
+    :else "http://localhost:5050"))
+
 (def environment
   "Mapping env-type -> bot-name"
-  {"PROD"  {:bot-name project-name}
-   "TEST"  {:bot-name "hokuspokus"}
-   "DEVEL" {:bot-name "hokuspokus"}})
+  ;; TODO fix port-nr
+  {"PROD"  {:bot-name project-name :webserver "https://corona-cases-bot.herokuapp.com"}
+   "TEST"  {:bot-name "hokuspokus" :webserver "https://hokuspokus-bot.herokuapp.com"}
+   "DEVEL" {:bot-name "hokuspokus" :webserver "http://localhost:5050"}})
 
 (def env-type
-  "When deving check: echo $CORONA_ENV_TYPE
+  "When deving check:
+      echo $CORONA_ENV_TYPE
   When testing locally via `heroku local --env=.heroku-local.env` check
   the file .heroku-local.env"
   (env/env :corona-env-type))
@@ -59,7 +67,8 @@
 
 (def ^:const ^String telegram-token (env/env :telegram-token))
 
-(def ^:const bot-name (get-in environment [env-type :bot-name]))
+(def ^:const ^String bot-name      (get-in environment [env-type :bot-name]))
+(def ^:const ^String webapp-server (get-in environment [env-type :webserver]))
 
 ;; forward declarations
 (declare env-prod? env-test? env-devel?)
@@ -74,6 +83,8 @@
         (keys environment)))
 
 (define-env-predicates)
+
+(def ^:const ^Boolean env-test-or-prod? (or env-prod? env-test?))
 
 (def ^:const ^Long webapp-port (if-let [env-port (env/env :port)]
                                  (read-string env-port)
@@ -155,14 +166,22 @@
     ;; if-let ... else
     undef))
 
-(run! (fn [env-var-q]
-        (debugf "%s: %s" env-var-q (if-let [env-var (eval env-var-q)]
-                                     (if (in? ['telegram-token] env-var-q)
-                                       "<PRESENT>" env-var)
-                                     ;; if-let ... else
-                                     undef)))
-      ['env-type 'telegram-token 'webapp-port 'bot-name
-       'prj-vernum 'commit])
+(defn show-env []
+  (mapv (fn [env-var-q]
+          (format "%s: %s"
+                  env-var-q (if-let [env-var (eval env-var-q)]
+                              (if (in? ['corona.common/telegram-token] env-var-q)
+                                "<PRESENT>" env-var)
+                              ;; if-let ... else
+                              undef)))
+        ['corona.common/env-type
+         'corona.common/telegram-token
+         'corona.common/webapp-port
+         'corona.common/bot-name
+         'corona.common/prj-vernum
+         'corona.common/commit]))
+
+(debugf "\n%s" (clojure.string/join "\n" (show-env)))
 
 ;; TODO (System/exit <val>) if some var is undefined
 
@@ -314,9 +333,11 @@
   #_"coronavirus-tracker-api.herokuapp.com")
 
 (def ^:const api-server
-  (cond (or env-prod? env-test?) heroku-host-api-server
-        :else                    "localhost:8000"))
+  (cond env-test-or-prod? heroku-host-api-server
+        :else             "localhost:8000"))
 
 (def ttl
   "Time to live in (* <hours> <minutes> <seconds> <miliseconds>)."
   (* 3 60 60 1000))
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

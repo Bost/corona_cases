@@ -608,3 +608,5 @@
   "Appears when a user types: @<botname>
   See https://core.telegram.org/bots/inline"
   [] "Coronavirus Information")
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.messages)

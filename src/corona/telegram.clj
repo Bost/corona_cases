@@ -27,8 +27,9 @@
 (defonce continue (atom true))
 
 ;; TODO use com.stuartsierra.compoment for start / stop
+;; see https://github.com/miikka/avulias-botti
 ;; For interactive development:
-(defonce component (atom nil))
+(defonce my-component (atom nil))
 
 (defonce telegram-port (atom nil))
 
@@ -53,15 +54,17 @@
   ([msg-id cmds]
    (map
     (fn [{:keys [name fun]}]
-      (->> (fn [prm] (fun (-> prm :chat :id)))
-           (wrap-in-hooks {:pre (fn [& args]
-                                  (let [chat (:chat (first args))]
-                                    (infof "[%s] :pre /%s chat %s" msg-id name chat)))
-                           :post (fn [& args]
-                                   (let [[fn-result {:keys [chat]}] args]
-                                     (infof "[%s] :post /%s chat %s" msg-id name chat)
-                                     fn-result))})
-           (moh/command-fn name)))
+      (->>
+       #_(fn [prm] (fun (-> prm :chat :id)))
+       (fn [{{chat-id :id} :chat}] (fun chat-id))
+       (wrap-in-hooks {:pre (fn [& args]
+                              (let [chat (:chat (first args))]
+                                (infof "[%s] :pre /%s chat %s" msg-id name chat)))
+                       :post (fn [& args]
+                               (let [[fn-result {:keys [chat]}] args]
+                                 (infof "[%s] :post /%s chat %s" msg-id name chat)
+                                 fn-result))})
+       (moh/command-fn name)))
     cmds)))
 
 (defn create-callbacks
@@ -94,15 +97,13 @@
          commands (create-commands cmd/cmds)]
      (infof "[%s] registering %s chatbot commands and %s callbacks..."
             msg-id (count commands) (count callbacks))
-     (apply moh/handlers (into callbacks commands)))))
+     (->> (into callbacks commands)
+          #_(apply moh/handlers)))))
 
 (defn start-polling
-  "
-  Receiving incoming updates using long polling (getUpdates method)
+  "Receiving incoming updates using long polling (getUpdates method)
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned.
-
-  TODO switch to webhooks: https://github.com/Otann/morse/issues/44
 
   Starts long-polling process.
   Handler is supposed to process immediately, as it will be called in a blocking
@@ -151,8 +152,8 @@
                       msg-id port (if-let [v fst-retval<!] v "nil"))
                (fatalf "[%s] Further telegram requests may NOT be answered!!!"
                        msg-id)
-               (debugf "[%s] @component %s" msg-id @component)
-               (when @component
+               (debugf "[%s] @my-component %s" msg-id @my-component)
+               (when @my-component
                  #_com/env-prod?
                  #_(com/system-exit 2)
                  (debugf "[%s] Closing port %s..." msg-id port)
@@ -292,24 +293,24 @@
 
 (defn -main
   "Fetch api service data and only then register the telegram commands."
-  ([] (-main "component--main"))
+  ([] (-main "my-component--main"))
   ([msg-id] (-main msg-id nil))
   ([msg-id & [env-type]]
    (infof "[%s] Starting version %s in environment %s..."
           msg-id com/commit (or env-type com/undef))
    (reset-cache!)
    ;; TODO I guess the telegram-server, i.e. morse.handler
-   ;; should be set to the component atom
-   (swap! component (fn [_] true))
-   (let [funs [
-               (fn p-endlessly [] (endlessly reset-cache! com/ttl))
-               (fn p-telegram [] (telegram com/telegram-token))]]
+   ;; should be set to the my-component atom
+   (swap! my-component (fn [_] true))
+   (let [funs (into [(fn p-endlessly [] (endlessly reset-cache! com/ttl))]
+                    (when-not com/env-test-or-prod?
+                      [(fn p-telegram [] (telegram com/telegram-token))]))]
      (debugf "[-main] Execute in parallel: %s..." funs)
      (pmap (fn [fun] (fun)) funs))
    (infof "[%s] Starting [..] ... done" msg-id)))
 
 (defn stop
-  ([] (stop "component-stop"))
+  ([] (stop "my-component-stop"))
   ([msg-id]
    (infof "[%s] Stopping..." msg-id)
    (run! (fn [obj-q]
@@ -328,18 +329,20 @@
              (debugf "[%s] %s new value: %s"
                      msg-id
                      obj-q (if-let [v (deref obj)] v "nil"))))
-         ['corona.telegram/component
+         ['corona.telegram/my-component
           'corona.api.expdev07/cache
           'corona.telegram/continue
           'corona.telegram/telegram-port])
    (infof "[%s] Stopping... done" msg-id)))
 
 (defn restart
-  ([] (restart "component-restart"))
+  ([] (restart "my-component-restart"))
   ([msg-id]
    (infof "[%s] Restarting..." msg-id)
-   (when @component
+   (when @my-component
      (stop)
      (Thread/sleep 400))
    (-main com/env-type)
    (infof "[%s] Restarting... done" msg-id)))
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.telegram)

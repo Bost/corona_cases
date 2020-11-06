@@ -3,21 +3,29 @@
 (ns corona.web
   (:require
    [clj-time-ext.core :as cte]
-   [clj-time.core :as t]
+   [clj-time.core :as ctc]
    [clojure.data.json :as json]
    [clojure.java.io :as jio]
-   [clojure.string :as s]
-   [compojure.core :refer [ANY defroutes GET POST]]
-   [compojure.handler :refer [site]]
-   [compojure.route :as route]
+   [clojure.string :as cstr]
+   [compojure.core :as cjc]
+   [compojure.handler]
+   [compojure.route]
    [corona.common :as com]
    [corona.telegram :as tgram]
-   [ring.adapter.jetty :as jetty]
+   [ring.adapter.jetty]
+   ;; [ring.util.response]
+   [ring.util.http-response]
+   [ring.middleware.json]
    [taoensso.timbre :as timbre :refer [debugf info infof]]
-   [corona.country-codes :as ccc])
+   [corona.country-codes :as ccc]
+   [morse.api :as moa]
+   [morse.handlers :as moh]
+   [com.stuartsierra.component :as component]
+   )
   (:import
    java.time.ZoneId
-   java.util.TimeZone))
+   java.util.TimeZone
+   ))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -27,7 +35,7 @@
 (defn home-page []
   {:status 200
    :headers {"Content-Type" "text/plain"}
-   :body (s/join "\n" ["home page"])})
+   :body (cstr/join "\n" ["home page"])})
 
 (def ^:const prj-vernum "See `com/prj-vernum`" nil)
 (def ^:const ws-path (format "ws/%s" prj-vernum))
@@ -49,91 +57,146 @@
      ;; swapped order x y -> y x
      (into (sorted-map-by (fn [x y] (compare y x))))))})
 
+(defn webhook-url [telegram-token]
+  (format "https://%s.herokuapp.com/%s"
+          (str com/bot-name "-bot")
+          telegram-token))
+
+(def url-getUpdates "https://api.telegram.org/bot$TELEGRAM_TOKEN/getUpdates")
+(def url-getMe "https://api.telegram.org/bot$TELEGRAM_TOKEN/getMe")
+(def url-deleteWebhook "https://api.telegram.org/bot$TELEGRAM_TOKEN/deleteWebhook")
+(def url-getWebhookInfo "https://api.telegram.org/bot$TELEGRAM_TOKEN/getWebhookInfo")
+(def url-setWebhook "https://api.telegram.org/bot$TELEGRAM_TOKEN/setWebhook")
+(def url-sendMessage "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage")
+(def url-sendPhoto "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendPhoto")
+
 (defn links []
   {:status 200
    :headers {"Content-Type" "text/plain"}
    :body
-   (s/join
+   (cstr/join
     "\n"
-    [
-     "Send out these commands from shell:"
-     ""
-     "curl \"http://localhost:5000/snake?input=HelloWorld\""
-     ""
-     (str "curl --request POST \"http://localhost:5000/" telegram-hook "/$TELEGRAM_TOKEN\"")
-     (str "curl --request POST \"http://localhost:5000/" google-hook "/$TELEGRAM_TOKEN\"")
-     ""
-     "curl --form \"url=https://shielded-inlet-72499.herokuapp.com/$TELEGRAM_TOKEN\" \"https://api.telegram.org/bot$TELEGRAM_TOKEN/setWebhook\""
-     ""
-     "curl --request GET  \"https://api.telegram.org/bot$TELEGRAM_TOKEN/getMe\""
-     "curl --request POST \"https://api.telegram.org/bot$TELEGRAM_TOKEN/getMe\""
-     ""
-     "curl --request GET  \"https://api.telegram.org/bot$TELEGRAM_TOKEN/getUpdates\""
-     "curl --request POST \"https://api.telegram.org/bot$TELEGRAM_TOKEN/getUpdates\""
-     "curl --request GET  \"https://api.telegram.org/bot$TELEGRAM_TOKEN/getUpdates\" | jq .message.chat.id"
-     "curl --request POST \"https://api.telegram.org/bot$TELEGRAM_TOKEN/getUpdates\" | jq .message.chat.id"
-     ""
-     (str "curl --request POST -H 'Content-Type: application/json' "
-          "-d '{\"chat_id\":" com/chat-id ",\"text\":\"curl test msg\",\"disable_notification\":true}' "
-          "\"https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage\"")
-     ""
-     (str "curl --request POST --form chat_id=" com/chat-id " "
-          "--form photo=@/tmp/pic.png "
-          "\"https://api.telegram.org/bot$TELEGRAM_TOKEN/sendPhoto\"")
-     ])})
+    (into
+     (com/show-env)
+     [
+      ""
+      "Send out these commands from shell:"
+      ""
+      (format "curl \"%s/snake?input=HelloWorld\"" com/webapp-server)
+      ""
+      (format "curl --request POST \"%s/%s/$TELEGRAM_TOKEN\""
+              com/webapp-server telegram-hook)
+      #_(format "curl --request POST \"%s/%s/$TELEGRAM_TOKEN\""
+              com/webapp-server google-hook)
+      ""
+      (format "curl %s %s \"%s\""
+              (str "--form \"url=\"" (webhook-url "$TELEGRAM_TOKEN"))
+              "--form \"drop_pending_updates=true\""
+              url-setWebhook)
 
-(defroutes app
-  (let [hook telegram-hook]
-    (POST
-     (str "/" hook "/" com/telegram-token) req ;; {{input :input} :params}
-     {:status 200
-      :headers {"Content-Type" "text/plain"}
-      :body
-      (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
-                            {:text (str "Hello from " hook " webhook")}))}))
+      (format "curl --request POST %s \"%s\""
+              "--form \"drop_pending_updates=true\""
+              url-deleteWebhook)
+      (format "curl --request POST \"%s\"" url-getWebhookInfo)
+      ""
+      (format "curl --request GET  \"%s\"" url-getMe)
+      (format "curl --request POST \"%s\"" url-getMe)
+      (format "curl --request GET  \"%s\"" url-getUpdates)
+      (format "curl --request POST \"%s\"" url-getUpdates)
+      (format "curl --request GET  \"%s\" | jq .message.chat.id" url-getUpdates)
+      (format "curl --request POST \"%s\" | jq .message.chat.id" url-getUpdates)
+      ""
+      (format "curl --request POST -H '%s' -d '%s' \"%s\""
+              "Content-Type: application/json"
+              (format (str "{\"chat_id\":%s,\"text\":\"curl test msg\","
+                           "\"disable_notification\":true}")
+                      com/chat-id)
+              url-sendMessage)
+      ""
+      (format "curl --request POST --form %s --form %s \"%s\""
+              (format "chat_id=%s" com/chat-id)
+              "photo=@/tmp/pic.png"
+              url-sendPhoto)]))})
 
-  (let [hook google-hook]
-    (POST
-     (str "/" hook "/" com/telegram-token) req ;; {{input :input} :params}
-     {:status 200
-      :headers {"Content-Type" "text/plain"}
-      :body
-      (json/write-str (conj {:chat_id (->> req :params :message :chat :id)}
-                            {:text (str "Hello from " hook " webhook")}))}))
-  (GET "/camel" {{input :input} :params}
-       {:status 200
-        :headers {"Content-Type" "text/plain"}
-        :body (str "input was " input)})
-  (GET "/" []
-       (home-page))
-  (GET "/links" []
-       (links))
-  (GET (format "/%s/beds" ws-path) []
-       (web-service {:type :beds}))
-  (GET (format "/%s/names" ws-path) []
-       (web-service {:type :names}))
-  (GET (format "/%s/codes" ws-path) []
-       (web-service {:type :codes}))
-  (ANY "*" []
-       (route/not-found (slurp (jio/resource "404.html")))))
+(def token com/telegram-token)
+
+(if com/env-test-or-prod?
+  (let [res (moa/set-webhook com/telegram-token (webhook-url com/telegram-token))]
+    ;; (debugf "set-webhook %s %s" com/telegram-token webhook-url)
+    (debugf "(set-webhook ...) %s" (:body res))))
+
+(moh/apply-macro moh/defhandler
+                 tgram-handlers
+                 #_[(moh/command-fn "help"
+                                  (fn [{{chat-id :id} :chat}
+                                      #_chat-id]
+                                    (moa/send-text token chat-id "Help is on the way")))]
+                 (tgram/create-handlers))
+;; (debugf "tgram-handlers %s" tgram-handlers)
+
+(cjc/defroutes app-routes
+  (cjc/POST
+   (format "/%s" com/telegram-token)
+   args
+   (let [body (get-in args [:body])]
+     #_(debugf "args %s" args)
+     (tgram-handlers body)
+     (ring.util.http-response/ok)))
+
+  (cjc/POST
+   (format "/%s/%s" google-hook com/telegram-token)
+   req ;; {{input :input} :params}
+   {:status 200
+    :headers {"Content-Type" "text/plain"}
+    :body
+    (json/write-str {:chat_id (->> req :params :message :chat :id)
+                     :text (format "Hello from %s webhook" google-hook)})})
+
+  (cjc/GET "/camel" {{input :input} :params}
+           {:status 200
+            :headers {"Content-Type" "text/plain"}
+            :body (str "input was " input)})
+  (cjc/GET "/" []
+           (home-page))
+  (cjc/GET "/links" []
+           (links))
+  (cjc/GET (format "/%s/beds" ws-path) []
+           (web-service {:type :beds}))
+  (cjc/GET (format "/%s/names" ws-path) []
+           (web-service {:type :names}))
+  (cjc/GET (format "/%s/codes" ws-path) []
+           (web-service {:type :codes}))
+  (cjc/ANY "*" []
+           #_(ring.util.http-response/not-found)
+           (debugf "Not found")
+           (compojure.route/not-found
+            "Not found"
+            #_(slurp (jio/resource "404.html")))))
 
 ;; For interactive development:
-(defonce component
-  (atom nil))
+(defonce my-component (atom nil))
 
 (defn webapp-start [& [env-type port]]
   (let [port (or port com/webapp-port)
-        starting "[webapp] starting"
-        msg (format "%s version %s in environment %s on port %s..."
+        msg-id "webapp"
+        starting "starting"
+        msg (format "[%s] %s version %s in environment %s on port %s..."
+                    msg-id
                     starting
                     (if com/env-devel? com/undef com/commit)
                     env-type
                     port)]
     (info msg)
-    (let [web-server (jetty/run-jetty (site #'app)
-                                      {:port port :join? false})]
-      (swap! component (fn [_] web-server))
-      (infof "%s... done" starting)
+    (let [web-server
+          (ring.adapter.jetty/run-jetty
+           (-> (compojure.handler/site #'app-routes)
+               ;; wrap-json-body is needed for the destructing the
+               ;; (POST "..." {body :body} ...)
+               (ring.middleware.json/wrap-json-body {:keywords? true}))
+           {:port port :join? false})]
+      (debugf "[%s] web-server %s" msg-id web-server)
+      (swap! my-component (fn [_] web-server))
+      (infof "[%s] %s... done" msg-id starting)
       web-server)))
 
 (defn -main [& [env-type port]]
@@ -146,18 +209,18 @@
                     env-type
                     port)]
     (info msg)
-    (if (= (str (t/default-time-zone))
+    (if (= (str (ctc/default-time-zone))
            (str (ZoneId/systemDefault))
            (.getID (TimeZone/getDefault)))
       (debugf "TimeZone: %s; current time: %s (%s in %s)"
-              (str (t/default-time-zone))
+              (str (ctc/default-time-zone))
               (cte/tnow)
               (cte/tnow ccc/zone-id)
               ccc/zone-id)
-      (debugf (str "t/default-time-zone %s; "
+      (debugf (str "ctc/default-time-zone %s; "
                    "ZoneId/systemDefault: %s; "
                    "TimeZone/getDefault: %s\n")
-              (t/default-time-zone)
+              (ctc/default-time-zone)
               (ZoneId/systemDefault)
               (.getID (TimeZone/getDefault))))
     ;; Seems like the webapp must be always started, otherwise I get:
@@ -173,8 +236,8 @@
 
 (defn webapp-stop []
   (info "[webapp] Stopping...")
-  (.stop ^org.eclipse.jetty.server.Server @component)
-  (let [objs ['corona.web/component]]
+  (.stop ^org.eclipse.jetty.server.Server @my-component)
+  (let [objs ['corona.web/my-component]]
     (run! (fn [obj-q]
             (let [obj (eval obj-q)]
               (swap! obj (fn [_] nil))
@@ -183,7 +246,7 @@
           objs)))
 
 (defn webapp-restart []
-  (when @component
+  (when @my-component
     (webapp-stop)
     (Thread/sleep 400))
   (webapp-start com/env-type com/webapp-port))
@@ -193,5 +256,30 @@
       "Attention!
 Value is reset to nil when reloading current buffer,
 e.g. via `s-u` my=cider-save-and-load-current-buffer."]
-  (->> ['component 'data/cache 'tgram/continue 'tgram/component]
+  (->> ['my-component 'data/cache 'tgram/continue 'tgram/my-component]
        (run! (fn [v] (alter-meta! (get (ns-interns *ns*) v) assoc :doc doc)))))
+
+(defrecord WebServer [http-server app-component]
+  component/Lifecycle
+  (start [this]
+    (assoc this :http-server
+           (webapp-start)
+           #_(web-framework/start-http-server (app-routes app-component))))
+  (stop [this]
+    (webapp-stop)
+    #_(stop-http-server http-server)
+    this))
+
+(defn web-server
+  "Returns a new instance of the web server component which
+  creates its handler dynamically."
+  []
+  (component/using (map->WebServer {})
+                   [:app-component]))
+
+(def system (web-server))
+
+;; (alter-var-root #'system component/start)
+;; (alter-var-root #'system component/stop)
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.web)

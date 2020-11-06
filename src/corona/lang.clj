@@ -124,3 +124,5 @@
 ;; (def ^:const cmd-country  (format "<%s>" (:country lang-strings)))
 
 ;; (def ^:const lang-de "lang:de")
+
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.lang)
