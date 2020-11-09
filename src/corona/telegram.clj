@@ -302,7 +302,7 @@
    ;; should be set to the component atom
    (swap! component (fn [_] true))
    (let [funs [
-               #_(fn p-endlessly [] (endlessly reset-cache! com/ttl))
+               (fn p-endlessly [] (endlessly reset-cache! com/ttl))
                (fn p-telegram [] (telegram com/telegram-token))]]
      (debugf "[-main] Execute in parallel: %s..." funs)
      (pmap (fn [fun] (fun)) funs))
