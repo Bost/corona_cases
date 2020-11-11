@@ -209,51 +209,63 @@
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
   [ccode & [stats day]]
-  (let [base-data (stats-for-country ccode stats)
-        sarea-data (remove (fn [[case-kw _]]
-                             (in? #_[:c :a :r :d] [:c :p :e] case-kw))
-                           base-data)
-        curves (keys sarea-data)
-        palette (palette-colors (count curves))]
-    ;; every chart/series definition is a vector with three fields:
-    ;; 1. chart type e.g. :grid, :sarea, :line
-    ;; 2. data
-    ;; 3. configuration hash-map
+  ;; TODO have a look at the web service; there's no json-data
+  ;; excluded countries
+  (when-not (in? [ccc/im ccc/mp ccc/ck ccc/gf ccc/sx ccc/tk ccc/tf ccc/kp
+                  ccc/nu ccc/nf ccc/ax ccc/cx ccc/mf ccc/sj ccc/tm ccc/gu
+                  ccc/vu ccc/pf ccc/bm ccc/vg ccc/pn ccc/pr ccc/qq ccc/um
+                  ccc/gg ccc/bq ccc/mo ccc/ky ccc/nr ccc/aw ccc/fm ccc/cc
+                  ccc/ws ccc/to ccc/sh ccc/wf ccc/tv ccc/bl ccc/ms ccc/gp
 
-    ;; TODO annotation by value and labeling doesn't work:
-    ;; :annotate? true
-    ;; :annotate-fmt "%.1f"
-    ;; {:label (plot-label day ccode stats)}
-    (let [img
-          (boiler-plate
-           {:series (b/series
-                     [:grid]
-                     [:sarea sarea-data {:palette palette}]
-                     #_[:line (line-data :p base-data) stroke-population]
-                     [:line (line-data :c base-data) stroke-confirmed]
-                     [:line (line-data :a base-data) stroke-sick]
-                     [:line (line-data :e base-data) stroke-estimated])
-            :y-axis-formatter  (metrics-prefix-formatter
-                                ;; population numbers have the `max` values, all
-                                ;; other numbers are derived from them
+                  ccc/bv ccc/as ccc/fk ccc/gs ccc/mq ccc/fo ccc/aq ccc/mh
+                  ccc/vi ccc/gi ccc/nc ccc/yt ccc/tc ccc/re ccc/gl ccc/ki
+                  ccc/hk ccc/io ccc/cw ccc/je ccc/hm ccc/pm ccc/ai ccc/pw]
+                 ccode)
+    (let [base-data (stats-for-country ccode stats)
+          sarea-data (remove (fn [[case-kw _]]
+                               (in? #_[:c :a :r :d] [:c :p :e] case-kw))
+                             base-data)
+          curves (keys sarea-data)
+          palette (palette-colors (count curves))]
+      ;; every chart/series definition is a vector with three fields:
+      ;; 1. chart type e.g. :grid, :sarea, :line
+      ;; 2. data
+      ;; 3. configuration hash-map
 
-                                ;; don't display the population data for the moment
-                                (max-y-val + sarea-data))
-            :legend (reverse
-                     (conj (map #(vector :rect %2 {:color %1})
-                                palette
-                                (map (fn [k] (get {:a l/active :d l/deaths :r l/recovered
-                                                  :e l/recov-estim} k))
-                                     curves))
-                           [:line l/confirmed     stroke-confirmed]
-                           [:line l/sick-absolute stroke-sick]
-                           [:line l/recov-estim   stroke-estimated]
-                           #_[:line l/people    stroke-population]))
-            :label (plot-label day ccode stats)
-            :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
-      (let [img-byte-array (toByteArrayAutoClosable img)]
-        (debugf "[plot-country] ccode %s img-size %s" ccode (count img-byte-array))
-        img-byte-array))))
+      ;; TODO annotation by value and labeling doesn't work:
+      ;; :annotate? true
+      ;; :annotate-fmt "%.1f"
+      ;; {:label (plot-label day ccode stats)}
+      (let [img
+            (boiler-plate
+             {:series (b/series
+                       [:grid]
+                       [:sarea sarea-data {:palette palette}]
+                       #_[:line (line-data :p base-data) stroke-population]
+                       [:line (line-data :c base-data) stroke-confirmed]
+                       [:line (line-data :a base-data) stroke-sick]
+                       [:line (line-data :e base-data) stroke-estimated])
+              :y-axis-formatter  (metrics-prefix-formatter
+                                  ;; population numbers have the `max` values, all
+                                  ;; other numbers are derived from them
+
+                                  ;; don't display the population data for the moment
+                                  (max-y-val + sarea-data))
+              :legend (reverse
+                       (conj (map #(vector :rect %2 {:color %1})
+                                  palette
+                                  (map (fn [k] (get {:a l/active :d l/deaths :r l/recovered
+                                                    :e l/recov-estim} k))
+                                       curves))
+                             [:line l/confirmed     stroke-confirmed]
+                             [:line l/sick-absolute stroke-sick]
+                             [:line l/recov-estim   stroke-estimated]
+                             #_[:line l/people    stroke-population]))
+              :label (plot-label day ccode stats)
+              :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
+        (let [img-byte-array (toByteArrayAutoClosable img)]
+          (debugf "[plot-country] ccode %s img-size %s" ccode (count img-byte-array))
+          img-byte-array)))))
 
 (defn plot-country
   "The optional params `stats`, `day` are used only for the first calculation

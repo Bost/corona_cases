@@ -41,9 +41,10 @@
            ;; the plot is fetched from the cache, stats and day need not to be
            ;; specified
            content (p/plot-country ccode)]
-       (doall
-        (morse/send-photo com/telegram-token chat-id options content))
-       (debugf "[%s] send-photo: %s bytes sent" msg-id (count content))))))
+       (when content
+         (doall
+          (morse/send-photo com/telegram-token chat-id options content))
+         (debugf "[%s] send-photo: %s bytes sent" msg-id (count content)))))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
