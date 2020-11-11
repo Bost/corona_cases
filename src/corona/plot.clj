@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s\n" *ns* 'corona.plot)
+(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.plot)
 
 (ns corona.plot
   (:require

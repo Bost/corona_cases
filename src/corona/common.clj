@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s\n" *ns* 'corona.common)
+(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.common)
 
 (ns corona.common
   (:require

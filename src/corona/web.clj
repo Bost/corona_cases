@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s\n" *ns* 'corona.web)
+(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web)
 
 (ns corona.web
   (:require
@@ -174,7 +174,7 @@
             #_(slurp (jio/resource "404.html")))))
 
 ;; For interactive development:
-(defonce my-component (atom nil))
+(defonce server (atom nil))
 
 (defn webapp-start [& [env-type port]]
   (let [port (or port com/webapp-port)
@@ -195,7 +195,7 @@
                (ring.middleware.json/wrap-json-body {:keywords? true}))
            {:port port :join? false})]
       (debugf "[%s] web-server %s" msg-id web-server)
-      (swap! my-component (fn [_] web-server))
+      (swap! server (fn [_] web-server))
       (infof "[%s] %s... done" msg-id starting)
       web-server)))
 
@@ -236,8 +236,8 @@
 
 (defn webapp-stop []
   (info "[webapp] Stopping...")
-  (.stop ^org.eclipse.jetty.server.Server @my-component)
-  (let [objs ['corona.web/my-component]]
+  (.stop ^org.eclipse.jetty.server.Server @server)
+  (let [objs ['corona.web/server]]
     (run! (fn [obj-q]
             (let [obj (eval obj-q)]
               (swap! obj (fn [_] nil))
@@ -246,17 +246,16 @@
           objs)))
 
 (defn webapp-restart []
-  (when @my-component
+  (when @server
     (webapp-stop)
     (Thread/sleep 400))
   (webapp-start com/env-type com/webapp-port))
 
-;; TODO defonce - add metadata
 #_(let [doc
       "Attention!
 Value is reset to nil when reloading current buffer,
 e.g. via `s-u` my=cider-save-and-load-current-buffer."]
-  (->> ['my-component 'data/cache 'tgram/continue 'tgram/my-component]
+  (->> ['corona.web/server 'data/cache 'tgram/continue 'tgram/my-component]
        (run! (fn [v] (alter-meta! (get (ns-interns *ns*) v) assoc :doc doc)))))
 
 (defrecord WebServer [http-server app-component]

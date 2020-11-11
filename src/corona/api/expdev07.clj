@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s\n" *ns* 'corona.api.expdev07)
+(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.api.expdev07)
 
 (ns corona.api.expdev07
   (:require

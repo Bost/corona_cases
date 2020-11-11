@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s\n" *ns* 'corona.telegram)
+(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.telegram)
 
 (ns corona.telegram
   (:gen-class)
@@ -220,13 +220,9 @@
               [:c :d])))
 
 (defn estimate-recov-for-country
-  "TODO decrease estimation by the number of deaths - that can be derived from
-  the (country-specific) death percentage.
-
-  Seems like different countries have different recovery reporting policies:
+  "Seems like different countries have different recovery reporting policies:
   * Germany  - 14 days/reports
-  * Slovakia - 23 days/reports
-  "
+  * Slovakia - 23 days/reports"
   [[ccode stats-country-unsorted]]
   (let [stats-country (sort-by :t stats-country-unsorted)]
     (mapv (fn [est-rec stats-hm]

@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s\n" *ns* 'corona.api.v1)
+(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.api.v1)
 
 (ns corona.api.v1
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
