@@ -97,8 +97,7 @@
          commands (create-commands cmd/cmds)]
      (infof "[%s] registering %s chatbot commands and %s callbacks..."
             msg-id (count commands) (count callbacks))
-     (->> (into callbacks commands)
-          #_(apply moh/handlers)))))
+     (into callbacks commands))))
 
 (defn start-polling
   "Receiving incoming updates using long polling (getUpdates method)
@@ -130,10 +129,10 @@
   ([tgram-token] (telegram "telegram" tgram-token))
   ([msg-id tgram-token]
    (infof "[%s] Starting..." msg-id)
-   (if-let [tgram-handlers (create-handlers)]
+   (if-let [polling-handlers (apply moh/handlers (create-handlers))]
      (do
-       (debugf "[%s] Created tgram-handlers %s" msg-id tgram-handlers)
-       (let [port (start-polling tgram-token tgram-handlers)]
+       (debugf "[%s] Created polling-handlers %s" msg-id polling-handlers)
+       (let [port (start-polling tgram-token polling-handlers)]
          (swap! telegram-port (fn [_] port))
          (let [retval-async<!! (async/<!! port)]
            (warnf "[%s] Taking vals on port %s stopped with retval-async<! %s"
@@ -142,8 +141,8 @@
            (when com/env-prod?
              (com/system-exit 2)))))
      #_(do
-         (debugf "[%s] Created tgram-handlers %s" msg-id tgram-handlers)
-         (let [port (start-polling tgram-token tgram-handlers)]
+         (debugf "[%s] Created polling-handlers %s" msg-id polling-handlers)
+         (let [port (start-polling tgram-token polling-handlers)]
            (swap! telegram-port (fn [_] port))
            (async/go-loop []
              (debugf "[%s] Taking vals on port %s..." msg-id port)
@@ -183,7 +182,7 @@
                                        msg-id port)
                              (debugf "[%s WTF?] New start-polling invocation..."
                                      msg-id)
-                             (let [new-port (start-polling tgram-token tgram-handlers)]
+                             (let [new-port (start-polling tgram-token polling-handlers)]
                                (swap! telegram-port (fn [_] new-port))
                                (debugf "[%s WTF?] Recuring the go-loop on a new-port %s..." msg-id new-port)
                                (recur)))
@@ -194,7 +193,7 @@
              (warnf "[%] async/go-loop will sleep forever, i.e. %s msecs"
                     msg-id sleep-time)
              (Thread/sleep sleep-time)))
-     (fatalf "[%s] tgram-handlers not created" msg-id))
+     (fatalf "[%s] polling-handlers not created" msg-id))
    (infof "[%s] Starting... done" msg-id)))
 
 (defn endlessly
