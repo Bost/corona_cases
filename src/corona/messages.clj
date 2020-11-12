@@ -574,15 +574,6 @@
            lang/active-change-last-7-avg
            lang/active lang/active-last-8th
            (:doc (meta #'lang/active-change-last-7-avg)))
-   #_(str
-      "\n"
-      " - " (link "Home page"
-                  (def home-page
-                    (cond
-                      com/env-prod? "https://corona-cases-bot.herokuapp.com/"
-                      com/env-test? "https://hokuspokus-bot.herokuapp.com/"
-                      :else "http://localhost:5050"))
-                  parse_mode))
    ;; (abbreviated) content of the former reference message
    (format (str "- %s, %s, %s, %s:\n"
                 "  %s\n")

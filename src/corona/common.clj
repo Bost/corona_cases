@@ -43,15 +43,30 @@
                                  5050))
 (def environment
   "Mapping env-type -> bot-name"
-  {"PROD"  {:bot-name project-name
-            :web-server "https://corona-cases-bot.herokuapp.com"
-            :json-server "covid-tracker-us.herokuapp.com"}
-   "TEST"  {:bot-name "hokuspokus"
-            :web-server "https://hokuspokus-bot.herokuapp.com"
-            :json-server "covid-tracker-us.herokuapp.com"}
-   "DEVEL" {:bot-name "hokuspokus"
-            :web-server nil ;; intentionally undefined
-            :json-server "localhost:8000"}})
+  {
+   "PROD"
+   {:level 0
+    :bot-name project-name
+    :web-server "https://corona-cases-bot.herokuapp.com"
+    :json-server "covid-tracker-us.herokuapp.com"}
+
+   "HOKUSPOKUS"
+   {:level 1
+    :bot-name "hokuspokus"
+    :web-server "https://hokuspokus-bot.herokuapp.com"
+    :json-server "covid-tracker-us.herokuapp.com"}
+
+   "LOCAL"
+   {:level 2
+    :bot-name "hokuspokus"
+    :web-server nil ;; intentionally undefined
+    :json-server "covid-tracker-us.herokuapp.com"}
+
+   "DEVEL"
+   {:level 3
+    :bot-name "hokuspokus"
+    :web-server nil ;; intentionally undefined
+    :json-server "localhost:8000"}})
 
 (def env-type
   "When deving check:
@@ -69,11 +84,11 @@
 ;; TODO use clojure.spec to validate env-type
 (let [env-types (set (keys environment))]
   (if (in? env-types env-type)
-    (debugf "env-type %s is valid" env-type)
+    (debugf "%s %s is valid" 'env-type env-type)
     (throw (Exception.
             (format
-             "Invalid env-type: %s. It must be an element of %s"
-             env-type env-types)))))
+             "Invalid %s: %s. It must be an element of %s"
+             'env-type env-type env-types)))))
 
 (def ^:const ^String bot-name        (get-in environment
                                              [env-type :bot-name]))
@@ -83,10 +98,11 @@
                                              [env-type :json-server]))
 
 ;; forward declarations
-(declare env-prod? env-test? env-devel?)
+(declare env-prod? env-hokuspokus? env-local? env-devel?)
 
 (defn- define-env-predicates
-  "Defines vars: `env-prod?`, `env-test?`, `env-devel?`"
+  "Defines vars:
+  `env-prod?`, `env-hokuspokus?`, `env-local?`, `env-devel?`"
   []
   (run! (fn [v]
           (let [symb-v (symbol (format "env-%s?" (s/lower-case v)))]
@@ -96,7 +112,7 @@
 
 (define-env-predicates)
 
-(def ^:const ^Boolean env-test-or-prod? (or env-prod? env-test?))
+(def ^:const ^Boolean env-heroku? (or env-prod? env-hokuspokus?))
 
 (def ^:const ^String telegram-token (env/env :telegram-token))
 

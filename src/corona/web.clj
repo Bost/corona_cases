@@ -125,7 +125,7 @@
 
 (declare tgram-handlers)
 
-(when com/env-test-or-prod?
+(when com/env-heroku?
   (when (empty? (->> com/telegram-token moa/get-info-webhook
                      :body :result :url))
     (let [res (moa/set-webhook com/telegram-token
