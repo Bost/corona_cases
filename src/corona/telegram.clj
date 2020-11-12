@@ -29,7 +29,7 @@
 ;; TODO use com.stuartsierra.compoment for start / stop
 ;; see https://github.com/miikka/avulias-botti
 ;; For interactive development:
-(defonce my-component (atom nil))
+(defonce initialized (atom nil))
 
 (defonce telegram-port (atom nil))
 
@@ -124,9 +124,9 @@
                 msg-id consumer producer handler)
          channel)))))
 
-(defn telegram
+(defn long-polling
   "TODO see https://github.com/Otann/morse/issues/32"
-  ([tgram-token] (telegram "telegram" tgram-token))
+  ([tgram-token] (long-polling "telegram" tgram-token))
   ([msg-id tgram-token]
    (infof "[%s] Starting..." msg-id)
    (if-let [polling-handlers (apply moh/handlers (create-handlers))]
@@ -151,8 +151,8 @@
                       msg-id port (if-let [v fst-retval<!] v "nil"))
                (fatalf "[%s] Further telegram requests may NOT be answered!!!"
                        msg-id)
-               (debugf "[%s] @my-component %s" msg-id @my-component)
-               (when @my-component
+               (debugf "[%s] @initialized %s" msg-id @initialized)
+               (when @initialized
                  #_com/env-prod?
                  #_(com/system-exit 2)
                  (debugf "[%s] Closing port %s..." msg-id port)
@@ -197,8 +197,7 @@
    (infof "[%s] Starting... done" msg-id)))
 
 (defn endlessly
-  "Invoke fun and put the thread to sleep for millis in an endless loop.
-  TODO have a look at `repeatedly`"
+  "Invoke fun and put the thread to sleep for millis in an endless loop."
   ([fun ttl] (endlessly "endlessly" fun ttl))
   ([msg-id fun ttl]
    (infof "[%s] Starting..." msg-id)
@@ -209,20 +208,21 @@
    (warnf "[%s] Displayed data will NOT be updated!" msg-id)))
 
 (defn estimate-recov
-  "Warning: lucky coincidence of 1 report per 1 day!"
-  [days all-stats]
+  [reports all-stats]
   (apply map
          ;; reducing two values into one... TODO identify here the transducer
          (fn [confirmed deaths] (- confirmed deaths))
          (map (comp
-               (fn [case-kw-stats] (into (drop-last days case-kw-stats) (repeat days 0)))
+               (fn [case-kw-stats] (into (drop-last reports case-kw-stats) (repeat reports 0)))
                (fn [case-kw] (map case-kw all-stats)))
               [:c :d])))
 
 (defn estimate-recov-for-country
   "Seems like different countries have different recovery reporting policies:
   * Germany  - 14 days/reports
-  * Slovakia - 23 days/reports"
+  * Slovakia - 23 days/reports
+
+  Warning: lucky coincidence of 1 report per 1 day!"
   [[ccode stats-country-unsorted]]
   (let [stats-country (sort-by :t stats-country-unsorted)]
     (mapv (fn [est-rec stats-hm]
@@ -248,51 +248,48 @@
                                  ;; the xform for the `into []`
                                  into [])
                       (sort-by :cc))
-           day (count (data/dates))
-           ]
-       ;; (def stats stats)
-       (let [form '(< (count (corona.api.expdev07/raw-dates)) 10)]
-         ;; TODO do not call calc-functions when the
-         (if (eval form)
-           (warnf "Some stuff may not be calculated: %s" form))
-         (do
-           (doall
-            (map (fn [ccode] (plot/plot-country ccode stats day))
-                 ccc/all-country-codes))
-           (doall
-            (map (fn [ccode] (msg/detailed-info ccode))
-                 ccc/all-country-codes))
-           (doall
-              (map (fn [plot-fn]
-                     (run! (fn [case-kw]
-                             #_(debugf "Calculating %s %s" plot-fn case-kw)
-                             (plot-fn case-kw stats day))
-                           com/absolute-cases))
-                   [plot/plot-sum-by-case plot/plot-absolute-by-case])))))
+           cnt-reports (count (data/dates))
+           form '(< (count (corona.api.expdev07/raw-dates)) 10)]
+       ;; TODO do not call calc-functions when the `form` evaluates to true
+       (if (eval form)
+         (warnf "Some stuff may not be calculated: %s" form))
+       (do
+         (doall
+          (map (fn [ccode]
+                 (msg/detailed-info ccode)
+                 (plot/plot-country ccode stats cnt-reports))
+               ccc/all-country-codes))
+         (doall
+          (map (fn [plot-fn]
+                 (run! (fn [case-kw]
+                         #_(debugf "Calculating %s %s" plot-fn case-kw)
+                         (plot-fn case-kw stats cnt-reports))
+                       com/absolute-cases))
+               [plot/plot-sum-by-case plot/plot-absolute-by-case]))))
      (debugf "[%s] %s chars cached in %s ms"
              msg-id
              (count (str @data/cache)) (- (System/currentTimeMillis) tbeg)))))
 
-(defn -main
+(defn start
   "Fetch api service data and only then register the telegram commands."
-  ([] (-main "my-component--main"))
-  ([msg-id] (-main msg-id nil))
-  ([msg-id & [env-type]]
+  ([] (start "telegram-start" com/env-type))
+  ([env-type] (start "telegram-start" env-type))
+  ([msg-id env-type]
    (infof "[%s] Starting version %s in environment %s..."
-          msg-id com/commit (or env-type com/undef))
+          msg-id com/commit env-type)
    (reset-cache!)
-   ;; TODO I guess the telegram-server, i.e. morse.handler
-   ;; should be set to the my-component atom
-   (swap! my-component (fn [_] true))
+   (swap! initialized (fn [_]
+                        ;; TODO use morse.handler instead of true?
+                        true))
    (let [funs (into [(fn p-endlessly [] (endlessly reset-cache! com/ttl))]
                     (when-not com/env-test-or-prod?
-                      [(fn p-telegram [] (telegram com/telegram-token))]))]
-     (debugf "[-main] Execute in parallel: %s..." funs)
+                      [(fn p-long-polling [] (long-polling com/telegram-token))]))]
+     (debugf "[%s] Execute in parallel: %s..." msg-id funs)
      (pmap (fn [fun] (fun)) funs))
    (infof "[%s] Starting [..] ... done" msg-id)))
 
 (defn stop
-  ([] (stop "my-component-stop"))
+  ([] (stop "long-poll-stop"))
   ([msg-id]
    (infof "[%s] Stopping..." msg-id)
    (run! (fn [obj-q]
@@ -311,20 +308,20 @@
              (debugf "[%s] %s new value: %s"
                      msg-id
                      obj-q (if-let [v (deref obj)] v "nil"))))
-         ['corona.telegram/my-component
+         ['corona.telegram/initialized
           'corona.api.expdev07/cache
           'corona.telegram/continue
           'corona.telegram/telegram-port])
    (infof "[%s] Stopping... done" msg-id)))
 
 (defn restart
-  ([] (restart "my-component-restart"))
+  ([] (restart "long-poll-restart"))
   ([msg-id]
    (infof "[%s] Restarting..." msg-id)
-   (when @my-component
+   (when @initialized
      (stop)
      (Thread/sleep 400))
-   (-main com/env-type)
+   (start)
    (infof "[%s] Restarting... done" msg-id)))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.telegram)

@@ -14,7 +14,7 @@
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
-   [corona.lang :as l]
+   [corona.lang :as lang]
    [utils.core :refer [in?] :exclude [id]]
    [taoensso.timbre :as timbre :refer [debugf
                                        #_info infof
@@ -128,7 +128,7 @@
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :t last) (sort-by :t stats)))
 
-(defn fmt-day [day] (format "%s %s" l/day day))
+(defn fmt-report [report] (format "%s %s" lang/report report))
 
 (defn plot-label
   "report-nr - Nth report since the outbreak
@@ -136,11 +136,11 @@
   stats - statistics active, confirmed, etc. for the given country code"
   [report-nr ccode stats]
   (format "%s; %s; %s: %s"
-          (fmt-day report-nr)
+          (fmt-report report-nr)
           (fmt-last-date stats)
           com/bot-name
           (format "%s %s %s"
-                  l/stats
+                  lang/stats
                   (ccr/country-name-aliased ccode)
                   (com/encode-cmd ccode))))
 
@@ -208,7 +208,7 @@
 (defn calc-plot-country-fn
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
-  [ccode & [stats day]]
+  [ccode & [stats report]]
   ;; TODO have a look at the web service; there's no json-data
   ;; excluded countries
   (when-not (in? [ccc/im ccc/mp ccc/ck ccc/gf ccc/sx ccc/tk ccc/tf ccc/kp
@@ -235,7 +235,7 @@
       ;; TODO annotation by value and labeling doesn't work:
       ;; :annotate? true
       ;; :annotate-fmt "%.1f"
-      ;; {:label (plot-label day ccode stats)}
+      ;; {:label (plot-label report ccode stats)}
       (let [img
             (boiler-plate
              {:series (b/series
@@ -254,26 +254,23 @@
               :legend (reverse
                        (conj (map #(vector :rect %2 {:color %1})
                                   palette
-                                  (map (fn [k] (get {:a l/active :d l/deaths :r l/recovered
-                                                    :e l/recov-estim} k))
+                                  (map (fn [k] (get {:a lang/active :d lang/deaths :r lang/recovered
+                                                    :e lang/recov-estim} k))
                                        curves))
-                             [:line l/confirmed     stroke-confirmed]
-                             [:line l/sick-absolute stroke-sick]
-                             [:line l/recov-estim   stroke-estimated]
-                             #_[:line l/people    stroke-population]))
-              :label (plot-label day ccode stats)
+                             [:line lang/confirmed     stroke-confirmed]
+                             [:line lang/sick-absolute stroke-sick]
+                             [:line lang/recov-estim   stroke-estimated]
+                             #_[:line lang/people    stroke-population]))
+              :label (plot-label report ccode stats)
               :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
         (let [img-byte-array (toByteArrayAutoClosable img)]
           (debugf "[plot-country] ccode %s img-size %s" ccode (count img-byte-array))
           img-byte-array)))))
 
 (defn plot-country
-  "The optional params `stats`, `day` are used only for the first calculation
-  See http://clojure-goes-fast.com/ https://github.com/clojure-goes-fast/
-  TODO https://github.com/clojure-goes-fast/clj-async-profiler
-  "
-  [ccode & [stats day]]
-  (data/from-cache (fn [] (calc-plot-country-fn ccode stats day))
+  "The optional params `stats`, `report` are used only for the first calculation"
+  [ccode & [stats report]]
+  (data/from-cache (fn [] (calc-plot-country-fn ccode stats report))
                    [:plot (keyword ccode)]))
 
 (defn group-below-threshold
@@ -296,7 +293,7 @@
       {:data res :threshold threshold})))
 
 (defn sum-all-by-date-by-case
-  "Group the country stats by day and sum up the active cases"
+  "Group the country stats by report and sum up the active cases"
   [{:keys [case] :as prm-orig}]
   (let [case-kw case
         prm (group-below-threshold prm-orig)]
@@ -345,10 +342,10 @@
 
 (defn calc-plot-sum-by-case-fn
   "Case-specific plot for the sum of all countries."
-  [case-kw stats day]
+  [case-kw stats report]
   (let [
         prm {
-             :day day
+             :report report
              :stats stats
              :threshold (com/min-threshold case-kw)
              :threshold-increase (com/threshold-increase case-kw)
@@ -374,13 +371,13 @@
                                ;; `+` means: sum up all active cases
                                (max-y-val + json-data))
             :label (format "%s; %s; %s: %s > %s"
-                           (fmt-day day)
+                           (fmt-report report)
                            (fmt-last-date stats)
                            com/bot-name
-                           (->> [l/confirmed l/recovered l/deaths l/active-cases ]
+                           (->> [lang/confirmed lang/recovered lang/deaths lang/active-cases ]
                                 (zipmap com/basic-cases)
                                 case-kw)
-                           #_(case-kw {:c l/confirmed :a l/active-cases :r l/recovered :d l/deaths})
+                           #_(case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
                            threshold-recaltulated)
             :label-conf {:color (c/darken :steelblue) :font-size 14}})]
       (let [img-byte-array (toByteArrayAutoClosable img)]
@@ -388,9 +385,9 @@
         img-byte-array))))
 
 (defn plot-sum-by-case
-  "The optional params `stats`, `day` are used only for the first calculation"
-  [case-kw & [stats day]]
-  (data/from-cache (fn [] (calc-plot-sum-by-case-fn case-kw stats day))
+  "The optional params `stats`, `report` are used only for the first calculation"
+  [case-kw & [stats report]]
+  (data/from-cache (fn [] (calc-plot-sum-by-case-fn case-kw stats report))
                    [:plot :sum case-kw]))
 
 (defn line-stroke [color]
@@ -403,11 +400,11 @@
                            }}))
 
 (defn calc-plot-absolute-by-case-fn
-  [case-kw stats day]
+  [case-kw stats report]
   (let [
         threshold (com/min-threshold case-kw)
         prm {
-             :day day
+             :report report
              :stats stats
              :threshold threshold
              :threshold-increase (com/threshold-increase case-kw)
@@ -441,11 +438,11 @@
                          (map ccr/country-alias (keys json-data)))
             :label (format
                     "%s; %s; %s: %s > %s"
-                    (fmt-day day)
+                    (fmt-report report)
                     (fmt-last-date stats)
                     com/bot-name
-                    (str (case-kw {:c l/confirmed :a l/active-cases :r l/recovered :d l/deaths})
-                         " " l/absolute)
+                    (str (case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
+                         " " lang/absolute)
                     threshold)
             :label-conf {:color (c/darken :steelblue) :font-size 14}})]
       (let [img-byte-array (toByteArrayAutoClosable img)]
@@ -453,9 +450,9 @@
         img-byte-array))))
 
 (defn plot-absolute-by-case
-  "The optional params `stats`, `day` are used only for the first calculation"
-  [case-kw & [stats day]]
-  (data/from-cache (fn [] (calc-plot-absolute-by-case-fn case-kw stats day))
+  "The optional params `stats`, `report` are used only for the first calculation"
+  [case-kw & [stats report]]
+  (data/from-cache (fn [] (calc-plot-absolute-by-case-fn case-kw stats report))
                    [:plot :abs case-kw]))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.plot)

@@ -70,7 +70,8 @@
 
   ;; Clojure interface for Telegram Bot API
   org.clojars.bost/morse  {:mvn/version
-                           "0.0.0-158-0x6991"
+                           "0.0.0-159-0xa8c2"
+                           #_"0.0.0-158-0x6991"
                            #_"0.0.0-157-0x8c5c"}
 
   org.clojure/data.json   {:mvn/version "1.0.0"}
@@ -104,5 +105,12 @@
   clojurewerkz/propertied {:mvn/version "1.3.0"}
 
   ;; manage the lifecycle and dependencies of components with runtime state
+  ;; TODO Include it only in the development
   com.stuartsierra/component {:mvn/version "1.0.0"}
+
+  ;; profiling - see
+  ;; http://clojure-goes-fast.com/
+  ;; https://github.com/clojure-goes-fast/
+  ;; https://github.com/clojure-goes-fast/clj-async-profiler
+  ;; com.clojure-goes-fast/clj-async-profiler {:mvn/version "0.4.1"}
   }}

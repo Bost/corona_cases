@@ -156,7 +156,7 @@
      (let [options (reply-markup-btns {:chat-id chat-id :cc ccode})
            content (let [plot-fn (if (= type :sum)
                                    plot/plot-sum-by-case plot/plot-absolute-by-case)]
-                     ;; the plot is fetched from the cache, stats and day need not to be
+                     ;; the plot is fetched from the cache, stats and report need not to be
                      ;; specified
                      (plot-fn case-kw))]
        (doall
@@ -179,7 +179,7 @@
       ;; i.e. "Markdown"
       "*%s*")
     " %s")
-   (com/fmt-date (:t (data/last-day pred-hm)))
+   (com/fmt-date (:t (data/last-report pred-hm)))
    (condp = parse_mode
      "HTML" com/bot-name
      ;; i.e. "Markdown"
@@ -209,7 +209,7 @@
        [
         ["%s\n"   [(header parse_mode
                            (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
-        ["%s\n"   [(format "%s %s;  %s/%s" lang/day cnt-reports msg-idx cnt-msgs)]]
+        ["%s\n"   [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
         ["    %s "[(str lang/active    (if (= :a sort-by-case) sort-indicator " "))]]
         ["%s"     [spacer]]
         ["%s "    [(str lang/recovered (if (= :r sort-by-case) sort-indicator " "))]]
@@ -260,7 +260,7 @@
       (format-linewise
        [["%s\n" [(header parse_mode
                          (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
-        ["%s\n" [(format "%s %s;  %s/%s" lang/day (count (data/dates)) msg-idx cnt-msgs)]]
+        ["%s\n" [(format "%s %s;  %s/%s" lang/report (count (data/dates)) msg-idx cnt-msgs)]]
         ["%s "  [(str lang/active-per-1e5    (if (= :a100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
         ["%s "  [(str lang/recove-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
@@ -350,13 +350,13 @@
                         (map (fn [s] (com/encode-cmd (cstr/lower-case s)))
                              [ccode
                               (ccc/country-code-3-letter ccode)]))]]])]]
-    ["%s\n" [(str lang/day " " (count (data/dates)))]]
+    ["%s\n" [(str lang/report " " (count (data/dates)))]]
     ["%s\n" ; data
      [(let [
             data-active (:a (data/case-counts-report-by-report pred-hm))
             ]
         ;; (debugf "[%s] max-active-date %s" msg-id max-active-date)
-        ;; (debugf "[%s] last-day %s" msg-id last-day)
+        ;; (debugf "[%s] last-report %s" msg-id last-report)
         ;; (debugf "[%s] confirmed %s" msg-id confirmed)
         ;; (debugf "[%s] population-rounded %s" msg-id population-rounded)
         ;; (debugf "[%s] (count data-active) %s" msg-id (count data-active))
@@ -365,8 +365,8 @@
               max-active-val (apply max data-active)
               max-active-idx (last-index-of data-active max-active-val)
               max-active-date (nth (data/dates) max-active-idx)
-              last-day (data/last-day pred-hm)
-              {confirmed :c population :p} last-day
+              last-report (data/last-report pred-hm)
+              {confirmed :c population :p} last-report
               population-rounded (utn/round-div-precision population 1e6 1)
               delta (data/delta pred-hm)
               {delta-confirmed :c} delta
@@ -399,7 +399,7 @@
                        r-rate          :r-rate
                        d-rate          :d-rate
                        c-rate          :c-rate ;; closed-rate
-                       } last-day
+                       } last-report
                       {active-last-8-reports :a} (data/last-8-reports pred-hm)
                       [active-last-8th-report & active-last-7-reports] active-last-8-reports
                       closed (+ deaths recove)

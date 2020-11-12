@@ -38,7 +38,7 @@
      (let [options (if (msg/worldwide? ccode)
                      (msg/reply-markup-btns (select-keys prm [:chat-id :cc]))
                      {})
-           ;; the plot is fetched from the cache, stats and day need not to be
+           ;; the plot is fetched from the cache, stats and report need not to be
            ;; specified
            content (p/plot-country ccode)]
        (when content

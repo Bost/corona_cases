@@ -513,10 +513,10 @@
        conj (sorted-map)
        population-table))
 
-(defn growth-per-day
+(defn growth-per-report
   "Population: number of people at the beginning of the year
   YearlyChangeRate: in percents E.g.:
-  => (growth-per-day 83517045 0.3) ;; 686"
+  => (growth-per-report 83517045 0.3) ;; 686"
   [Population YearlyChangeRate]
   (int
    (/ (* Population (/ YearlyChangeRate 100))

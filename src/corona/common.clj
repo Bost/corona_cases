@@ -37,26 +37,36 @@
 (def ^:const project-name "corona_cases")
 (def ^:const undef "<UNDEF>")
 
-#_(def home-page
-  (cond
-    com/env-prod? "https://corona-cases-bot.herokuapp.com/"
-    com/env-test? "https://hokuspokus-bot.herokuapp.com/"
-    :else "http://localhost:5050"))
-
+(def ^:const ^Long webapp-port (if-let [env-port (env/env :port)]
+                                 (read-string env-port)
+                                 ;; keep port-nr in sync with README.md
+                                 5050))
 (def environment
   "Mapping env-type -> bot-name"
-  ;; TODO fix port-nr
-  {"PROD"  {:bot-name project-name :webserver "https://corona-cases-bot.herokuapp.com"}
-   "TEST"  {:bot-name "hokuspokus" :webserver "https://hokuspokus-bot.herokuapp.com"}
-   "DEVEL" {:bot-name "hokuspokus" :webserver "http://localhost:5050"}})
+  {"PROD"  {:bot-name project-name
+            :web-server "https://corona-cases-bot.herokuapp.com"
+            :json-server "covid-tracker-us.herokuapp.com"}
+   "TEST"  {:bot-name "hokuspokus"
+            :web-server "https://hokuspokus-bot.herokuapp.com"
+            :json-server "covid-tracker-us.herokuapp.com"}
+   "DEVEL" {:bot-name "hokuspokus"
+            :web-server nil ;; intentionally undefined
+            :json-server "localhost:8000"}})
 
 (def env-type
   "When deving check:
       echo $CORONA_ENV_TYPE
   When testing locally via `heroku local --env=.heroku-local.env` check
-  the file .heroku-local.env"
+  the file .heroku-local.env
+
+  TODO env-type priority could / should be:
+  1. command line parameter
+  2. some config/env file - however not the .heroku-local.env
+  3. environment variable
+  "
   (env/env :corona-env-type))
 
+;; TODO use clojure.spec to validate env-type
 (let [env-types (set (keys environment))]
   (if (in? env-types env-type)
     (debugf "env-type %s is valid" env-type)
@@ -65,10 +75,12 @@
              "Invalid env-type: %s. It must be an element of %s"
              env-type env-types)))))
 
-(def ^:const ^String telegram-token (env/env :telegram-token))
-
-(def ^:const ^String bot-name      (get-in environment [env-type :bot-name]))
-(def ^:const ^String webapp-server (get-in environment [env-type :webserver]))
+(def ^:const ^String bot-name        (get-in environment
+                                             [env-type :bot-name]))
+(def ^:const ^String webapp-server   (get-in environment
+                                             [env-type :web-server]))
+(def ^:const ^String json-api-server (get-in environment
+                                             [env-type :json-server]))
 
 ;; forward declarations
 (declare env-prod? env-test? env-devel?)
@@ -86,11 +98,7 @@
 
 (def ^:const ^Boolean env-test-or-prod? (or env-prod? env-test?))
 
-(def ^:const ^Long webapp-port (if-let [env-port (env/env :port)]
-                                 (read-string env-port)
-                                 (cond env-prod? 5000
-                                       ;; keep port-nr in sync with README.md
-                                       :else 5050)))
+(def ^:const ^String telegram-token (env/env :telegram-token))
 
 (defn system-exit [exit-status]
   (debugf "Exiting with status %s ..." exit-status)
@@ -136,18 +144,6 @@
                  :c c)
                p))))
 
-(defn telegram-token-suffix
-  "TODO hard coded `recognized-token-suffixes` make the code not portable"
-  []
-  (let [suffix (.substring telegram-token (- (count telegram-token) 3))
-        recognized-token-suffixes (set ["Fq8" "MR8"])]
-    (if (in? recognized-token-suffixes suffix)
-      suffix
-      (throw (Exception.
-              (format "TELEGRAM_TOKEN suffix %s must be an element of %s"
-                      suffix
-                      recognized-token-suffixes))))))
-
 (def prj-vernum
   "See also the implementation in the deploy.clj"
   (:version
@@ -186,7 +182,7 @@
 ;; TODO (System/exit <val>) if some var is undefined
 
 (defn fix-octal-val
-  "(read-string s-day \"08\") produces a NumberFormatException
+  "(read-string \"08\") produces a NumberFormatException - octal numbers
   https://clojuredocs.org/clojure.core/read-string#example-5ccee021e4b0ca44402ef71a"
   [s]
   (s/replace s #"^0+" ""))
@@ -327,14 +323,6 @@
   ;; Execution error (ArityException) at cljplot.impl.line/eval34748$fn (line.clj:155).
   ;; Wrong number of args (0) passed to: cljplot.common/fast-max
   #_"csbs")
-
-(def ^:const heroku-host-api-server
-  "covid-tracker-us.herokuapp.com"
-  #_"coronavirus-tracker-api.herokuapp.com")
-
-(def ^:const api-server
-  (cond env-test-or-prod? heroku-host-api-server
-        :else             "localhost:8000"))
 
 (def ttl
   "Time to live in (* <hours> <minutes> <seconds> <miliseconds>)."

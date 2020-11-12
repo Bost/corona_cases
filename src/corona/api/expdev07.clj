@@ -20,7 +20,7 @@
 
 ;; (set! *warn-on-reflection* true)
 
-(def ^:const url (format "http://%s/all" com/api-server))
+(def ^:const url (format "http://%s/all" com/json-api-server))
 
 (defonce cache (atom {}))
 
@@ -174,7 +174,7 @@
                  :country_code ccode
                  :history
                  ;; {:1/23/20 1e6 ;; start number
-                 ;;    ;; other days - calc diff
+                 ;;    ;; other reports - calc diff
                  ;; }
                  (let [pop-cnt (population-cnt ccode)]
                    (zipmap the-dates (repeat pop-cnt)))})
@@ -201,7 +201,7 @@
 
 ;; TODO reload only the latest N reports. e.g. try one week
 (defn sums-for-case
-  "Return sums for a given `case-kw` calculated for every single day."
+  "Return sums for a given `case-kw` calculated for every single report."
   [case-kw {:keys [cc pred-fun]}]
   ;; ignore predicate for the moment
   (from-cache
@@ -262,7 +262,7 @@
                                         pcrda))))))))
 
 (defn case-counts-report-by-report
-  "Returns a hash-map containing case-counts day-by-day. E.g.:
+  "Returns a hash-map containing case-counts report-by-report. E.g.:
   ;; => ;; last 5 values
   {
    :p (... 5456362 5456362 5456362 5456362 5456362)
@@ -295,7 +295,7 @@
                      com/all-cases)))
        (reduce into {})))
 
-(defn last-day
+(defn last-report
   [pred-hm]
   (eval-fun get-last pred-hm))
 
@@ -323,7 +323,7 @@
 (defn calc-stats-countries-fn []
   #_(debugf "calc-stats-countries-fn")
   (map (fn [ccode] (conj {:cc ccode}
-                      (last-day (create-pred-hm ccode))))
+                      (last-report (create-pred-hm ccode))))
        ccc/all-country-codes))
 
 (defn stats-countries []

@@ -5,7 +5,7 @@
    [clj-time-ext.core :as cte]
    [clj-time.core :as ctc]
    [clojure.data.json :as json]
-   [clojure.java.io :as jio]
+   ;; [clojure.java.io :as jio]
    [clojure.string :as cstr]
    [compojure.core :as cjc]
    [compojure.handler]
@@ -62,13 +62,14 @@
           (str com/bot-name "-bot")
           telegram-token))
 
-(def url-getUpdates "https://api.telegram.org/bot$TELEGRAM_TOKEN/getUpdates")
-(def url-getMe "https://api.telegram.org/bot$TELEGRAM_TOKEN/getMe")
-(def url-deleteWebhook "https://api.telegram.org/bot$TELEGRAM_TOKEN/deleteWebhook")
-(def url-getWebhookInfo "https://api.telegram.org/bot$TELEGRAM_TOKEN/getWebhookInfo")
-(def url-setWebhook "https://api.telegram.org/bot$TELEGRAM_TOKEN/setWebhook")
-(def url-sendMessage "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage")
-(def url-sendPhoto "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendPhoto")
+(def url-telegram       "https://api.telegram.org/bot$TELEGRAM_TOKEN")
+(def url-getUpdates     (str url-telegram "/getUpdates"))
+(def url-getMe          (str url-telegram "/getMe"))
+(def url-deleteWebhook  (str url-telegram "/deleteWebhook"))
+(def url-getWebhookInfo (str url-telegram "/getWebhookInfo"))
+(def url-setWebhook     (str url-telegram "/setWebhook"))
+(def url-sendMessage    (str url-telegram "/sendMessage"))
+(def url-sendPhoto      (str url-telegram "/sendPhoto"))
 
 (defn links []
   {:status 200
@@ -82,10 +83,12 @@
       ""
       "Send out these commands from shell:"
       ""
-      (format "curl \"%s/snake?input=HelloWorld\"" com/webapp-server)
+      (when com/webapp-server
+        (format "curl \"%s/snake?input=HelloWorld\"" com/webapp-server))
       ""
-      (format "curl --request POST \"%s/%s/$TELEGRAM_TOKEN\""
-              com/webapp-server telegram-hook)
+      (when com/webapp-server
+        (format "curl --request POST \"%s/%s/$TELEGRAM_TOKEN\""
+                com/webapp-server telegram-hook))
       #_(format "curl --request POST \"%s/%s/$TELEGRAM_TOKEN\""
               com/webapp-server google-hook)
       ""
@@ -120,19 +123,23 @@
 
 (def token com/telegram-token)
 
-(if com/env-test-or-prod?
-  (let [res (moa/set-webhook com/telegram-token (webhook-url com/telegram-token))]
-    ;; (debugf "set-webhook %s %s" com/telegram-token webhook-url)
-    (debugf "(set-webhook ...) %s" (:body res))))
+(declare tgram-handlers)
 
-(moh/apply-macro moh/defhandler
-                 tgram-handlers
-                 #_[(moh/command-fn "help"
-                                  (fn [{{chat-id :id} :chat}
-                                      #_chat-id]
-                                    (moa/send-text token chat-id "Help is on the way")))]
-                 (tgram/create-handlers))
-;; (debugf "tgram-handlers %s" tgram-handlers)
+(when com/env-test-or-prod?
+  (when (empty? (->> com/telegram-token moa/get-info-webhook
+                     :body :result :url))
+    (let [res (moa/set-webhook com/telegram-token
+                               (webhook-url com/telegram-token))]
+      ;; (debugf "set-webhook %s %s" com/telegram-token webhook-url)
+      (debugf "(set-webhook ...) %s" (:body res))))
+  (moh/apply-macro moh/defhandler
+                   tgram-handlers
+                   #_[(moh/command-fn "help"
+                                      (fn [{{chat-id :id} :chat}
+                                          #_chat-id]
+                                        (moa/send-text token chat-id "Help is on the way")))]
+                   (tgram/create-handlers))
+  #_(debugf "tgram-handlers %s" tgram-handlers))
 
 (cjc/defroutes app-routes
   (cjc/POST
@@ -176,14 +183,14 @@
 ;; For interactive development:
 (defonce server (atom nil))
 
-(defn webapp-start [& [env-type port]]
-  (let [port (or port com/webapp-port)
-        msg-id "webapp"
+(defn webapp-start [env-type port]
+  (let [msg-id "webapp"
         starting "starting"
+        version (if com/env-devel? com/undef com/commit)
         msg (format "[%s] %s version %s in environment %s on port %s..."
                     msg-id
                     starting
-                    (if com/env-devel? com/undef com/commit)
+                    version
                     env-type
                     port)]
     (info msg)
@@ -231,7 +238,7 @@
     ;;     remote:        Procfile declares types -> web
     ;; during the deployment process
     (webapp-start env-type port)
-    (tgram/-main env-type)
+    (tgram/start env-type)
     (infof "%s... done" starting)))
 
 (defn webapp-stop []
@@ -262,7 +269,7 @@ e.g. via `s-u` my=cider-save-and-load-current-buffer."]
   component/Lifecycle
   (start [this]
     (assoc this :http-server
-           (webapp-start)
+           (webapp-start com/env-type com/webapp-port)
            #_(web-framework/start-http-server (app-routes app-component))))
   (stop [this]
     (webapp-stop)
@@ -278,7 +285,8 @@ e.g. via `s-u` my=cider-save-and-load-current-buffer."]
 
 (def system (web-server))
 
-;; (alter-var-root #'system component/start)
-;; (alter-var-root #'system component/stop)
+(comment
+  (alter-var-root #'system component/start)
+  (alter-var-root #'system component/stop))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.web)
