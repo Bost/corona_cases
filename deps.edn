@@ -75,7 +75,7 @@
   clojure.java-time/clojure.java-time {:mvn/version "0.3.2"}
   net.cgrand/xforms       {:mvn/version "0.19.2"}
   org.clojars.bost/clj-time-ext {:mvn/version "0.0.0-39-0x3d91"}
-  org.clojars.bost/utils {:mvn/version "0.0.0-43-0x8a82"}
+  org.clojars.bost/utils {:mvn/version "0.0.0-44-0x27f7"}
 
   ;; https://github.com/generateme/cljplot
   org.clojars.bost/cljplot {:mvn/version "0.0.2"}

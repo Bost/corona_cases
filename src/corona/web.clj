@@ -37,8 +37,8 @@
    :headers {"Content-Type" "text/plain"}
    :body (cstr/join "\n" ["home page"])})
 
-(def ^:const prj-vernum "See `com/prj-vernum`" nil)
-(def ^:const ws-path (format "ws/%s" prj-vernum))
+(def ^:const pom-version "See `com/pom-version`" nil)
+(def ^:const ws-path (format "ws/%s" pom-version))
 
 (defn web-service [{:keys [type] :as prm}]
   (info "web-service" prm)
@@ -51,7 +51,7 @@
          :names (conj {"desc" com/desc-ws})
          :codes (conj {"desc" com/desc-ws})
          (format "Error. Wrong type %s" type))
-     (conj (when-not prj-vernum
+     (conj (when-not pom-version
              {"warn" "Under construction. Don't use it in PROD env"}))
      (conj {"source" "https://github.com/Bost/corona_cases"})
      ;; swapped order x y -> y x
@@ -166,10 +166,6 @@
     (json/write-str {:chat_id (->> req :params :message :chat :id)
                      :text (format "Hello from %s webhook" google-hook)})})
 
-  (cjc/GET "/camel" {{input :input} :params}
-           {:status 200
-            :headers {"Content-Type" "text/plain"}
-            :body (str "input was " input)})
   (cjc/GET "/" []
            (home-page))
   (cjc/GET "/links" []
@@ -237,13 +233,10 @@
               (ctc/default-time-zone)
               (ZoneId/systemDefault)
               (.getID (TimeZone/getDefault))))
-    ;; Seems like the webapp must be always started, otherwise I get:
+    ;; The webapp must be always started, this error occurs otherwise:
     ;; Error R10 (Boot timeout) -> Web process failed to bind to
     ;; $PORT within 60 seconds of launch
-    ;; TODO try to change it in the Procfile. See in the console:
-    ;;     remote: -----> Discovering process types
-    ;;     remote:        Procfile declares types -> web
-    ;; during the deployment process
+    ;; https://devcenter.heroku.com/articles/run-non-web-java-processes-on-heroku
     (webapp-start env-type port)
     (tgram/start env-type)
     (infof "%s... done" starting)))

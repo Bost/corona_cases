@@ -191,10 +191,8 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   ([prm] (list-countries "list-countries" prm))
-  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode]}]
+  ([_ {:keys [cnt-reports data msg-idx cnt-msgs sort-by-case parse_mode]}]
    (let [
-         ;; TODO calculate count of reports only once
-         cnt-reports (count (data/dates))
          spacer " "
          sort-indicator "▴" ;; " " "▲"
          omag-active    7 ;; order of magnitude i.e. number of digits

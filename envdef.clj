@@ -9,11 +9,11 @@
    java.lang.ProcessBuilder$Redirect
    ))
 
-(def tst "--test")
-(def prd "--prod")
+(def test "--test")
+(def prod "--prod")
 
-(def env {tst "hokuspokus"
-          prd "corona-cases"})
+(def env {test "hokuspokus"
+          prod "corona-cases"})
 
 (def env-type (first *command-line-args*))
 (def rest-args (rest *command-line-args*))
@@ -68,52 +68,43 @@
     (.waitFor (apply sh-process raw-args))))
 
 (defn shell-command
-  "Executes shell command. Exits script when the shell-command has a non-zero exit code, propagating it.
-  Accepts the following options:
+  "Executes shell command. Exits script when the shell-command has a non-zero
+  exit code, propagating it. Accepts the following options:
   `:input`: instead of reading from stdin, read from this string.
   `:to-string?`: instead of writing to stdoud, write to a string and
   return it."
   ([args] (shell-command args nil))
-  ([args {:keys [:input :to-string?] :as prm}]
-   #_(println 'prm prm)
-   (let [
-         ;; temp (File/createTempFile "file" ".tmp")
-         ]
-     #_(println "Temp file:" (.toString temp) "(type temp)" (type temp))
-     #_(printf "to-string? %s; (not to-string?): %s => " to-string? (not to-string?))
-     #_(if (not to-string?)
-       (printf "Output redirected\n")
-       (printf "Output not redirected\n"))
-     (let [args (mapv str args)
-           pb (cond-> (-> (ProcessBuilder. ^java.util.List args)
-                          (.redirectError ProcessBuilder$Redirect/INHERIT))
-                (not to-string?)
-                (.redirectOutput ProcessBuilder$Redirect/INHERIT)
-                #_(.redirectOutput ProcessBuilder$Redirect/PIPE)
-                #_(.redirectOutput (ProcessBuilder$Redirect/appendTo temp))
+  ([args {:keys [:input :to-string?]}]
+   (let [args (mapv str args)
+         pb (cond-> (-> (ProcessBuilder. ^java.util.List args)
+                        (.redirectError ProcessBuilder$Redirect/INHERIT))
+              (not to-string?)
+              (.redirectOutput ProcessBuilder$Redirect/INHERIT)
+              #_(.redirectOutput ProcessBuilder$Redirect/PIPE)
+              #_(.redirectOutput (ProcessBuilder$Redirect/appendTo temp))
 
-                (not input) (.redirectInput ProcessBuilder$Redirect/INHERIT))
-           proc (.start pb)]
-       (when input
-         (with-open [w (io/writer (.getOutputStream proc))]
-           (binding [*out* w]
-             (print input)
-             (flush))))
-       (let [string-out
-             (when to-string? ;; i.e when output not redirected
-               #_(println "Not redirected; reading from proc to-string...")
-               (let [sw (java.io.StringWriter.)]
-                 (with-open [w (io/reader
-                                (.getInputStream proc)
-                                #_(io/input-stream (File. (.toString temp)))
-                                )]
-                   (io/copy w sw))
-                 (str sw)))
-             exit-code (.waitFor proc)]
-         (when-not (zero? exit-code)
-           (System/exit exit-code))
-         (printf "%s\n" string-out)
-         string-out)))))
+              (not input) (.redirectInput ProcessBuilder$Redirect/INHERIT))
+         proc (.start pb)]
+     (when input
+       (with-open [w (io/writer (.getOutputStream proc))]
+         (binding [*out* w]
+           (print input)
+           (flush))))
+     (let [string-out
+           (when to-string? ;; i.e when output not redirected
+             #_(println "Not redirected; reading from proc to-string...")
+             (let [sw (java.io.StringWriter.)]
+               (with-open [w (io/reader
+                              (.getInputStream proc)
+                              #_(io/input-stream (File. (.toString temp)))
+                              )]
+                 (io/copy w sw))
+               (str sw)))
+           exit-code (.waitFor proc)]
+       (when-not (zero? exit-code)
+         (System/exit exit-code))
+       (printf "%s\n" string-out)
+       string-out))))
 
 (defn sh [& raw-args]
     (let [args (remove empty? raw-args)]

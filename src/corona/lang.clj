@@ -59,7 +59,6 @@
 (def ^:const closed        "Closed")
 (def ^:const closed-cases  "Closed cases")
 
-;; TODO rename day -> report
 (def ^:const report
   "Coincidentally there is 1 report per day"
   "Day\\Report")

@@ -53,26 +53,24 @@
 (defn listing
   ([prm] (listing "listing" prm))
   ([msg-id {:keys [msg-listing-fun chat-id sort-by-case] :as prm}]
-   (let [coll (sort-by sort-by-case < (data/stats-countries))]
-     #_(debugf "[%s] coll %s" msg-id (count coll))
-     (let [
-           ;; Split the long list of all countries into smaller subparts
-           sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
-           cnt-msgs (count sub-msgs)]
-       (let [options (select-keys prm (keys msg/options))
-             contents (map-indexed (fn [idx sub-msg]
-                                     (msg-listing-fun
-                                      msg-id
-                                      (assoc prm
-                                             :data sub-msg
-                                             :msg-idx (inc idx)
-                                             :cnt-msgs cnt-msgs)))
-                                   sub-msgs)]
-         (doall
-          (map (fn [content]
-                 (morse/send-text com/telegram-token chat-id options content)
-                 #_(debugf "[%s] send-text: %s chars sent" msg-id (count content)))
-               contents)))))))
+   (let [coll (sort-by sort-by-case < (data/stats-countries))
+         ;; Split the long list of all countries into smaller subparts
+         sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
+         cnt-msgs (count sub-msgs)
+         options (select-keys prm (keys msg/options))
+         contents (map-indexed (fn [idx sub-msg]
+                                 (msg-listing-fun
+                                  msg-id
+                                  (assoc prm
+                                         :cnt-reports (count (data/dates))
+                                         :data sub-msg
+                                         :msg-idx (inc idx)
+                                         :cnt-msgs cnt-msgs)))
+                               sub-msgs)]
+     (doall
+      (map (fn [content]
+             (morse/send-text com/telegram-token chat-id options content))
+           contents)))))
 
 (defn list-countries [prm]
   (listing "list-countries" (assoc prm :msg-listing-fun msg/list-countries)))

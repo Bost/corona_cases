@@ -5,7 +5,7 @@
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
-   [utils.core :as utc :refer [in?]]
+   [utils.core :as utc]
    [taoensso.timbre :as timbre :refer [
                                        debugf infof
                                        warnf
@@ -146,21 +146,16 @@
                       (update-in
                        case-m [:locations]
                        (fn [locs]
-                         #_(debugf "%s" (type locs))
                          (->> locs
-                              #_(map (fn [m] (select-keys m [:country :country_code :history])))
                               ;; here the country_code keyword comes from the json
                               (filter (fn [{:keys [country_code]}]
-                                        #_true
-                                        (in? ccc/all-country-codes country_code)))
+                                        (utc/in? ccc/all-country-codes country_code)))
                               (map (fn [m]
-                                     #_(debugf "%s" (keys m))
                                      (update-in m [:history]
                                                 (fn [history]
                                                   (->> history
                                                        (filter (fn [[raw-date _]]
-                                                                 #_true
-                                                                 (in? (raw-dates) raw-date)))
+                                                                 (utc/in? (raw-dates) raw-date)))
                                                        (into {}))))))
                               (into []))))
                       case-m))}))
@@ -189,16 +184,6 @@
 
 (defn get-prev [coll] (first (take-last 2 coll)))
 
-(defn dbg-recov [ccode case-kw raw-date v]
-  #_(debugf "%s %s %s: %s" ccode case-kw (com/fmt-date-dbg (date raw-date)) v))
-
-(defn check-zero [ccode case-kw raw-date history]
-  (let [v (get history raw-date)]
-    (when (and (= :recovered case-kw)
-               (not= ccode ccc/zz))
-      (dbg-recov ccode case-kw raw-date v))
-    v))
-
 ;; TODO reload only the latest N reports. e.g. try one week
 (defn sums-for-case
   "Return sums for a given `case-kw` calculated for every single report."
@@ -221,7 +206,7 @@
                  (map (comp
                        ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
                        ;; str com/read-number
-                       (fn [history] (check-zero cc case-kw raw-date history))
+                       (fn [history] (get history raw-date))
                        :history))
                  + 0
                  locations)))
@@ -229,7 +214,6 @@
    [:sums case-kw cc]))
 
 (defn calc-case-counts-report-by-report [pred-hm]
-  #_(debugf "calc-case-counts-report-by-report")
   (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
                    [:population :confirmed :recovered :deaths])
 
@@ -274,7 +258,7 @@
   (get-counts (fn [_] true))
   "
   [{:keys [cc #_pred-fun] :as pred-hm}]
-  ;; ignore #_pred-fun for the moment
+  ;; ignore pred-fun for the moment
   (from-cache (fn [] (calc-case-counts-report-by-report pred-hm))
               [:cnts (keyword cc)]))
 
@@ -303,10 +287,6 @@
   [pred-hm]
   (eval-fun (fn [coll] (take-last 8 coll)) pred-hm))
 
-(defn last-8-reports
-  [pred-hm]
-  (eval-fun (fn [coll] (take-last 8 coll)) pred-hm))
-
 (defn create-pred-hm [ccode]
   {:cc ccode
    :pred-fun (fn [loc]
@@ -321,23 +301,12 @@
                  (= ccode (:country_code loc))))})
 
 (defn calc-stats-countries-fn []
-  #_(debugf "calc-stats-countries-fn")
   (map (fn [ccode] (conj {:cc ccode}
                       (last-report (create-pred-hm ccode))))
        ccc/all-country-codes))
 
 (defn stats-countries []
   (from-cache calc-stats-countries-fn [:stats]))
-
-(defn deep-merge
-  "Recursively merges maps. TODO see https://github.com/weavejester/medley
-Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-2711849"
-  [& maps]
-  (apply merge-with (fn [& args]
-                      (if (every? map? args)
-                        (apply deep-merge args)
-                        (last args)))
-         maps))
 
 (defn rank-for-case [rank-kw]
   (map-indexed
@@ -351,9 +320,8 @@ Thanks to https://gist.github.com/danielpcox/c70a8aa2c36766200a95#gistcomment-27
 (defn calc-all-rankings-fn
   "TODO verify ranking for one and zero countries"
   []
-  #_(debugf "calc-all-rankings-fn")
   (map (fn [ccode]
-         (apply deep-merge
+         (apply utc/deep-merge
                 (reduce into []
                         (map (fn [ranking]
                                (filter (fn [{:keys [cc]}]

@@ -1,29 +1,13 @@
 #!/usr/bin/env bb
 
 (load-file "envdef.clj")
+(load-file "pom_version_get.clj")
 (ns deploy
   (:require
-   [clojure.string :as str]
-   [envdef :refer :all]
-   [clojure.data.xml :as xml]
-   [clojure.zip :as zip]))
-
-(defn zip-str
-  "Convenience function, first seen at nakkaya.com later in clj.zip src"
-  [s]
-  (zip/xml-zip
-   (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
-
-;; see corona.common/prj-vernum
-(defn prj-vernum
-  "From ./pom.xml tag: <version>. See also the implementation in the common.clj
-  TODO getting prj-vernum from pom.properties may be simpler"
-  []
-  (->> "pom.xml" (slurp) (zip-str) (first) :content
-       (filter (fn [elem] (= (:tag elem)
-                            (keyword "xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version"))))
-       (map (fn [elem] (->> elem :content first)))
-       (first)))
+   [clojure.string :as cstr]
+   [clojure.java.io :as jio]
+   [envdef :as env]
+   [pom-version-get :as pom]))
 
 ;; need to define LEIN_SNAPSHOTS_IN_RELEASE=true because of
 ;; cljplot "0.0.2-SNAPSHOT"
@@ -37,59 +21,53 @@
 
 ;; activate when using data from the local COVID-19_repo
 #_(let [repo "../COVID-19"]
-    (sh "git" "clone" "https://github.com/CSSEGISandData/COVID-19.git" (str repo "/.git"))
+    (env/sh "git" "clone" "https://github.com/CSSEGISandData/COVID-19.git" (str repo "/.git"))
     ;; TODO following command composition should be done by a monadic bind
     (let [status0
-          (sh "git" (str "--git-dir=" repo) "pull"
-              "--rebase" "origin" "master")
+          (env/sh "git" (str "--git-dir=" repo) "pull"
+                  "--rebase" "origin" "master")
 
           status1
-          (sh
+          (env/sh
            "cp" "-r"
            (str repo "/csse_covid_19_data/csse_covid_19_daily_reports/*.csv")
            "resources/csv")
 
           status2
-          (sh "git" "add" "resources/csv/*.csv")]
+          (env/sh "git" "add" "resources/csv/*.csv")]
       (if (zero? (:exit status))
-        (sh "git commit -m \"Add new csv file(s)\""))))
+        (env/sh "git commit -m \"Add new csv file(s)\""))))
 
-(def commit (sh "git" "rev-parse" "--short" "master"))
-(def version-number (prj-vernum))
+(def commit (env/sh "git" "rev-parse" "--short" "master"))
 
-(printf "%s: %s\n" 'version-number version-number)
+(def pom-version (pom/pom-version))
+
+(def clojure-cli-version
+  (let [props (java.util.Properties.)
+        key "CLOJURE_CLI_VERSION"]
+    (.load props (jio/reader ".heroku-local.env"))
+    (str key "=" (get props key))))
+
+(printf "%s: %s\n" 'pom-version pom-version)
+(printf "%s\n" clojure-cli-version)
 
 ;; `heroku logs --tail --app $APP` blocks the execution
-(sh "heroku" "addons:open" "papertrail" "--app" app)
-(sh "heroku" "ps:scale" "web=0" "--app" app)
-(sh "git" "push" (str/join " " rest-args) remote "master")
-(sh "heroku" "config:set" (str "BOT_VER=" commit) "--app" app)
-;; TODO read CLOJURE_CLI_VERSION from the .env file ???
-(sh "heroku" "config:set" "CLOJURE_CLI_VERSION=1.10.1.697" "--app" app)
-(sh "heroku" "ps:scale" "web=1" "--app" app)
+(env/sh "heroku" "addons:open" "papertrail" "--app" env/app)
+(env/sh "heroku" "ps:scale" "web=0" "--app" env/app)
+(env/sh "git" "push" (cstr/join " " env/rest-args) env/remote "master")
+(env/sh "heroku" "config:set" (str "COMMIT==" commit) "--app" env/app)
+(env/sh "heroku" "config:set" clojure-cli-version "--app" env/app)
+(env/sh "heroku" "ps:scale" "web=1" "--app" env/app)
 
 ;; ;; publish source code only when deploying to production
-(if (= env-type prd)
-  (do
-    ;; seems like `git push --tags` pushes only tags w/o the code
-    (sh "git" "tag" "--annotate" "--message" "''"
-        (str version-number "-" commit))
+(when (= env/env-type env/prod)
+  ;; seems like `git push --tags` pushes only tags w/o the code
+  (env/sh "git" "tag" "--annotate" "--message" "''"
+          (str pom-version "-" commit))
 
-    (doseq [remote ["origin" "gitlab"]]
-      (sh "git" "push" "--follow-tags" "--verbose" remote)
-
-      ;; if test $status != 0
-      ;;     break
-      ;; end
-
-      ;; TODO this should not be needed
-      ;; set cmd git push --tags $pushFlags $remote
-      ;; echo $cmd
-      ;; eval $cmd
-      ;; if test $status != 0
-      ;;     break
-      ;; end
-      )))
+  (doseq [remote ["origin" "gitlab"]]
+    ;; See also `git push --tags $pushFlags $remote`
+    (env/sh "git" "push" "--follow-tags" "--verbose" remote)))
 
 ;; ;; heroku ps:scale web=0 --app $APP; and \
 ;; ;; heroku ps:scale web=1 --app $APP
@@ -110,7 +88,7 @@
 
 ;; ;; run locally:
 ;; ;; lein uberjar; and \
-;; ;; set --export BOT_VER $botVerSHA; and \
+;; ;; set --export COMMIT= $botVerSHA; and \
 ;; ;; java $JVM_OPTS -cp target/corona_cases-standalone.jar:$cljjar:$cljsjar \
 ;;     ;; clojure.main -m corona.web
 

@@ -24,16 +24,6 @@
 
 ;; (set! *warn-on-reflection* true)
 
-(defn ttt
-  "For debugging.
-  TODO move ttt to utils and make it monadic"
-  [fun & args]
-  (debug fun #_args)
-  (let [tbeg (System/currentTimeMillis)]
-    (let [r (doall (apply fun args))]
-      (debugf "%s took %s ms" fun (- (System/currentTimeMillis) tbeg))
-      r)))
-
 (def ^:const project-name "corona_cases")
 (def ^:const undef "<UNDEF>")
 
@@ -160,8 +150,9 @@
                  :c c)
                p))))
 
-(def prj-vernum
-  "See also the implementation in the deploy.clj"
+(def pom-version
+  "See also the implementation in the deploy.clj
+  TODO read the META-INF/maven/corona_cases/corona_cases/pom.xml to get a unique source of truth"
   (:version
    (let [file (format "META-INF/maven/%s/%s/pom.properties"
                       project-name project-name)]
@@ -172,9 +163,9 @@
          (errorf "Could not read from the resource %s" file))))))
 
 (def commit
-  (if-let [shasum (env/env :bot-ver)]
-    (when (and prj-vernum shasum)
-      (format "%s-%s" prj-vernum shasum))
+  (if-let [shasum (env/env :commit)]
+    (when (and pom-version shasum)
+      (format "%s-%s" pom-version shasum))
     ;; if-let ... else
     undef))
 
@@ -190,7 +181,7 @@
          'corona.common/telegram-token
          'corona.common/webapp-port
          'corona.common/bot-name
-         'corona.common/prj-vernum
+         'corona.common/pom-version
          'corona.common/commit]))
 
 (debugf "\n%s" (clojure.string/join "\n" (show-env)))
