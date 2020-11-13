@@ -12,7 +12,7 @@
    [corona.lang :as lang]
    [corona.plot :as plot]
    [morse.api :as morse]
-   [utils.core :as utl :refer [in?] :exclude [id]]
+   [utils.core :as utc :exclude [id]]
    [utils.num :as utn]
    [incanter.stats :as istats]
    ;; [incanter.zoo :as izoo]
@@ -143,7 +143,7 @@
              [:sum :abs]))]})})
 
 (defn worldwide? [ccode]
-  (in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
+  (utc/in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
         ccc/worldwide] ccode))
 
 (defn worldwide-plots
@@ -474,7 +474,7 @@
                              #_"%s\n%s"
                              "<code>%s</code>\n%s"
                              #_"<code>%s\n%s</code>" lang/active-last-7
-                             (utl/sjoin active-last-7-reports))]]
+                             (utc/sjoin active-last-7-reports))]]
 
                    ;; no country ranking can be displayed for worldwide statistics
                    (do
