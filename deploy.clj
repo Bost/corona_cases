@@ -54,9 +54,9 @@
 ;; `heroku logs --tail --app $APP` blocks the execution
 (env/sh "heroku" "addons:open" "papertrail" "--app" env/app)
 (env/sh "heroku" "ps:scale" "web=0" "--app" env/app)
-(env/sh "git" "push" (cstr/join " " env/rest-args) env/remote "master")
 (env/sh "heroku" "config:set" (str "COMMIT==" commit) "--app" env/app)
 (env/sh "heroku" "config:set" clojure-cli-version "--app" env/app)
+(env/sh "git" "push" (cstr/join " " env/rest-args) env/remote "master")
 (env/sh "heroku" "ps:scale" "web=1" "--app" env/app)
 
 ;; ;; publish source code only when deploying to production
