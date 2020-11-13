@@ -125,28 +125,32 @@
 
 (declare tgram-handlers)
 
-(if com/env-heroku?
-  (do
-    (when (empty? (->> com/telegram-token moa/get-info-webhook
-                       :body :result :url))
-      (let [res (moa/set-webhook com/telegram-token
-                                 (webhook-url com/telegram-token))]
-        ;; (debugf "(set-webhook %s %s)" com/telegram-token webhook-url)
-        (debugf "(set-webhook ...) %s" (:body res))))
-    (moh/apply-macro moh/defhandler
-                     tgram-handlers
-                     #_[(moh/command-fn "help"
-                                        (fn [{{chat-id :id} :chat}
-                                            #_chat-id]
-                                          (moa/send-text token chat-id "Help is on the way")))]
-                     (tgram/create-handlers))
-    #_(debugf "tgram-handlers %s" tgram-handlers))
-  ;; curl --form "drop_pending_updates=true" --request POST https://api.telegram.org/bot$TELEGRAM_TOKEN_HOKUSPOKUS/deleteWebhook
-  (when-not (empty? (->> com/telegram-token moa/get-info-webhook
+(when com/env-heroku?
+  (debugf "Defining tgram-handlers at compile time ...")
+  (moh/apply-macro moh/defhandler
+                   tgram-handlers
+                   #_[(moh/command-fn "help"
+                                      (fn [{{chat-id :id} :chat}
+                                          #_chat-id]
+                                        (moa/send-text token chat-id "Help is on the way")))]
+                   (tgram/create-handlers))
+  (debugf "Defining tgram-handlers at compile time ... done"))
+
+(defn setup-webhook []
+  (if com/env-heroku?
+    (do
+      (when (empty? (->> com/telegram-token moa/get-info-webhook
                          :body :result :url))
-    (let [res (moa/del-webhook com/telegram-token)]
-      ;; (debugf "(del-webhook %s)" com/telegram-token)
-      (debugf "(del-webhook ...) %s" (:body res)))))
+        (let [res (moa/set-webhook com/telegram-token
+                                   (webhook-url com/telegram-token))]
+          ;; (debugf "(set-webhook %s %s)" com/telegram-token webhook-url)
+          (debugf "(set-webhook ...) %s" (:body res)))))
+    ;; curl --form "drop_pending_updates=true" --request POST https://api.telegram.org/bot$TELEGRAM_TOKEN_HOKUSPOKUS/deleteWebhook
+    (when-not (empty? (->> com/telegram-token moa/get-info-webhook
+                           :body :result :url))
+      (let [res (moa/del-webhook com/telegram-token)]
+        ;; (debugf "(del-webhook %s)" com/telegram-token)
+        (debugf "(del-webhook ...) %s" (:body res))))))
 
 (cjc/defroutes app-routes
   (cjc/POST
@@ -238,6 +242,10 @@
     ;; $PORT within 60 seconds of launch
     ;; https://devcenter.heroku.com/articles/run-non-web-java-processes-on-heroku
     (webapp-start env-type port)
+
+    ;; setup-webhook should be done in the end after everything is initialized
+    (setup-webhook)
+
     (tgram/start env-type)
     (infof "%s ... done" starting)))
 
