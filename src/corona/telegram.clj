@@ -95,7 +95,7 @@
   ([msg-id]
    (let [callbacks (create-callbacks [msg/worldwide-plots])
          commands (create-commands cmd/cmds)]
-     (infof "[%s] registering %s chatbot commands and %s callbacks..."
+     (infof "[%s] registering %s chatbot commands and %s callbacks ..."
             msg-id (count commands) (count callbacks))
      (into callbacks commands))))
 
@@ -128,7 +128,7 @@
   "TODO see https://github.com/Otann/morse/issues/32"
   ([tgram-token] (long-polling "telegram" tgram-token))
   ([msg-id tgram-token]
-   (infof "[%s] Starting..." msg-id)
+   (infof "[%s] Starting ..." msg-id)
    (if-let [polling-handlers (apply moh/handlers (create-handlers))]
      (do
        (debugf "[%s] Created polling-handlers %s" msg-id polling-handlers)
@@ -145,7 +145,7 @@
          (let [port (start-polling tgram-token polling-handlers)]
            (swap! telegram-port (fn [_] port))
            (async/go-loop []
-             (debugf "[%s] Taking vals on port %s..." msg-id port)
+             (debugf "[%s] Taking vals on port %s ..." msg-id port)
              (let [fst-retval<! (async/<! port)]
                (warnf "[%s] Taking vals on port %s stopped with fst-retval<! %s"
                       msg-id port (if-let [v fst-retval<!] v "nil"))
@@ -155,15 +155,15 @@
                (when @initialized
                  #_com/env-prod?
                  #_(com/system-exit 2)
-                 (debugf "[%s] Closing port %s..." msg-id port)
+                 (debugf "[%s] Closing port %s ..." msg-id port)
                  (async/close! port)
-                 (debugf "[%s] Closing port... done. Current port value: %s"
+                 (debugf "[%s] Closing port ... done. Current port value: %s"
                          msg-id port)
                  (let [dummy-channel-timeout 10000]
-                   (debugf "[%s] Creating a dummy-channel (closes in %s msecs)..."
+                   (debugf "[%s] Creating a dummy-channel (closes in %s msecs) ..."
                            msg-id dummy-channel-timeout)
                    (let [dummy-channel-port (async/timeout dummy-channel-timeout)]
-                     (debugf "[%s] Taking vals on dummy-channel-port %s..."
+                     (debugf "[%s] Taking vals on dummy-channel-port %s ..."
                              msg-id dummy-channel-port)
                      (let [retval-dummy-channel<! (async/<! dummy-channel-port)]
                        (debugf (str
@@ -175,36 +175,36 @@
                                    msg-id port (if-let [v snd-retval<!] v "nil"))
                          (if (nil? snd-retval<!)
                            (do
-                             #_(debugf "[%s WTF?] Closing port %s again..."
+                             #_(debugf "[%s WTF?] Closing port %s again ..."
                                        msg-id port)
                              #_(async/close! port)
                              #_(debugf "[%s WTF?] Port closed again. Current port value: %s"
                                        msg-id port)
-                             (debugf "[%s WTF?] New start-polling invocation..."
+                             (debugf "[%s WTF?] New start-polling invocation ..."
                                      msg-id)
                              (let [new-port (start-polling tgram-token polling-handlers)]
                                (swap! telegram-port (fn [_] new-port))
-                               (debugf "[%s WTF?] Recuring the go-loop on a new-port %s..." msg-id new-port)
+                               (debugf "[%s WTF?] Recuring the go-loop on a new-port %s ..." msg-id new-port)
                                (recur)))
                            (do
-                             (debugf "[%s WTF?] Recuring the go-loop on the old port %s..." msg-id port)
+                             (debugf "[%s WTF?] Recuring the go-loop on the old port %s ..." msg-id port)
                              (recur)))))))))))
          #_(let [sleep-time Long/MAX_VALUE]
              (warnf "[%] async/go-loop will sleep forever, i.e. %s msecs"
                     msg-id sleep-time)
              (Thread/sleep sleep-time)))
      (fatalf "[%s] polling-handlers not created" msg-id))
-   (infof "[%s] Starting... done" msg-id)))
+   (infof "[%s] Starting ... done" msg-id)))
 
 (defn endlessly
   "Invoke fun and put the thread to sleep for millis in an endless loop."
   ([fun ttl] (endlessly "endlessly" fun ttl))
   ([msg-id fun ttl]
-   (infof "[%s] Starting..." msg-id)
+   (infof "[%s] Starting ..." msg-id)
    (while @continue
      (Thread/sleep ttl)
      (fun))
-   (debugf "[%s] Starting... done" msg-id)
+   (debugf "[%s] Starting ... done" msg-id)
    (warnf "[%s] Displayed data will NOT be updated!" msg-id)))
 
 (defn estimate-recov
@@ -275,7 +275,7 @@
   ([] (start "telegram-start" com/env-type))
   ([env-type] (start "telegram-start" env-type))
   ([msg-id env-type]
-   (infof "[%s] Starting version %s in environment %s..."
+   (infof "[%s] Starting version %s in environment %s ..."
           msg-id com/commit env-type)
    (reset-cache!)
    (swap! initialized (fn [_]
@@ -284,20 +284,20 @@
    (let [funs (into [(fn p-endlessly [] (endlessly reset-cache! com/ttl))]
                     (when-not com/env-heroku?
                       [(fn p-long-polling [] (long-polling com/telegram-token))]))]
-     (debugf "[%s] Execute in parallel: %s..." msg-id funs)
+     (debugf "[%s] Execute in parallel: %s ..." msg-id funs)
      (pmap (fn [fun] (fun)) funs))
    (infof "[%s] Starting [..] ... done" msg-id)))
 
 (defn stop
   ([] (stop "long-poll-stop"))
   ([msg-id]
-   (infof "[%s] Stopping..." msg-id)
+   (infof "[%s] Stopping ..." msg-id)
    (run! (fn [obj-q]
            (let [obj (eval obj-q)]
              (if (= obj-q 'corona.telegram/telegram-port)
                (if-let [old-tgram-port (deref obj)]
                  (do
-                   (debugf "[%s] Closing old-tgram-port %s..."
+                   (debugf "[%s] Closing old-tgram-port %s ..."
                            msg-id old-tgram-port)
                    (async/close! old-tgram-port))
                  (debugf "[%s] No old-tgram-port defined" msg-id))
@@ -312,16 +312,16 @@
           'corona.api.expdev07/cache
           'corona.telegram/continue
           'corona.telegram/telegram-port])
-   (infof "[%s] Stopping... done" msg-id)))
+   (infof "[%s] Stopping ... done" msg-id)))
 
 (defn restart
   ([] (restart "long-poll-restart"))
   ([msg-id]
-   (infof "[%s] Restarting..." msg-id)
+   (infof "[%s] Restarting ..." msg-id)
    (when @initialized
      (stop)
      (Thread/sleep 400))
    (start)
-   (infof "[%s] Restarting... done" msg-id)))
+   (infof "[%s] Restarting ... done" msg-id)))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.telegram)

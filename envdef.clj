@@ -92,7 +92,7 @@
            (flush))))
      (let [string-out
            (when to-string? ;; i.e when output not redirected
-             #_(println "Not redirected; reading from proc to-string...")
+             #_(println "Not redirected; reading from proc to-string ...")
              (let [sw (java.io.StringWriter.)]
                (with-open [w (io/reader
                               (.getInputStream proc)

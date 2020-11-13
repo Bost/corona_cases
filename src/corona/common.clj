@@ -184,7 +184,7 @@
          'corona.common/pom-version
          'corona.common/commit]))
 
-(debugf "\n%s" (clojure.string/join "\n" (show-env)))
+(debugf "\n  %s" (clojure.string/join "\n  " (show-env)))
 
 ;; TODO (System/exit <val>) if some var is undefined
 
@@ -231,7 +231,6 @@
           s (s/replace s ">" "&gt;")]
       s)
     s))
-
 
 (def ^:const case-params
   ":idx - defines an order in appearance

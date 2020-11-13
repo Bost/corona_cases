@@ -190,7 +190,7 @@
   (let [msg-id "webapp"
         starting "starting"
         version (if com/env-devel? com/undef com/commit)
-        msg (format "[%s] %s version %s in environment %s on port %s..."
+        msg (format "[%s] %s version %s in environment %s on port %s ..."
                     msg-id
                     starting
                     version
@@ -206,14 +206,14 @@
            {:port port :join? false})]
       (debugf "[%s] web-server %s" msg-id web-server)
       (swap! server (fn [_] web-server))
-      (infof "[%s] %s... done" msg-id starting)
+      (infof "[%s] %s ... done" msg-id starting)
       web-server)))
 
 (defn -main [& [env-type port]]
   (let [env-type (or env-type com/env-type)
         port (or port com/webapp-port)
         starting "[-main] starting"
-        msg (format "%s version %s in environment %s on port %s..."
+        msg (format "%s version %s in environment %s on port %s ..."
                     starting
                     (if com/env-devel? com/undef com/commit)
                     env-type
@@ -239,10 +239,10 @@
     ;; https://devcenter.heroku.com/articles/run-non-web-java-processes-on-heroku
     (webapp-start env-type port)
     (tgram/start env-type)
-    (infof "%s... done" starting)))
+    (infof "%s ... done" starting)))
 
 (defn webapp-stop []
-  (info "[webapp] Stopping...")
+  (info "[webapp] Stopping ...")
   (.stop ^org.eclipse.jetty.server.Server @server)
   (let [objs ['corona.web/server]]
     (run! (fn [obj-q]
