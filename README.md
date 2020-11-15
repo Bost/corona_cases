@@ -11,30 +11,34 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 ![Screenshot](/resources/pics/screenshot_2-50-percents.jpg)
 
 ## Develop
-Start Clojure REPL:
+Emacs Cider `M-x cider-jack-in-clj`
+
+Or start the nREPL:
 ```fish
-lein repl
+/usr/local/bin/clojure -Sdeps '{:deps {nrepl {:mvn/version "0.8.2"} refactor-nrepl {:mvn/version "2.5.0"} cider/cider-nrepl {:mvn/version "0.25.4"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
 ```
-Start telegram chatbot:
+And connect to it from the editor of your choice.
+
+Start telegram chatbot long-polling:
 ```clojure
-(require '[corona.telegram] '[corona.common :as com])
-(corona.telegram/-main com/env-type)
+(require '[corona.telegram])
+(corona.telegram/start)
 ```
 Start web server:
 ```clojure
-(require '[corona.telegram] '[corona.common :as com])
-(corona.web/webapp-start com/env-type com/webapp-port)
+(require '[corona.web])
+(alter-var-root #'system component/start)
 ```
 Then check the [http://localhost:5050/](http://localhost:5050/)
 
 ## Run locally
 
 ```fish
-heroku local --env=.heroku-local.env
+bin/build; and heroku local --env=.heroku-local.env
 ```
 TODO `heroku local` - ask about setting environment variables on the CLI, i.e.:
 ```fish
-heroku local --env=.heroku-local.env --set COMMIT=...`
+bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...`
 ```
 
 ## Deploy to Heroku
