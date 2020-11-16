@@ -105,6 +105,9 @@
   ;; TODO Include it only in the development
   com.stuartsierra/component {:mvn/version "1.0.0"}
 
+  ;; read project-version from pom.xml
+  org.clojure/data.xml {:mvn/version "0.0.8"}
+
   ;; profiling - see
   ;; http://clojure-goes-fast.com/
   ;; https://github.com/clojure-goes-fast/

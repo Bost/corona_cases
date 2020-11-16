@@ -125,7 +125,7 @@
 
 (declare tgram-handlers)
 
-(when com/env-heroku?
+(when com/on-heroku?
   (debugf "Defining tgram-handlers at compile time ...")
   (moh/apply-macro moh/defhandler
                    tgram-handlers
@@ -136,21 +136,23 @@
                    (tgram/create-handlers))
   (debugf "Defining tgram-handlers at compile time ... done"))
 
-(defn setup-webhook []
-  (if com/env-heroku?
+(defn setup-webhook
+  ([] (setup-webhook "setup-webhook"))
+  ([msg-id]
+  (if com/on-heroku?
     (do
       (when (empty? (->> com/telegram-token moa/get-info-webhook
                          :body :result :url))
         (let [res (moa/set-webhook com/telegram-token
                                    (webhook-url com/telegram-token))]
-          ;; (debugf "(set-webhook %s %s)" com/telegram-token webhook-url)
-          (debugf "(set-webhook ...) %s" (:body res)))))
+          ;; (debugf "[%s] (set-webhook %s %s)" msg-id com/telegram-token webhook-url)
+          (debugf "[%s] (set-webhook ...) %s" msg-id (:body res)))))
     ;; curl --form "drop_pending_updates=true" --request POST https://api.telegram.org/bot$TELEGRAM_TOKEN_HOKUSPOKUS/deleteWebhook
     (when-not (empty? (->> com/telegram-token moa/get-info-webhook
                            :body :result :url))
       (let [res (moa/del-webhook com/telegram-token)]
-        ;; (debugf "(del-webhook %s)" com/telegram-token)
-        (debugf "(del-webhook ...) %s" (:body res))))))
+        ;; (debugf "[%s] (del-webhook %s)" msg-id com/telegram-token)
+        (debugf "[%s] (del-webhook ...) %s" msg-id (:body res)))))))
 
 (cjc/defroutes app-routes
   (cjc/POST
@@ -193,7 +195,7 @@
 (defn webapp-start [env-type port]
   (let [msg-id "webapp"
         starting "starting"
-        version (if com/env-devel? com/undef com/commit)
+        version (if com/env-devel? com/undef com/botver)
         msg (format "[%s] %s version %s in environment %s on port %s ..."
                     msg-id
                     starting
@@ -214,15 +216,20 @@
       web-server)))
 
 (defn -main [& [env-type port]]
-  (let [env-type (or env-type com/env-type)
+  #_(show-env)
+  #_(debugf "\n  %s" (clojure.string/join "\n  " (show-env)))
+  (let [msg-id "-main"
+        env-type (or env-type com/env-type)
         port (or port com/webapp-port)
-        starting "[-main] starting"
+        starting (format "[%s] starting" msg-id)
         msg (format "%s version %s in environment %s on port %s ..."
                     starting
-                    (if com/env-devel? com/undef com/commit)
+                    (if com/env-devel? com/undef com/botver)
                     env-type
                     port)]
-    (info msg)
+    #_(info msg)
+    (infof "%s ... " starting)
+    (infof "\n  %s" (clojure.string/join "\n  " (com/show-env)))
     (if (= (str (ctc/default-time-zone))
            (str (ZoneId/systemDefault))
            (.getID (TimeZone/getDefault)))

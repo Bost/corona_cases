@@ -542,7 +542,7 @@
   (str
    ;; escape underscores for the markdown parsing
    (bot-name-formatted)
-   " " com/commit " "
+   " " com/botver " "
    (str
     (link "GitHub" "https://github.com/Bost/corona_cases" parse_mode) ", "
     (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" parse_mode)

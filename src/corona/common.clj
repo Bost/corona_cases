@@ -4,59 +4,32 @@
   (:require
    [clj-http.client :as client]
    [clj-time.coerce :as ctc]
-   [clj-time.core :as t]
+   [clj-time.core :as ctime]
    [clj-time.format :as ctf]
    [clojure.data.json :as json]
-   [clojure.java.io :as jio]
-   [clojure.string :as s]
+   [clojure.string :as cstr]
    [environ.core :as env]
+   [corona.envdef :as envdef]
    [utils.num :as utn]
-   [utils.core :refer [in?] :exclude [id]]
+   [utils.core :as utc :exclude [id]]
    #_[corona.country-codes :as ccc]
-   [taoensso.timbre :as timbre :refer [debug debugf
-                                       #_info infof
-                                       ;; warn
-                                       errorf
-                                       #_fatalf
-                                       ]]
-   [clojurewerkz.propertied.properties :as p]
+   [taoensso.timbre :as timbre :refer [debugf infof
+                                       #_errorf]]
+   [corona.pom-version-get :as pom]
+   [clojure.java.io :as jio]
    ))
 
 ;; (set! *warn-on-reflection* true)
 
-(def ^:const project-name "corona_cases")
+(def ^:const project-name envdef/project-name)
 (def ^:const undef "<UNDEF>")
 
 (def ^:const ^Long webapp-port (if-let [env-port (env/env :port)]
                                  (read-string env-port)
                                  ;; keep port-nr in sync with README.md
                                  5050))
-(def environment
-  "Mapping env-type -> bot-name"
-  {
-   "PROD"
-   {:level 0
-    :bot-name project-name
-    :web-server "https://corona-cases-bot.herokuapp.com"
-    :json-server "covid-tracker-us.herokuapp.com"}
 
-   "HOKUSPOKUS"
-   {:level 1
-    :bot-name "hokuspokus"
-    :web-server "https://hokuspokus-bot.herokuapp.com"
-    :json-server "covid-tracker-us.herokuapp.com"}
-
-   "LOCAL"
-   {:level 2
-    :bot-name "hokuspokus"
-    :web-server nil ;; intentionally undefined
-    :json-server "covid-tracker-us.herokuapp.com"}
-
-   "DEVEL"
-   {:level 3
-    :bot-name "hokuspokus"
-    :web-server nil ;; intentionally undefined
-    :json-server "localhost:8000"}})
+(def environment envdef/environment)
 
 (def env-type
   "When deving check:
@@ -73,7 +46,7 @@
 
 ;; TODO use clojure.spec to validate env-type
 (let [env-types (set (keys environment))]
-  (if (in? env-types env-type)
+  (if (utc/in? env-types env-type)
     (debugf "%s %s is valid" 'env-type env-type)
     (throw (Exception.
             (format
@@ -95,14 +68,14 @@
   `env-prod?`, `env-hokuspokus?`, `env-local?`, `env-devel?`"
   []
   (run! (fn [v]
-          (let [symb-v (symbol (format "env-%s?" (s/lower-case v)))]
+          (let [symb-v (symbol (format "env-%s?" (cstr/lower-case v)))]
             (reset-meta! (intern *ns* symb-v (= env-type v))
                          {:const true :tag `Boolean})))
         (keys environment)))
 
 (define-env-predicates)
 
-(def ^:const ^Boolean env-heroku? (or env-prod? env-hokuspokus?))
+(def ^:const ^Boolean on-heroku? (or env-prod? env-hokuspokus?))
 
 (def ^:const ^String telegram-token (env/env :telegram-token))
 
@@ -151,40 +124,39 @@
                p))))
 
 (def pom-version
-  "See also the implementation in the deploy.clj
-  TODO read the META-INF/maven/corona_cases/corona_cases/pom.xml to get a unique source of truth"
-  (:version
-   (let [file (format "META-INF/maven/%s/%s/pom.properties"
-                      project-name project-name)]
-     (if-let [resource (jio/resource file)]
-       (p/properties->map (p/load-from resource) true)
-       (if env-devel?
-         nil ;; no version defined when deving
-         (errorf "Could not read from the resource %s" file))))))
+  (->
+   #_(format "META-INF/maven/%s/%s/pom.xml" project-name project-name)
+   #_(jio/resource)
+   "pom.xml"
+   (slurp)
+   (pom/parse-xml-str)))
 
-(def commit
-  (if-let [shasum (env/env :commit)]
-    (when (and pom-version shasum)
-      (format "%s-%s" pom-version shasum))
+(def botver
+  (if-let [commit (env/env :commit)]
+    (when (and pom-version commit)
+      (format "%s-%s" pom-version commit))
     ;; if-let ... else
     undef))
 
 (defn show-env []
   (mapv (fn [env-var-q]
           (format "%s: %s"
-                  env-var-q (if-let [env-var (eval env-var-q)]
-                              (if (in? ['corona.common/telegram-token] env-var-q)
-                                "<PRESENT>" env-var)
-                              ;; if-let ... else
-                              undef)))
+                  env-var-q
+                  (let [env-var (eval env-var-q)]
+                    (if (or env-var (false? env-var))
+                      (if (utc/in? ['corona.common/telegram-token] env-var-q)
+                        "<PRESENT>" env-var)
+                      ;; if-let ... else
+                      undef))))
         ['corona.common/env-type
+         'corona.common/on-heroku?
          'corona.common/telegram-token
          'corona.common/webapp-port
          'corona.common/bot-name
          'corona.common/pom-version
-         'corona.common/commit]))
+         'corona.common/botver]))
 
-(debugf "\n  %s" (clojure.string/join "\n  " (show-env)))
+#_(debugf "\n  %s" (clojure.string/join "\n  " (show-env)))
 
 ;; TODO (System/exit <val>) if some var is undefined
 
@@ -192,7 +164,7 @@
   "(read-string \"08\") produces a NumberFormatException - octal numbers
   https://clojuredocs.org/clojure.core/read-string#example-5ccee021e4b0ca44402ef71a"
   [s]
-  (s/replace s #"^0+" ""))
+  (cstr/replace s #"^0+" ""))
 
 (defn read-number [v]
   (if (or (empty? v) (= "0" v))
@@ -202,18 +174,18 @@
 (defn left-pad
   ([s padding-len] (left-pad s "0" padding-len))
   ([s with padding-len]
-   (s/replace (format (str "%" padding-len "s") s) " " with)))
+   (cstr/replace (format (str "%" padding-len "s") s) " " with)))
 
 #_
 (defn left-pad [s padding-len]
-  (str (s/join (repeat (- padding-len (count s)) " "))
+  (str (cstr/join (repeat (- padding-len (count s)) " "))
        s))
 
 (defn right-pad
   ([s padding-len] (right-pad s " " padding-len))
   ([s with padding-len]
    (str s
-        (s/join (repeat (- padding-len (count s)) with)))))
+        (cstr/join (repeat (- padding-len (count s)) with)))))
 
 (defn get-json [url]
   (infof "Requesting json-data from %s ..." url)
@@ -224,13 +196,13 @@
 
 (defn encode-pseudo-cmd
   "For displaying e.g. /<command-name>"
-  [s parse_mode]
-  {:pre (in? ["HTML" "Markdown"] parse_mode)}
-  (if (= parse_mode "HTML")
-    (let [s (s/replace s "<" "&lt;")
-          s (s/replace s ">" "&gt;")]
-      s)
-    s))
+  [lexical-token parse_mode]
+  {:pre (utc/in? ["HTML" "Markdown"] parse_mode)}
+  (let [fun (if (= parse_mode "HTML")
+              (comp #(cstr/replace % "<" "&lt;")
+                    #(cstr/replace % ">" "&gt;"))
+              identity)]
+    (fun lexical-token)))
 
 (def ^:const case-params
   ":idx - defines an order in appearance
@@ -257,11 +229,11 @@
    ])
 
 (def ^:const absolute-cases (->> case-params
-                                 (filter (fn [m] (in? [1 2 3 4] (:idx m))))
+                                 (filter (fn [m] (utc/in? [1 2 3 4] (:idx m))))
                                  (mapv :kw)))
 
 (def ^:const basic-cases (->> case-params
-                              (filter (fn [m] (in? [1 2 3 4 5 6 7 8] (:idx m))))
+                              (filter (fn [m] (utc/in? [1 2 3 4 5 6 7 8] (:idx m))))
                               (mapv :kw)))
 (def ^:const all-cases (->> case-params
                             (mapv :kw)))
@@ -271,30 +243,29 @@
 (def ^:const listing-cases-per-100k
   "No listing of :c100k - Closed cases per 100k"
   (->> case-params
-       (filter (fn [m] (in? [5 6 7] (:idx m))))
+       (filter (fn [m] (utc/in? [5 6 7] (:idx m))))
        (mapv :kw)))
 
 (def ^:const listing-cases-absolute
   (->> case-params
-       (filter (fn [m] (in? [0 1 2] (:listing-idx m))))
+       (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
        (sort-by :listing-idx)
        (mapv :kw)))
 
-(defn fmt-date
+(defn fmt-date-fun [fmts]
+  (fn [date]
+    (ctf/unparse (ctf/with-zone (ctf/formatter fmts) (ctime/default-time-zone))
+                 (ctc/from-date date))))
+
+(def fmt-date
   "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
             \"4/26/20\"))"
-  [date]
-  (ctf/unparse (ctf/with-zone (ctf/formatter "dd MMM yyyy")
-                (t/default-time-zone))
-              (ctc/from-date date)))
+  (fmt-date-fun "dd MMM yyyy"))
 
-(defn fmt-date-dbg
+(def fmt-date-dbg
   "(fmt-date-dbg (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
                 \"4/26/20\"))"
-  [date]
-  (ctf/unparse (ctf/with-zone (ctf/formatter "dd.MM.")
-                 (t/default-time-zone))
-               (ctc/from-date date)))
+  (fmt-date-fun "dd.MM."))
 
 (defn- threshold [case-kw]
   (->> case-params

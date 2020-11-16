@@ -1,19 +1,24 @@
 #!/usr/bin/env bb
 
-(ns envdef
+(load-file "src/corona/envdef.clj")
+
+(ns cli-env
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]
+   [corona.envdef :as env]
    )
   (:import
    java.lang.ProcessBuilder$Redirect
    ))
 
-(def test "--test")
-(def prod "--prod")
+(def prod (-> (get-in env/environment [(keyword env/prod) :cli]) (keys) (first)))
 
-(def env {test "hokuspokus"
-          prod "corona-cases"})
+(def env-names
+  (into {}
+        (map (fn [kw]
+               (get-in env/environment [kw :cli]))
+             (keys env/environment))))
 
 (def env-type (first *command-line-args*))
 (def rest-args (rest *command-line-args*))
@@ -116,14 +121,14 @@
            (trim-last-newline))))
 
 (def env-name
-  (or (get env env-type)
+  (or (get env-names env-type)
       (let [file (->> (sh "basename" *file*) str/trim-newline (str "./"))]
         (if (empty? env-type)
           (println "ERR: Undefined parameter" 'env-type)
           (println "ERR: Unknown value of parameter" 'env-type env-type))
         ;; w/o the '--' every list element gets printed on a separate line
         ;; as if invoked in a for-loop. WTF?
-        (let [env-names (keys env)]
+        (let [env-names (keys env-names)]
           (printf "Usage: %s {%s}\n\nExamples:\n"
                   file (str/join " | " env-names))
           (doseq [en env-names]

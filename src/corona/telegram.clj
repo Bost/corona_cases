@@ -1,12 +1,15 @@
 (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.telegram)
 
+;; TODO replace `->>` with `comp` https://github.com/practicalli/clojure-content/issues/160
+;; TODO replace loop-recur with functional implementation and parallelize it https://youtu.be/GvJm-eJ5o18?t=1617
+;; TODO https://stuartsierra.com/2016/01/09/how-to-name-clojure-functions
+
 (ns corona.telegram
   (:gen-class)
   (:require
    [clojure.core.async :as async]
    [corona.common :as com]
    [corona.commands :as cmd]
-   [clojure.set :as cset]
    [corona.messages :as msg]
    [morse.handlers :as moh]
    [morse.polling :as mop]
@@ -18,8 +21,7 @@
    [corona.country-codes :as ccc]
    [net.cgrand.xforms :as x]
    ;; [com.stuartsierra.component :as component]
-   [clojure.inspector :refer :all]
-   [utils.num :as utn]
+   ;; [clojure.inspector :refer :all]
    ))
 
 ;; (set! *warn-on-reflection* true)
@@ -272,17 +274,17 @@
 
 (defn start
   "Fetch api service data and only then register the telegram commands."
-  ([] (start "telegram-start" com/env-type))
+  ([] (start com/env-type))
   ([env-type] (start "telegram-start" env-type))
   ([msg-id env-type]
    (infof "[%s] Starting version %s in environment %s ..."
-          msg-id com/commit env-type)
+          msg-id com/botver env-type)
    (reset-cache!)
    (swap! initialized (fn [_]
                         ;; TODO use morse.handler instead of true?
                         true))
    (let [funs (into [(fn p-endlessly [] (endlessly reset-cache! com/ttl))]
-                    (when-not com/env-heroku?
+                    (when-not com/on-heroku?
                       [(fn p-long-polling [] (long-polling com/telegram-token))]))]
      (debugf "[%s] Execute in parallel: %s ..." msg-id funs)
      (pmap (fn [fun] (fun)) funs))
