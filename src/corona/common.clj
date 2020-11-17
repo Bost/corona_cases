@@ -30,6 +30,11 @@
 
 (def environment envdef/environment)
 
+(def use-webhook?
+  true
+  ;; TODO (env/env :use-webhook)
+  )
+
 (def env-type
   "When deving check:
       echo $CORONA_ENV_TYPE
@@ -128,8 +133,6 @@
       (format "%s-%s" pom/pom-version commit))
     ;; if-let ... else
     undef))
-
-(def use-webhook? false)
 
 (defn show-env []
   (mapv (fn [env-var-q]
