@@ -125,7 +125,7 @@
 
 (declare tgram-handlers)
 
-(when com/on-heroku?
+(when com/use-webhook?
   (debugf "Defining tgram-handlers at compile time ...")
   (moh/apply-macro moh/defhandler
                    tgram-handlers
@@ -139,7 +139,7 @@
 (defn setup-webhook
   ([] (setup-webhook "setup-webhook"))
   ([msg-id]
-  (if com/on-heroku?
+  (if com/use-webhook?
     (do
       (when (empty? (->> com/telegram-token moa/get-info-webhook
                          :body :result :url))

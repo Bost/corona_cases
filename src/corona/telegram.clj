@@ -284,7 +284,7 @@
                         ;; TODO use morse.handler instead of true?
                         true))
    (let [funs (into [(fn p-endlessly [] (endlessly reset-cache! com/ttl))]
-                    (when-not com/on-heroku?
+                    (when-not com/use-webhook?
                       [(fn p-long-polling [] (long-polling com/telegram-token))]))]
      (debugf "[%s] Execute in parallel: %s ..." msg-id funs)
      (pmap (fn [fun] (fun)) funs))

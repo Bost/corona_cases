@@ -138,6 +138,8 @@
     ;; if-let ... else
     undef))
 
+(def use-webhook? false)
+
 (defn show-env []
   (mapv (fn [env-var-q]
           (format "%s: %s"
@@ -149,6 +151,7 @@
                       ;; if-let ... else
                       undef))))
         ['corona.common/env-type
+         'corona.common/use-webkook?
          'corona.common/on-heroku?
          'corona.common/telegram-token
          'corona.common/webapp-port
