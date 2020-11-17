@@ -58,9 +58,7 @@
      (into (sorted-map-by (fn [x y] (compare y x))))))})
 
 (defn webhook-url [telegram-token]
-  (format "https://%s.herokuapp.com/%s"
-          (str com/bot-name "-bot")
-          telegram-token))
+  (format "%s/%s" com/webapp-server telegram-token))
 
 (def url-telegram       "https://api.telegram.org/bot$TELEGRAM_TOKEN")
 (def url-getUpdates     (str url-telegram "/getUpdates"))
