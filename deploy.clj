@@ -56,8 +56,10 @@
 ;; `heroku logs --tail --app $APP` blocks the execution
 (cli/sh "heroku" "addons:open" "papertrail" "--app" cli/app)
 (cli/sh "heroku" "ps:scale" "web=0" "--app" cli/app)
-(cli/sh "heroku" "config:set" (str "COMMIT=" commit) "--app" cli/app)
-(cli/sh "heroku" "config:set" clojure-cli-version "--app" cli/app)
+(cli/sh "heroku" "config:set"
+        (str "COMMIT=" commit)
+        clojure-cli-version
+        "--app" cli/app)
 (cli/sh "git" "push" rest-args cli/remote "master")
 (cli/sh "heroku" "ps:scale" "web=1" "--app" cli/app)
 
