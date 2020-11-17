@@ -189,8 +189,10 @@
 
 (defn get-json [url]
   (infof "Requesting json-data from %s ..." url)
-  (json/read-json
-   (:body (client/get url {:accept :json}))))
+  (let [result (json/read-str
+                (:body (client/get url {:accept :json})))]
+    (infof "Requesting json-data from %s ... done. %s chars received" url (count result))
+    result))
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))
 
