@@ -159,7 +159,7 @@
    (format "/%s" com/telegram-token)
    args
    (let [body (get-in args [:body])]
-     #_(debugf "args %s" args)
+     (debugf "args %s" args)
      (tgram-handlers body)
      (ring.util.http-response/ok)))
 
