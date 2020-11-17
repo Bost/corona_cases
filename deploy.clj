@@ -69,7 +69,8 @@
 
   (doseq [remote ["origin" "gitlab"]]
     ;; See also `git push --tags $pushFlags $remote`
-    (cli/sh "git" "push" "--follow-tags" "--verbose" remote)))
+    (cli/sh "git" "push" (cstr/join " " cli/rest-args)
+            "--follow-tags" "--verbose" remote)))
 
 ;; ;; heroku ps:scale web=0 --app $APP; and \
 ;; ;; heroku ps:scale web=1 --app $APP
