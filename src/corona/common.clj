@@ -16,7 +16,6 @@
    [taoensso.timbre :as timbre :refer [debugf infof
                                        #_errorf]]
    [corona.pom-version-get :as pom]
-   [clojure.java.io :as jio]
    ))
 
 ;; (set! *warn-on-reflection* true)
@@ -123,18 +122,10 @@
                  :c c)
                p))))
 
-(def pom-version
-  (->
-   #_(format "META-INF/maven/%s/%s/pom.xml" project-name project-name)
-   #_(jio/resource)
-   "pom.xml"
-   (slurp)
-   (pom/parse-xml-str)))
-
 (def botver
   (if-let [commit (env/env :commit)]
-    (when (and pom-version commit)
-      (format "%s-%s" pom-version commit))
+    (when (and pom/pom-version commit)
+      (format "%s-%s" pom/pom-version commit))
     ;; if-let ... else
     undef))
 
@@ -156,7 +147,6 @@
          'corona.common/telegram-token
          'corona.common/webapp-port
          'corona.common/bot-name
-         'corona.common/pom-version
          'corona.common/botver]))
 
 #_(debugf "\n  %s" (clojure.string/join "\n  " (show-env)))

@@ -41,8 +41,7 @@
 
 (def commit (cli/sh "git" "rev-parse" "--short" "master"))
 
-(def pom-version (->> (slurp "pom.xml")
-                      (pom/parse-xml-str)))
+(printf "%s: %s\n" 'pom/pom-version pom/pom-version)
 
 (def clojure-cli-version
   (let [props (java.util.Properties.)
@@ -50,51 +49,51 @@
     (.load props (jio/reader ".heroku-local.env"))
     (str key "=" (get props key))))
 
-(printf "%s: %s\n" 'pom-version pom-version)
-(printf "%s\n" clojure-cli-version)
+(printf "%s\n" clojure-cli-version) ;; prints 'CLOJURE_CLI_VERSION=...'
+
+(def rest-args (cstr/join " " cli/rest-args))
 
 ;; `heroku logs --tail --app $APP` blocks the execution
 (cli/sh "heroku" "addons:open" "papertrail" "--app" cli/app)
 (cli/sh "heroku" "ps:scale" "web=0" "--app" cli/app)
 (cli/sh "heroku" "config:set" (str "COMMIT=" commit) "--app" cli/app)
 (cli/sh "heroku" "config:set" clojure-cli-version "--app" cli/app)
-(cli/sh "git" "push" (cstr/join " " cli/rest-args) cli/remote "master")
+(cli/sh "git" "push" rest-args cli/remote "master")
 (cli/sh "heroku" "ps:scale" "web=1" "--app" cli/app)
 
 ;; ;; publish source code only when deploying to production
 (when (= cli/env-type cli/prod)
   ;; seems like `git push --tags` pushes only tags w/o the code
   (cli/sh "git" "tag" "--annotate" "--message" "''"
-          (str pom-version "-" commit))
+          (str pom/pom-version "-" commit))
 
   (doseq [remote ["origin" "gitlab"]]
     ;; See also `git push --tags $pushFlags $remote`
-    (cli/sh "git" "push" (cstr/join " " cli/rest-args)
-            "--follow-tags" "--verbose" remote)))
+    (cli/sh "git" "push" rest-args "--follow-tags" "--verbose" remote)))
 
-;; ;; heroku ps:scale web=0 --app $APP; and \
-;; ;; heroku ps:scale web=1 --app $APP
-;; ;; heroku open --app $APP
-;; ;; heroku addons:open papertrail --app $APP
-;; ;; heroku logs --tail --app $APP
-;; ;; heroku maintenance:on  --app $APP
-;; ;; heroku config:unset type private_key_id private_key client_id client_email \
-;;     ;; --app $APP
-;; ;; heroku maintenance:off --app $APP
+;; heroku ps:scale web=0 --app $APP; and \
+;; heroku ps:scale web=1 --app $APP
+;; heroku open --app $APP
+;; heroku addons:open papertrail --app $APP
+;; heroku logs --tail --app $APP
+;; heroku maintenance:on  --app $APP
+;; heroku config:unset type private_key_id private_key client_id client_email \
+    ;; --app $APP
+;; heroku maintenance:off --app $APP
 
-;; ;; Fix: Push rejected, submodule install failed
-;; ;; Thanks to https://stackoverflow.com/a/31545903
-;; ;; heroku plugins:install https://github.com/heroku/heroku-repo.git
-;; ;; heroku repo:reset --app $APP
+;; Fix: Push rejected, submodule install failed
+;; Thanks to https://stackoverflow.com/a/31545903
+;; heroku plugins:install https://github.com/heroku/heroku-repo.git
+;; heroku repo:reset --app $APP
 
-;; ;; heroku run bash --app $APP
+;; heroku run bash --app $APP
 
-;; ;; run locally:
-;; ;; lein uberjar; and \
-;; ;; set --export COMMIT= $botVerSHA; and \
-;; ;; java $JVM_OPTS -cp target/corona_cases-standalone.jar:$cljjar:$cljsjar \
-;;     ;; clojure.main -m corona.web
+;; run locally:
+;; lein uberjar; and \
+;; set --export COMMIT= $botVerSHA; and \
+;; java $JVM_OPTS -cp target/corona_cases-standalone.jar:$cljjar:$cljsjar \
+    ;; clojure.main -m corona.web
 
-;; ;; resize screnshot from CLI
-;; ;; set screenshot path/to/screenshot.jpg
-;; ;; convert -resize 40% $screenshot resources/pics/screenshot_40-percents.jpg
+;; resize screnshot from CLI
+;; set screenshot path/to/screenshot.jpg
+;; convert -resize 40% $screenshot resources/pics/screenshot_40-percents.jpg

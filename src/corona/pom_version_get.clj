@@ -13,13 +13,11 @@ See https://github.com/borkdude/babashka/blob/master/examples/pom_version_get.cl
 (defn tag-content-str [tag]
   (->> tag :content (filter string?) (clojure.string/join "")))
 
-(defn parse-xml-str [xml]
-  (->>
-   xml
-   (clojure.data.xml/parse-str)
-   (xml-seq)
-   (filter #(tag-name? % "version"))
-   first
-   tag-content-str))
+(def pom-version (->> (slurp "pom.xml")
+                      (clojure.data.xml/parse-str)
+                      (xml-seq)
+                      (filter #(tag-name? % "version"))
+                      (first)
+                      (tag-content-str)))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.pom-version-get)

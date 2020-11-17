@@ -37,7 +37,7 @@
    :headers {"Content-Type" "text/plain"}
    :body (cstr/join "\n" ["home page"])})
 
-(def ^:const pom-version "See `com/pom-version`" nil)
+(def ^:const pom-version "See `pom/pom-version`" nil)
 (def ^:const ws-path (format "ws/%s" pom-version))
 
 (defn web-service [{:keys [type] :as prm}]
@@ -82,9 +82,6 @@
      [
       ""
       "Send out these commands from shell:"
-      ""
-      (when com/webapp-server
-        (format "curl \"%s/snake?input=HelloWorld\"" com/webapp-server))
       ""
       (when com/webapp-server
         (format "curl --request POST \"%s/%s/$TELEGRAM_TOKEN\""
@@ -159,7 +156,7 @@
    (format "/%s" com/telegram-token)
    args
    (let [body (get-in args [:body])]
-     (debugf "args %s" args)
+     (debugf "webhook request body:\n%s" args)
      (tgram-handlers body)
      (ring.util.http-response/ok)))
 
