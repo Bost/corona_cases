@@ -179,7 +179,6 @@
            (web-service {:type :codes}))
   (cjc/ANY "*" []
            #_(ring.util.http-response/not-found)
-           (debugf "Not found")
            (compojure.route/not-found
             "Not found"
             #_(slurp (jio/resource "404.html")))))
@@ -189,15 +188,10 @@
 
 (defn webapp-start [env-type port]
   (let [msg-id "webapp"
-        starting "starting"
-        version (if com/env-devel? com/undef com/botver)
-        msg (format "[%s] %s version %s in environment %s on port %s ..."
-                    msg-id
-                    starting
-                    version
-                    env-type
-                    port)]
-    (info msg)
+        msg (format "[%s] starting" msg-id)
+        version (if com/env-devel? com/undef com/botver)]
+    (infof "%s version %s in environment %s on port %s ..."
+           msg version env-type port)
     (let [web-server
           (ring.adapter.jetty/run-jetty
            (-> (compojure.handler/site #'app-routes)
@@ -207,28 +201,23 @@
            {:port port :join? false})]
       (debugf "[%s] web-server %s" msg-id web-server)
       (swap! server (fn [_] web-server))
-      (infof "[%s] %s ... done" msg-id starting)
+      (infof "%s ... done" msg)
       web-server)))
 
 (defn -main [& [env-type port]]
-  #_(show-env)
-  #_(debugf "\n  %s" (clojure.string/join "\n  " (show-env)))
   (let [msg-id "-main"
         env-type (or env-type com/env-type)
         port (or port com/webapp-port)
-        starting (format "[%s] starting" msg-id)
-        msg (format "%s version %s in environment %s on port %s ..."
-                    starting
-                    (if com/env-devel? com/undef com/botver)
-                    env-type
-                    port)]
-    #_(info msg)
-    (infof "%s ... " starting)
+        msg (format "[%s] starting" msg-id)]
+    #_(infof "%s version %s in environment %s on port %s ..."
+            msg (if com/env-devel? com/undef com/botver) env-type port)
+    (debugf "%s ..." msg)
     (infof "\n  %s" (clojure.string/join "\n  " (com/show-env)))
     (if (= (str (ctc/default-time-zone))
            (str (ZoneId/systemDefault))
            (.getID (TimeZone/getDefault)))
-      (debugf "TimeZone: %s; current time: %s (%s in %s)"
+      (debugf "[%s] TimeZone: %s; current time: %s (%s in %s)"
+              msg-id
               (str (ctc/default-time-zone))
               (cte/tnow)
               (cte/tnow ccc/zone-id)
@@ -249,18 +238,23 @@
     (setup-webhook)
 
     (tgram/start env-type)
-    (infof "%s ... done" starting)))
+    (debugf "%s ... done" msg)))
 
-(defn webapp-stop []
-  (info "[webapp] Stopping ...")
-  (.stop ^org.eclipse.jetty.server.Server @server)
-  (let [objs ['corona.web/server]]
-    (run! (fn [obj-q]
-            (let [obj (eval obj-q)]
-              (swap! obj (fn [_] nil))
-              (debugf "%s new value: %s"
-                      obj-q (if-let [v (deref obj)] v "nil"))))
-          objs)))
+(defn webapp-stop
+  ([] (webapp-stop "webapp"))
+  ([msg-id]
+   (let [msg (format "[%s] stopping" msg-id)]
+     (debugf "%s ..." msg)
+     (.stop ^org.eclipse.jetty.server.Server @server)
+     (let [objs ['corona.web/server]]
+       (run! (fn [obj-q]
+               (let [obj (eval obj-q)]
+                 (swap! obj (fn [_] nil))
+                 (debugf "[%s] %s new value: %s"
+                         msg-id
+                         obj-q (if-let [v (deref obj)] v "nil"))))
+             objs))
+     (debugf "%s ... done" msg))))
 
 (defn webapp-restart []
   (when @server

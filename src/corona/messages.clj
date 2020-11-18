@@ -502,8 +502,8 @@
                                 (fn [args] (update args (dec (count args))
                                                   (fn [_]
                                                     (get rank (last args))))))]])]
-                       ;; (debugf "[%s] (count worldwide-block) %s"
-                       ;;         msg-id (count worldwide-block))
+                       #_(debugf "[%s] (count worldwide-block) %s"
+                               msg-id (count worldwide-block))
                        worldwide-block))])))))))]]
     ["%s\n" [(footer parse_mode)]]]))
 

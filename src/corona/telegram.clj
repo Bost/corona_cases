@@ -83,8 +83,6 @@
                                    (let [[fn-result {:keys [data message]}] args]
                                      (infof "[%s] :post data %s chat %s"
                                             msg-id data (:chat message))
-                                     #_(debugf "fn-result %s; size %s"
-                                               fn-result (count (str fn-result)))
                                      fn-result))})
            (moh/callback-fn)))
     funs)))
