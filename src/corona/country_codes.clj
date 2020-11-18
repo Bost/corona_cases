@@ -453,8 +453,17 @@
   [ccode]
   (get country-code-2-to-3-hm ccode))
 
+(def excluded-country-codes
+  "
+  No data provided for this countries in the API service (the json)
+  "
+  [im mp ck gf sx tk tf kp nu nf ax cx mf sj tm gu vu pf bm vg pn pr qq um gg bq
+  mo ky nr aw fm cc ws to sh wf tv bl ms gp bv as fk gs mq fo aq mh vi gi nc yt
+  tc re gl ki hk io cw je hm pm ai pw])
+
 (def all-country-codes
-  #_[sk zz]
+  "TODO all-country-codes should be a set"
+  #_[sk cz gg zz]
   #_[gb sk de at cz us fr pl it es se ua hu zz]
   (keys country-code-2-to-3-hm))
 

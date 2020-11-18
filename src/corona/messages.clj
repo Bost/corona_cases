@@ -348,6 +348,7 @@
                         (map (fn [s] (com/encode-cmd (cstr/lower-case s)))
                              [ccode
                               (ccc/country-code-3-letter ccode)]))]]])]]
+    ;; TODO pass (count (data/dates)) as a param
     ["%s\n" [(str lang/report " " (count (data/dates)))]]
     ["%s\n" ; data
      [(let [
@@ -481,8 +482,10 @@
                      #_(debug "[%s] worldwide?" msg-id (worldwide? ccode))
                      (let [rank (first
                                  (map :rank
-                                      (filter (fn [{:keys [ccode]}] (= ccode ccode))
+                                      (filter (fn [{:keys [cc]}] (= cc ccode))
+                                              ;; TODO pass (data/all-rankings) as a param
                                               (data/all-rankings))))
+                           ;; TODO pass cnt-countries as a param
                            cnt-countries (count ccc/all-country-codes)
                            worldwide-block
                            (if (worldwide? ccode)

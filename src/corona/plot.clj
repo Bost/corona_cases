@@ -209,18 +209,7 @@
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
   [ccode & [stats report]]
-  ;; TODO have a look at the web service; there's no json-data
-  ;; excluded countries
-  (when-not (in? [ccc/im ccc/mp ccc/ck ccc/gf ccc/sx ccc/tk ccc/tf ccc/kp
-                  ccc/nu ccc/nf ccc/ax ccc/cx ccc/mf ccc/sj ccc/tm ccc/gu
-                  ccc/vu ccc/pf ccc/bm ccc/vg ccc/pn ccc/pr ccc/qq ccc/um
-                  ccc/gg ccc/bq ccc/mo ccc/ky ccc/nr ccc/aw ccc/fm ccc/cc
-                  ccc/ws ccc/to ccc/sh ccc/wf ccc/tv ccc/bl ccc/ms ccc/gp
-
-                  ccc/bv ccc/as ccc/fk ccc/gs ccc/mq ccc/fo ccc/aq ccc/mh
-                  ccc/vi ccc/gi ccc/nc ccc/yt ccc/tc ccc/re ccc/gl ccc/ki
-                  ccc/hk ccc/io ccc/cw ccc/je ccc/hm ccc/pm ccc/ai ccc/pw]
-                 ccode)
+  (when-not (in? ccc/excluded-country-codes ccode)
     (let [base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
                                (in? #_[:c :a :r :d] [:c :p :e] case-kw))

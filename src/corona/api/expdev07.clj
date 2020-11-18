@@ -315,7 +315,10 @@
                 ;; inc - ranking starts from 1, not from 0
                 (fn [_] (inc idx))))
    (sort-by rank-kw >
-            (stats-countries))))
+            ;; TODO sets and set operations should be used clojure.set/difference
+            (remove (fn [{:keys [cc]}]
+                      (= cc ccc/zz))
+                    (stats-countries)))))
 
 (defn calc-all-rankings
   "TODO verify ranking for one and zero countries"
@@ -329,7 +332,9 @@
                                        ranking))
                              (utc/transpose (map rank-for-case
                                                  com/ranking-cases))))))
-       ccc/all-country-codes))
+       ;; TODO sets and set operations should be used clojure.set/difference
+       (remove (fn [ccode] (= ccode ccc/zz))
+               ccc/all-country-codes)))
 
 (defn all-rankings []
   (from-cache calc-all-rankings [:rankings]))
