@@ -2,7 +2,7 @@
 
 (ns corona.common
   (:require
-   [clj-http.client :as client]
+   [clj-http.client]
    [clj-time.coerce :as ctc]
    [clj-time.core :as ctime]
    [clj-time.format :as ctf]
@@ -185,8 +185,15 @@
 
 (defn get-json [url]
   (infof "Requesting json-data from %s ..." url)
-  (let [result (json/read-json ;; TODO read-json is deprecated
-                (:body (client/get url {:accept :json})))]
+  (let [result (-> url
+                   (clj-http.client/get {:accept :json})
+                   :body
+                   (json/read-str :key-fn clojure.core/keyword))]
+    ;; TODO sanitize against http status 503 - service not available
+    ;; Requesting json-data from http://covid-tracker-us.herokuapp.com/all ...
+    ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
+    ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
+    ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
     (infof "Requesting json-data from %s ... done. %s chars received" url
            (count (str result)))
     result))
