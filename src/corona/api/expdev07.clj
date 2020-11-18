@@ -135,7 +135,7 @@
 (defn dates []
   (from-cache (fn [] (map date (raw-dates))) [:dates]))
 
-(defn calc-data-with-pop-fn []
+(defn calc-data-with-pop []
   (let [json (json-data)]
     (conj
      (->> (keys json)
@@ -178,7 +178,7 @@
 (defn data-with-pop
   "Data with population numbers."
   []
-  (from-cache calc-data-with-pop-fn [:data-with-pop]))
+  (from-cache calc-data-with-pop [:data-with-pop]))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -300,13 +300,13 @@
 
                  (= ccode (:country_code loc))))})
 
-(defn calc-stats-countries-fn []
+(defn calc-stats-countries []
   (map (fn [ccode] (conj {:cc ccode}
                       (last-report (create-pred-hm ccode))))
        ccc/all-country-codes))
 
 (defn stats-countries []
-  (from-cache calc-stats-countries-fn [:stats]))
+  (from-cache calc-stats-countries [:stats]))
 
 (defn rank-for-case [rank-kw]
   (map-indexed
@@ -317,7 +317,7 @@
    (sort-by rank-kw >
             (stats-countries))))
 
-(defn calc-all-rankings-fn
+(defn calc-all-rankings
   "TODO verify ranking for one and zero countries"
   []
   (map (fn [ccode]
@@ -332,6 +332,6 @@
        ccc/all-country-codes))
 
 (defn all-rankings []
-  (from-cache calc-all-rankings-fn [:rankings]))
+  (from-cache calc-all-rankings [:rankings]))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.expdev07)

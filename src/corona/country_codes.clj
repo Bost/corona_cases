@@ -16,10 +16,10 @@
 
 (def log-level-map ^:const {:debug :dbg :info :inf :warn :wrn :error :err})
 
-(defn log-output-fn
+(defn log-output
   "Default (fn [data]) -> string output fn.
-    Use`(partial log-output-fn <opts-map>)` to modify default opts."
-  ([     data] (log-output-fn nil data))
+    Use`(partial log-output <opts-map>)` to modify default opts."
+  ([     data] (log-output nil data))
   ([opts data] ; For partials
    (let [{:keys [no-stacktrace? #_stacktrace-fonts]} opts
          {:keys [level ?err #_vargs msg_ ?ns-str ?file #_hostname_
@@ -52,7 +52,7 @@
 
 ;; (set-config! default-config)
 (timbre/merge-config!
- {:output-fn log-output-fn #_default-output-fn
+ {:output-fn log-output #_default-output-fn
   :timestamp-opts
   (conj {:timezone (java.util.TimeZone/getTimeZone zone-id) #_:utc}
         (when com/env-devel? {:pattern "HH:mm:ss.SSSX"}))})

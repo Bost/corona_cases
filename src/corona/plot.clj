@@ -205,7 +205,7 @@
       (ImageIO/write image fmt-name out)
       (.toByteArray out))))
 
-(defn calc-plot-country-fn
+(defn calc-plot-country
   "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
   cases."
   [ccode & [stats report]]
@@ -270,7 +270,7 @@
 (defn plot-country
   "The optional params `stats`, `report` are used only for the first calculation"
   [ccode & [stats report]]
-  (data/from-cache (fn [] (calc-plot-country-fn ccode stats report))
+  (data/from-cache (fn [] (calc-plot-country ccode stats report))
                    [:plot (keyword ccode)]))
 
 (defn group-below-threshold
@@ -340,7 +340,7 @@
     #_(sort-by-country-name mapped-hm)
     (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
 
-(defn calc-plot-sum-by-case-fn
+(defn calc-plot-sum-by-case
   "Case-specific plot for the sum of all countries."
   [case-kw stats report]
   (let [
@@ -387,7 +387,7 @@
 (defn plot-sum-by-case
   "The optional params `stats`, `report` are used only for the first calculation"
   [case-kw & [stats report]]
-  (data/from-cache (fn [] (calc-plot-sum-by-case-fn case-kw stats report))
+  (data/from-cache (fn [] (calc-plot-sum-by-case case-kw stats report))
                    [:plot :sum case-kw]))
 
 (defn line-stroke [color]
@@ -399,7 +399,7 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn calc-plot-absolute-by-case-fn
+(defn calc-plot-absolute-by-case
   [case-kw stats report]
   (let [
         threshold (com/min-threshold case-kw)
@@ -452,7 +452,7 @@
 (defn plot-absolute-by-case
   "The optional params `stats`, `report` are used only for the first calculation"
   [case-kw & [stats report]]
-  (data/from-cache (fn [] (calc-plot-absolute-by-case-fn case-kw stats report))
+  (data/from-cache (fn [] (calc-plot-absolute-by-case case-kw stats report))
                    [:plot :abs case-kw]))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.plot)
