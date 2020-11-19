@@ -53,7 +53,12 @@
 (defn listing
   ([prm] (listing "listing" prm))
   ([msg-id {:keys [msg-listing-fun chat-id sort-by-case] :as prm}]
-   (let [coll (sort-by sort-by-case < (data/stats-countries))
+   (let [
+         ;; TODO extract cnt-reports stats-countries
+         cnt-reports (count (data/dates))
+         stats-countries (data/stats-countries)
+
+         coll (sort-by sort-by-case < stats-countries)
          ;; Split the long list of all countries into smaller subparts
          sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
          cnt-msgs (count sub-msgs)
@@ -62,7 +67,7 @@
                                  (msg-listing-fun
                                   msg-id
                                   (assoc prm
-                                         :cnt-reports (count (data/dates))
+                                         :cnt-reports cnt-reports
                                          :data sub-msg
                                          :msg-idx (inc idx)
                                          :cnt-msgs cnt-msgs)))
@@ -72,11 +77,8 @@
              (morse/send-text com/telegram-token chat-id options content))
            contents)))))
 
-(defn list-countries [prm]
-  (listing "list-countries" (assoc prm :msg-listing-fun msg/list-countries)))
-
-(defn list-per-100k [prm]
-  (listing "list-per-100k" (assoc prm :msg-listing-fun msg/list-per-100k)))
+(defn list-countries [prm] (listing "list-countries" prm))
+(defn list-per-100k [prm] (listing "list-per-100k" prm))
 
 (defn explain
   ([prm] (explain "explain" prm))
@@ -166,13 +168,13 @@
        (map (fn [case-kw]
               {:name (l/list-sorted-by case-kw)
                :fun (fn [chat-id]
-                      (let [cmd-list-fun (if (in? com/listing-cases-per-100k case-kw)
-                                           list-per-100k
-                                           list-countries)]
-                        (cmd-list-fun (assoc msg/options
-                                             :parse_mode "HTML"
-                                             :chat-id chat-id
-                                             :sort-by-case case-kw))))
+                      (listing (assoc msg/options
+                                      :parse_mode "HTML"
+                                      :chat-id chat-id
+                                      :sort-by-case case-kw
+                                      :msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)
+                                                         msg/list-per-100k
+                                                         msg/list-countries))))
                :desc (l/list-sorted-by-desc case-kw)}))))
 
 (def cmds
