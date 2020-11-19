@@ -27,7 +27,7 @@
          prm
          ;; override default parse_mode
          (assoc prm-orig
-                :parse_mode "HTML"
+                :parse_mode com/html
                 :pred-hm (msg/create-pred-hm ccode))]
      (let [options (select-keys prm (keys msg/options))
            ;; the message content is fetched from the cache
@@ -169,7 +169,7 @@
               {:name (l/list-sorted-by case-kw)
                :fun (fn [chat-id]
                       (listing (assoc msg/options
-                                      :parse_mode "HTML"
+                                      :parse_mode com/html
                                       :chat-id chat-id
                                       :sort-by-case case-kw
                                       :msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)

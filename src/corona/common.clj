@@ -22,7 +22,7 @@
 ;; (set! *warn-on-reflection* true)
 
 (def ^:const project-name envdef/project-name)
-(def ^:const undef "<UNDEF>")
+(def ^:const ^String undef "<UNDEF>")
 
 (spec/def ::port number?)
 
@@ -205,11 +205,14 @@
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))
 
+(def ^:const ^String html "HTML")
+(def ^:const ^String markdown "Markdown")
+
 (defn encode-pseudo-cmd
   "For displaying e.g. /<command-name>"
   [lexical-token parse_mode]
-  {:pre (utc/in? ["HTML" "Markdown"] parse_mode)}
-  (let [fun (if (= parse_mode "HTML")
+  {:pre (utc/in? [html markdown] parse_mode)}
+  (let [fun (if (= parse_mode html)
               (comp #(cstr/replace % "<" "&lt;")
                     #(cstr/replace % ">" "&gt;"))
               identity)]

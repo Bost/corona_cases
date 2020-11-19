@@ -25,7 +25,7 @@
 (defn bot-name-formatted []
   (cstr/replace com/bot-name #"_" "\\\\_"))
 
-(def ^:const options {:parse_mode "Markdown" :disable_web_page_preview true})
+(def ^:const options {:parse_mode com/markdown :disable_web_page_preview true})
 
 (defn create-pred-hm [ccode] (data/create-pred-hm ccode))
 
@@ -103,7 +103,7 @@
      (plus-minus diff))))
 
 (defn link [name url parse_mode]
-  (if (= parse_mode "HTML")
+  (if (= parse_mode com/html)
     (format "<a href=\"%s\">%s</a>" url name)
     (format "[%s](%s)" name url)))
 
@@ -175,14 +175,14 @@
   (format
    (str
     (condp = parse_mode
-      "HTML" "<b>%s</b>"
-      ;; i.e. "Markdown"
+      com/html "<b>%s</b>"
+      ;; i.e. com/markdown
       "*%s*")
     " %s")
    (com/fmt-date (:t (data/last-report pred-hm)))
    (condp = parse_mode
-     "HTML" com/bot-name
-     ;; i.e. "Markdown"
+     com/html com/bot-name
+     ;; i.e. com/markdown
      (cstr/replace com/bot-name #"_" "\\\\_"))))
 
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
@@ -518,7 +518,7 @@
   "Doesn't need to specify the rest of parameters. The retval will be fetched from
   the cache."
   ([ccode]
-   (detailed-info "detailed-info" ccode "HTML" (create-pred-hm ccode)))
+   (detailed-info "detailed-info" ccode com/html (create-pred-hm ccode)))
   ([msg-id ccode parse_mode pred-hm]
    ;; (debugf "[%s] ccode %s; parse_mode %s; pred-hm %s"
    ;;         msg-id ccode parse_mode pred-hm)
