@@ -4,8 +4,8 @@
 
 (ns cli-env
   (:require
-   [clojure.java.io :as io]
-   [clojure.string :as str]
+   [clojure.java.io :as jio]
+   [clojure.string :as cstr]
    [corona.envdef :as env]
    )
   (:import
@@ -43,7 +43,7 @@
     "Uses clojure.java.shell"
     [& raw-args]
   (let [args (remove empty? raw-args)
-        cmd (str/join " " args)]
+        cmd (cstr/join " " args)]
     (println cmd)
     (let [r (apply shell/sh args)
             exit (:exit r)]
@@ -63,7 +63,7 @@
   (let [sh-process
         (fn [& raw-args]
           (let [cmd (remove empty? raw-args)]
-            #_(println (str/join " " cmd))
+            #_(println (cstr/join " " cmd))
             (let [pb (doto (ProcessBuilder. cmd)
                        (.redirectOutput ProcessBuilder$Redirect/INHERIT))
                   proc (.start pb)]
@@ -91,7 +91,7 @@
               (not input) (.redirectInput ProcessBuilder$Redirect/INHERIT))
          proc (.start pb)]
      (when input
-       (with-open [w (io/writer (.getOutputStream proc))]
+       (with-open [w (jio/writer (.getOutputStream proc))]
          (binding [*out* w]
            (print input)
            (flush))))
@@ -99,11 +99,11 @@
            (when to-string? ;; i.e when output not redirected
              #_(println "Not redirected; reading from proc to-string ...")
              (let [sw (java.io.StringWriter.)]
-               (with-open [w (io/reader
+               (with-open [w (jio/reader
                               (.getInputStream proc)
-                              #_(io/input-stream (File. (.toString temp)))
+                              #_(jio/input-stream (File. (.toString temp)))
                               )]
-                 (io/copy w sw))
+                 (jio/copy w sw))
                (str sw)))
            exit-code (.waitFor proc)]
        (when-not (zero? exit-code)
@@ -113,7 +113,7 @@
 
 (defn sh [& raw-args]
     (let [args (remove empty? raw-args)]
-      (println "#" (str/join " " args))
+      (println "#" (cstr/join " " args))
       (->> (shell-command args
                           (conj
                            #_{:to-string? false}
@@ -122,22 +122,14 @@
 
 (def env-name
   (or (get env-names env-type)
-      (let [file (->> (sh "basename" *file*) str/trim-newline (str "./"))]
+      (do
         (if (empty? env-type)
           (println "ERR: Undefined parameter" 'env-type)
           (println "ERR: Unknown value of parameter" 'env-type env-type))
-        ;; w/o the '--' every list element gets printed on a separate line
-        ;; as if invoked in a for-loop. WTF?
-        (let [env-names (keys env-names)]
-          (printf "Usage: %s {%s}\n\nExamples:\n"
-                  file (str/join " | " env-names))
-          (doseq [en env-names]
-            (printf "%s %s\n" file en)))
-        ;; TODO proper return
         (System/exit 1))))
 
 (def app (str env-name "-bot"))
 (def remote (str "heroku-" app))
 
 (printf "DBG: app: %s\nDBG: remote: %s\nDBG: rest-args: %s\n"
-        app remote (str/join " " rest-args))
+        app remote (cstr/join " " rest-args))
