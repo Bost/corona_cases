@@ -16,6 +16,7 @@
    [taoensso.timbre :as timbre :refer [debugf infof
                                        #_errorf]]
    [corona.pom-version-get :as pom]
+   [clojure.spec.alpha :as spec]
    ))
 
 ;; (set! *warn-on-reflection* true)
@@ -23,17 +24,20 @@
 (def ^:const project-name envdef/project-name)
 (def ^:const undef "<UNDEF>")
 
+(spec/def ::port number?)
+
 (def ^:const ^Long webapp-port (if-let [env-port (env/env :port)]
                                  (read-string env-port)
                                  ;; keep port-nr in sync with README.md
                                  5050))
 
+(when-not (spec/valid? ::port webapp-port)
+  (throw (Exception.
+          (spec/explain-str ::port webapp-port))))
+
 (def environment envdef/environment)
 
-(def use-webhook?
-  true
-  ;; TODO (env/env :use-webhook)
-  )
+(spec/def ::env-type (set (keys environment)))
 
 (def env-type
   "When deving check:
@@ -48,14 +52,11 @@
   "
   (env/env :corona-env-type))
 
-;; TODO use clojure.spec to validate env-type
-(let [env-types (set (keys environment))]
-  (if (utc/in? env-types env-type)
-    (debugf "%s %s is valid" 'env-type env-type)
-    (throw (Exception.
-            (format
-             "Invalid %s: %s. It must be an element of %s"
-             'env-type env-type env-types)))))
+(when-not (spec/valid? ::env-type env-type)
+  (throw (Exception.
+          (spec/explain-str ::env-type env-type))))
+
+(spec/def ::fun clojure.core/fn?)
 
 (def ^:const ^String bot-name        (get-in environment
                                              [env-type :bot-name]))
@@ -80,6 +81,10 @@
 (define-env-predicates)
 
 (def ^:const ^Boolean on-heroku? (or env-prod? env-hokuspokus?))
+
+(def use-webhook?
+  "TODO consider having environment variable (env/env :use-webhook)"
+  on-heroku?)
 
 (def ^:const ^String telegram-token (env/env :telegram-token))
 
@@ -134,7 +139,9 @@
     ;; if-let ... else
     undef))
 
-(defn show-env []
+(defn show-env
+  "TODO should the spec checking be done here?"
+  []
   (mapv (fn [env-var-q]
           (format "%s: %s"
                   env-var-q
@@ -151,8 +158,6 @@
          'corona.common/webapp-port
          'corona.common/bot-name
          'corona.common/botver]))
-
-#_(debugf "\n  %s" (clojure.string/join "\n  " (show-env)))
 
 ;; TODO (System/exit <val>) if some var is undefined
 
