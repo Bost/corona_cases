@@ -213,7 +213,8 @@
          ;; reducing two values into one... TODO identify here the transducer
          (fn [confirmed deaths] (- confirmed deaths))
          (map (comp
-               (fn [case-kw-stats] (into (drop-last reports case-kw-stats) (repeat reports 0)))
+               (fn [case-kw-stats] (into (drop-last reports case-kw-stats)
+                                        (repeat reports 0)))
                (fn [case-kw] (map case-kw all-stats)))
               [:c :d])))
 
@@ -235,6 +236,7 @@
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
   ([msg-id]
+   ;; TODO refresh cache entry by entry, not everything at once
    (swap! data/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
@@ -266,6 +268,19 @@
                          (plot-fn case-kw stats cnt-reports))
                        com/absolute-cases))
                [plot/plot-sum-by-case plot/plot-absolute-by-case]))))
+
+     ;; 'endpoint' functions:
+     ;; data/all-rankings also calculates stats-countries for listings
+
+     ;; plot/plot-country
+     ;; msg/detailed-info
+
+     ;; msg/list-countries
+     ;; msg/list-per-100k
+
+     ;; plot/plot-sum-by-case
+     ;; plot/plot-absolute-by-case
+
      (debugf "[%s] %s chars cached in %s ms"
              msg-id
              (count (str @data/cache)) (- (System/currentTimeMillis) tbeg)))))

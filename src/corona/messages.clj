@@ -33,6 +33,12 @@
 
 (def ^:const max-diff-order-of-magnitude 7)
 
+(defn pos-neg [n]
+  (cond
+    (pos? n) "📈"
+    (neg? n) "📉"
+    :else " "))
+
 (defn plus-minus
   "Display \"+0\" when n is zero"
   [n]
@@ -45,7 +51,8 @@
               :else "")
       (cond (pos? n) "+"
             :else "")
-      n))
+      n
+      #_(pos-neg n)))
    " " max-diff-order-of-magnitude))
 
 (def ^:const padding-s
@@ -90,6 +97,9 @@
                                (fn-args (second line))))
               lines)))
 
+;; The worldwide population has 3 commas:
+;; (count (re-seq #"," (format "%+,2d" 7697236610))) ; => 3
+
 (def blank
   #_" "
   #_"\u2004" ;; U+2004 	&#8196 	Three-Per-Em Space
@@ -107,14 +117,61 @@
   [{:keys [emoji s n diff rate]}]
   (format
    #_(str "<code>%s" blank "%s" blank "%s" blank "%s</code>")
-   (str "<code>%s" "</code>" vline "<code>" "%s" "</code>" vline "<code>" "%s" "</code>" vline "<code>" "%s</code>")
-   (com/right-pad (str (if emoji emoji (str blank blank)) blank s) blank padding-s)
+   (str "<code>%s" "</code>" vline
+        "<code>" "%s" "</code>" vline
+        "<code>" "%s" "</code>" vline
+        "<code>" "%s</code>")
+   (com/right-pad (str (if emoji emoji (str blank blank)) blank s)
+                  blank padding-s)
    (com/left-pad n blank padding-n)
    (com/left-pad (if rate (str rate percent) blank) blank 3)
    (if (nil? diff)
      (com/left-pad "" blank max-diff-order-of-magnitude)
      (plus-minus diff))
    ))
+
+#_(defn fmt-to-cols
+    "Info-message numbers of aligned to columns for better readability"
+    [{:keys [s n diff rate show-plus-minus]}]
+    (format
+     "<code>%s┃%s┃%s┃%s</code>"
+   ;; "<code>%s┃%s %s</code>"
+     (com/right-pad s " " padding-s)
+     (let [formatted-n (format (if show-plus-minus "%+,2d" "%,2d") n)
+           padded-n (com/left-pad
+                     (format "%s%s"
+                             (format "%s"
+                                     (reduce str (repeat
+                                                  (- 2 (count (re-seq #"," formatted-n)))
+                                                  ",")))
+                             formatted-n)
+                     " " padding-n)]
+       (str (.replaceAll padded-n "," " ")
+            (if (and true show-plus-minus)
+              (pos-neg n)
+              "")))
+     #_(com/left-pad (if rate (str rate "%") " ") " " 4)
+     (format "%s%s"
+             (com/left-pad (if (nil? diff)
+                             ""
+                             #_(format "%+d" diff)
+                             (let [formatted-n (format "%+,2d" diff)
+                                   padded-n (com/left-pad
+                                             (format "%s%s"
+                                                     (format "%s"
+                                                             (reduce str (repeat
+                                                                          (- 1 (count (re-seq #"," formatted-n)))
+                                                                          ",")))
+                                                     formatted-n)
+                                             " "
+                                             (- padding-n 2))]
+                               (.replaceAll padded-n "," " ")))
+                           " " max-diff-order-of-magnitude)
+             (if (nil? diff)
+               ""
+               (pos-neg n)))
+     ""
+     #_(com/left-pad (if rate (str rate "%") " ") " " 4)))
 
 (defn link [name url parse_mode]
   (if (= parse_mode com/html)
@@ -208,6 +265,9 @@
   ([prm] (list-countries "list-countries" prm))
   ([_ {:keys [cnt-reports data msg-idx cnt-msgs sort-by-case parse_mode]}]
    (let [
+         ;; TODO extract header-txt
+         header-txt (header parse_mode
+                            (create-pred-hm (ccr/get-country-code ccc/worldwide)))
          spacer " "
          sort-indicator "▴" ;; " " "▲"
          omag-active 7 ;; order of magnitude i.e. number of digits
@@ -220,8 +280,7 @@
      (format
       (format-linewise
        [
-        ["%s\n"   [(header parse_mode
-                           (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
+        ["%s\n"   [header-txt]]
         ["%s\n"   [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
         ["    %s "[(str lang/active    (if (= :a sort-by-case) sort-indicator " "))]]
         ["%s"     [spacer]]
@@ -262,7 +321,11 @@
   See also `footer`, `bot-father-edit-cmds`."
   ([prm] (partial list-per-100k "list-per-100k" prm))
   ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode]}]
-   (let [spacer " "
+   (let [
+         ;; TODO extract header-txt
+         header-txt (header parse_mode
+                            (create-pred-hm (ccr/get-country-code ccc/worldwide)))
+         spacer " "
          sort-indicator "▴" ;; " " "▲"
          ;; omag - order of magnitude i.e. number of digits
          omag-active-per-100k 4
@@ -273,8 +336,7 @@
          ]
      (format
       (format-linewise
-       [["%s\n" [(header parse_mode
-                         (create-pred-hm (ccr/get-country-code ccc/worldwide)))]]
+       [["%s\n" [header-txt]]
         ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
         ["%s "  [(str lang/active-per-1e5 (if (= :a100k sort-by-case) sort-indicator " "))]]
         ["%s"   [spacer]]
@@ -339,6 +401,174 @@
     ;; the collection
     coll)))
 
+(defn create-detailed-info-ext
+  [{:keys
+    [ccode pred-hm cnt-reports cnt-countries header-txt footer-txt
+     max-active-val max-active-date last-report confirmed population
+     population-rounded delta delta-confirmed country-name-aliased cc-c3-codes
+     ;; confirmed-prm
+     ]}]
+  #_(let [msg-id "ext"]
+      (debugf "[%s] max-active-date %s" msg-id max-active-date)
+      (debugf "[%s] last-report %s" msg-id last-report)
+      (debugf "[%s] confirmed %s" msg-id confirmed)
+      (debugf "[%s] population-rounded %s" msg-id population-rounded)
+      ;; (debugf "[%s] (count data-active) %s" msg-id (count data-active))
+      ;; (debugf "[%s] (type data-active) %s" msg-id (type data-active))
+      (debugf "[%s] delta %s" msg-id delta)
+      (debugf "[%s] max-active-val %s" msg-id max-active-val)
+      ;; (debugf "[%s] max-active-idx %s" msg-id max-active-idx)
+      (debugf "[%s] delta-confirmed %s" msg-id delta-confirmed)
+      (debugf "[%s] pred-hm %s" msg-id pred-hm))
+  (format-linewise
+   [["%s\n"  ; extended header
+     [(format-linewise
+       [["%s  " [header-txt]]
+        ["%s "  [country-name-aliased]]
+        ["%s"   [;; country commands
+                 (apply (fn [ccode c3code] (format "     %s    %s" ccode c3code))
+                        (map (fn [s] (com/encode-cmd (cstr/lower-case s)))
+                             cc-c3-codes))]]])]]
+    ["%s\n" [(str lang/report " " cnt-reports)]]
+    ["%s\n" ; data
+     [(format-linewise
+       (apply
+        conj
+        [["%s\n" [(format "<code>%s %s</code> = %s %s"
+                          (com/right-pad lang/people " " (- padding-s 2))
+                          (com/left-pad population " " (+ padding-n 2))
+                          population-rounded
+                          lang/millions-rounded)]]
+         ["%s\n" [(fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
+                                :diff delta-confirmed})]]]
+        (do
+          #_(debug "[%s] (pos? confirmed)" msg-id (pos? confirmed))
+          (when (pos? confirmed)
+            (let [{deaths          :d
+                   recove          :r
+                   active          :a
+                   active-per-100k :a100k
+                   recove-per-100k :r100k
+                   deaths-per-100k :d100k
+                   closed-per-100k :c100k
+                   a-rate          :a-rate
+                   r-rate          :r-rate
+                   d-rate          :d-rate
+                   c-rate          :c-rate ;; closed-rate
+                   }last-report
+                  active-last-8-reports (:a (data/last-8-reports pred-hm))
+                  [active-last-8th-report & active-last-7-reports] active-last-8-reports
+                  closed (+ deaths recove)
+                  {delta-deaths :d
+                   delta-recove :r
+                   delta-active :a
+                   delta-d100k  :d100k
+                   delta-r100k  :r100k
+                   delta-a100k  :a100k} delta
+                  delta-closed (+ delta-deaths delta-recove)
+                  active-last-7-avg (-> active-last-7-reports istats/mean round-nr)
+
+                  ;; ActC(t0)    = active(t0)    - active(t0-1d)
+                  ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
+                  ;; ActC(t0-2d) = active(t0-2d) - active(t0-3d)
+                  ;; ActC(t0-3d) = active(t0-2d) - active(t0-4d)
+                  ;; ActC(t0-4d) = active(t0-2d) - active(t0-5d)
+                  ;; ActC(t0-5d) = active(t0-2d) - active(t0-6d)
+                  ;; ActC(t0-6d) = active(t0-6d) - active(t0-7d)
+
+                  ;; ActCL7CAvg =
+                  ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
+                  ;; = (active(t0) - active(t0-7d)) / 7
+                  active-change-last-7-avg (-> (/ (- active active-last-8th-report) 7.0)
+                                               round-nr
+                                               ;; plus-minus
+                                               )
+                  ]
+              #_(debugf "[%s] delta-closed" msg-id delta-closed)
+              #_(debugf "[%s] delta-confirmed" msg-id delta-confirmed)
+              #_(debugf "[%s] (= delta-confirmed delta-closed)"
+                        msg-id (= delta-confirmed delta-closed))
+              [["%s\n" [(fmt-to-cols
+                         {:emoji "🤒" :s lang/active :n active
+                          :diff delta-active :rate a-rate})]]
+               ["%s\n" [(fmt-to-cols
+                         {:s lang/active-per-1e5 :n active-per-100k
+                          :diff delta-a100k})]]
+               ["%s\n" [
+
+                        (fmt-to-cols
+                         {:s lang/active-max
+                          :n max-active-val})
+
+                        #_(format "<code>%s %s</code> %s"
+                                (com/right-pad lang/active-max " " padding-s)
+                                (com/left-pad max-active-val " " padding-n)
+                                (format "(%s)"
+                                        (com/fmt-date max-active-date)))]]
+
+               ;; TODO add effective reproduction number (R)
+               #_["%s\n" [(fmt-to-cols
+                           {:s lang/active-last-7-med
+                            :n (->> active-last-7-reports (izoo/roll-median 7) (first)
+                                    (int))})]]
+               ["%s\n" [(fmt-to-cols
+                         {:s lang/active-last-7-avg
+                          :n active-last-7-avg})]]
+               ["%s\n" [(fmt-to-cols
+                         {:s lang/active-change-last-7-avg
+                          :n active-change-last-7-avg
+                          :show-plus-minus true})]]
+               ["%s\n" [(fmt-to-cols
+                         {:emoji "🎉" :s lang/recovered :n recove
+                          :diff delta-recove :rate r-rate})]]
+               ["%s\n" [(fmt-to-cols
+                         {:s lang/recove-per-1e5 :n recove-per-100k
+                          :diff delta-r100k})]]
+               ["%s\n" [(fmt-to-cols
+                         {:emoji "⚰️" :s lang/deaths :n deaths
+                          :diff delta-deaths :rate d-rate})]]
+               ["%s\n" [(fmt-to-cols
+                         {:s lang/deaths-per-1e5 :n deaths-per-100k
+                          :diff delta-d100k})]]
+               ["%s\n" [(fmt-to-cols
+                         {:emoji "🏁" :s lang/closed :n closed
+                          :diff delta-closed :rate c-rate})]]
+               ["%s\n\n" [(fmt-to-cols
+                           {:s lang/closed-per-1e5 :n closed-per-100k
+                            :diff delta-d100k
+                            ;; TODO create command lang/cmd-closed-per-1e5
+                            #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})]]
+               ["%s\n" [(format
+                         #_"%s\n%s"
+                         "<code>%s</code>\n%s"
+                         #_"<code>%s\n%s</code>" lang/active-last-7
+                         (utc/sjoin active-last-7-reports))]]
+
+               ;; no country ranking can be displayed for worldwide statistics
+               (if (worldwide? ccode)
+                 ["" [""]]
+                 ["\n%s"
+                  [(format-linewise
+                    [["%s" [lang/people         :p]]
+                     ["%s" [lang/active-per-1e5 :a100k]]
+                     ["%s" [lang/recove-per-1e5 :r100k]]
+                     ["%s" [lang/deaths-per-1e5 :d100k]]
+                     ["%s" [lang/closed-per-1e5 :c100k]]]
+                    :line-fmt (str "<code>%s</code>: %s / " cnt-countries "\n")
+                    :fn-fmts
+                    (fn [fmts] (format lang/randking-desc
+                                      cnt-countries (cstr/join "" fmts)))
+                    :fn-args
+                    (fn [args] (update args (dec (count args))
+                                      (fn [_]
+                                        (get
+                                         (first
+                                          (map :rank
+                                               (filter (fn [{:keys [cc]}] (= cc ccode))
+                                                       (data/all-rankings))))
+                                         (last args))))))]])])))))]]
+    ["%s\n" [footer-txt]]]))
+
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread
 ;; they obey a stack discipline:
@@ -355,179 +585,80 @@
   ;; (debugf "[%s] ccode %s" msg-id ccode)
   ;; (debugf "[%s] parse_mode %s" msg-id parse_mode)
   ;; (debugf "[%s] pred-hm %s" msg-id pred-hm)
-  (let [
-        ;; TODO extract cnt-reports
-        cnt-reports (count (data/dates))]
-    (format-linewise
-     [["%s\n"  ; extended header
-       [(format-linewise
-         [["%s  " [(header parse_mode pred-hm)]]
-          ["%s "  [(ccr/country-name-aliased ccode)]]
-          ["%s"   [;; country commands
-                   (apply (fn [ccode c3code] (format "     %s    %s" ccode c3code))
-                          (map (fn [s] (com/encode-cmd (cstr/lower-case s)))
-                               [ccode
-                                (ccc/country-code-3-letter ccode)]))]]])]]
-      ["%s\n" [(str lang/report " " cnt-reports)]]
-      ["%s\n" ; data
-       [(let [
-              data-active (:a (data/case-counts-report-by-report pred-hm))
-              ]
-          ;; (debugf "[%s] max-active-date %s" msg-id max-active-date)
-          ;; (debugf "[%s] last-report %s" msg-id last-report)
-          ;; (debugf "[%s] confirmed %s" msg-id confirmed)
-          ;; (debugf "[%s] population-rounded %s" msg-id population-rounded)
-          ;; (debugf "[%s] (count data-active) %s" msg-id (count data-active))
-          ;; (debugf "[%s] (type data-active) %s" msg-id (type data-active))
-          (let [
-                max-active-val (apply max data-active)
-                max-active-idx (last-index-of data-active max-active-val)
-                max-active-date (nth (data/dates) max-active-idx)
-                last-report (data/last-report pred-hm)
-                {confirmed :c population :p} last-report
-                population-rounded (utn/round-div-precision population 1e6 1)
-                delta (data/delta pred-hm)
-                {delta-confirmed :c} delta
-                ]
-            ;; (debugf "[%s] delta %s" msg-id delta)
-            ;; (debugf "[%s] max-active-val %s" msg-id max-active-val)
-            ;; (debugf "[%s] max-active-idx %s" msg-id max-active-idx)
-            ;; (debugf "[%s] delta-confirmed %s" msg-id delta-confirmed)
-            (format-linewise
-             (apply
-              conj
-              [["%s\n" [(format (str"<code>%s" "</code>" blank "<code>" "%s</code>" blank "=" blank "%s" blank "%s")
-                                (com/right-pad lang/people blank (- padding-s 2))
-                                (com/left-pad population blank (+ padding-n 2))
-                                population-rounded
-                                lang/millions-rounded)]]
-               ["%s\n" [(fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
-                                      :diff delta-confirmed})]]]
-              (do
-                #_(debug "[%s] (pos? confirmed)" msg-id (pos? confirmed))
-                (when (pos? confirmed)
-                  (let [{deaths          :d
-                         recove          :r
-                         active          :a
-                         active-per-100k :a100k
-                         recove-per-100k :r100k
-                         deaths-per-100k :d100k
-                         closed-per-100k :c100k
-                         a-rate          :a-rate
-                         r-rate          :r-rate
-                         d-rate          :d-rate
-                         c-rate          :c-rate ;; closed-rate
-                         } last-report
-                        {active-last-8-reports :a} (data/last-8-reports pred-hm)
-                        [active-last-8th-report & active-last-7-reports] active-last-8-reports
-                        closed (+ deaths recove)
-                        {
-                         delta-deaths :d
-                         delta-recove :r
-                         delta-active :a
-                         delta-d100k  :d100k
-                         delta-r100k  :r100k
-                         delta-a100k  :a100k
-                         } delta
-                        delta-closed (+ delta-deaths delta-recove)]
-                    #_(debugf "[%s] delta-closed" msg-id delta-closed)
-                    #_(debugf "[%s] delta-confirmed" msg-id delta-confirmed)
-                    #_(debugf "[%s] (= delta-confirmed delta-closed)"
-                              msg-id (= delta-confirmed delta-closed))
-                    [
-                     ["%s\n" [(fmt-to-cols
-                               {:emoji "🤒" :s lang/active :n active
-                                :diff delta-active :rate a-rate})]]
-                     ["%s\n" [(fmt-to-cols
-                               {:s lang/active-per-1e5 :n active-per-100k
-                                :diff delta-a100k})]]
-                     ["%s\n" [(format (str "<code>%s" "</code>" blank "<code>" "%s</code>" blank "%s")
-                                      (com/right-pad (str blank blank blank lang/active-max) blank padding-s)
-                                      (com/left-pad max-active-val blank (- padding-n 0))
-                                      (format "(%s)"
-                                              (com/fmt-date max-active-date)))]]
+  (let [data-active (:a (data/case-counts-report-by-report pred-hm))
+        max-active-val (apply max data-active)
+        max-active-idx (last-index-of data-active max-active-val)
+        last-report (data/last-report pred-hm)
+        delta (data/delta pred-hm)
+        population (:p last-report)
+        ]
+    #_(let [
+          ;; [active-last-8th-report & active-last-7-reports] active-last-8-reports
+          active-last-8-reports (:a (data/last-8-reports pred-hm))
+          active-last-8th-report (first active-last-8-reports)
+          active-last-7-reports (rest active-last-8-reports)
+          prm-pos-confirmed
+          {
+           ;; {deaths          :d
+           ;;  recove          :r
+           ;;  active          :a
+           ;;  active-per-100k :a100k
+           ;;  recove-per-100k :r100k
+           ;;  deaths-per-100k :d100k
+           ;;  closed-per-100k :c100k
+           ;;  a-rate          :a-rate
+           ;;  r-rate          :r-rate
+           ;;  d-rate          :d-rate
+           ;;  c-rate          :c-rate ;; closed-rate
+           ;;  } last-report
+           :active-last-8-reports active-last-8-reports
+           :active-last-8th-report active-last-8th-report
+           :active-last-7-reports active-last-7-reports
+           :closed (+ deaths recove)
+           ;; {
+           ;;  delta-deaths :d
+           ;;  delta-recove :r
+           ;;  delta-active :a
+           ;;  delta-d100k  :d100k
+           ;;  delta-r100k  :r100k
+           ;;  delta-a100k  :a100k
+           ;;  } delta
+           :delta-closed (+ delta-deaths delta-recove)
+           :active-last-7-avg (-> active-last-7-reports istats/mean round-nr)
 
-                     ;; TODO add effective reproduction number (R)
-                     #_["%s\n" [(fmt-to-cols
-                                 {:s lang/active-last-7-med
-                                  :n (->> active-last-7-reports (izoo/roll-median 7) (first)
-                                          (int))})]]
-                     ["%s\n" [(fmt-to-cols
-                               {:s lang/active-last-7-avg
-                                :n (-> active-last-7-reports istats/mean round-nr)})]]
-                     ["%s\n" [(fmt-to-cols
-                               {:s lang/active-change-last-7-avg
-                                ;; ActC(t0)    = active(t0)    - active(t0-1d)
-                                ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
-                                ;; ActC(t0-2d) = active(t0-2d) - active(t0-3d)
-                                ;; ActC(t0-3d) = active(t0-2d) - active(t0-4d)
-                                ;; ActC(t0-4d) = active(t0-2d) - active(t0-5d)
-                                ;; ActC(t0-5d) = active(t0-2d) - active(t0-6d)
-                                ;; ActC(t0-6d) = active(t0-6d) - active(t0-7d)
+           ;; ActC(t0)    = active(t0)    - active(t0-1d)
+           ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
+           ;; ActC(t0-2d) = active(t0-2d) - active(t0-3d)
+           ;; ActC(t0-3d) = active(t0-2d) - active(t0-4d)
+           ;; ActC(t0-4d) = active(t0-2d) - active(t0-5d)
+           ;; ActC(t0-5d) = active(t0-2d) - active(t0-6d)
+           ;; ActC(t0-6d) = active(t0-6d) - active(t0-7d)
 
-                                ;; ActCL7CAvg =
-                                ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
-                                ;; = (active(t0) - active(t0-7d)) / 7
-                                :n (-> (/ (- active active-last-8th-report) 7.0)
-                                       round-nr plus-minus)})]]
-                     ["%s\n" [(fmt-to-cols
-                               {:emoji "🎉" :s lang/recovered :n recove
-                                :diff delta-recove :rate r-rate})]]
-                     ["%s\n" [(fmt-to-cols
-                               {:s lang/recove-per-1e5 :n recove-per-100k
-                                :diff delta-r100k})]]
-                     ["%s\n" [(fmt-to-cols
-                               {:emoji "⚰️" :s lang/deaths :n deaths
-                                :diff delta-deaths :rate d-rate})]]
-                     ["%s\n" [(fmt-to-cols
-                               {:s lang/deaths-per-1e5 :n deaths-per-100k
-                                :diff delta-d100k})]]
-                     ["%s\n" [(fmt-to-cols
-                               {:emoji "🏁":s lang/closed :n closed
-                                :diff delta-closed :rate c-rate})]]
-                     ["%s\n\n" [(fmt-to-cols
-                                 {:s lang/closed-per-1e5 :n closed-per-100k
-                                  :diff delta-d100k
-                                  ;; TODO create command lang/cmd-closed-per-1e5
-                                  #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})]]
-                     ["%s\n" [(format
-                               #_"%s\n%s"
-                               "<code>%s</code>\n%s"
-                               #_"<code>%s\n%s</code>" lang/active-last-7
-                               (utc/sjoin active-last-7-reports))]]
-
-                     ;; no country ranking can be displayed for worldwide statistics
-                     (do
-                       #_(debug "[%s] worldwide?" msg-id (worldwide? ccode))
-                       (let [rank (first
-                                   (map :rank
-                                        (filter (fn [{:keys [cc]}] (= cc ccode))
-                                                ;; TODO pass (data/all-rankings) as a param
-                                                (data/all-rankings))))
-                             ;; TODO extract cnt-countries
-                             cnt-countries (count ccc/all-country-codes)
-                             worldwide-block
-                             (if (worldwide? ccode)
-                               ["" [""]]
-                               ["\n%s"
-                                [(format-linewise
-                                  [["%s" [lang/people         :p]]
-                                   ["%s" [lang/active-per-1e5 :a100k]]
-                                   ["%s" [lang/recove-per-1e5 :r100k]]
-                                   ["%s" [lang/deaths-per-1e5 :d100k]]
-                                   ["%s" [lang/closed-per-1e5 :c100k]]]
-                                  :line-fmt (str "<code>%s</code>: %s / " cnt-countries "\n")
-                                  :fn-fmts
-                                  (fn [fmts] (format lang/randking-desc
-                                                     cnt-countries (cstr/join "" fmts)))
-                                  :fn-args
-                                  (fn [args] (update args (dec (count args))
-                                                     (fn [_]
-                                                       (get rank (last args))))))]])]
-                         #_(debugf "[%s] (count worldwide-block) %s"
-                                   msg-id (count worldwide-block))
-                         worldwide-block))])))))))]]
-      ["%s\n" [(footer parse_mode)]]])))
+           ;; ActCL7CAvg =
+           ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
+           ;; = (active(t0) - active(t0-7d)) / 7
+           :active-change-last-7-avg (-> (/ (- active active-last-8th-report) 7.0)
+                                         round-nr plus-minus)
+           }
+          ])
+  (create-detailed-info-ext
+     {
+      :ccode ccode
+      :pred-hm pred-hm
+      :cnt-reports (count (data/dates))
+      :cnt-countries (count ccc/all-country-codes)
+      :header-txt (header parse_mode pred-hm)
+      :footer-txt (footer parse_mode)
+      :max-active-val max-active-val
+      :max-active-date (nth (data/dates) max-active-idx)
+      :last-report last-report
+      :confirmed (:c last-report)
+      :population population
+      :population-rounded (utn/round-div-precision population 1e6 1)
+      :delta delta
+      :delta-confirmed (:c delta)
+      :country-name-aliased (ccr/country-name-aliased ccode)
+      :cc-c3-codes [ccode (ccc/country-code-3-letter ccode)]})))
 
 (defn detailed-info
   "Doesn't need to specify the rest of parameters. The retval will be fetched from

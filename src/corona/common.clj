@@ -194,6 +194,7 @@
                    (clj-http.client/get {:accept :json})
                    :body
                    (json/read-str :key-fn clojure.core/keyword))]
+    ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
     ;; TODO sanitize against http status 503 - service not available
     ;; Requesting json-data from http://covid-tracker-us.herokuapp.com/all ...
     ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
