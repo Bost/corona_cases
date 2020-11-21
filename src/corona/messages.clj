@@ -94,7 +94,7 @@
   "Info-message numbers of aligned to columns for better readability"
   [{:keys [s n diff rate]}]
   (format
-   "<code>%s %s %s %s </code>"
+   "<code>%s %s %s %s</code>"
    (com/right-pad s " " padding-s)
    (com/left-pad n " " padding-n)
    (com/left-pad (if rate (str rate "%") " ") " " 4)
@@ -174,11 +174,12 @@
 (defn header [parse_mode pred-hm]
   (format
    (str
+    "🗓 "
     (condp = parse_mode
       com/html "<b>%s</b>"
       ;; i.e. com/markdown
       "*%s*")
-    " %s")
+    " 🦠 @%s")
    (com/fmt-date (:t (data/last-report pred-hm)))
    (condp = parse_mode
      com/html com/bot-name
@@ -386,7 +387,7 @@
                                 (com/left-pad population " " (+ padding-n 2))
                                 population-rounded
                                 lang/millions-rounded)]]
-               ["%s\n" [(fmt-to-cols {:s lang/confirmed :n confirmed
+               ["%s\n" [(fmt-to-cols {:s (str "🦠 " lang/confir) :n confirmed
                                       :diff delta-confirmed})]]]
               (do
                 #_(debug "[%s] (pos? confirmed)" msg-id (pos? confirmed))
@@ -421,7 +422,7 @@
                               msg-id (= delta-confirmed delta-closed))
                     [
                      ["%s\n" [(fmt-to-cols
-                               {:s lang/active :n active
+                               {:s (str "🤒 " lang/active) :n active
                                 :diff delta-active :rate a-rate})]]
                      ["%s\n" [(fmt-to-cols
                                {:s lang/active-per-1e5 :n active-per-100k
@@ -456,19 +457,19 @@
                                 :n (-> (/ (- active active-last-8th-report) 7.0)
                                        round-nr plus-minus)})]]
                      ["%s\n" [(fmt-to-cols
-                               {:s lang/recovered :n recove
+                               {:s (str "🎉 " lang/recove) :n recove
                                 :diff delta-recove :rate r-rate})]]
                      ["%s\n" [(fmt-to-cols
                                {:s lang/recove-per-1e5 :n recove-per-100k
                                 :diff delta-r100k})]]
                      ["%s\n" [(fmt-to-cols
-                               {:s lang/deaths :n deaths
+                               {:s (str "⚰️ " lang/deaths) :n deaths
                                 :diff delta-deaths :rate d-rate})]]
                      ["%s\n" [(fmt-to-cols
                                {:s lang/deaths-per-1e5 :n deaths-per-100k
                                 :diff delta-d100k})]]
                      ["%s\n" [(fmt-to-cols
-                               {:s lang/closed :n closed
+                               {:s (str "🏁 " lang/closed) :n closed
                                 :diff delta-closed :rate c-rate})]]
                      ["%s\n\n" [(fmt-to-cols
                                  {:s lang/closed-per-1e5 :n closed-per-100k
@@ -549,38 +550,38 @@
   (str
    ;; escape underscores for the markdown parsing
    (bot-name-formatted)
-   " " com/botver " "
+   "🦠 @" com/botver " "
    (str
-    (link "GitHub" "https://github.com/Bost/corona_cases" parse_mode) ", "
-    (link "GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" parse_mode)
+    (link "👩🏼‍💻 GitHub" "https://github.com/Bost/corona_cases" parse_mode) ", "
+    (link "👨🏻‍💻 GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" parse_mode)
     "\n")
    "\n"
-   (format "- %s %s = %s + %s\n"
+   (format "• %s %s = %s + %s\n"
            lang/closed lang/cases lang/recovered lang/deaths)
-   (format "- %s: <%s> / %s\n" lang/percentage-calc lang/cases lang/confirmed)
-   (format (str "- %s:\n"
+   (format "• %s: <%s> / %s\n" lang/percentage-calc lang/cases lang/confirmed)
+   (format (str "• %s:\n"
                 "  %s\n")
            lang/active-max
            (:doc (meta #'lang/active-max)))
-   (format (str "- %s:\n"
+   (format (str "• %s:\n"
                 "  %s\n")
            lang/active-last-7
            (:doc (meta #'lang/active-last-7)))
-   (format (str "- %s:\n"
+   (format (str "• %s:\n"
                 "  %s\n")
            lang/active-last-7-med
            (:doc (meta #'lang/active-last-7-med)))
-   (format (str "- %s:\n"
+   (format (str "• %s:\n"
                 "  %s\n")
            lang/active-last-7-avg
            (:doc (meta #'lang/active-last-7-avg)))
-   (format (str "- %s = (%s - %s) / 7\n"
+   (format (str "• %s = (%s - %s) / 7\n"
                 "  %s\n")
            lang/active-change-last-7-avg
            lang/active lang/active-last-8th
            (:doc (meta #'lang/active-change-last-7-avg)))
    ;; (abbreviated) content of the former reference message
-   (format (str "- %s, %s, %s, %s:\n"
+   (format (str "• %s, %s, %s, %s:\n"
                 "  %s\n")
            lang/active-per-1e5
            lang/recove-per-1e5
@@ -588,7 +589,7 @@
            lang/closed-per-1e5
            lang/cases-per-1e5)
    "\n"
-   (format "- Thanks goes to %s. Please send %s \n"
+   (format "🙏 Thanks goes to %s. Please ✍️ write %s\n"
            (com/encode-cmd lang/contributors)
            (com/encode-cmd lang/feedback))
    "\n"
