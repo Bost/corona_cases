@@ -49,7 +49,7 @@
    " " max-diff-order-of-magnitude))
 
 (def ^:const padding-s
-  "Stays constant" 9)
+  "Stays constant" (+ 3 9))
 (def ^:const padding-n
   "Count of digits to display. Increase it when the nr of cases. Increases by an
   order of magnitude" 8)
@@ -90,17 +90,31 @@
                                (fn-args (second line))))
               lines)))
 
+(def blank
+  #_" "
+  #_"\u2004" ;; U+2004 	&#8196 	Three-Per-Em Space
+  #_"\u2005" ;; U+2005 	&#8197 	Four-Per-Em Space
+  "\u2006" ;; U+2006 	&#8198 	Six-Per-Em Space
+  #_" " ;; U+2009 	&#8201 	Thin Space
+  )
+
+(def vline blank)
+
+(def percent "%") ;; "\uFF05" "\uFE6A"
+
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
-  [{:keys [s n diff rate]}]
+  [{:keys [emoji s n diff rate]}]
   (format
-   "<code>%s %s %s %s</code>"
-   (com/right-pad s " " padding-s)
-   (com/left-pad n " " padding-n)
-   (com/left-pad (if rate (str rate "%") " ") " " 4)
+   #_(str "<code>%s" blank "%s" blank "%s" blank "%s</code>")
+   (str "<code>%s" "</code>" vline "<code>" "%s" "</code>" vline "<code>" "%s" "</code>" vline "<code>" "%s</code>")
+   (com/right-pad (str (if emoji emoji (str blank blank)) blank s) blank padding-s)
+   (com/left-pad n blank padding-n)
+   (com/left-pad (if rate (str rate percent) blank) blank 3)
    (if (nil? diff)
-     (com/left-pad "" " " max-diff-order-of-magnitude)
-     (plus-minus diff))))
+     (com/left-pad "" blank max-diff-order-of-magnitude)
+     (plus-minus diff))
+   ))
 
 (defn link [name url parse_mode]
   (if (= parse_mode com/html)
@@ -382,12 +396,12 @@
             (format-linewise
              (apply
               conj
-              [["%s\n" [(format "<code>%s %s</code> = %s %s"
-                                (com/right-pad lang/people " " (- padding-s 2))
-                                (com/left-pad population " " (+ padding-n 2))
+              [["%s\n" [(format (str"<code>%s" "</code>" blank "<code>" "%s</code>" blank "=" blank "%s" blank "%s")
+                                (com/right-pad lang/people blank (- padding-s 2))
+                                (com/left-pad population blank (+ padding-n 2))
                                 population-rounded
                                 lang/millions-rounded)]]
-               ["%s\n" [(fmt-to-cols {:s (str "🦠 " lang/confir) :n confirmed
+               ["%s\n" [(fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
                                       :diff delta-confirmed})]]]
               (do
                 #_(debug "[%s] (pos? confirmed)" msg-id (pos? confirmed))
@@ -422,14 +436,14 @@
                               msg-id (= delta-confirmed delta-closed))
                     [
                      ["%s\n" [(fmt-to-cols
-                               {:s (str "🤒 " lang/active) :n active
+                               {:emoji "🤒" :s lang/active :n active
                                 :diff delta-active :rate a-rate})]]
                      ["%s\n" [(fmt-to-cols
                                {:s lang/active-per-1e5 :n active-per-100k
                                 :diff delta-a100k})]]
-                     ["%s\n" [(format "<code>%s %s</code> %s"
-                                      (com/right-pad lang/active-max " " padding-s)
-                                      (com/left-pad max-active-val " " padding-n)
+                     ["%s\n" [(format (str "<code>%s" "</code>" blank "<code>" "%s</code>" blank "%s")
+                                      (com/right-pad (str blank blank blank lang/active-max) blank padding-s)
+                                      (com/left-pad max-active-val blank (- padding-n 0))
                                       (format "(%s)"
                                               (com/fmt-date max-active-date)))]]
 
@@ -457,19 +471,19 @@
                                 :n (-> (/ (- active active-last-8th-report) 7.0)
                                        round-nr plus-minus)})]]
                      ["%s\n" [(fmt-to-cols
-                               {:s (str "🎉 " lang/recove) :n recove
+                               {:emoji "🎉" :s lang/recovered :n recove
                                 :diff delta-recove :rate r-rate})]]
                      ["%s\n" [(fmt-to-cols
                                {:s lang/recove-per-1e5 :n recove-per-100k
                                 :diff delta-r100k})]]
                      ["%s\n" [(fmt-to-cols
-                               {:s (str "⚰️ " lang/deaths) :n deaths
+                               {:emoji "⚰️" :s lang/deaths :n deaths
                                 :diff delta-deaths :rate d-rate})]]
                      ["%s\n" [(fmt-to-cols
                                {:s lang/deaths-per-1e5 :n deaths-per-100k
                                 :diff delta-d100k})]]
                      ["%s\n" [(fmt-to-cols
-                               {:s (str "🏁 " lang/closed) :n closed
+                               {:emoji "🏁":s lang/closed :n closed
                                 :diff delta-closed :rate c-rate})]]
                      ["%s\n\n" [(fmt-to-cols
                                  {:s lang/closed-per-1e5 :n closed-per-100k

@@ -274,7 +274,7 @@
 (def fmt-date
   "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
             \"4/26/20\"))"
-  (fmt-date-fun "dd MMM yyyy"))
+  (fmt-date-fun "dd MMM yy"))
 
 (def fmt-date-dbg
   "(fmt-date-dbg (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
