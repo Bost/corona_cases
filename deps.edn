@@ -37,6 +37,10 @@
     ;; AOT compilation
     ;; See https://github.com/seancorfield/depstar#aot-compilation
     #_"--compile"]}
+
+  :clj-kondo
+  {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2020.11.07"}}
+   :main-opts ["-m" "clj-kondo.main"]}
   }
 
  :deps

@@ -10,3 +10,5 @@
 /.nrepl-port
 /log/
 /.cpcache/
+/.clj-kondo/
+/.lsp/
