@@ -30,7 +30,6 @@
                 :parse_mode com/html
                 :pred-hm (msg/create-pred-hm ccode))]
      (let [options (select-keys prm (keys msg/options))
-           ;; the message content is fetched from the cache
            content (msg/detailed-info ccode)]
        (doall
         (morse/send-text com/telegram-token chat-id options content))
@@ -49,36 +48,6 @@
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
-
-(defn listing
-  ([prm] (listing "listing" prm))
-  ([msg-id {:keys [msg-listing-fun chat-id sort-by-case] :as prm}]
-   (let [
-         ;; TODO extract cnt-reports stats-countries
-         cnt-reports (count (data/dates))
-         stats-countries (data/stats-countries)
-
-         coll (sort-by sort-by-case < stats-countries)
-         ;; Split the long list of all countries into smaller subparts
-         sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
-         cnt-msgs (count sub-msgs)
-         options (select-keys prm (keys msg/options))
-         contents (map-indexed (fn [idx sub-msg]
-                                 (msg-listing-fun
-                                  msg-id
-                                  (assoc prm
-                                         :cnt-reports cnt-reports
-                                         :data sub-msg
-                                         :msg-idx (inc idx)
-                                         :cnt-msgs cnt-msgs)))
-                               sub-msgs)]
-     (doall
-      (map (fn [content]
-             (morse/send-text com/telegram-token chat-id options content))
-           contents)))))
-
-(defn list-countries [prm] (listing "list-countries" prm))
-(defn list-per-100k [prm] (listing "list-per-100k" prm))
 
 (defn explain
   ([prm] (explain "explain" prm))
@@ -161,21 +130,30 @@
       :desc "Talk to the bot-creator"}]))
 
 (defn cmds-listing
-  "Command map for list-sort-by-case. See also `footer`, `list-countries`."
+  "Command map for listings."
   []
-  (->> com/listing-cases-absolute
-       (into com/listing-cases-per-100k)
-       (map (fn [case-kw]
-              {:name (l/list-sorted-by case-kw)
-               :fun (fn [chat-id]
-                      (listing (assoc msg/options
-                                      :parse_mode com/html
-                                      :chat-id chat-id
-                                      :sort-by-case case-kw
-                                      :msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)
-                                                         msg/list-per-100k
-                                                         msg/list-countries))))
-               :desc (l/list-sorted-by-desc case-kw)}))))
+  (let [msg-id "cmds-listing"]
+    (->> com/listing-cases-absolute
+         (into com/listing-cases-per-100k)
+         (map (fn [case-kw]
+                {:name (l/list-sorted-by case-kw)
+                 :fun (fn [chat-id]
+                        (let [coll (sort-by case-kw < (data/stats-countries))
+                            ;; Split the long list of all countries into smaller sub-parts
+                              sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
+                              msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)
+                                                msg/list-per-100k
+                                                msg/list-countries)
+                              contents (map-indexed (fn [idx _]
+                                                      (msg-listing-fun case-kw (inc idx)))
+                                                    sub-msgs)]
+                          #_(println "contents" contents)
+                          (doall
+                           (map (fn [content]
+                                  (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
+                                  (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
+                                contents))))
+                 :desc (l/list-sorted-by-desc case-kw)})))))
 
 (def cmds
   "Create a vector of hash-maps for all available commands."

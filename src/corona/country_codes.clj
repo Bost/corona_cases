@@ -456,8 +456,10 @@
 (def excluded-country-codes
   "No data provided for this countries in the API service (the json)"
   [im mp ck gf sx tk tf kp nu nf ax cx mf sj tm gu vu pf bm vg pn pr qq um gg bq
-  mo ky nr aw fm cc ws to sh wf tv bl ms gp bv as fk gs mq fo aq mh vi gi nc yt
-  tc re gl ki hk io cw je hm pm ai pw])
+   mo ky nr aw fm cc ws to sh wf tv bl ms gp bv as fk gs mq fo aq mh vi gi nc yt
+   tc re gl ki hk io cw je hm pm ai pw
+   eh ;; Western Sahara Cases https://github.com/CSSEGISandData/COVID-19/issues/3436
+   ])
 
 (def all-country-codes
   "TODO all-country-codes should be a set"

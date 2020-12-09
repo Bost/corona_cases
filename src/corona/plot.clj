@@ -259,8 +259,11 @@
 (defn plot-country
   "The optional params `stats`, `report` are used only for the first calculation"
   [ccode & [stats report]]
-  (data/from-cache (fn [] (calc-plot-country ccode stats report))
-                   [:plot (keyword ccode)]))
+  (let [ks [:plot (keyword ccode)]]
+    (if (and stats report)
+      (data/cache! (fn [] (calc-plot-country ccode stats report))
+                   ks)
+      (get-in @data/cache ks))))
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
@@ -329,10 +332,9 @@
     #_(sort-by-country-name mapped-hm)
     (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
 
-(defn calc-plot-sum-by-case
+(defn calc-sum
   "Case-specific plot for the sum of all countries."
-  ([case-kw stats report] (calc-plot-sum-by-case "calc-plot-sum-by-case"
-                                                 case-kw stats report))
+  ([case-kw stats report] (calc-sum "calc-sum" case-kw stats report))
   ([msg-id case-kw stats report]
    (let [
          prm {
@@ -375,11 +377,14 @@
          (debugf "[%s] %s img-size %s" msg-id case-kw (count img-byte-array))
          img-byte-array)))))
 
-(defn plot-sum-by-case
+(defn plot-sum
   "The optional params `stats`, `report` are used only for the first calculation"
   [case-kw & [stats report]]
-  (data/from-cache (fn [] (calc-plot-sum-by-case case-kw stats report))
-                   [:plot :sum case-kw]))
+  (let [ks [:plot :sum case-kw]]
+    (if (and stats report)
+      (data/cache! (fn [] (calc-sum case-kw stats report))
+                   ks)
+      (get-in @data/cache ks))))
 
 (defn line-stroke [color]
   (conj line-cfg {:color color
@@ -390,9 +395,8 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn calc-plot-absolute-by-case
-  ([case-kw stats report] (calc-plot-absolute-by-case
-                           "plot-absolute-by-case" case-kw stats report))
+(defn calc-absolute
+  ([case-kw stats report] (calc-absolute "calc-absolute" case-kw stats report))
   ([msg-id case-kw stats report]
    (let [
          threshold (com/min-threshold case-kw)
@@ -443,10 +447,13 @@
          (debugf "[%s] %s img-size %s" msg-id  case-kw (count img-byte-array))
          img-byte-array)))))
 
-(defn plot-absolute-by-case
+(defn plot-absolute
   "The optional params `stats`, `report` are used only for the first calculation"
   [case-kw & [stats report]]
-  (data/from-cache (fn [] (calc-plot-absolute-by-case case-kw stats report))
-                   [:plot :abs case-kw]))
+  (let [ks [:plot :abs case-kw]]
+    (if (and stats report)
+      (data/cache! (fn [] (calc-absolute case-kw stats report))
+                   ks)
+      (get-in @data/cache ks))))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.plot)

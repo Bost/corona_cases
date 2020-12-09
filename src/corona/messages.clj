@@ -226,7 +226,7 @@
           case-kw :case} (edn/read-string data)]
      (let [options (reply-markup-btns {:chat-id chat-id :cc ccode})
            content (let [plot-fn (if (= type :sum)
-                                   plot/plot-sum-by-case plot/plot-absolute-by-case)]
+                                   plot/plot-sum plot/plot-absolute)]
                      ;; the plot is fetched from the cache, stats and report need not to be
                      ;; specified
                      (plot-fn case-kw))]
@@ -259,13 +259,12 @@
 
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 
-(defn list-countries
+(defn calc-list-countries
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  ([prm] (list-countries "list-countries" prm))
-  ([_ {:keys [cnt-reports data msg-idx cnt-msgs sort-by-case parse_mode]}]
-   (let [
-         ;; TODO extract header-txt
+  ([case-kw msg-idx prm] (calc-list-countries "calc-list-countries" case-kw msg-idx prm))
+  ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode]}]
+   (let [;; TODO extract header-txt
          header-txt (header parse_mode
                             (create-pred-hm (ccr/get-country-code ccc/worldwide)))
          spacer " "
@@ -274,55 +273,63 @@
          omag-recov  (inc omag-active)
          omag-deaths (dec omag-active)]
      #_(debugf "[%s] cnt-reports %s" msg-id cnt-reports)
-     #_(debugf "[%s] (count data) %s" msg-id (count data))
+     #_(debugf "[%s] cnt-msgs %s" msg-id cnt-msgs)
      #_(debugf "[%s] data %s" msg-id data)
-     #_(debugf "[%s] pred-hm %s" msg-id pred-hm)
-     (format
-      (format-linewise
-       [
-        ["%s\n"   [header-txt]]
-        ["%s\n"   [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-        ["    %s "[(str lang/active    (if (= :a sort-by-case) sort-indicator " "))]]
-        ["%s"     [spacer]]
-        ["%s "    [(str lang/recovered (if (= :r sort-by-case) sort-indicator " "))]]
-        ["%s"     [spacer]]
-        ["%s\n"   [(str lang/deaths    (if (= :d sort-by-case) sort-indicator " "))]]
-        ["%s"     [(str
-                    "%s"   ; listing table
-                    "%s"   ; sorted-by description; has its own new-line
-                    "\n\n"
-                    "%s"   ; footer
-                    )]]])
-      (cstr/join
-       "\n"
-       (map (fn [{:keys [a r d cc]}]
-              (let [ccode cc
-                    cname (ccr/country-name-aliased ccode)]
-                (format "<code>%s%s%s%s%s %s</code>  %s"
-                        (com/left-pad a " " omag-active)
-                        spacer
-                        (com/left-pad r " " omag-recov)
-                        spacer
-                        (com/left-pad d " " omag-deaths)
-                        (com/right-pad cname 17)
-                        (cstr/lower-case (com/encode-cmd ccode)))))
-            (->> data
-                 #_(take-last 11)
-                 #_(partition-all 2)
-                 #_(map (fn [part] (cstr/join "       " part))))))
-      ""
-      #_(if (= msg-idx cnt-msgs)
-          (str "\n\n" (lang/list-sorted-by-desc sort-by-case))
-          "")
-      (footer parse_mode)))))
+     (let [msg
+           (format
+            (format-linewise
+             [["%s\n"   [header-txt]]
+              ["%s\n"   [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
+              ["    %s " [(str lang/active    (if (= :a case-kw) sort-indicator " "))]]
+              ["%s"     [spacer]]
+              ["%s "    [(str lang/recovered (if (= :r case-kw) sort-indicator " "))]]
+              ["%s"     [spacer]]
+              ["%s\n"   [(str lang/deaths    (if (= :d case-kw) sort-indicator " "))]]
+              ["%s"     [(str
+                          "%s"   ; listing table
+                          "%s"   ; sorted-by description; has its own new-line
+                          "\n\n"
+                          "%s"   ; footer
+                          )]]])
+            (cstr/join
+             "\n"
+             (map (fn [{:keys [a r d cc]}]
+                    (let [ccode cc
+                          cname (ccr/country-name-aliased ccode)]
+                      (format "<code>%s%s%s%s%s %s</code>  %s"
+                              (com/left-pad a " " omag-active)
+                              spacer
+                              (com/left-pad r " " omag-recov)
+                              spacer
+                              (com/left-pad d " " omag-deaths)
+                              (com/right-pad cname 17)
+                              (cstr/lower-case (com/encode-cmd ccode)))))
+                  (->> data
+                       #_(take-last 11)
+                       #_(partition-all 2)
+                       #_(map (fn [part] (cstr/join "       " part))))))
+            ""
+            #_(if (= msg-idx cnt-msgs)
+                (str "\n\n" (lang/list-sorted-by-desc case-kw))
+                "")
+            (footer parse_mode))]
+       (debugf "[%s] case-kw %s msg-idx %s msg-size %s" msg-id case-kw msg-idx (count msg))
+       msg))))
 
-(defn list-per-100k
+(defn list-countries
+  [case-kw msg-idx & [prm]]
+  (let [ks [:list :countries (keyword (str msg-idx))  case-kw]]
+    (if (and prm)
+      (data/cache! (fn [] (calc-list-countries case-kw msg-idx prm))
+                   ks)
+      (get-in @data/cache ks))))
+
+(defn calc-list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  ([prm] (partial list-per-100k "list-per-100k" prm))
-  ([_ {:keys [data msg-idx cnt-msgs sort-by-case parse_mode]}]
-   (let [
-         ;; TODO extract header-txt
+  ([case-kw msg-idx prm] (calc-list-per-100k "calc-list-per-100k" case-kw msg-idx prm))
+  ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode]}]
+   (let [;; TODO extract header-txt
          header-txt (header parse_mode
                             (create-pred-hm (ccr/get-country-code ccc/worldwide)))
          spacer " "
@@ -330,46 +337,54 @@
          ;; omag - order of magnitude i.e. number of digits
          omag-active-per-100k 4
          omag-recove-per-100k omag-active-per-100k
-         omag-deaths-per-100k (dec omag-active-per-100k)
-         ;; TODO pass-in cnt-reports
-         cnt-reports (count (data/dates))
-         ]
-     (format
-      (format-linewise
-       [["%s\n" [header-txt]]
-        ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-        ["%s "  [(str lang/active-per-1e5 (if (= :a100k sort-by-case) sort-indicator " "))]]
-        ["%s"   [spacer]]
-        ["%s "  [(str lang/recove-per-1e5 (if (= :r100k sort-by-case) sort-indicator " "))]]
-        ["%s"   [spacer]]
-        ["%s"   [(str lang/deaths-per-1e5 (if (= :d100k sort-by-case) sort-indicator " "))]]
-        ["\n%s" [(str
-                  "%s"     ; listing table
-                  "%s"     ; sorted-by description; has its own new-line
-                  "\n\n%s" ; footer
-                  )]]])
-      (cstr/join
-       "\n"
-       (map (fn [{:keys [a100k r100k d100k cc]}]
-              (let [ccode cc
-                    cname (ccr/country-name-aliased ccode)]
-                (format "<code>   %s%s   %s%s    %s %s</code>  %s"
-                        (com/left-pad a100k " " omag-active-per-100k)
-                        spacer
-                        (com/left-pad r100k " " omag-recove-per-100k)
-                        spacer
-                        (com/left-pad d100k " " omag-deaths-per-100k)
-                        (com/right-pad cname 17)
-                        (cstr/lower-case (com/encode-cmd ccode)))))
-            (->> data
-                 #_(take-last 11)
-                 #_(partition-all 2)
-                 #_(map (fn [part] (cstr/join "       " part))))))
-      ""
-      #_(if (= msg-idx cnt-msgs)
-          (str "\n\n" (lang/list-sorted-by-desc sort-by-case))
-          "")
-      (footer parse_mode)))))
+         omag-deaths-per-100k (dec omag-active-per-100k)]
+     (let [msg
+           (format
+            (format-linewise
+             [["%s\n" [header-txt]]
+              ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
+              ["%s "  [(str lang/active-per-1e5 (if (= :a100k case-kw) sort-indicator " "))]]
+              ["%s"   [spacer]]
+              ["%s "  [(str lang/recove-per-1e5 (if (= :r100k case-kw) sort-indicator " "))]]
+              ["%s"   [spacer]]
+              ["%s"   [(str lang/deaths-per-1e5 (if (= :d100k case-kw) sort-indicator " "))]]
+              ["\n%s" [(str
+                        "%s"     ; listing table
+                        "%s"     ; sorted-by description; has its own new-line
+                        "\n\n%s" ; footer
+                        )]]])
+            (cstr/join
+             "\n"
+             (map (fn [{:keys [a100k r100k d100k cc]}]
+                    (let [ccode cc
+                          cname (ccr/country-name-aliased ccode)]
+                      (format "<code>   %s%s   %s%s    %s %s</code>  %s"
+                              (com/left-pad a100k " " omag-active-per-100k)
+                              spacer
+                              (com/left-pad r100k " " omag-recove-per-100k)
+                              spacer
+                              (com/left-pad d100k " " omag-deaths-per-100k)
+                              (com/right-pad cname 17)
+                              (cstr/lower-case (com/encode-cmd ccode)))))
+                  (->> data
+                       #_(take-last 11)
+                       #_(partition-all 2)
+                       #_(map (fn [part] (cstr/join "       " part))))))
+            ""
+            #_(if (= msg-idx cnt-msgs)
+                (str "\n\n" (lang/list-sorted-by-desc case-kw))
+                "")
+            (footer parse_mode))]
+       (debugf "[%s] case-kw %s msg-idx %s msg-size %s" msg-id case-kw msg-idx (count msg))
+       msg))))
+
+(defn list-per-100k
+  [case-kw msg-idx & [prm]]
+  (let [ks [:list :100k (keyword (str msg-idx)) case-kw]]
+    (if (and prm)
+      (data/cache! (fn [] (calc-list-per-100k case-kw msg-idx prm))
+                   ks)
+      (get-in @data/cache ks))))
 
 (defn diff-coll-vals
   "Differences between values. E.g.:
@@ -581,25 +596,24 @@
   TODO make an api service for the content shown in the message
   TODO Create API web service(s) for every field displayed in the messages
   "
-  [msg-id ccode parse_mode pred-hm]
+  ([ccode parse_mode pred-hm]
+   (create-detailed-info "create-detailed-info" ccode parse_mode pred-hm))
+  ([msg-id ccode parse_mode pred-hm]
   ;; (debugf "[%s] ccode %s" msg-id ccode)
   ;; (debugf "[%s] parse_mode %s" msg-id parse_mode)
   ;; (debugf "[%s] pred-hm %s" msg-id pred-hm)
-  (let [data-active (:a (data/case-counts-report-by-report pred-hm))
-        max-active-val (apply max data-active)
-        max-active-idx (last-index-of data-active max-active-val)
-        last-report (data/last-report pred-hm)
-        delta (data/delta pred-hm)
-        population (:p last-report)
-        ]
-    #_(let [
-          ;; [active-last-8th-report & active-last-7-reports] active-last-8-reports
-          active-last-8-reports (:a (data/last-8-reports pred-hm))
-          active-last-8th-report (first active-last-8-reports)
-          active-last-7-reports (rest active-last-8-reports)
-          prm-pos-confirmed
-          {
-           ;; {deaths          :d
+   (let [data-active (:a (data/case-counts-report-by-report pred-hm))
+         max-active-val (apply max data-active)
+         max-active-idx (last-index-of data-active max-active-val)
+         last-report (data/last-report pred-hm)
+         delta (data/delta pred-hm)
+         population (:p last-report)]
+     #_(let [;; [active-last-8th-report & active-last-7-reports] active-last-8-reports
+             active-last-8-reports (:a (data/last-8-reports pred-hm))
+             active-last-8th-report (first active-last-8-reports)
+             active-last-7-reports (rest active-last-8-reports)
+             prm-pos-confirmed
+             {;; {deaths          :d
            ;;  recove          :r
            ;;  active          :a
            ;;  active-per-100k :a100k
@@ -611,10 +625,10 @@
            ;;  d-rate          :d-rate
            ;;  c-rate          :c-rate ;; closed-rate
            ;;  } last-report
-           :active-last-8-reports active-last-8-reports
-           :active-last-8th-report active-last-8th-report
-           :active-last-7-reports active-last-7-reports
-           :closed (+ deaths recove)
+              :active-last-8-reports active-last-8-reports
+              :active-last-8th-report active-last-8th-report
+              :active-last-7-reports active-last-7-reports
+              :closed (+ deaths recove)
            ;; {
            ;;  delta-deaths :d
            ;;  delta-recove :r
@@ -623,8 +637,8 @@
            ;;  delta-r100k  :r100k
            ;;  delta-a100k  :a100k
            ;;  } delta
-           :delta-closed (+ delta-deaths delta-recove)
-           :active-last-7-avg (-> active-last-7-reports istats/mean round-nr)
+              :delta-closed (+ delta-deaths delta-recove)
+              :active-last-7-avg (-> active-last-7-reports istats/mean round-nr)
 
            ;; ActC(t0)    = active(t0)    - active(t0-1d)
            ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
@@ -637,42 +651,36 @@
            ;; ActCL7CAvg =
            ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
            ;; = (active(t0) - active(t0-7d)) / 7
-           :active-change-last-7-avg (-> (/ (- active active-last-8th-report) 7.0)
-                                         round-nr plus-minus)
-           }
-          ])
-  (create-detailed-info-ext
-     {
-      :ccode ccode
-      :pred-hm pred-hm
-      :cnt-reports (count (data/dates))
-      :cnt-countries (count ccc/all-country-codes)
-      :header-txt (header parse_mode pred-hm)
-      :footer-txt (footer parse_mode)
-      :max-active-val max-active-val
-      :max-active-date (nth (data/dates) max-active-idx)
-      :last-report last-report
-      :confirmed (:c last-report)
-      :population population
-      :population-rounded (utn/round-div-precision population 1e6 1)
-      :delta delta
-      :delta-confirmed (:c delta)
-      :country-name-aliased (ccr/country-name-aliased ccode)
-      :cc-c3-codes [ccode (ccc/country-code-3-letter ccode)]})))
+              :active-change-last-7-avg (-> (/ (- active active-last-8th-report) 7.0)
+                                            round-nr plus-minus)}])
+
+     (let [info (create-detailed-info-ext
+                 {:ccode ccode
+                  :pred-hm pred-hm
+                  :cnt-reports (count (data/dates))
+                  :cnt-countries (count ccc/all-country-codes)
+                  :header-txt (header parse_mode pred-hm)
+                  :footer-txt (footer parse_mode)
+                  :max-active-val max-active-val
+                  :max-active-date (nth (data/dates) max-active-idx)
+                  :last-report last-report
+                  :confirmed (:c last-report)
+                  :population population
+                  :population-rounded (utn/round-div-precision population 1e6 1)
+                  :delta delta
+                  :delta-confirmed (:c delta)
+                  :country-name-aliased (ccr/country-name-aliased ccode)
+                  :cc-c3-codes [ccode (ccc/country-code-3-letter ccode)]})]
+       (debugf "[%s] ccode %s info-size %s" msg-id ccode (count info))
+       info))))
 
 (defn detailed-info
-  "Doesn't need to specify the rest of parameters. The retval will be fetched from
-  the cache."
-  ([ccode]
-   (detailed-info "detailed-info" ccode com/html (create-pred-hm ccode)))
-  ([msg-id ccode parse_mode pred-hm]
-   ;; (debugf "[%s] ccode %s; parse_mode %s; pred-hm %s"
-   ;;         msg-id ccode parse_mode pred-hm)
-   (let [content (data/from-cache
-                  (fn [] (create-detailed-info msg-id ccode parse_mode pred-hm))
-                  [:msg (keyword ccode)])]
-     (debugf "[%s] ccode %s msg-size %s" msg-id ccode (count content))
-     content)))
+  [ccode & [parse_mode pred-hm]]
+  (let [ks [:msg (keyword ccode)]]
+    (if (and parse_mode pred-hm)
+      (data/cache! (fn [] (create-detailed-info ccode parse_mode pred-hm))
+                   ks)
+      (get-in @data/cache ks))))
 
 (defn feedback []
   (str "Just write a message to @RostislavSvoboda thanks."))

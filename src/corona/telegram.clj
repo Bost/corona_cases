@@ -20,6 +20,7 @@
    [corona.api.v1 :as v1]
    [corona.country-codes :as ccc]
    [net.cgrand.xforms :as x]
+   [utils.core :as u :refer [in?] :exclude [id]]
    ;; [com.stuartsierra.component :as component]
    ;; [clojure.inspector :refer :all]
    ))
@@ -236,12 +237,42 @@
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
   ([msg-id]
-   ;; TODO refresh cache entry by entry, not everything at once
    (swap! data/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
-     (doall
-      (data/all-rankings))
+     (run! (fn [case-kw]
+             (let [coll (sort-by case-kw < (data/stats-countries))
+                   ;; Split the long list of all countries into smaller sub-parts
+                   sub-msgs (partition-all (/ (count coll)
+                                              #_com/cnt-messages-in-listing
+                                              7) coll)
+                   options {:parse_mode com/html}
+                   prm (conj options {:cnt-msgs (count sub-msgs)
+                                      :cnt-reports (count (data/dates))})]
+               (doall
+                (map-indexed (fn [idx sub-msg]
+                               (msg/list-countries case-kw (inc idx)
+                                                   (conj prm {:data sub-msg})))
+                             sub-msgs))))
+           com/listing-cases-absolute)
+     (run! (fn [case-kw]
+             (let [coll (sort-by case-kw < (data/stats-countries))
+                   ;; Split the long list of all countries into smaller sub-parts
+                   sub-msgs (partition-all (/ (count coll)
+                                              #_com/cnt-messages-in-listing
+                                              7) coll)
+                   options {:parse_mode com/html}
+                   prm (conj options {:cnt-msgs (count sub-msgs)
+                                      :cnt-reports (count (data/dates))})]
+               (doall
+                (map-indexed (fn [idx sub-msg]
+                               (msg/list-per-100k case-kw (inc idx)
+                                                  (conj prm {:data sub-msg})))
+                             sub-msgs))))
+           com/listing-cases-per-100k)
+
+     #_(map (fn [msg-listing-fun])
+            [msg/list-countries msg/list-per-100k])
      (let [stats (->> (v1/pic-data)
                       (transduce (comp
                                   ;; group together provinces of the given country
@@ -258,7 +289,7 @@
        (do
          (doall
           (map (fn [ccode]
-                 (msg/detailed-info ccode)
+                 (msg/detailed-info ccode com/html (data/create-pred-hm ccode))
                  (plot/plot-country ccode stats cnt-reports))
                ccc/all-country-codes))
          (doall
@@ -267,7 +298,7 @@
                          #_(debugf "Calculating %s %s" plot-fn case-kw)
                          (plot-fn case-kw stats cnt-reports))
                        com/absolute-cases))
-               [plot/plot-sum-by-case plot/plot-absolute-by-case]))))
+               [plot/plot-sum plot/plot-absolute]))))
 
      ;; 'endpoint' functions:
      ;; data/all-rankings also calculates stats-countries for listings
@@ -278,8 +309,8 @@
      ;; msg/list-countries
      ;; msg/list-per-100k
 
-     ;; plot/plot-sum-by-case
-     ;; plot/plot-absolute-by-case
+     ;; plot/plot-sum
+     ;; plot/plot-absolute
 
      (debugf "[%s] %s chars cached in %s ms"
              msg-id
