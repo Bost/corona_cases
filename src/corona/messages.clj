@@ -313,15 +313,16 @@
                 (str "\n\n" (lang/list-sorted-by-desc case-kw))
                 "")
             (footer parse_mode))]
-       (debugf "[%s] case-kw %s msg-idx %s msg-size %s" msg-id case-kw msg-idx (count msg))
+       (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
+               msg-id case-kw msg-idx (count msg))
        msg))))
 
 (defn list-countries
-  [case-kw msg-idx & [prm]]
-  (let [ks [:list :countries (keyword (str msg-idx))  case-kw]]
-    (if (and prm)
-      (data/cache! (fn [] (calc-list-countries case-kw msg-idx prm))
-                   ks)
+  [case-kw & [msg-idx prm]]
+  (let [ks [:list :countries case-kw]]
+    (if prm
+      (data/cache! (fn [] (calc-list-countries case-kw  msg-idx prm))
+                   (conj ks (keyword (str msg-idx))))
       (get-in @data/cache ks))))
 
 (defn calc-list-per-100k
@@ -375,15 +376,16 @@
                 (str "\n\n" (lang/list-sorted-by-desc case-kw))
                 "")
             (footer parse_mode))]
-       (debugf "[%s] case-kw %s msg-idx %s msg-size %s" msg-id case-kw msg-idx (count msg))
+       (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
+               msg-id case-kw msg-idx (count msg))
        msg))))
 
 (defn list-per-100k
-  [case-kw msg-idx & [prm]]
-  (let [ks [:list :100k (keyword (str msg-idx)) case-kw]]
-    (if (and prm)
+  [case-kw & [msg-idx prm]]
+  (let [ks [:list :100k case-kw]]
+    (if prm
       (data/cache! (fn [] (calc-list-per-100k case-kw msg-idx prm))
-                   ks)
+                   (conj ks (keyword (str msg-idx))))
       (get-in @data/cache ks))))
 
 (defn diff-coll-vals

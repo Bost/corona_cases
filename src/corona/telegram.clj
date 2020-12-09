@@ -253,7 +253,7 @@
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
   ([msg-id]
-   (swap! data/cache (fn [_] {}))
+   #_(swap! data/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
      (run! (fn [prms] (apply calc-listings prms))
@@ -294,6 +294,9 @@
 
      ;; plot/plot-sum
      ;; plot/plot-absolute
+
+     (swap! data/cache (fn [_]
+                         (select-keys @data/cache [:plot :msg :list])))
 
      (debugf "[%s] %s chars cached in %s ms"
              msg-id

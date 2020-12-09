@@ -138,16 +138,10 @@
          (map (fn [case-kw]
                 {:name (l/list-sorted-by case-kw)
                  :fun (fn [chat-id]
-                        (let [coll (sort-by case-kw < (data/stats-countries))
-                            ;; Split the long list of all countries into smaller sub-parts
-                              sub-msgs (partition-all (/ (count coll) cnt-messages-in-listing) coll)
-                              msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)
+                        (let [msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)
                                                 msg/list-per-100k
                                                 msg/list-countries)
-                              contents (map-indexed (fn [idx _]
-                                                      (msg-listing-fun case-kw (inc idx)))
-                                                    sub-msgs)]
-                          #_(println "contents" contents)
+                              contents (vals (msg-listing-fun case-kw))]
                           (doall
                            (map (fn [content]
                                   (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
