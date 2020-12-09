@@ -234,45 +234,31 @@
            #_(+ 3 (* 2 7)) stats-country)
           stats-country)))
 
+(defn calc-listings [fun case-kws]
+  (run! (fn [case-kw]
+         (let [coll (sort-by case-kw < (data/stats-countries))
+               ;; Split the long list of all countries into smaller sub-parts
+               sub-msgs (partition-all (/ (count coll)
+                                          #_com/cnt-messages-in-listing
+                                          7) coll)
+               options {:parse_mode com/html}
+               prm (conj options {:cnt-msgs (count sub-msgs)
+                                  :cnt-reports (count (data/dates))})]
+           (doall
+            (map-indexed (fn [idx sub-msg]
+                           (fun case-kw (inc idx) (conj prm {:data sub-msg})))
+                         sub-msgs))))
+       case-kws))
+
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
   ([msg-id]
    (swap! data/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
-     (run! (fn [case-kw]
-             (let [coll (sort-by case-kw < (data/stats-countries))
-                   ;; Split the long list of all countries into smaller sub-parts
-                   sub-msgs (partition-all (/ (count coll)
-                                              #_com/cnt-messages-in-listing
-                                              7) coll)
-                   options {:parse_mode com/html}
-                   prm (conj options {:cnt-msgs (count sub-msgs)
-                                      :cnt-reports (count (data/dates))})]
-               (doall
-                (map-indexed (fn [idx sub-msg]
-                               (msg/list-countries case-kw (inc idx)
-                                                   (conj prm {:data sub-msg})))
-                             sub-msgs))))
-           com/listing-cases-absolute)
-     (run! (fn [case-kw]
-             (let [coll (sort-by case-kw < (data/stats-countries))
-                   ;; Split the long list of all countries into smaller sub-parts
-                   sub-msgs (partition-all (/ (count coll)
-                                              #_com/cnt-messages-in-listing
-                                              7) coll)
-                   options {:parse_mode com/html}
-                   prm (conj options {:cnt-msgs (count sub-msgs)
-                                      :cnt-reports (count (data/dates))})]
-               (doall
-                (map-indexed (fn [idx sub-msg]
-                               (msg/list-per-100k case-kw (inc idx)
-                                                  (conj prm {:data sub-msg})))
-                             sub-msgs))))
-           com/listing-cases-per-100k)
-
-     #_(map (fn [msg-listing-fun])
-            [msg/list-countries msg/list-per-100k])
+     (run! (fn [prms] (apply calc-listings prms))
+           [[msg/list-countries com/listing-cases-absolute]
+            [msg/list-per-100k com/listing-cases-per-100k]])
      (let [stats (->> (v1/pic-data)
                       (transduce (comp
                                   ;; group together provinces of the given country
@@ -286,19 +272,16 @@
        ;; TODO do not call calc-functions when the `form` evaluates to true
        (if (eval form)
          (warnf "Some stuff may not be calculated: %s" form))
-       (do
-         (doall
-          (map (fn [ccode]
-                 (msg/detailed-info ccode com/html (data/create-pred-hm ccode))
-                 (plot/plot-country ccode stats cnt-reports))
-               ccc/all-country-codes))
-         (doall
-          (map (fn [plot-fn]
-                 (run! (fn [case-kw]
-                         #_(debugf "Calculating %s %s" plot-fn case-kw)
-                         (plot-fn case-kw stats cnt-reports))
-                       com/absolute-cases))
-               [plot/plot-sum plot/plot-absolute]))))
+       (run! (fn [ccode]
+               (msg/detailed-info ccode com/html (data/create-pred-hm ccode))
+               (plot/plot-country ccode stats cnt-reports))
+             ccc/all-country-codes)
+       (run! (fn [plot-fn]
+               (run! (fn [case-kw]
+                       #_(debugf "Calculating %s %s" plot-fn case-kw)
+                       (plot-fn case-kw stats cnt-reports))
+                     com/absolute-cases))
+             [plot/plot-sum plot/plot-absolute]))
 
      ;; 'endpoint' functions:
      ;; data/all-rankings also calculates stats-countries for listings
@@ -330,7 +313,7 @@
    (let [funs (into [(fn p-endlessly [] (endlessly reset-cache! com/ttl))]
                     (when-not com/use-webhook?
                       [(fn p-long-polling [] (long-polling com/telegram-token))]))]
-     (debugf "[%s] Execute in parallel: %s ..." msg-id funs)
+     (debugf "[%s] Parallel run: %s ..." msg-id funs)
      (pmap (fn [fun] (fun)) funs))
    (infof "[%s] Starting [..] ... done" msg-id)))
 
