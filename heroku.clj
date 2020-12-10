@@ -28,10 +28,10 @@
 (def cli-options
   ;; An option with a required argument
   [["-a" "--app APP" "Required Heroku app to run command against"
-    :validate [(fn [elem]
+    :validate [(fn [app]
                  ;; contains? can be used to test set membership.
                  ;; See https://clojuredocs.org/clojure.core/contains_q#example-542692cdc026201cdc326d2f
-                 (contains? heroku-apps elem))
+                 (contains? heroku-apps app))
                (str "Must be an element of " heroku-apps)]]
    ["-f" "--force" "Force deployment"]
    ["-h" "--help"]])
@@ -132,51 +132,55 @@
                            #_{:to-string? false}
                            {:to-string? true}))
            (trim-last-newline))))
+
+(defn sh-heroku
+  [app & cmds]
+  {:pre [(contains? heroku-apps app)]}
+  (apply sh (into ["heroku"] (conj (vec cmds) "--app" app))))
+
+(defn deploy! [options]
+  (let [commit (sh "git" "rev-parse" "--short" "master")
+        clojure-cli-version (let [props (java.util.Properties.)
+                                  key "CLOJURE_CLI_VERSION"]
+                              (.load props (jio/reader ".heroku-local.env"))
+                              (str key "=" (get props key)))
+        app (str (:app options) "-bot")
+        remote (str "heroku-" app)
+        rest-args (if (:force options) "--force" "")]
+    ;; (printf "%s: %s\n" 'pom/pom-version pom/pom-version)
+    ;; (printf "app %s \n" app)
+    ;; (printf "remote %s \n" remote)
+    ;; (printf "rest-args %s \n" rest-args)
+    ;; (printf "commit %s \n" commit)
+    ;; (printf "clojure-cli-version %s \n" clojure-cli-version)
+
+    (sh-heroku app "addons:open" "papertrail")
+    (sh-heroku app "ps:scale" "web=0")
+    (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
+    (sh "git" "push" rest-args remote "master")
+    (sh-heroku app "ps:scale" "web=1")
+
+    ;; ;; publish source code only when deploying to production
+    (when false ; (= env-type prod)
+      ;; seems like `git push --tags` pushes only tags w/o the code
+      (sh "git" "tag" "--annotate" "--message" "''"
+          (str pom/pom-version "-" commit))
+
+      (doseq [remote ["origin" "gitlab"]]
+        ;; See also `git push --tags $pushFlags $remote`
+        (sh "git" "push" rest-args "--follow-tags" "--verbose" remote)))))
+
 ;; Examples:
 ;; ./heroku.clj deploy --app hokuspokus-bot
-(let [{:keys [action options exit-message ok?]} (validate-args *command-line-args*)]
+(let [{:keys [action options exit-message ok?]}
+      (validate-args *command-line-args*)]
   (if exit-message
     (exit (if ok? 0 1) exit-message)
     (condp = action
-      restart (println (format "%s %s" action options))
-      deploy
-      (do
-        (println (format "%s %s" action options))
-        (let [commit (sh "git" "rev-parse" "--short" "master")
-              clojure-cli-version (let [props (java.util.Properties.)
-                                        key "CLOJURE_CLI_VERSION"]
-                                    (.load props (jio/reader ".heroku-local.env"))
-                                    (str key "=" (get props key)))
-
-              app (str (:app options) "-bot")
-              remote (str "heroku-" app)
-              rest-args (if (:force options)
-                          "--force"
-                          "")
-              ]
-          (printf "%s: %s\n" 'pom/pom-version pom/pom-version)
-          (printf "app %s \n" app)
-          (printf "remote %s \n" remote)
-          (printf "rest-args %s \n" rest-args)
-          (printf "commit %s \n" commit)
-          (printf "clojure-cli-version %s \n" clojure-cli-version)
-
-          (sh "heroku" "addons:open" "papertrail" "--app" app)
-          (sh "heroku" "ps:scale" "web=0" "--app" app)
-          (sh "heroku" "config:set"
-              (str "COMMIT=" commit)
-              clojure-cli-version
-              "--app" app)
-          (sh "git" "push" rest-args remote "master")
-          (sh "heroku" "ps:scale" "web=1" "--app" app)
-
-          ;; ;; publish source code only when deploying to production
-          (when false ; (= env-type prod)
-            ;; seems like `git push --tags` pushes only tags w/o the code
-            (sh "git" "tag" "--annotate" "--message" "''"
-                (str pom/pom-version "-" commit))
-
-            (doseq [remote ["origin" "gitlab"]]
-              ;; See also `git push --tags $pushFlags $remote`
-              (sh "git" "push" rest-args "--follow-tags" "--verbose" remote)))
-          )))))
+      restart (do
+                (println (format "%s %s" action options))
+                (let [app (str (:app options) "-bot")]
+                  (sh "heroku" "ps:restart" "--app" app)))
+      deploy (do
+               (println (format "%s %s" action options))
+               (deploy! options)))))
