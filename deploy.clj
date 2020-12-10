@@ -8,7 +8,8 @@
    [clojure.string :as cstr]
    [clojure.java.io :as jio]
    [cli-env :as cli]
-   [corona.pom-version-get :as pom]))
+   [corona.pom-version-get :as pom]
+   ))
 
 ;; need to define LEIN_SNAPSHOTS_IN_RELEASE=true because of
 ;; cljplot "0.0.2-SNAPSHOT"
