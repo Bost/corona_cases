@@ -512,16 +512,18 @@
                          {:s lang/active-per-1e5 :n active-per-100k
                           :diff delta-a100k})]]
                ["%s\n" [
-
-                        (fmt-to-cols
+                        #_(fmt-to-cols
                          {:s lang/active-max
                           :n max-active-val})
 
-                        #_(format "<code>%s %s</code> %s"
-                                (com/right-pad lang/active-max " " padding-s)
-                                (com/left-pad max-active-val " " padding-n)
-                                (format "(%s)"
-                                        (com/fmt-date max-active-date)))]]
+                        (format
+                         (str "<code>%s" "</code>" vline
+                              "<code>" "%s" "</code>" vline
+                              "(%s)")
+                         (com/right-pad (str (if nil nil (str blank blank)) blank lang/active-max)
+                                        blank padding-s)
+                         (com/left-pad max-active-val blank padding-n)
+                         (com/fmt-date max-active-date))]]
 
                ;; TODO add effective reproduction number (R)
                #_["%s\n" [(fmt-to-cols
