@@ -43,17 +43,3 @@ bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...`
 
 ## Deploy to Heroku
 Using [deploy.clj](./deploy.clj).
-
-## TODOs
-- Graphs:
-  -- better user experience - show:
-     only interpolated graphs
-     relative numbers (e.g. percentage)
-     doubling time as in the spiegel.de
-     logarithmic scale
-- Prediction - extrapolate graphs
-- Use buttons instead of `/<command-name>`
-- Don't panic: Compare data: Corona vs. Flu vs. World population and Show deaths
-  rates distribution by age / age-groups; probability calculator
-- Create home page providing extensive information
-- Tables - show: average recovery time, cases in % of population

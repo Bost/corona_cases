@@ -264,7 +264,7 @@
   See also `footer`, `bot-father-edit-cmds`."
   ([case-kw msg-idx prm] (calc-list-countries "calc-list-countries" case-kw msg-idx prm))
   ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode]}]
-   (let [;; TODO extract header-txt
+   (let [;; TODO create header-txt outside of this function and concatenate it to the message
          header-txt (header parse_mode
                             (create-pred-hm (ccr/get-country-code ccc/worldwide)))
          spacer " "

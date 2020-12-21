@@ -253,6 +253,7 @@
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
   ([msg-id]
+   ;; full cache cleanup is not really necessary
    #_(swap! data/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
@@ -282,19 +283,8 @@
                        (plot-fn case-kw stats cnt-reports))
                      com/absolute-cases))
              [plot/plot-sum plot/plot-absolute]))
-
-     ;; 'endpoint' functions:
-     ;; data/all-rankings also calculates stats-countries for listings
-
-     ;; plot/plot-country
-     ;; msg/detailed-info
-
-     ;; msg/list-countries
-     ;; msg/list-per-100k
-
-     ;; plot/plot-sum
-     ;; plot/plot-absolute
-
+     ;; discard the intermediary results, i.e. keep only those items in the
+     ;; cache which contain the final results.
      (swap! data/cache (fn [_]
                          (select-keys @data/cache [:plot :msg :list])))
 
