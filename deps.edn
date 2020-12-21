@@ -21,17 +21,14 @@
 ;; TODO integrate spyscope tools.deps. See ~/.clojure/deps.edn - probably
 ;; under :dev alias, then the cider-jack-in should use it I expect.
 
-{
- ;; See https://github.com/roomkey/lein-v
- ;; "Example of Clojure source code version output"
- ;; and https://github.com/arrdem/lein-git-version
+;; Project version is defined in the pom.xml. See "Example of Clojure source
+;; code version output" in https://github.com/roomkey/lein-v and
+;; https://github.com/arrdem/lein-git-version
 
- ;; project version is defined in the pom.xml
-
- :aliases
- {
-  :uberjar
-  {:extra-deps {seancorfield/depstar {:mvn/version "1.1.117"}}
+{:aliases
+ {:uberjar
+  {:extra-deps {seancorfield/depstar {:mvn/version
+                                      "1.1.136"}}
    :main-opts
    ["--main" "hf.depstar.uberjar" "target/corona_cases-standalone.jar"
     ;; AOT compilation
@@ -39,13 +36,12 @@
     #_"--compile"]}
 
   :clj-kondo
-  {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2020.11.07"}}
-   :main-opts ["-m" "clj-kondo.main"]}
-  }
+  {:extra-deps {clj-kondo/clj-kondo {:mvn/version
+                                     "2020.12.12"}}
+   :main-opts ["-m" "clj-kondo.main"]}}
 
  :deps
- {
-  org.clojure/clojure     {:mvn/version "1.10.1"}
+ {org.clojure/clojure     {:mvn/version "1.10.1"}
 
   ;; CSV reader/writer to/from Clojure data structures.
   org.clojure/data.csv    {:mvn/version "1.0.0"}
@@ -70,7 +66,8 @@
 
   ;; for the get-json function. Not having it cheshire as a dependency results
   ;; in: `namespace 'cheshire.factory' not found`
-  clj-http/clj-http {:mvn/version "3.10.3"}
+  clj-http/clj-http {:mvn/version
+                     "3.11.0"}
 
   ;; Clojure interface for Telegram Bot API
   org.clojars.bost/morse  {:mvn/version "0.0.0-160-0x1afd"}
