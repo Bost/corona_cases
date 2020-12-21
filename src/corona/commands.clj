@@ -141,8 +141,11 @@
                         (let [msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)
                                                 msg/list-per-100k
                                                 msg/list-countries)
-                              contents (vals (msg-listing-fun case-kw))]
+                              contents (msg-listing-fun case-kw)]
                           (doall
+                           ;; mapping over results implies the knowledge that
+                           ;; the type of `(msg-listing-fun case-kw)` is a
+                           ;; collection.
                            (map (fn [content]
                                   (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
                                   (debugf "[%s] send-text: %s chars sent" msg-id (count content)))

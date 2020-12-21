@@ -317,13 +317,16 @@
                msg-id case-kw msg-idx (count msg))
        msg))))
 
+(defn get-from-cache! [case-kw ks fun msg-idx prm]
+  (if prm
+    (data/cache! (fn [] (fun case-kw msg-idx prm))
+                 (conj ks (keyword (str msg-idx))))
+    (vals (get-in @data/cache ks))))
+
 (defn list-countries
   [case-kw & [msg-idx prm]]
-  (let [ks [:list :countries case-kw]]
-    (if prm
-      (data/cache! (fn [] (calc-list-countries case-kw  msg-idx prm))
-                   (conj ks (keyword (str msg-idx))))
-      (get-in @data/cache ks))))
+  (get-from-cache! case-kw [:list :countries case-kw]
+                   calc-list-countries msg-idx prm))
 
 (defn calc-list-per-100k
   "Listing commands in the message footer correspond to the columns in the listing.
@@ -382,11 +385,8 @@
 
 (defn list-per-100k
   [case-kw & [msg-idx prm]]
-  (let [ks [:list :100k case-kw]]
-    (if prm
-      (data/cache! (fn [] (calc-list-per-100k case-kw msg-idx prm))
-                   (conj ks (keyword (str msg-idx))))
-      (get-in @data/cache ks))))
+  (get-from-cache! case-kw [:list :100k case-kw]
+                   calc-list-per-100k msg-idx prm))
 
 (defn diff-coll-vals
   "Differences between values. E.g.:
