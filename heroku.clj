@@ -16,7 +16,7 @@
    java.lang.ProcessBuilder$Redirect
    ))
 
-(def heroku-apps
+(def heroku-envs
   (->> (map (fn [kw]
               (get-in env/environment [kw :cli]))
             (keys env/environment))
@@ -24,15 +24,20 @@
        (vals)
        (set)))
 
-#_(println "heroku-apps" heroku-apps)
+(def heroku-apps
+  (set
+   (map (fn [henv] (str henv "-bot")) heroku-envs)))
+
+(defn in?
+  "true if `sequence` contains `elem`. See (contains? (set sequence) elem)"
+  [sequence elem]
+  (boolean (some (fn [e] (= elem e)) sequence)))
+
 (def cli-options
   ;; An option with a required argument
-  [["-a" "--app APP" "Required Heroku app to run command against"
-    :validate [(fn [app]
-                 ;; contains? can be used to test set membership.
-                 ;; See https://clojuredocs.org/clojure.core/contains_q#example-542692cdc026201cdc326d2f
-                 (contains? heroku-apps app))
-               (str "Must be an element of " heroku-apps)]]
+  [["-he" "--heroku-env HENV" "Required Heroku environment to run command against"
+    :validate [(fn [henv] (in? heroku-envs henv))
+               (str "Must be an element of " heroku-envs)]]
    ["-f" "--force" "Force deployment"]
    ["-h" "--help"]])
 
@@ -135,7 +140,7 @@
 
 (defn sh-heroku
   [app & cmds]
-  {:pre [(contains? heroku-apps app)]}
+  {:pre [(in? heroku-apps app)]}
   (apply sh (into ["heroku"] (conj (vec cmds) "--app" app))))
 
 (defn deploy! [options]
@@ -144,7 +149,7 @@
                                   key "CLOJURE_CLI_VERSION"]
                               (.load props (jio/reader ".heroku-local.env"))
                               (str key "=" (get props key)))
-        app (str (:app options) "-bot")
+        app (str (:heroku-env options) "-bot")
         remote (str "heroku-" app)
         rest-args (if (:force options) "--force" "")]
     ;; (printf "%s: %s\n" 'pom/pom-version pom/pom-version)
@@ -179,7 +184,7 @@
     (condp = action
       restart (do
                 (println (format "%s %s" action options))
-                (let [app (str (:app options) "-bot")]
+                (let [app (str (:heroku-env options) "-bot")]
                   (sh "heroku" "ps:restart" "--app" app)))
       deploy (do
                (println (format "%s %s" action options))

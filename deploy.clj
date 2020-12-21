@@ -52,6 +52,8 @@
 
 (printf "%s\n" clojure-cli-version) ;; prints 'CLOJURE_CLI_VERSION=...'
 
+#_(System/exit 0)
+
 (def rest-args (cstr/join " " cli/rest-args))
 
 ;; `heroku logs --tail --app $APP` blocks the execution
