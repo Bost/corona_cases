@@ -21,6 +21,13 @@
    [morse.api :as moa]
    [morse.handlers :as moh]
    [com.stuartsierra.component :as component]
+   [drawbridge.core :as drawbridge]
+   [drawbridge.client]
+   [ring.middleware.keyword-params]
+   [ring.middleware.nested-params]
+   [ring.middleware.params]
+   [ring.middleware.session :as session]
+   [ring.middleware.basic-authentication :as basic]
    )
   (:import
    java.time.ZoneId
@@ -149,7 +156,20 @@
         ;; (debugf "[%s] (del-webhook %s)" msg-id com/telegram-token)
         (debugf "[%s] (del-webhook ...) %s" msg-id (:body res)))))))
 
+(defn- authenticated? [user pass]
+  ;; TODO: heroku config:add REPL_USER=[...] REPL_PASSWORD=[...]
+  true
+  #_(= [user pass] [(env :repl-user false) (env :repl-password false)]))
+
+(def ^:private drawbridge
+  (-> (drawbridge/ring-handler)
+      (session/wrap-session)
+      #_(basic/wrap-basic-authentication authenticated?)))
+
 (cjc/defroutes app-routes
+  (cjc/ANY "/repl" {:as req}
+           (drawbridge req))
+
   (cjc/POST
    (format "/%s" com/telegram-token)
    args
@@ -183,6 +203,23 @@
             "Not found"
             #_(slurp (jio/resource "404.html")))))
 
+(def ^:private drawbridge-handler
+  (-> (drawbridge.core/ring-handler)
+      (ring.middleware.keyword-params/wrap-keyword-params)
+      (ring.middleware.nested-params/wrap-nested-params)
+      (ring.middleware.params/wrap-params)
+      (ring.middleware.session/wrap-session)
+      #_(basic/wrap-basic-authentication authenticated?)))
+
+(defn wrap-drawbridge [handler]
+  (fn [req]
+    (let [handler (if (= "/repl" (:uri req))
+                    #_(basic/wrap-basic-authentication
+                       drawbridge-handler authenticated?)
+                    handler
+                    handler)]
+      (handler req))))
+
 ;; For interactive development:
 (defonce server (atom nil))
 
@@ -194,7 +231,10 @@
            msg version env-type port)
     (let [web-server
           (ring.adapter.jetty/run-jetty
-           (-> (compojure.handler/site #'app-routes)
+           #_(compojure.handler/api #'app-routes)
+           (-> #'app-routes
+               (wrap-drawbridge)
+               (compojure.handler/site)
                ;; wrap-json-body is needed for the destructing the
                ;; (POST "..." {body :body} ...)
                (ring.middleware.json/wrap-json-body {:keywords? true}))

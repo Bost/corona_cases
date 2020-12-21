@@ -109,6 +109,11 @@
   ;; read project-version from pom.xml
   org.clojure/data.xml {:mvn/version "0.0.8"}
 
+  ;; HTTP transport support for Clojure’s nREPL implemented as a Ring handler
+  nrepl/drawbridge {:mvn/version "0.2.1"}
+
+  ring-basic-authentication/ring-basic-authentication {:mvn/version "1.1.0"}
+
   ;; profiling - see
   ;; http://clojure-goes-fast.com/
   ;; https://github.com/clojure-goes-fast/
