@@ -12,6 +12,13 @@
   :url "http://corona-cases-bot.herokuapp.com"
   :license {:name "Eclipse Public License v1.0"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :plugins
+  [
+   ;; needed as a plugin to be able to start lein repl :connect ... from the
+   ;; same directory
+   [nrepl/drawbridge "0.2.1"]
+   ]
+
   :dependencies
   [
    [org.clojure/clojure     "1.10.1"]
@@ -24,6 +31,12 @@
 
    ;; Ring Jetty adapter
    [ring/ring-jetty-adapter "1.8.2"]
+
+   ;; for the (ring.util.http-response/ok)
+   [metosin/ring-http-response "0.9.1"]
+
+   ;; for [ring.middleware.json :refer [wrap-json-body]]
+   [ring/ring-json "0.5.0"]
 
    ;; managing environment variables
    [environ                 "1.2.0"]
@@ -64,6 +77,22 @@
 
    ;; logging
    [com.taoensso/timbre "5.1.0"]
+
+   ;; read from META-INF/maven/.../.../pom.properties
+   [clojurewerkz/propertied "1.3.0"]
+
+   ;; manage the lifecycle and dependencies of components with runtime state
+   ;; TODO Include it only in the development
+   [com.stuartsierra/component "1.0.0"]
+
+   ;; read project-version from pom.xml
+   [org.clojure/data.xml "0.0.8"]
+
+   ;; HTTP transport support for Clojure’s nREPL implemented as a Ring handler
+   [nrepl/drawbridge "0.2.1"]
+
+   ;; for drawbridge
+   [ring-basic-authentication "1.1.0"]
    ]
 
   :min-lein-version "2.0.0"
