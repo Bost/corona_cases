@@ -87,6 +87,8 @@
   on-heroku?)
 
 (def ^:const ^String telegram-token (env/env :telegram-token))
+(def ^:const ^String repl-user      (env/env :repl-user))
+(def ^:const ^String repl-password  (env/env :repl-password))
 
 (defn system-exit [exit-status]
   (debugf "Exiting with status %s ..." exit-status)
@@ -147,7 +149,8 @@
                   env-var-q
                   (let [env-var (eval env-var-q)]
                     (if (or env-var (false? env-var))
-                      (if (utc/in? ['corona.common/telegram-token] env-var-q)
+                      (if (utc/in? ['corona.common/telegram-token
+                                    'corona.common/repl-password] env-var-q)
                         "<PRESENT>" env-var)
                       ;; if-let ... else
                       undef))))
@@ -155,6 +158,8 @@
          'corona.common/use-webhook?
          'corona.common/on-heroku?
          'corona.common/telegram-token
+         'corona.common/repl-user
+         'corona.common/repl-password
          'corona.common/webapp-port
          'corona.common/bot-name
          'corona.common/botver]))

@@ -5,7 +5,6 @@
    [clj-time-ext.core :as cte]
    [clj-time.core :as ctc]
    [clojure.data.json :as json]
-   ;; [clojure.java.io :as jio]
    [clojure.string :as cstr]
    [compojure.core :as cjc]
    [compojure.handler]
@@ -13,7 +12,6 @@
    [corona.common :as com]
    [corona.telegram :as tgram]
    [ring.adapter.jetty]
-   ;; [ring.util.response]
    [ring.util.http-response]
    [ring.middleware.json]
    [taoensso.timbre :as timbre :refer [debugf info infof]]
@@ -21,8 +19,7 @@
    [morse.api :as moa]
    [morse.handlers :as moh]
    [com.stuartsierra.component :as component]
-   [drawbridge.core :as drawbridge]
-   [drawbridge.client]
+   [drawbridge.core]
    [ring.middleware.keyword-params]
    [ring.middleware.nested-params]
    [ring.middleware.params]
@@ -158,17 +155,18 @@
 
 (defn- authenticated? [user pass]
   ;; TODO: heroku config:add REPL_USER=[...] REPL_PASSWORD=[...]
-  true
-  #_(= [user pass] [(env :repl-user false) (env :repl-password false)]))
+  (= [user pass] [com/repl-user com/repl-password]))
 
 (def ^:private drawbridge
-  (-> (drawbridge/ring-handler)
+  (-> (drawbridge.core/ring-handler)
       (session/wrap-session)
-      #_(basic/wrap-basic-authentication authenticated?)))
+      (basic/wrap-basic-authentication authenticated?)))
 
 (cjc/defroutes app-routes
   (cjc/ANY "/repl" {:as req}
-           (drawbridge req))
+           (do
+             (drawbridge req)
+             (Thread/sleep 400)))
 
   (cjc/POST
    (format "/%s" com/telegram-token)
@@ -198,8 +196,8 @@
   (cjc/GET (format "/%s/codes" ws-path) []
            (web-service {:type :codes}))
   (cjc/ANY "*" []
-           #_(ring.util.http-response/not-found)
-           (compojure.route/not-found
+           (ring.util.http-response/not-found)
+           #_(compojure.route/not-found
             "Not found"
             #_(slurp (jio/resource "404.html")))))
 
@@ -209,14 +207,13 @@
       (ring.middleware.nested-params/wrap-nested-params)
       (ring.middleware.params/wrap-params)
       (ring.middleware.session/wrap-session)
-      #_(basic/wrap-basic-authentication authenticated?)))
+      (basic/wrap-basic-authentication authenticated?)))
 
 (defn wrap-drawbridge [handler]
   (fn [req]
     (let [handler (if (= "/repl" (:uri req))
-                    #_(basic/wrap-basic-authentication
-                       drawbridge-handler authenticated?)
-                    handler
+                    (basic/wrap-basic-authentication
+                     drawbridge-handler authenticated?)
                     handler)]
       (handler req))))
 
