@@ -1,39 +1,35 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web)
+(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web.core)
 
-(ns corona.web
+(ns corona.web.core
   (:require
    [clj-time-ext.core :as cte]
    [clj-time.core :as ctc]
    [clojure.data.json :as json]
    [clojure.string :as cstr]
+   [com.stuartsierra.component :as component]
    [compojure.core :as cjc]
-   [compojure.handler]
-   [compojure.route]
+   compojure.handler
    [corona.common :as com]
-   [corona.telegram :as tgram]
-   [ring.adapter.jetty]
-   [ring.util.http-response]
-   [ring.middleware.json]
-   [taoensso.timbre :as timbre :refer [debugf info infof]]
    [corona.country-codes :as ccc]
+   [corona.telegram :as tgram]
+   [corona.web.response :as webresp]
+   drawbridge.core
    [morse.api :as moa]
    [morse.handlers :as moh]
-   [com.stuartsierra.component :as component]
-   [drawbridge.core]
-   [ring.middleware.keyword-params]
-   [ring.middleware.nested-params]
-   [ring.middleware.params]
-   [ring.middleware.session :as session]
+   ring.adapter.jetty
    [ring.middleware.basic-authentication :as basic]
-   )
-  (:import
-   java.time.ZoneId
-   java.util.TimeZone
-   ))
+   ring.middleware.json
+   ring.middleware.keyword-params
+   ring.middleware.nested-params
+   ring.middleware.params
+   [ring.middleware.session :as session]
+   ring.util.http-response
+   [taoensso.timbre :as timbre :refer [debugf info infof]])
+  (:import java.time.ZoneId
+           java.util.TimeZone))
 
 ;; (set! *warn-on-reflection* true)
 
-(def ^:const telegram-hook "telegram")
 (def ^:const google-hook "google")
 
 (defn home-page []
@@ -41,84 +37,10 @@
    :headers {"Content-Type" "text/plain"}
    :body (cstr/join "\n" ["home page"])})
 
-(def ^:const pom-version "See `pom/pom-version`" nil)
-(def ^:const ws-path (format "ws/%s" pom-version))
-
-(defn web-service [{:keys [type] :as prm}]
-  (info "web-service" prm)
-  {:status 200
-   :headers {"Content-Type" "application/json"}
-   :body
-   (json/write-str
-    (->>
-     (condp = type
-         :names (conj {"desc" com/desc-ws})
-         :codes (conj {"desc" com/desc-ws})
-         (format "Error. Wrong type %s" type))
-     (conj (when-not pom-version
-             {"warn" "Under construction. Don't use it in PROD env"}))
-     (conj {"source" "https://github.com/Bost/corona_cases"})
-     ;; swapped order x y -> y x
-     (into (sorted-map-by (fn [x y] (compare y x))))))})
+(def ^:const ws-path (format "ws/%s" webresp/pom-version))
 
 (defn webhook-url [telegram-token]
   (format "%s/%s" com/webapp-server telegram-token))
-
-(def url-telegram       "https://api.telegram.org/bot$TELEGRAM_TOKEN")
-(def url-getUpdates     (str url-telegram "/getUpdates"))
-(def url-getMe          (str url-telegram "/getMe"))
-(def url-deleteWebhook  (str url-telegram "/deleteWebhook"))
-(def url-getWebhookInfo (str url-telegram "/getWebhookInfo"))
-(def url-setWebhook     (str url-telegram "/setWebhook"))
-(def url-sendMessage    (str url-telegram "/sendMessage"))
-(def url-sendPhoto      (str url-telegram "/sendPhoto"))
-
-(defn links []
-  {:status 200
-   :headers {"Content-Type" "text/plain"}
-   :body
-   (cstr/join
-    "\n"
-    (into
-     (com/show-env)
-     [
-      ""
-      "Send out these commands from shell:"
-      ""
-      (when com/webapp-server
-        (format "curl --request POST \"%s/%s/$TELEGRAM_TOKEN\""
-                com/webapp-server telegram-hook))
-      #_(format "curl --request POST \"%s/%s/$TELEGRAM_TOKEN\""
-              com/webapp-server google-hook)
-      ""
-      (format "curl %s %s \"%s\""
-              (str "--form \"url=\"" (webhook-url "$TELEGRAM_TOKEN"))
-              "--form \"drop_pending_updates=true\""
-              url-setWebhook)
-
-      (format "curl --request POST %s \"%s\""
-              "--form \"drop_pending_updates=true\""
-              url-deleteWebhook)
-      (format "curl --request POST \"%s\"" url-getWebhookInfo)
-      ""
-      (format "curl --request GET  \"%s\"" url-getMe)
-      (format "curl --request POST \"%s\"" url-getMe)
-      (format "curl --request GET  \"%s\"" url-getUpdates)
-      (format "curl --request POST \"%s\"" url-getUpdates)
-      (format "curl --request GET  \"%s\" | jq .message.chat.id" url-getUpdates)
-      (format "curl --request POST \"%s\" | jq .message.chat.id" url-getUpdates)
-      ""
-      (format "curl --request POST -H '%s' -d '%s' \"%s\""
-              "Content-Type: application/json"
-              (format (str "{\"chat_id\":%s,\"text\":\"curl test msg\","
-                           "\"disable_notification\":true}")
-                      com/chat-id)
-              url-sendMessage)
-      ""
-      (format "curl --request POST --form %s --form %s \"%s\""
-              (format "chat_id=%s" com/chat-id)
-              "photo=@/tmp/pic.png"
-              url-sendPhoto)]))})
 
 (def token com/telegram-token)
 
@@ -130,7 +52,7 @@
                    tgram-handlers
                    #_[(moh/command-fn "help"
                                       (fn [{{chat-id :id} :chat}
-                                          #_chat-id]
+                                           #_chat-id]
                                         (moa/send-text token chat-id "Help is on the way")))]
                    (tgram/create-handlers))
   (debugf "Defining tgram-handlers at compile time ... done"))
@@ -138,20 +60,20 @@
 (defn setup-webhook
   ([] (setup-webhook "setup-webhook"))
   ([msg-id]
-  (if com/use-webhook?
-    (do
-      (when (empty? (->> com/telegram-token moa/get-info-webhook
-                         :body :result :url))
-        (let [res (moa/set-webhook com/telegram-token
-                                   (webhook-url com/telegram-token))]
+   (if com/use-webhook?
+     (do
+       (when (empty? (->> com/telegram-token moa/get-info-webhook
+                          :body :result :url))
+         (let [res (moa/set-webhook com/telegram-token
+                                    (webhook-url com/telegram-token))]
           ;; (debugf "[%s] (set-webhook %s %s)" msg-id com/telegram-token webhook-url)
-          (debugf "[%s] (set-webhook ...) %s" msg-id (:body res)))))
+           (debugf "[%s] (set-webhook ...) %s" msg-id (:body res)))))
     ;; curl --form "drop_pending_updates=true" --request POST https://api.telegram.org/bot$TELEGRAM_TOKEN_HOKUSPOKUS/deleteWebhook
-    (when-not (empty? (->> com/telegram-token moa/get-info-webhook
-                           :body :result :url))
-      (let [res (moa/del-webhook com/telegram-token)]
+     (when-not (empty? (->> com/telegram-token moa/get-info-webhook
+                            :body :result :url))
+       (let [res (moa/del-webhook com/telegram-token)]
         ;; (debugf "[%s] (del-webhook %s)" msg-id com/telegram-token)
-        (debugf "[%s] (del-webhook ...) %s" msg-id (:body res)))))))
+         (debugf "[%s] (del-webhook ...) %s" msg-id (:body res)))))))
 
 (defn- authenticated? [user pass]
   ;; TODO: heroku config:add REPL_USER=[...] REPL_PASSWORD=[...]
@@ -164,42 +86,42 @@
 
 (cjc/defroutes app-routes
   (cjc/ANY "/repl" {:as req}
-           (do
-             (drawbridge req)
-             (Thread/sleep 400)))
+    (do
+      (drawbridge req)
+      (Thread/sleep 400)))
 
   (cjc/POST
-   (format "/%s" com/telegram-token)
-   args
-   (let [body (get-in args [:body])]
-     (debugf "webhook request body:\n%s" args)
-     (tgram-handlers body)
-     (ring.util.http-response/ok)))
+    (format "/%s" com/telegram-token)
+    args
+    (let [body (get-in args [:body])]
+      (debugf "webhook request body:\n%s" args)
+      (tgram-handlers body)
+      (ring.util.http-response/ok)))
 
   (cjc/POST
-   (format "/%s/%s" google-hook com/telegram-token)
-   req ;; {{input :input} :params}
-   {:status 200
-    :headers {"Content-Type" "text/plain"}
-    :body
-    (json/write-str {:chat_id (->> req :params :message :chat :id)
-                     :text (format "Hello from %s webhook" google-hook)})})
+    (format "/%s/%s" google-hook com/telegram-token)
+    req ;; {{input :input} :params}
+    {:status 200
+     :headers {"Content-Type" "text/plain"}
+     :body
+     (json/write-str {:chat_id (->> req :params :message :chat :id)
+                      :text (format "Hello from %s webhook" google-hook)})})
 
   (cjc/GET "/" []
-           (home-page))
+    (home-page))
   (cjc/GET "/links" []
-           (links))
+    (webresp/links))
   (cjc/GET (format "/%s/beds" ws-path) []
-           (web-service {:type :beds}))
+    (webresp/web-service {:type :beds}))
   (cjc/GET (format "/%s/names" ws-path) []
-           (web-service {:type :names}))
+    (webresp/web-service {:type :names}))
   (cjc/GET (format "/%s/codes" ws-path) []
-           (web-service {:type :codes}))
+    (webresp/web-service {:type :codes}))
   (cjc/ANY "*" []
-           (ring.util.http-response/not-found)
-           #_(compojure.route/not-found
-            "Not found"
-            #_(slurp (jio/resource "404.html")))))
+    (ring.util.http-response/not-found)
+    #_(compojure.route/not-found
+       "Not found"
+       #_(slurp (jio/resource "404.html")))))
 
 (def ^:private drawbridge-handler
   (-> (drawbridge.core/ring-handler)
@@ -247,7 +169,7 @@
         port (or port com/webapp-port)
         msg (format "[%s] starting" msg-id)]
     #_(infof "%s version %s in environment %s on port %s ..."
-            msg (if com/env-devel? com/undef com/botver) env-type port)
+             msg (if com/env-devel? com/undef com/botver) env-type port)
     (debugf "%s ..." msg)
     (infof "\n  %s" (clojure.string/join "\n  " (com/show-env)))
     (if (= (str (ctc/default-time-zone))
@@ -300,11 +222,11 @@
   (webapp-start com/env-type com/webapp-port))
 
 #_(let [doc
-      "Attention!
+        "Attention!
 Value is reset to nil when reloading current buffer,
 e.g. via `s-u` my=cider-save-and-load-current-buffer."]
-  (->> ['corona.web/server 'data/cache 'tgram/continue 'tgram/my-component]
-       (run! (fn [v] (alter-meta! (get (ns-interns *ns*) v) assoc :doc doc)))))
+    (->> ['corona.web/server 'data/cache 'tgram/continue 'tgram/my-component]
+         (run! (fn [v] (alter-meta! (get (ns-interns *ns*) v) assoc :doc doc)))))
 
 (defrecord WebServer [http-server app-component]
   component/Lifecycle
@@ -330,4 +252,4 @@ e.g. via `s-u` my=cider-save-and-load-current-buffer."]
   (alter-var-root #'system component/start)
   (alter-var-root #'system component/stop))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.web)
+(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.web.core)
