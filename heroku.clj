@@ -16,13 +16,17 @@
    java.lang.ProcessBuilder$Redirect
    ))
 
-(def heroku-envs
+(defn get-heroku-envs [kws]
   (->> (map (fn [kw]
               (get-in env/environment [kw :cli]))
-            (keys env/environment))
+            kws)
        (into {})
        (vals)
        (set)))
+
+(def heroku-envs (get-heroku-envs (keys env/environment)))
+
+(def heroku-env-prod (->> [env/prod] (get-heroku-envs) (first)))
 
 (def heroku-apps
   (set
@@ -149,7 +153,8 @@
                                   key "CLOJURE_CLI_VERSION"]
                               (.load props (jio/reader ".heroku-local.env"))
                               (str key "=" (get props key)))
-        app (str (:heroku-env options) "-bot")
+        heroku-env (:heroku-env options)
+        app (str heroku-env "-bot")
         remote (str "heroku-" app)
         rest-args (if (:force options) "--force" "")]
     ;; (printf "%s: %s\n" 'pom/pom-version pom/pom-version)
@@ -165,8 +170,8 @@
     (sh "git" "push" rest-args remote "master")
     (sh-heroku app "ps:scale" "web=1")
 
-    ;; ;; publish source code only when deploying to production
-    (when false ; (= env-type prod)
+    ;; publish source code only when deploying to production
+    (when (= heroku-env heroku-env-prod)
       ;; seems like `git push --tags` pushes only tags w/o the code
       (sh "git" "tag" "--annotate" "--message" "''"
           (str pom/pom-version "-" commit))
