@@ -189,8 +189,7 @@
     (condp = action
       restart (do
                 (println (format "%s %s" action options))
-                (let [app (str (:heroku-env options) "-bot")]
-                  (sh "heroku" "ps:restart" "--app" app)))
+                (sh-heroku (str (:heroku-env options) "-bot") "ps:restart"))
       deploy (do
                (println (format "%s %s" action options))
                (deploy! options)))))
