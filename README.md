@@ -15,7 +15,10 @@ Emacs Cider `M-x cider-jack-in-clj`
 
 Or start the nREPL:
 ```fish
-/usr/local/bin/clojure -Sdeps '{:deps {nrepl {:mvn/version "0.8.2"} refactor-nrepl {:mvn/version "2.5.0"} cider/cider-nrepl {:mvn/version "0.25.4"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+/usr/local/bin/clojure \
+    -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} refactor-nrepl {:mvn/version "2.5.0"} cider/cider-nrepl {:mvn/version "0.25.5"}}}' \
+    -m nrepl.cmdline \
+    --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
 ```
 And connect to it from the editor of your choice.
 
@@ -35,11 +38,12 @@ Then check the [http://localhost:5050/](http://localhost:5050/)
 
 ```fish
 bin/build; and heroku local --env=.heroku-local.env
-```
-TODO `heroku local` - ask about setting environment variables on the CLI, i.e.:
-```fish
+# or:
 bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...`
 ```
 
 ## Deploy to Heroku
-Using [deploy.clj](./deploy.clj).
+Done using [babashka](https://github.com/borkdude/babashka). See also
+[heroku.clj](./heroku.clj).
+
+bb heroku.clj deploy --heroku-env <heroku-app-name>
