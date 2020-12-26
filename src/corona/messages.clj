@@ -257,16 +257,20 @@
      ;; i.e. com/markdown
      (cstr/replace com/bot-name #"_" "\\\\_"))))
 
+;; mapvals
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
+
+(defn- header-content [parse_mode]
+  (let [ccode (ccr/get-country-code ccc/worldwide)
+        pred_hm (create-pred-hm ccode)]
+    (header parse_mode pred_hm)))
 
 (defn calc-list-countries
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   ([case-kw msg-idx prm] (calc-list-countries "calc-list-countries" case-kw msg-idx prm))
   ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode]}]
-   (let [;; TODO create header-txt outside of this function and concatenate it to the message
-         header-txt (header parse_mode
-                            (create-pred-hm (ccr/get-country-code ccc/worldwide)))
+   (let [header-txt (header-content parse_mode)
          spacer " "
          sort-indicator "▴" ;; " " "▲"
          omag-active 7 ;; order of magnitude i.e. number of digits
@@ -332,11 +336,7 @@
   ([case-kw msg-idx prm] (calc-list-per-100k "calc-list-per-100k"
                                              case-kw msg-idx prm))
   ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode]}]
-   (let [;; TODO extract header-txt
-         header-txt (->> ccc/worldwide
-                         (ccr/get-country-code)
-                         (create-pred-hm)
-                         (header parse_mode))
+   (let [header-txt (header-content parse_mode)
          spacer " "
          sort-indicator "▴" ;; " " "▲"
          ;; omag - order of magnitude i.e. number of digits
