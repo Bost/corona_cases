@@ -286,7 +286,7 @@
      ;; discard the intermediary results, i.e. keep only those items in the
      ;; cache which contain the final results.
      (swap! data/cache (fn [_]
-                         (select-keys @data/cache [:plot :msg :list])))
+                         (select-keys @data/cache [:plot :msg :list :threshold])))
 
      (debugf "[%s] %s chars cached in %s ms"
              msg-id

@@ -28,6 +28,39 @@
 
 ;; (set! *warn-on-reflection* true)
 
+(defn- threshold
+  "See also https://github.com/rplevy/swiss-arrows"
+  [case-kw]
+  #_
+  (->> case-params
+       (filter (fn [m] (= (:kw m) case-kw)))
+       (map :threshold)
+       (first))
+  #_
+  (transduce (comp
+              (filter (fn [m] (= (:kw m) case-kw)))
+              (map :threshold))
+             ;; there's only one element so we can use the net.cgrand.xforms.rfs/last
+             net.cgrand.xforms.rfs/last []
+             case-params)
+  (first
+   (com/tore
+    com/case-params
+    (filter (fn [m] (= (:kw m) case-kw)))
+    (map :threshold))))
+
+(defn min-threshold
+  "Countries with the number of cases less than the threshold are grouped into
+  \"Rest\"."
+  [case-kw]
+  (data/from-cache (fn [] ((comp :val threshold) case-kw))
+                   [:threshold case-kw]))
+
+(defn threshold-increase
+  "Case-dependent threshold recalculation increase."
+  [case-kw]
+  ((comp :inc threshold) case-kw))
+
 (defn metrics-prefix-formatter
   "Show 1k instead of 1000; i.e. kilo, mega etc.
       1 400 -> 1400
@@ -275,6 +308,7 @@
       (let [raised-threshold (+ threshold-increase threshold)]
         (infof "Case %s; %s countries above threshold. Raise to %s"
                case-kw (count (group-by :cc res)) raised-threshold)
+        (swap! data/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
         (group-below-threshold (assoc prm :threshold raised-threshold)))
       {:data res :threshold threshold})))
 
@@ -335,14 +369,15 @@
   "Case-specific plot for the sum of all countries."
   ([case-kw stats report] (calc-sum "calc-sum" case-kw stats report))
   ([msg-id case-kw stats report]
-   (let [prm {:report report
+   (let [threshold (min-threshold case-kw)
+         prm {:report report
               :stats stats
-              :threshold (com/min-threshold case-kw)
-              :threshold-increase (com/threshold-increase case-kw)
+              :threshold threshold
+              :threshold-increase (threshold-increase case-kw)
               :case-kw case-kw}
 
-         {json-data :data threshold-recaltulated
-          :threshold} (stats-all-by-case prm)]
+         {json-data :data threshold-recaltulated :threshold}
+         (stats-all-by-case prm)]
      (let [img
            (boiler-plate
             {:series (b/series [:grid] [:sarea json-data])
@@ -397,15 +432,12 @@
 (defn calc-absolute
   ([case-kw stats report] (calc-absolute "calc-absolute" case-kw stats report))
   ([msg-id case-kw stats report]
-   (let [
-         threshold (com/min-threshold case-kw)
-         prm {
-              :report report
+   (let [threshold (min-threshold case-kw)
+         prm {:report report
               :stats stats
               :threshold threshold
-              :threshold-increase (com/threshold-increase case-kw)
-              :case-kw case-kw
-              }
+              :threshold-increase (threshold-increase case-kw)
+              :case-kw case-kw}
 
          json-data (->> (:data (stats-all-by-case prm))
                         #_(remove (fn [[ccode _]] (= ccode ccc/qq))))

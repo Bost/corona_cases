@@ -305,37 +305,6 @@
                 \"4/26/20\"))"
   (fmt-date-fun "dd.MM."))
 
-(defn- threshold
-  "See also https://github.com/rplevy/swiss-arrows"
-  [case-kw]
-  #_
-  (->> case-params
-       (filter (fn [m] (= (:kw m) case-kw)))
-       (map :threshold)
-       (first))
-  #_
-  (transduce (comp
-              (filter (fn [m] (= (:kw m) case-kw)))
-              (map :threshold))
-             ;; there's only one element so we can use the net.cgrand.xforms.rfs/last
-             net.cgrand.xforms.rfs/last []
-             case-params)
-  (first
-   (tore case-params
-         (filter (fn [m] (= (:kw m) case-kw)))
-         (map :threshold))))
-
-(defn min-threshold
-  "Countries with the number of cases less than the threshold are grouped into
-  \"Rest\"."
-  [case-kw]
-  ((comp :val threshold) case-kw))
-
-(defn threshold-increase
-  "Case-dependent threshold recalculation increase."
-  [case-kw]
-  ((comp :inc threshold) case-kw))
-
 (def ^:const desc-ws
   "A placeholder"
   "")
