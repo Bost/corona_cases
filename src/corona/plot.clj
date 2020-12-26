@@ -124,19 +124,19 @@
   is unspecified."
   [ccode stats]
   (->> stats
-       (filter (fn [hm] (in? [ccc/worldwide-2-country-code (:cc hm)] ccode)))
+       (filter (fn [hm] (in? [ccc/worldwide-2-country-code (:ccode hm)] ccode)))
        (group-by :t)
        (map (fn [[t hms]]
               [;; confirmed cases is the sum of all others
-               {:cc ccode :t t :case-kw :p :cnt
+               {:ccode ccode :t t :case-kw :p :cnt
                 (bigint (/ (:p (first hms)) 1e3))
                 #_(reduce + (map :p hms))
                 #_(bigint (/ (get population ccode) (bigint 1e3)))}
-               {:cc ccode :t t :case-kw :e :cnt (reduce + (map :e hms))}
-               {:cc ccode :t t :case-kw :c :cnt (reduce + (map :c hms))}
-               {:cc ccode :t t :case-kw :r :cnt (reduce + (map :r hms))}
-               {:cc ccode :t t :case-kw :d :cnt (reduce + (map :d hms))}
-               {:cc ccode :t t :case-kw :a :cnt (reduce + (map :a hms))}]))
+               {:ccode ccode :t t :case-kw :e :cnt (reduce + (map :e hms))}
+               {:ccode ccode :t t :case-kw :c :cnt (reduce + (map :c hms))}
+               {:ccode ccode :t t :case-kw :r :cnt (reduce + (map :r hms))}
+               {:ccode ccode :t t :case-kw :d :cnt (reduce + (map :d hms))}
+               {:ccode ccode :t t :case-kw :a :cnt (reduce + (map :a hms))}]))
        (flatten)))
 
 (defn stats-for-country [ccode stats]
@@ -300,14 +300,14 @@
   [{:keys [case-kw threshold threshold-increase stats] :as prm}]
   (let [max-plot-lines 10
         res (map (fn [hm] (if (< (get hm case-kw) threshold)
-                           (assoc hm :cc ccc/default-2-country-code)
+                           (assoc hm :ccode ccc/default-2-country-code)
                            hm))
                  stats)]
     ;; TODO implement recalculation for decreasing case-kw numbers (e.g. sics)
-    (if (> (count (group-by :cc res)) max-plot-lines)
+    (if (> (count (group-by :ccode res)) max-plot-lines)
       (let [raised-threshold (+ threshold-increase threshold)]
         (infof "Case %s; %s countries above threshold. Raise to %s"
-               case-kw (count (group-by :cc res)) raised-threshold)
+               case-kw (count (group-by :ccode res)) raised-threshold)
         (swap! data/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
         (group-below-threshold (assoc prm :threshold raised-threshold)))
       {:data res :threshold threshold})))
@@ -320,32 +320,32 @@
         (->> (:data prm)
              (group-by :t)
              (map (fn [[t hms]]
-                    (->> (group-by :cc hms)
+                    (->> (group-by :ccode hms)
                          (map (fn [[ccode hms]]
-                                {:cc ccode :t t case-kw (reduce + (map case-kw hms))})))))
+                                {:ccode ccode :t t case-kw (reduce + (map case-kw hms))})))))
              (flatten))
         #_(flatten (map (fn [[t hms]]
                           (map (fn [[ccode hms]]
-                                 {:cc ccode :t t case-kw (reduce + (map case-kw hms))})
-                               (group-by :cc hms)))
+                                 {:ccode ccode :t t case-kw (reduce + (map case-kw hms))})
+                               (group-by :ccode hms)))
                         (group-by :t (:data prm))))]
     (update prm :data (fn [_] res))))
 
 (defn fill-rest [{:keys [case-kw] :as prm}]
   (let [date-sums (sum-all-by-date-by-case prm)
         {sum-all-by-date-by-case-threshold :data} date-sums
-        countries-threshold (set (map :cc sum-all-by-date-by-case-threshold))
+        countries-threshold (set (map :ccode sum-all-by-date-by-case-threshold))
         res (reduce into []
                     (map (fn [[t hms]]
                            (cset/union
                             hms
-                            (map (fn [ccode] {:cc ccode :t t case-kw 0})
+                            (map (fn [ccode] {:ccode ccode :t t case-kw 0})
                                  (cset/difference countries-threshold
-                                                  (keys (group-by :cc hms)))))
-                           #_(->> (group-by :cc hms)
+                                                  (keys (group-by :ccode hms)))))
+                           #_(->> (group-by :ccode hms)
                                   (keys)
                                   (cset/difference countries-threshold)
-                                  (map (fn [ccode] {:cc ccode :t t :a 0}))
+                                  (map (fn [ccode] {:ccode ccode :t t :a 0}))
                                   (cset/union hms)))
                          (group-by :t sum-all-by-date-by-case-threshold)))]
     (update date-sums :data (fn [_] res))))
@@ -361,7 +361,7 @@
                                        (:t fill-rest-stats))
                                       (get fill-rest-stats case-kw)])
                                    entry)))
-                   (group-by :cc data))]
+                   (group-by :ccode data))]
     #_(sort-by-country-name mapped-hm)
     (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
 

@@ -187,7 +187,7 @@
 ;; TODO reload only the latest N reports. e.g. try one week
 (defn sums-for-case
   "Return sums for a given `case-kw` calculated for every single report."
-  [case-kw {:keys [cc pred-fun]}]
+  [case-kw {:keys [ccode pred-fun]}]
   ;; ignore predicate for the moment
   (from-cache
    (fn []
@@ -199,8 +199,8 @@
               (if (and (empty? locations)
                        (= :recovered case-kw))
                 (let [default 0]
-                  #_(warnf "cc %s %s %s missing locations; defaults to %s"
-                         cc case-kw (com/fmt-date-dbg (date raw-date)) default)
+                  #_(warnf "ccode %s %s %s missing locations; defaults to %s"
+                         ccode case-kw (com/fmt-date-dbg (date raw-date)) default)
                   default)
                 (transduce
                  (map (comp
@@ -211,7 +211,7 @@
                  + 0
                  locations)))
             (raw-dates))))
-   [:sums case-kw cc]))
+   [:sums case-kw ccode]))
 
 (defn calc-case-counts-report-by-report [pred-hm]
   (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
@@ -257,10 +257,10 @@
 
   (get-counts (fn [_] true))
   "
-  [{:keys [cc #_pred-fun] :as pred-hm}]
+  [{:keys [ccode #_pred-fun] :as pred-hm}]
   ;; ignore pred-fun for the moment
   (from-cache (fn [] (calc-case-counts-report-by-report pred-hm))
-              [:cnts (keyword cc)]))
+              [:cnts (keyword ccode)]))
 
 (defn eval-fun
   [fun pred-hm]
@@ -288,7 +288,7 @@
   (eval-fun (fn [coll] (take-last 8 coll)) pred-hm))
 
 (defn create-pred-hm [ccode]
-  {:cc ccode
+  {:ccode ccode
    :pred-fun (fn [loc]
                (condp = ccode
                  ccc/worldwide-2-country-code
@@ -301,7 +301,7 @@
                  (= ccode (:country_code loc))))})
 
 (defn calc-stats-countries []
-  (map (fn [ccode] (conj {:cc ccode}
+  (map (fn [ccode] (conj {:ccode ccode}
                       (last-report (create-pred-hm ccode))))
        ccc/all-country-codes))
 
@@ -311,13 +311,13 @@
 (defn rank-for-case [rank-kw]
   (map-indexed
    (fn [idx hm]
-     (update-in (select-keys hm [:cc]) [:rank rank-kw]
+     (update-in (select-keys hm [:ccode]) [:rank rank-kw]
                 ;; inc - ranking starts from 1, not from 0
                 (fn [_] (inc idx))))
    (sort-by rank-kw >
             ;; TODO sets and set operations should be used clojure.set/difference
-            (remove (fn [{:keys [cc]}]
-                      (= cc ccc/zz))
+            (remove (fn [{:keys [ccode]}]
+                      (= ccode ccc/zz))
                     (stats-countries)))))
 
 (defn calc-all-rankings
@@ -327,14 +327,11 @@
          (apply utc/deep-merge
                 (reduce into []
                         (map (fn [ranking]
-                               (filter (fn [{:keys [cc]}]
-                                         (= cc ccode))
-                                       ranking))
+                               (filter (fn [hm] (= (:ccode hm) ccode)) ranking))
                              (utc/transpose (map rank-for-case
                                                  com/ranking-cases))))))
        ;; TODO sets and set operations should be used clojure.set/difference
-       (remove (fn [ccode] (= ccode ccc/zz))
-               ccc/all-country-codes)))
+       (remove (fn [ccode] (= ccode ccc/zz)) ccc/all-country-codes)))
 
 (defn all-rankings []
   (from-cache calc-all-rankings [:rankings]))

@@ -220,11 +220,11 @@
 (defn worldwide-plots
   ([prm] (worldwide-plots "worldwide-plots" prm))
   ([msg-id {:keys [data]}]
-   (let [{ccode :cc
+   (let [{ccode :ccode
           chat-id :chat-id
           type :type
           case-kw :case-kw} (edn/read-string data)
-         options (reply-markup-btns {:chat-id chat-id :cc ccode})
+         options (reply-markup-btns {:chat-id chat-id :ccode ccode})
          content (let [plot-fn (if (= type :sum)
                                  plot/plot-sum plot/plot-absolute)]
                      ;; the plot is fetched from the cache, stats and report need not to be
@@ -295,9 +295,8 @@
                         )]]])
           (cstr/join
            "\n"
-           (map (fn [{:keys [a r d cc]}]
-                  (let [ccode cc
-                        cname (ccr/country-name-aliased ccode)]
+           (map (fn [{:keys [a r d ccode]}]
+                  (let [cname (ccr/country-name-aliased ccode)]
                     (format "<code>%s%s%s%s%s %s</code>  %s"
                             (com/left-pad a " " omag-active)
                             spacer
@@ -364,9 +363,8 @@
                       )]]])
           (cstr/join
            "\n"
-           (map (fn [{:keys [a100k r100k d100k cc]}]
-                  (let [ccode cc
-                        cname (ccr/country-name-aliased ccode)]
+           (map (fn [{:keys [a100k r100k d100k ccode]}]
+                  (let [cname (ccr/country-name-aliased ccode)]
                     (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                             (com/left-pad a100k " " omag-active-per-100k)
                             spacer
@@ -530,7 +528,7 @@
                                (get
                                 (first
                                  (map :rank
-                                      (filter (fn [{:keys [cc]}] (= cc ccode))
+                                      (filter (fn [hm] (= (:ccode hm) ccode))
                                               (data/all-rankings))))
                                 (last args))))))]])]))
 

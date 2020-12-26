@@ -263,11 +263,11 @@
      (let [stats (->> (v1/pic-data)
                       (transduce (comp
                                   ;; group together provinces of the given country
-                                  (x/by-key :cc (x/reduce conj)) ; (group-by :cc)
+                                  (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
                                   (map estimate-recov-for-country))
                                  ;; the xform for the `into []`
                                  into [])
-                      (sort-by :cc))
+                      (sort-by :ccode))
            cnt-reports (count (data/dates))
            form '(< (count (corona.api.expdev07/raw-dates)) 10)]
        ;; TODO do not call calc-functions when the `form` evaluates to true

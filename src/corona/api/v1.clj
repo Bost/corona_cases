@@ -34,17 +34,17 @@
 ;;               (let [ccode (:country_code loc)]
 ;;                 (->> (sort-by
 ;;                       :t
-;;                       (map (fn [[t v]] {:cc ccode :t (fmt t) case-kw v})
+;;                       (map (fn [[t v]] {:ccode ccode :t (fmt t) case-kw v})
 ;;                            (:history loc)))
 ;;                      #_(take-last 3)))))
 ;;        (flatten)
 ;;        (group-by :t)
 ;;        (map (fn [[t hms]]
 ;;               (map (fn [[ccode hms]]
-;;                      {:cc ccode :t t case-kw (reduce + (map case-kw hms))})
-;;                    (group-by :cc hms))))
+;;                      {:ccode ccode :t t case-kw (reduce + (map case-kw hms))})
+;;                    (group-by :ccode hms))))
 ;;        (flatten)
-;;        (sort-by :cc)))
+;;        (sort-by :ccode)))
 
 (def ^:const ccodes
   #{
@@ -61,10 +61,10 @@
 (defn xf-for-case
   "E.g.
 (
-  {:cc \"SK\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :deaths 1}
-  {:cc \"SK\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :deaths 0}
-  {:cc \"US\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :deaths 8407}
-  {:cc \"US\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :deaths 3873})
+  {:ccode \"SK\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :deaths 1}
+  {:ccode \"SK\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :deaths 0}
+  {:ccode \"US\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :deaths 8407}
+  {:ccode \"US\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :deaths 3873})
 
   TODO see (require '[clojure.core.reducers :as r])
   "
@@ -78,11 +78,11 @@
     ;; (def history history)
 
     #_(->> (sort-by :t history)
-           (map (fn [[t v]] {:cc country_code :t (fmt t) case-kw v}))
+           (map (fn [[t v]] {:ccode country_code :t (fmt t) case-kw v}))
            (take-last 2))
 
     (into [] (comp (x/sort-by :t)
-                   (map (fn [[t v]] {:cc country_code :t (fmt t) case-kw v}))
+                   (map (fn [[t v]] {:ccode country_code :t (fmt t) case-kw v}))
                    #_(x/take-last 2))
           history))
 
@@ -94,12 +94,12 @@
           ;; the xform for the `into []`
           (comp
            ;; group together provinces of the given country
-           (x/by-key :cc (x/reduce conj)) ; (group-by :cc)
-           (map (fn [[ccode hms]] {:cc ccode :t t case-kw (reduce + (map case-kw hms))})))
+           (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
+           (map (fn [[ccode hms]] {:ccode ccode :t t case-kw (reduce + (map case-kw hms))})))
           hms)
 
-    #_(->> (group-by :cc hms) ;; group together provinces of the given country
-           (map (fn [[ccode hms]] {:cc ccode :t t case-kw (reduce + (map case-kw hms))}))))
+    #_(->> (group-by :ccode hms) ;; group together provinces of the given country
+           (map (fn [[ccode hms]] {:ccode ccode :t t case-kw (reduce + (map case-kw hms))}))))
 
   ;; TODO see: "A transducer for clojure.core.flatten"
   ;; https://groups.google.com/forum/#!topic/clojure-dev/J442k0GsWoY
@@ -128,24 +128,23 @@
                    (map process-date))
                   ;; works as flatten by 1 level
                   into [])
-       (sort-by :cc)))
+       (sort-by :ccode)))
 
 (defn pic-data
   "Returns a collection of hash-maps containing e.g.:
 (
-  {:cc \"SK\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :c 471    :r 10    :d 1    :p 5459642   :a 460}
-  {:cc \"SK\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :c 363    :r 3     :d 0    :p 5459642   :a 360}
-  {:cc \"US\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :c 308853 :r 14652 :d 8407 :p 331002651 :a 285794}
-  {:cc \"US\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :c 188172 :r 7024  :d 3873 :p 331002651 :a 177275}
+  {:ccode \"SK\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :c 471    :r 10    :d 1    :p 5459642   :a 460}
+  {:ccode \"SK\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :c 363    :r 3     :d 0    :p 5459642   :a 360}
+  {:ccode \"US\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :c 308853 :r 14652 :d 8407 :p 331002651 :a 285794}
+  {:ccode \"US\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :c 188172 :r 7024  :d 3873 :p 331002651 :a 177275}
 )"
   []
   (apply map
          (fn [{:keys [population]}
-             {:keys [cc t confirmed]}
+             {:keys [ccode t confirmed]}
              {:keys [recovered]}
              {:keys [deaths]}]
-           (let [ccode cc
-                 prm-basic {:cc ccode :t t :c confirmed :r recovered :d deaths
+           (let [prm-basic {:ccode ccode :t t :c confirmed :r recovered :d deaths
                             :p population}
                  prm (assoc prm-basic :a (com/calculate-active prm-basic))]
              (assoc

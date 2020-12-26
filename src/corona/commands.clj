@@ -22,9 +22,8 @@
 
 (defn world
   ([prm] (world "world" prm))
-  ([msg-id {:keys [chat-id cc] :as prm-orig}]
-   (let [ccode cc
-         prm
+  ([msg-id {:keys [chat-id ccode] :as prm-orig}]
+   (let [prm
          ;; override default parse_mode
          (assoc prm-orig
                 :parse_mode com/html
@@ -35,7 +34,7 @@
         (morse/send-text com/telegram-token chat-id options content))
        (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
      (let [options (if (msg/worldwide? ccode)
-                     (msg/reply-markup-btns (select-keys prm [:chat-id :cc]))
+                     (msg/reply-markup-btns (select-keys prm [:chat-id :ccode]))
                      {})
            ;; the plot is fetched from the cache, stats and report need not to be
            ;; specified
@@ -99,7 +98,7 @@
    (fn [fun]
      {:name (fun ccode)
       :fun (fn [chat-id] (world {:chat-id chat-id
-                                :cc ccode}))})
+                                :ccode ccode}))})
    [#(cstr/lower-case %)  ;; /de
     #(cstr/upper-case %)  ;; /DE
     #(cstr/capitalize %)  ;; /De
@@ -112,7 +111,7 @@
 
 (defn cmds-general []
   (let [prm (assoc msg/options
-                   :cc (ccr/get-country-code ccc/worldwide))]
+                   :ccode (ccr/get-country-code ccc/worldwide))]
     [{:name l/contributors
       :fun (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
