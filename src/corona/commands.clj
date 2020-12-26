@@ -1,22 +1,19 @@
 (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.commands)
 
 (ns corona.commands
-  (:require
-   ;; [clojure.spec.alpha :as spec]
-   [clojure.string :as cstr]
-   [corona.api.expdev07 :as data]
-   [corona.countries :as ccr]
-   [corona.country-codes :as ccc]
-   [corona.lang :as l]
-   [corona.messages :as msg]
-   [corona.plot :as p]
-   [morse.api :as morse]
-   [utils.core :as u :refer [in?] :exclude [id]]
-   [corona.common :as com]
-   [taoensso.timbre :as timbre :refer [debugf
-                                       ;; infof warnf errorf fatalf
-                                       ]]
-   ))
+  (:require [clojure.string :as cstr]
+            [corona.common :as com]
+            [corona.countries :as ccr]
+            [corona.country-codes :as ccc]
+            [corona.lang :as l]
+            [corona.msg.common :as msgc]
+            [corona.msg.info :as msgi]
+            [corona.msg.messages :as msg]
+            [corona.msg.lists :as msgl]
+            [corona.plot :as p]
+            [morse.api :as morse]
+            [taoensso.timbre :as timbre :refer [debugf]]
+            [utils.core :as u :refer [in?]]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -29,11 +26,11 @@
                 :parse_mode com/html
                 :pred-hm (msg/create-pred-hm ccode))]
      (let [options (select-keys prm (keys msg/options))
-           content (msg/detailed-info ccode)]
+           content (msgi/detailed-info ccode)]
        (doall
         (morse/send-text com/telegram-token chat-id options content))
        (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
-     (let [options (if (msg/worldwide? ccode)
+     (let [options (if (msgc/worldwide? ccode)
                      (msg/reply-markup-btns (select-keys prm [:chat-id :ccode]))
                      {})
            ;; the plot is fetched from the cache, stats and report need not to be
@@ -138,8 +135,8 @@
                 {:name (l/list-sorted-by case-kw)
                  :fun (fn [chat-id]
                         (let [msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)
-                                                msg/list-per-100k
-                                                msg/list-countries)
+                                                msgl/list-per-100k
+                                                msgl/list-countries)
                               contents (msg-listing-fun case-kw)]
                           (doall
                            ;; mapping over results implies the knowledge that

@@ -11,7 +11,9 @@
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.commands :as cmd]
-   [corona.messages :as msg]
+   [corona.msg.messages :as msg]
+   [corona.msg.info :as msgi]
+   [corona.msg.lists :as msgl]
    [morse.handlers :as moh]
    [morse.polling :as mop]
    [corona.plot :as plot]
@@ -260,8 +262,8 @@
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
      (run! (fn [prms] (apply calc-listings prms))
-           [[msg/list-countries com/listing-cases-absolute]
-            [msg/list-per-100k com/listing-cases-per-100k]])
+           [[msgl/list-countries com/listing-cases-absolute]
+            [msgl/list-per-100k com/listing-cases-per-100k]])
      (let [stats (->> (v1/pic-data)
                       (transduce (comp
                                   ;; group together provinces of the given country
@@ -276,7 +278,7 @@
        (if (eval form)
          (warnf "Some stuff may not be calculated: %s" form))
        (run! (fn [ccode]
-               (msg/detailed-info ccode com/html (data/create-pred-hm ccode))
+               (msgi/detailed-info ccode com/html (data/create-pred-hm ccode))
                (plot/plot-country ccode stats cnt-reports))
              ccc/all-country-codes)
        (run! (fn [plot-fn]

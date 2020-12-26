@@ -1,23 +1,19 @@
 (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.common)
 
 (ns corona.common
-  (:require
-   [clj-http.client]
-   [clj-time.coerce :as ctc]
-   [clj-time.core :as ctime]
-   [clj-time.format :as ctf]
-   [clojure.data.json :as json]
-   [clojure.string :as cstr]
-   [environ.core :as env]
-   [corona.envdef :as envdef]
-   [utils.num :as utn]
-   [utils.core :as utc :exclude [id]]
-   #_[corona.country-codes :as ccc]
-   [taoensso.timbre :as timbre :refer [debugf infof
-                                       #_errorf]]
-   [corona.pom-version-get :as pom]
-   [clojure.spec.alpha :as spec]
-   ))
+  (:require clj-http.client
+            [clj-time.coerce :as ctc]
+            [clj-time.core :as ctime]
+            [clj-time.format :as ctf]
+            [clojure.data.json :as json]
+            [clojure.spec.alpha :as spec]
+            [clojure.string :as cstr]
+            [corona.envdef :as envdef]
+            [corona.pom-version-get :as pom]
+            [environ.core :as env]
+            [taoensso.timbre :as timbre :refer [debugf infof]]
+            [utils.core :as utc]
+            [utils.num :as utn]))
 
 ;; (set! *warn-on-reflection* true)
 
