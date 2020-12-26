@@ -100,21 +100,17 @@
 (def ^:const millions-rounded "Mill")
 
 (defn list-sorted-by [case-kw]
-  (->> [conf recov deaths active
-        cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5]
-       (map s/lower-case)
-       (zipmap co/basic-cases)
-       case-kw))
+  (s/lower-case
+   (co/text-for-case case-kw
+                     [conf recov deaths active
+                      cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5])))
 
 (defn list-sorted-by-desc [case-kw]
   (format "Countries sorted by nr. of %s" ;; "... in ascending order"
-          (case-kw (zipmap co/basic-cases
-                           (map s/lower-case
-                                [confirmed-cases recovered-cases deaths
-                                 active-cases
-                                 active-per-1e5
-                                 recove-per-1e5
-                                 deaths-per-1e5])))))
+          (s/lower-case
+           (co/text-for-case case-kw
+                             [confirmed-cases recovered-cases deaths active-cases
+                              active-per-1e5 recove-per-1e5 deaths-per-1e5]))))
 
 (def ^:const buttons "Shortened button names"
   (zipmap co/absolute-cases ["Co" "Re" "De" "Ac"]))

@@ -20,8 +20,7 @@
                                        #_info infof
                                        ;; warn errorf fatalf
                                        ]]
-   [corona.api.expdev07 :as data]
-   )
+   [corona.api.expdev07 :as data])
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
            javax.imageio.ImageIO
@@ -91,25 +90,21 @@
   "Calculate sums for a given country code or all countries if the country code
   is unspecified."
   [ccode stats]
-  (let [pred-fun (fn [hm] (if (= ccode ccc/worldwide-2-country-code)
-                          true
-                          (= ccode (:cc hm))))]
-    (->> stats
-         (filter pred-fun)
-         (group-by :t)
-         (map (fn [[t hms]]
-                  [
-                   ;; confirmed cases is the sum of all others
-                   {:cc ccode :t t :case :p :cnt
-                    (bigint (/ (:p (first hms)) 1e3))
-                    #_(reduce + (map :p hms))
-                    #_(bigint (/ (get population ccode) (bigint 1e3)))}
-                   {:cc ccode :t t :case :e :cnt (reduce + (map :e hms))}
-                   {:cc ccode :t t :case :c :cnt (reduce + (map :c hms))}
-                   {:cc ccode :t t :case :r :cnt (reduce + (map :r hms))}
-                   {:cc ccode :t t :case :d :cnt (reduce + (map :d hms))}
-                   {:cc ccode :t t :case :a :cnt (reduce + (map :a hms))}]))
-         flatten)))
+  (->> stats
+       (filter (fn [hm] (in? [ccc/worldwide-2-country-code (:cc hm)] ccode)))
+       (group-by :t)
+       (map (fn [[t hms]]
+              [;; confirmed cases is the sum of all others
+               {:cc ccode :t t :case-kw :p :cnt
+                (bigint (/ (:p (first hms)) 1e3))
+                #_(reduce + (map :p hms))
+                #_(bigint (/ (get population ccode) (bigint 1e3)))}
+               {:cc ccode :t t :case-kw :e :cnt (reduce + (map :e hms))}
+               {:cc ccode :t t :case-kw :c :cnt (reduce + (map :c hms))}
+               {:cc ccode :t t :case-kw :r :cnt (reduce + (map :r hms))}
+               {:cc ccode :t t :case-kw :d :cnt (reduce + (map :d hms))}
+               {:cc ccode :t t :case-kw :a :cnt (reduce + (map :a hms))}]))
+       (flatten)))
 
 (defn stats-for-country [ccode stats]
   (let [mapped-hm (plotcom/map-kv
@@ -118,10 +113,11 @@
                               (map (fn [{:keys [t cnt]}]
                                      [(to-java-time-local-date t) cnt])
                                    entry)))
-                   (group-by :case (sum-for-pred ccode stats)))]
+                   (group-by :case-kw (sum-for-pred ccode stats)))]
     ;; sort - keep the "color order" of cases fixed; don't
     ;; recalculate it
-    (reverse (transduce (map (fn [case-kw] {case-kw (get mapped-hm case-kw)}))
+    ;; TODO try (map {:a 1 :b 2 :c 3 :d 4} [:a :d]) ;;=> (1 4)
+    (reverse (transduce (map (fn [case-kw] (select-keys mapped-hm [case-kw])))
                         into []
                         [:a :r :d :c :p :e]))))
 
@@ -234,17 +230,16 @@
                        [:line (line-data :c base-data) stroke-confirmed]
                        [:line (line-data :a base-data) stroke-sick]
                        [:line (line-data :e base-data) stroke-estimated])
-              :y-axis-formatter  (metrics-prefix-formatter
-                                  ;; population numbers have the `max` values, all
-                                  ;; other numbers are derived from them
-
-                                  ;; don't display the population data for the moment
-                                  (max-y-val + sarea-data))
+              :y-axis-formatter (metrics-prefix-formatter
+                                 ;; population numbers have the `max` values, all
+                                 ;; other numbers are derived from them
+                                 ;; don't display the population data for the moment
+                                 (max-y-val + sarea-data))
               :legend (reverse
                        (conj (map #(vector :rect %2 {:color %1})
                                   palette
                                   (map (fn [k] (get {:a lang/active :d lang/deaths :r lang/recovered
-                                                    :e lang/recov-estim} k))
+                                                     :e lang/recov-estim} k))
                                        curves))
                              [:line lang/confirmed     stroke-confirmed]
                              [:line lang/sick-absolute stroke-sick]
@@ -269,9 +264,8 @@
   "Group all countries w/ the number of active cases below the threshold under the
   `ccc/default-2-country-code` so that max 10 countries are displayed in the
   plot"
-  [{:keys [case threshold threshold-increase stats] :as prm}]
-  (let [case-kw case
-        max-plot-lines 10
+  [{:keys [case-kw threshold threshold-increase stats] :as prm}]
+  (let [max-plot-lines 10
         res (map (fn [hm] (if (< (get hm case-kw) threshold)
                            (assoc hm :cc ccc/default-2-country-code)
                            hm))
@@ -286,19 +280,25 @@
 
 (defn sum-all-by-date-by-case
   "Group the country stats by report and sum up the active cases"
-  [{:keys [case] :as prm-orig}]
-  (let [case-kw case
-        prm (group-below-threshold prm-orig)]
-    (let [res (flatten (map (fn [[t hms]]
-                              (map (fn [[ccode hms]]
-                                     {:cc ccode :t t case-kw (reduce + (map case-kw hms))})
-                                   (group-by :cc hms)))
-                            (group-by :t (:data prm))))]
-      (update prm :data (fn [_] res)))))
+  [{:keys [case-kw] :as prm-orig}]
+  (let [prm (group-below-threshold prm-orig)
+        res
+        (->> (:data prm)
+             (group-by :t)
+             (map (fn [[t hms]]
+                    (->> (group-by :cc hms)
+                         (map (fn [[ccode hms]]
+                                {:cc ccode :t t case-kw (reduce + (map case-kw hms))})))))
+             (flatten))
+        #_(flatten (map (fn [[t hms]]
+                          (map (fn [[ccode hms]]
+                                 {:cc ccode :t t case-kw (reduce + (map case-kw hms))})
+                               (group-by :cc hms)))
+                        (group-by :t (:data prm))))]
+    (update prm :data (fn [_] res))))
 
-(defn fill-rest [{:keys [case] :as prm}]
-  (let [case-kw case
-        date-sums (sum-all-by-date-by-case prm)
+(defn fill-rest [{:keys [case-kw] :as prm}]
+  (let [date-sums (sum-all-by-date-by-case prm)
         {sum-all-by-date-by-case-threshold :data} date-sums
         countries-threshold (set (map :cc sum-all-by-date-by-case-threshold))
         res (reduce into []
@@ -309,16 +309,15 @@
                                  (cset/difference countries-threshold
                                                   (keys (group-by :cc hms)))))
                            #_(->> (group-by :cc hms)
-                                  keys
+                                  (keys)
                                   (cset/difference countries-threshold)
                                   (map (fn [ccode] {:cc ccode :t t :a 0}))
                                   (cset/union hms)))
                          (group-by :t sum-all-by-date-by-case-threshold)))]
     (update date-sums :data (fn [_] res))))
 
-(defn stats-all-by-case [{:keys [case] :as prm}]
-  (let [case-kw case
-        fill-rest-stats (fill-rest prm)
+(defn stats-all-by-case [{:keys [case-kw] :as prm}]
+  (let [fill-rest-stats (fill-rest prm)
         data (:data fill-rest-stats)
         mapped-hm (plotcom/map-kv
                    (fn [entry]
@@ -336,14 +335,11 @@
   "Case-specific plot for the sum of all countries."
   ([case-kw stats report] (calc-sum "calc-sum" case-kw stats report))
   ([msg-id case-kw stats report]
-   (let [
-         prm {
-              :report report
+   (let [prm {:report report
               :stats stats
               :threshold (com/min-threshold case-kw)
               :threshold-increase (com/threshold-increase case-kw)
-              :case case-kw
-              }
+              :case-kw case-kw}
 
          {json-data :data threshold-recaltulated
           :threshold} (stats-all-by-case prm)]
@@ -357,8 +353,8 @@
                             ccr/country-alias
                             ;; XXX b/add-legend doesn't accept newline char \n
                             #_(fn [ccode] (format "%s %s"
-                                                 ccode
-                                                 (com/country-alias ccode)))
+                                                  ccode
+                                                  (com/country-alias ccode)))
                             (keys json-data))))
              :y-axis-formatter (metrics-prefix-formatter
                                 ;; `+` means: sum up all active cases
@@ -367,9 +363,12 @@
                             (fmt-report report)
                             (fmt-last-date stats)
                             com/bot-name
-                            (->> [lang/confirmed lang/recovered lang/deaths lang/active-cases ]
-                                 (zipmap com/basic-cases)
-                                 case-kw)
+                            (com/text-for-case
+                             case-kw
+                             [lang/confirmed lang/recovered lang/deaths lang/active-cases])
+                            #_(->> [lang/confirmed lang/recovered lang/deaths lang/active-cases]
+                                   (zipmap com/basic-cases)
+                                   case-kw)
                             #_(case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
                             threshold-recaltulated)
              :label-conf {:color (c/darken :steelblue) :font-size 14}})]
@@ -405,7 +404,7 @@
               :stats stats
               :threshold threshold
               :threshold-increase (com/threshold-increase case-kw)
-              :case case-kw
+              :case-kw case-kw
               }
 
          json-data (->> (:data (stats-all-by-case prm))

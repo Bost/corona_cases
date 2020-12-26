@@ -147,7 +147,7 @@
                              formatted-n)
                      " " padding-n)]
        (str (.replaceAll padded-n "," " ")
-            (if (and true show-plus-minus)
+            (if show-plus-minus
               (pos-neg n)
               "")))
      #_(com/left-pad (if rate (str rate "%") " ") " " 4)
@@ -208,7 +208,7 @@
                        {:text (str (get lang/buttons case-kw)
                                    (type lang/plot-type))
                         :callback_data (pr-str (assoc prm
-                                                      :case case-kw
+                                                      :case-kw case-kw
                                                       :type type))})
                      com/absolute-cases))
              [:sum :abs]))]})})
@@ -223,16 +223,16 @@
    (let [{ccode :cc
           chat-id :chat-id
           type :type
-          case-kw :case} (edn/read-string data)]
-     (let [options (reply-markup-btns {:chat-id chat-id :cc ccode})
-           content (let [plot-fn (if (= type :sum)
-                                   plot/plot-sum plot/plot-absolute)]
+          case-kw :case-kw} (edn/read-string data)
+         options (reply-markup-btns {:chat-id chat-id :cc ccode})
+         content (let [plot-fn (if (= type :sum)
+                                 plot/plot-sum plot/plot-absolute)]
                      ;; the plot is fetched from the cache, stats and report need not to be
                      ;; specified
-                     (plot-fn case-kw))]
-       (doall
-        (morse/send-photo com/telegram-token chat-id options content))
-       (debugf "[%s] send-photo: %s bytes sent" msg-id (count content))))))
+                   (plot-fn case-kw))]
+     (doall
+      (morse/send-photo com/telegram-token chat-id options content))
+     (debugf "[%s] send-photo: %s bytes sent" msg-id (count content)))))
 
 ;; (defn language [prm]
 ;;   (format
@@ -271,51 +271,49 @@
          sort-indicator "▴" ;; " " "▲"
          omag-active 7 ;; order of magnitude i.e. number of digits
          omag-recov  (inc omag-active)
-         omag-deaths (dec omag-active)]
-     #_(debugf "[%s] cnt-reports %s" msg-id cnt-reports)
-     #_(debugf "[%s] cnt-msgs %s" msg-id cnt-msgs)
-     #_(debugf "[%s] data %s" msg-id data)
-     (let [msg
-           (format
-            (format-linewise
-             [["%s\n"   [header-txt]]
-              ["%s\n"   [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-              ["    %s " [(str lang/active    (if (= :a case-kw) sort-indicator " "))]]
-              ["%s"     [spacer]]
-              ["%s "    [(str lang/recovered (if (= :r case-kw) sort-indicator " "))]]
-              ["%s"     [spacer]]
-              ["%s\n"   [(str lang/deaths    (if (= :d case-kw) sort-indicator " "))]]
-              ["%s"     [(str
-                          "%s"   ; listing table
-                          "%s"   ; sorted-by description; has its own new-line
-                          "\n\n"
-                          "%s"   ; footer
-                          )]]])
-            (cstr/join
-             "\n"
-             (map (fn [{:keys [a r d cc]}]
-                    (let [ccode cc
-                          cname (ccr/country-name-aliased ccode)]
-                      (format "<code>%s%s%s%s%s %s</code>  %s"
-                              (com/left-pad a " " omag-active)
-                              spacer
-                              (com/left-pad r " " omag-recov)
-                              spacer
-                              (com/left-pad d " " omag-deaths)
-                              (com/right-pad cname 17)
-                              (cstr/lower-case (com/encode-cmd ccode)))))
-                  (->> data
-                       #_(take-last 11)
-                       #_(partition-all 2)
-                       #_(map (fn [part] (cstr/join "       " part))))))
-            ""
-            #_(if (= msg-idx cnt-msgs)
-                (str "\n\n" (lang/list-sorted-by-desc case-kw))
-                "")
-            (footer parse_mode))]
-       (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
-               msg-id case-kw msg-idx (count msg))
-       msg))))
+         omag-deaths (dec omag-active)
+
+         msg
+         (format
+          (format-linewise
+           [["%s\n"   [header-txt]]
+            ["%s\n"   [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
+            ["    %s " [(str lang/active    (if (= :a case-kw) sort-indicator " "))]]
+            ["%s"     [spacer]]
+            ["%s "    [(str lang/recovered (if (= :r case-kw) sort-indicator " "))]]
+            ["%s"     [spacer]]
+            ["%s\n"   [(str lang/deaths    (if (= :d case-kw) sort-indicator " "))]]
+            ["%s"     [(str
+                        "%s"   ; listing table
+                        "%s"   ; sorted-by description; has its own new-line
+                        "\n\n"
+                        "%s"   ; footer
+                        )]]])
+          (cstr/join
+           "\n"
+           (map (fn [{:keys [a r d cc]}]
+                  (let [ccode cc
+                        cname (ccr/country-name-aliased ccode)]
+                    (format "<code>%s%s%s%s%s %s</code>  %s"
+                            (com/left-pad a " " omag-active)
+                            spacer
+                            (com/left-pad r " " omag-recov)
+                            spacer
+                            (com/left-pad d " " omag-deaths)
+                            (com/right-pad cname 17)
+                            (cstr/lower-case (com/encode-cmd ccode)))))
+                (->> data
+                     #_(take-last 11)
+                     #_(partition-all 2)
+                     #_(map (fn [part] (cstr/join "       " part))))))
+          ""
+          #_(if (= msg-idx cnt-msgs)
+              (str "\n\n" (lang/list-sorted-by-desc case-kw))
+              "")
+          (footer parse_mode))]
+     (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
+             msg-id case-kw msg-idx (count msg))
+     msg)))
 
 (defn get-from-cache! [case-kw ks fun msg-idx prm]
   (if prm
@@ -394,17 +392,6 @@
   [case-kw & [msg-idx prm]]
   (get-from-cache! case-kw [:list :100k case-kw]
                    calc-list-per-100k msg-idx prm))
-
-(defn diff-coll-vals
-  "Differences between values. E.g.:
-  (diff-coll-valls [1 3 6 10 9 9 10])
-  ;; => [2 3 4 -1 0 1]"
-  [coll]
-  (loop [[head & tail] coll
-         result []]
-    (if (and head (seq tail))
-      (recur tail (conj result (- (first tail) head)))
-      result)))
 
 (defn last-index-of
   "To find the last element in a collection the collection must be fully
@@ -588,8 +575,7 @@
   TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
-  TODO make an api service for the content shown in the message
-  TODO Create API web service(s) for every field displayed in the messages
+  TODO create an API web service(s) for every field displayed in the messages
   "
   ([ccode parse_mode pred-hm]
    (create-detailed-info "create-detailed-info" ccode parse_mode pred-hm))

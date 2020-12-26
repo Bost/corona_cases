@@ -17,20 +17,28 @@
    ))
 
 (defn get-heroku-envs [kws]
-  (->> (map (fn [kw]
-              (get-in env/environment [kw :cli]))
-            kws)
-       (into {})
-       (vals)
-       (set)))
+  ((comp
+    set
+    vals
+    (partial into {})
+    (partial map (fn [kw] (get-in env/environment [kw :cli]))))
+    kws))
 
 (def heroku-envs (get-heroku-envs (keys env/environment)))
+#_(println "heroku-envs" heroku-envs)
 
-(def heroku-env-prod (->> [env/prod] (get-heroku-envs) (first)))
+(def heroku-env-prod ((comp first get-heroku-envs) [env/prod]))
+#_(println "heroku-env-prod" heroku-env-prod)
 
 (def heroku-apps
-  (set
-   (map (fn [henv] (str henv "-bot")) heroku-envs)))
+  ((comp
+    set
+    (partial map (fn [henv] (str henv "-bot"))))
+   heroku-envs))
+
+#_(println "heroku-apps" heroku-apps)
+
+#_(System/exit 1)
 
 (defn in?
   "true if `sequence` contains `elem`. See (contains? (set sequence) elem)"

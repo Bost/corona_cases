@@ -195,19 +195,22 @@
 
 (defn get-json [url]
   (infof "Requesting json-data from %s ..." url)
-  (let [result (-> url
-                   (clj-http.client/get {:accept :json})
-                   :body
-                   (json/read-str :key-fn clojure.core/keyword))]
-    ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
-    ;; TODO sanitize against http status 503 - service not available
-    ;; Requesting json-data from http://covid-tracker-us.herokuapp.com/all ...
-    ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
-    ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
-    ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
-    (infof "Requesting json-data from %s ... done. %s chars received" url
-           (count (str result)))
-    result))
+  (let [tbeg (System/currentTimeMillis)]
+    (let [result (-> url
+                     (clj-http.client/get {:accept :json})
+                     :body
+                     (json/read-str :key-fn clojure.core/keyword))]
+      ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
+      ;; TODO sanitize against http status 503 - service not available
+      ;; Requesting json-data from http://covid-tracker-us.herokuapp.com/all ...
+      ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
+      ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
+      ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
+      (infof "Requesting json-data from %s ... done. %s chars received in %s ms"
+             url
+             (count (str result))
+             (- (System/currentTimeMillis) tbeg))
+      result)))
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))
 
@@ -248,29 +251,44 @@
    {:idx 12 :kw :c-rate} ;; closed-rate
    ])
 
-(def ^:const absolute-cases (->> case-params
-                                 (filter (fn [m] (utc/in? [1 2 3 4] (:idx m))))
-                                 (mapv :kw)))
+(defmacro tore
+  "->>-or-eduction. In fact both have the same performance.
+  See also https://github.com/rplevy/swiss-arrows"
+  [coll & fns]
+  `(->> ~coll ~@fns)
+  #_`(sequence (eduction ~@fns ~coll)))
 
-(def ^:const basic-cases (->> case-params
-                              (filter (fn [m] (utc/in? [1 2 3 4 5 6 7 8] (:idx m))))
-                              (mapv :kw)))
-(def ^:const all-cases (->> case-params
-                            (mapv :kw)))
+(def ^:const absolute-cases
+  (tore case-params
+        (filter (fn [m] (utc/in? [1 2 3 4] (:idx m))))
+        (map :kw)))
+
+(def ^:const basic-cases
+  (tore case-params
+        (filter (fn [m] (utc/in? [1 2 3 4 5 6 7 8] (:idx m))))
+        (map :kw)))
+
+(def ^:const all-cases
+  (tore case-params
+        (map :kw)))
 
 (def ^:const ranking-cases [:p :c100k :r100k :d100k :a100k])
 
 (def ^:const listing-cases-per-100k
   "No listing of :c100k - Closed cases per 100k"
-  (->> case-params
-       (filter (fn [m] (utc/in? [5 6 7] (:idx m))))
-       (mapv :kw)))
+  (tore case-params
+        (filter (fn [m] (utc/in? [5 6 7] (:idx m))))
+        (map :kw)))
 
 (def ^:const listing-cases-absolute
   (->> case-params
-       (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
-       (sort-by :listing-idx)
-       (mapv :kw)))
+        (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
+        (sort-by :listing-idx)
+        (map :kw))
+  #_(tore case-params
+        (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
+        (net.cgrand.xforms/sort-by :listing-idx)
+        (map :kw)))
 
 (defn fmt-date-fun [fmts]
   (fn [date]
@@ -287,22 +305,36 @@
                 \"4/26/20\"))"
   (fmt-date-fun "dd.MM."))
 
-(defn- threshold [case-kw]
+(defn- threshold
+  "See also https://github.com/rplevy/swiss-arrows"
+  [case-kw]
+  #_
   (->> case-params
        (filter (fn [m] (= (:kw m) case-kw)))
        (map :threshold)
-       (first)))
+       (first))
+  #_
+  (transduce (comp
+              (filter (fn [m] (= (:kw m) case-kw)))
+              (map :threshold))
+             ;; there's only one element so we can use the net.cgrand.xforms.rfs/last
+             net.cgrand.xforms.rfs/last []
+             case-params)
+  (first
+   (tore case-params
+         (filter (fn [m] (= (:kw m) case-kw)))
+         (map :threshold))))
 
 (defn min-threshold
   "Countries with the number of cases less than the threshold are grouped into
   \"Rest\"."
   [case-kw]
-  (->> case-kw threshold :val))
+  ((comp :val threshold) case-kw))
 
 (defn threshold-increase
   "Case-dependent threshold recalculation increase."
   [case-kw]
-  (->> case-kw threshold :inc))
+  ((comp :inc threshold) case-kw))
 
 (def ^:const desc-ws
   "A placeholder"
@@ -324,5 +356,11 @@
 (def ttl
   "Time to live in (* <hours> <minutes> <seconds> <miliseconds>)."
   (* 3 60 60 1000))
+
+(defn text-for-case [case-kw texts]
+  (->> basic-cases
+       (keep-indexed (fn [idx kw] (when (= kw case-kw)
+                                    (nth texts idx))))
+       (first)))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

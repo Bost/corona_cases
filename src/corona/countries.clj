@@ -13,13 +13,6 @@
 
 ;; (set! *warn-on-reflection* true)
 
-;; nothing should be default affected!!!
-(def ^:const default-affected-country-codes
-  (->> [ccc/country-code-worldwide
-        ccc/country-code-others]
-       (reduce into)
-       (mapv (fn [[k _]] k))))
-
 (defn country-code--country-nv-i18n
   "The base data from the internationalization, ISO 3166-1 country codes etc.
   library: com.neovisionaries/nv-i18n \"1.27\""
@@ -660,6 +653,13 @@
                                       nil)}))
                      (reduce into)))"
   #_corona.tables/population
+  ;; TODO See net.cgrand.xforms/transjuxt - perform several transductions at once
+  #_(eduction
+   (map (fn [[cname population-nr]]
+          {(get-country-code cname) population-nr}))
+       ;; because e.g. population of Russia is mainland + South Ossetia
+   (fn [maps] (apply merge-with + maps))
+   population-table)
   (->> population-table
        (map (fn [[cname population-nr]]
               {(get-country-code cname) population-nr}))

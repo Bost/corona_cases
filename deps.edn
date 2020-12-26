@@ -115,6 +115,9 @@
 
   ring-basic-authentication/ring-basic-authentication {:mvn/version "1.1.0"}
 
+  ;; A collection of arrow macros. Better threading macros `->` and `->>`
+  ;; swiss-arrows/swiss-arrows {:mvn/version "1.0.0"}
+
   ;; profiling - see
   ;; http://clojure-goes-fast.com/
   ;; https://github.com/clojure-goes-fast/
