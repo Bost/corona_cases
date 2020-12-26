@@ -9,6 +9,7 @@
   (:require
    [clojure.core.async :as async]
    [corona.common :as com]
+   [corona.countries :as ccr]
    [corona.commands :as cmd]
    [corona.messages :as msg]
    [morse.handlers :as moh]
@@ -243,7 +244,8 @@
                                           7) coll)
                options {:parse_mode com/html}
                prm (conj options {:cnt-msgs (count sub-msgs)
-                                  :cnt-reports (count (data/dates))})]
+                                  :cnt-reports (count (data/dates))
+                                  :pred-hm (msg/create-pred-hm (ccr/get-country-code ccc/worldwide))})]
            (doall
             (map-indexed (fn [idx sub-msg]
                            (fun case-kw (inc idx) (conj prm {:data sub-msg})))

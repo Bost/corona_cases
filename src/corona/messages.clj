@@ -260,17 +260,12 @@
 ;; mapvals
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 
-(defn- header-content [parse_mode]
-  (let [ccode (ccr/get-country-code ccc/worldwide)
-        pred_hm (create-pred-hm ccode)]
-    (header parse_mode pred_hm)))
-
 (defn calc-list-countries
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   ([case-kw msg-idx prm] (calc-list-countries "calc-list-countries" case-kw msg-idx prm))
-  ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode]}]
-   (let [header-txt (header-content parse_mode)
+  ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode pred-hm]}]
+   (let [header-txt (header parse_mode pred-hm)
          spacer " "
          sort-indicator "▴" ;; " " "▲"
          omag-active 7 ;; order of magnitude i.e. number of digits
@@ -334,8 +329,8 @@
   listing. See also `footer`, `bot-father-edit-cmds`."
   ([case-kw msg-idx prm] (calc-list-per-100k "calc-list-per-100k"
                                              case-kw msg-idx prm))
-  ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode]}]
-   (let [header-txt (header-content parse_mode)
+  ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode pred-hm]}]
+   (let [header-txt (header parse_mode pred-hm)
          spacer " "
          sort-indicator "▴" ;; " " "▲"
          ;; omag - order of magnitude i.e. number of digits
@@ -532,36 +527,26 @@
                                               (data/all-rankings))))
                                 (last args))))))]])]))
 
-(defn create-detailed-info-ext
+(defn format-detailed-info
   [{:keys
-    [ccode pred-hm cnt-reports cnt-countries header-txt footer-txt
-     max-active-val max-active-date last-report confirmed population
-     population-rounded delta delta-confirmed country-name-aliased cc-c3-codes]}]
+    [header-txt
+     cname-aliased-txt
+     country-commands-txt
+     cnt-reports-txt
+     population-txt
+     confirmed-txt
+     footer-txt
+     details-txt]}]
   (format-linewise
-   [["%s\n"  ; extended header
-     [(format-linewise
-       [["%s  " [header-txt]]
-        ["%s "  [country-name-aliased]]
-        ["%s"   [;; country commands
-                 (apply (fn [ccode c3code]
-                          (format "     %s    %s" ccode c3code))
-                        (map (fn [s] (com/encode-cmd (cstr/lower-case s)))
-                             cc-c3-codes))]]])]]
-    ["%s\n" [(str lang/report " " cnt-reports)]]
-    ["%s\n" ; data
-     [(format-linewise
-       (apply
-        conj
-        [["%s\n" [(format "<code>%s %s</code> = %s %s"
-                          (com/right-pad lang/people " " (- padding-s 2))
-                          (com/left-pad population " " (+ padding-n 2))
-                          population-rounded
-                          lang/millions-rounded)]]
-         ["%s\n" [(fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
-                                :diff delta-confirmed})]]]
-        (when (pos? confirmed)
-          (confirmed-info last-report pred-hm delta max-active-val
-                          max-active-date ccode cnt-countries))))]]
+   ;; extended header
+   [["%s\n" [(format-linewise [["%s  " [header-txt]]
+                               ["%s "  [cname-aliased-txt]]
+                               ["%s"   [country-commands-txt]]])]]
+    ["%s\n" [cnt-reports-txt]]
+    ["%s\n" [(format-linewise (apply conj
+                                     [["%s\n" [population-txt]]
+                                      ["%s\n" [confirmed-txt]]]
+                                     details-txt))]]
     ["%s\n" [footer-txt]]]))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
@@ -578,32 +563,37 @@
   ([ccode parse_mode pred-hm]
    (create-detailed-info "create-detailed-info" ccode parse_mode pred-hm))
   ([msg-id ccode parse_mode pred-hm]
-   ;; (debugf "[%s] ccode %s" msg-id ccode)
-   ;; (debugf "[%s] parse_mode %s" msg-id parse_mode)
-   ;; (debugf "[%s] pred-hm %s" msg-id pred-hm)
-   (let [data-active (:a (data/case-counts-report-by-report pred-hm))
-         max-active-val (apply max data-active)
-         last-report (data/last-report pred-hm)
+   (let [last-report (data/last-report pred-hm)
+         {population :p confirmed :c} last-report
          delta (data/delta pred-hm)
-         population (:p last-report)
-         info (create-detailed-info-ext
-               {:ccode ccode
-                :pred-hm pred-hm
-                :cnt-reports (count (data/dates))
-                :cnt-countries (count ccc/all-country-codes)
-                :header-txt (header parse_mode pred-hm)
-                :footer-txt (footer parse_mode)
-                :max-active-val max-active-val
-                :max-active-date (nth (data/dates)
-                                      (last-index-of data-active max-active-val))
-                :last-report last-report
-                :confirmed (:c last-report)
-                :population population
-                :population-rounded (utn/round-div-precision population 1e6 1)
-                :delta delta
-                :delta-confirmed (:c delta)
-                :country-name-aliased (ccr/country-name-aliased ccode)
-                :cc-c3-codes [ccode (ccc/country-code-3-letter ccode)]})]
+         delta-confirmed (:c delta)
+         info (format-detailed-info
+               (conj
+                {:header-txt (header parse_mode pred-hm)
+                 :cname-aliased-txt (ccr/country-name-aliased ccode)
+                 :country-commands-txt (apply (fn [ccode c3code]
+                                                (format "     %s    %s" ccode c3code))
+                                              (map (comp com/encode-cmd cstr/lower-case)
+                                                   [ccode (ccc/country-code-3-letter ccode)]))
+                 :cnt-reports-txt (str lang/report " " (count (data/dates)))
+                 :population-txt (format "<code>%s %s</code> = %s %s"
+                                         (com/right-pad lang/people " " (- padding-s 2))
+                                         (com/left-pad population " " (+ padding-n 2))
+                                         (utn/round-div-precision population 1e6 1)
+                                         lang/millions-rounded)
+                 :confirmed-txt (fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
+                                              :diff delta-confirmed})
+                 :footer-txt (footer parse_mode)}
+                (when (pos? confirmed)
+                  (let [data-active (:a (data/case-counts-report-by-report pred-hm))
+                        max-active-val (apply max data-active)]
+                    {:details-txt (confirmed-info last-report pred-hm delta
+                                                  max-active-val
+                                                  (nth (data/dates)
+                                                       (last-index-of data-active max-active-val))
+                                                  ccode
+                                                  (count ccc/all-country-codes))}))))]
+
      (debugf "[%s] ccode %s info-size %s" msg-id ccode (count info))
      info)))
 
@@ -621,12 +611,11 @@
 (defn contributors [parse_mode]
   (format "%s\n\n%s\n\n%s"
           (cstr/join "\n" ["@DerAnweiser"
-                        (link "maty535" "https://github.com/maty535" parse_mode)
-                        "@kostanjsek"
-                        "@DistrictBC"
-                        "Michael J."
-                        "Johannes D."
-                        ])
+                           (link "maty535" "https://github.com/maty535" parse_mode)
+                           "@kostanjsek"
+                           "@DistrictBC"
+                           "Michael J."
+                           "Johannes D."])
           (str
            "The rest of the contributors prefer anonymity or haven't "
            "approved their inclusion to this list yet. 🙏 Thanks folks.")
