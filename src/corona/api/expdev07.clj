@@ -107,17 +107,14 @@
   ;; 1010 items"
   []
   (from-cache! (fn []
-                 (->> (transduce xform-raw-dates
-                                 conj []
-                                 #_[(keyword "2/22/20") (keyword "2/2/20")]
-                                 (keys (:history
-                                        (last
-                                         (:locations
-                                          (:confirmed (json-data)))))))
-                      ;; I need at least 2 to calc difference
-                      #_(take-last 4)))
-               [:raw-dates])
-  )
+                 (transduce xform-raw-dates
+                            conj []
+                            ((comp
+                              ;; at least 2 values needed to calc difference
+                              #_(partial take-last 4)
+                              keys :history last :locations :confirmed)
+                             (json-data))))
+               [:raw-dates]))
 
 (defn population-cnt [ccode]
   (or (get ccr/population ccode)
