@@ -293,7 +293,7 @@
 
 (defn calc-stats-countries []
   (map (fn [ccode] (conj {:ccode ccode}
-                      (last-report (create-pred-hm ccode))))
+                        (last-report (create-pred-hm ccode))))
        ccc/all-country-codes))
 
 (defn stats-countries [] (from-cache! calc-stats-countries [:stats]))
@@ -306,8 +306,7 @@
                 (fn [_] (inc idx))))
    (sort-by rank-kw >
             ;; TODO sets and set operations should be used clojure.set/difference
-            (remove (fn [{:keys [ccode]}] (= ccode ccc/zz))
-                    (stats-countries)))))
+            (remove (fn [hm] (= (:ccode hm) ccc/zz)) (stats-countries)))))
 
 (defn calc-all-rankings
   "TODO verify ranking for one and zero countries"
