@@ -1,30 +1,26 @@
 (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.plot)
 
 (ns corona.plot
-  (:require
-   [cljplot.build :as b]
-   [cljplot.common :as plotcom]
-   ;; XXX cljplot.core must be required otherwise an empty plot is
-   ;; shown when released. WTF?
-   [cljplot.core]
-   [cljplot.render :as r]
-   [clojure.set :as cset]
-   [clojure2d.color :as c]
-   [clojure2d.core :as c2d]
-   [corona.common :as com]
-   [corona.countries :as ccr]
-   [corona.country-codes :as ccc]
-   [corona.lang :as lang]
-   [utils.core :refer [in?] :exclude [id]]
-   [taoensso.timbre :as timbre :refer [debugf
-                                       #_info infof
-                                       ;; warn errorf fatalf
-                                       ]]
-   [corona.api.expdev07 :as data])
+  (:require [cljplot.build :as b]
+            [cljplot.common :as plotcom]
+            ;; XXX cljplot.core must be required otherwise an empty plot is
+            ;; shown when released. WTF?
+            [cljplot.core]
+            [cljplot.render :as r]
+            [clojure.set :as cset]
+            [clojure2d.color :as c]
+            [clojure2d.core :as c2d]
+            [corona.api.expdev07 :as data]
+            [corona.common :as com]
+            [corona.countries :as ccr]
+            [corona.country-codes :as ccc]
+            [corona.lang :as lang]
+            [taoensso.timbre :as timbre :refer [debugf infof]]
+            [utils.core :refer [in?]])
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
-           javax.imageio.ImageIO
-           [java.time LocalDate ZoneId]))
+           [java.time LocalDate ZoneId]
+           javax.imageio.ImageIO))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -105,19 +101,16 @@
 (defn to-java-time-local-date [^java.util.Date java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date) (ZoneId/systemDefault)))
 
-(defn sort-by-country-name [mapped-hm]
-  (sort-by first (comp - compare)
-           mapped-hm))
+(defn sort-by-country-name [hmap] (sort-by first (comp - compare) hmap))
 
-(defn sort-by-last-val [mapped-hm]
-  (let [order (->> mapped-hm
-                   (map (fn [[ccode hms]] [ccode (second (last hms))]))
-                   (sort-by second)
-                   (reverse)
-                   (map first))]
-    (transduce (map (fn [ccode] {ccode (get mapped-hm ccode)}))
-               into []
-               order)))
+(defn sort-by-last-val [hm]
+  ((comp (partial reduce into [])
+         (partial map (comp (fn [key] {key (get hm key)})
+                            first))
+         reverse
+         (partial sort-by second)
+         (partial map (juxt first (comp second last second))))
+   hm))
 
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
