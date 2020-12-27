@@ -261,9 +261,14 @@
    #_(swap! data/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
-     (run! (fn [prms] (apply calc-listings prms))
-           [[msgl/list-countries com/listing-cases-absolute]
-            [msgl/list-per-100k com/listing-cases-per-100k]])
+     #_(doall
+        #_(data/stats-countries)
+        #_(data/dates)
+        #_(data/json-data))
+     (doall
+      (run! (fn [prms] (apply calc-listings prms))
+            [[msgl/list-countries com/listing-cases-absolute]
+             [msgl/list-per-100k com/listing-cases-per-100k]]))
      (let [stats (->> (v1/pic-data)
                       (transduce (comp
                                   ;; group together provinces of the given country
@@ -277,16 +282,24 @@
        ;; TODO do not call calc-functions when the `form` evaluates to true
        (if (eval form)
          (warnf "Some stuff may not be calculated: %s" form))
-       (run! (fn [ccode]
-               (msgi/detailed-info ccode com/html (data/create-pred-hm ccode))
-               (plot/plot-country ccode stats cnt-reports))
-             ccc/all-country-codes)
-       (run! (fn [plot-fn]
-               (run! (fn [case-kw]
-                       #_(debugf "Calculating %s %s" plot-fn case-kw)
-                       (plot-fn case-kw stats cnt-reports))
-                     com/absolute-cases))
-             [plot/plot-sum plot/plot-absolute]))
+       (doall
+        (pmap (fn [ccode]
+                (msgi/detailed-info ccode com/html
+                                    (data/create-pred-hm ccode))
+                (plot/plot-country ccode stats cnt-reports)
+                #_(pmap (fn [fun] (fun))
+                      [(fn [] (msgi/detailed-info ccode com/html
+                                                 (data/create-pred-hm ccode)))
+                       (fn [] (plot/plot-country ccode stats cnt-reports))]))
+              ccc/all-country-codes))
+       (doall
+        (pmap (fn [plot-fn]
+                (doall
+                 (pmap (fn [case-kw]
+                         #_(debugf "Calculating %s %s" plot-fn case-kw)
+                         (plot-fn case-kw stats cnt-reports))
+                       com/absolute-cases)))
+              [plot/plot-sum plot/plot-absolute])))
      ;; discard the intermediary results, i.e. keep only those items in the
      ;; cache which contain the final results.
      (swap! data/cache (fn [_]
