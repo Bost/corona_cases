@@ -16,23 +16,11 @@
 ;; (set! *warn-on-reflection* true)
 
 (defn last-index-of
-  "To find the last element in a collection the collection must be fully
-  computed and so this can't be lazy."
+  "TODO move last-index-of to utils"
   [coll elem]
-  ;; (->> coll
-  ;;      (map-indexed (fn [idx val] [idx val]))
-  ;;      (filter (fn [indexed-el] (= elem (second indexed-el))))
-  ;;      (last)
-  ;;      (first))
-  (first
-   (transduce
-    ;; the xform:
-    (comp (map-indexed (fn [idx val] [idx val]))
-          (filter (fn [indexed-el] (= elem (second indexed-el)))))
-    ;; the reducer:
-    (fn [& findings] (last findings))
-    ;; the collection
-    coll)))
+  ((comp last
+         (partial keep-indexed (fn [i v] (when (= elem v) i))))
+   coll))
 
 (defn format-detailed-info
   [{:keys
@@ -96,9 +84,7 @@
         ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
         ;; = (active(t0) - active(t0-7d)) / 7
         active-change-last-7-avg (-> (/ (- active active-last-8th-report) 7.0)
-                                     round-nr
-                                     ;; plus-minus
-                                     )]
+                                     round-nr #_plus-minus)]
     [["%s\n" [(msgc/fmt-to-cols
                {:emoji "🤒" :s lang/active :n active
                 :diff delta-active :rate a-rate})]]

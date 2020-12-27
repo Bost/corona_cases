@@ -171,7 +171,7 @@
 (defn read-number [v]
   (if (or (empty? v) (= "0" v))
     0
-    (-> v fix-octal-val read-string)))
+    ((comp read-string fix-octal-val) v)))
 
 (defn left-pad
   ([s padding-len] (left-pad s "0" padding-len))
@@ -323,9 +323,9 @@
   (* 3 60 60 1000))
 
 (defn text-for-case [case-kw texts]
-  (->> basic-cases
-       (keep-indexed (fn [idx kw] (when (= kw case-kw)
-                                    (nth texts idx))))
-       (first)))
+  ((comp (partial nth texts)
+         first
+         (partial keep-indexed (fn [i k] (when (= k case-kw) i))))
+   basic-cases))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

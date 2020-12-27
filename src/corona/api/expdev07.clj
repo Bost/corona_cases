@@ -164,15 +164,13 @@
       {:locations
        (let [the-dates (raw-dates)]
          (map (fn [ccode]
-                {
-                 :country (ccr/country-name-aliased ccode)
+                {:country (ccr/country-name-aliased ccode)
                  :country_code ccode
                  :history
                  ;; {:1/23/20 1e6 ;; start number
                  ;;    ;; other reports - calc diff
                  ;; }
-                 (let [pop-cnt (population-cnt ccode)]
-                   (zipmap the-dates (repeat pop-cnt)))})
+                 (zipmap the-dates ((comp repeat population-cnt) ccode))})
               ccc/all-country-codes))}})))
 
 (defn data-with-pop
@@ -192,8 +190,7 @@
   (from-cache!
    (fn []
      (let [locations (filter pred-fun
-                             ((comp :locations case-kw)
-                              (data-with-pop)))]
+                             ((comp :locations case-kw) (data-with-pop)))]
        ;; (debugf "locations %s" (cstr/join " " locations))
        (map (fn [raw-date]
               (if (and (empty? locations)
@@ -280,13 +277,9 @@
                      com/all-cases)))
        (reduce into {})))
 
-(defn last-report
-  [pred-hm]
-  (eval-fun get-last pred-hm))
+(defn last-report [pred-hm] (eval-fun get-last pred-hm))
 
-(defn last-8-reports
-  [pred-hm]
-  (eval-fun (fn [coll] (take-last 8 coll)) pred-hm))
+(defn last-8-reports [pred-hm] (eval-fun (partial take-last 8) pred-hm))
 
 (defn create-pred-hm [ccode]
   {:ccode ccode
@@ -306,8 +299,7 @@
                       (last-report (create-pred-hm ccode))))
        ccc/all-country-codes))
 
-(defn stats-countries []
-  (from-cache! calc-stats-countries [:stats]))
+(defn stats-countries [] (from-cache! calc-stats-countries [:stats]))
 
 (defn rank-for-case [rank-kw]
   (map-indexed
@@ -317,8 +309,7 @@
                 (fn [_] (inc idx))))
    (sort-by rank-kw >
             ;; TODO sets and set operations should be used clojure.set/difference
-            (remove (fn [{:keys [ccode]}]
-                      (= ccode ccc/zz))
+            (remove (fn [{:keys [ccode]}] (= ccode ccc/zz))
                     (stats-countries)))))
 
 (defn calc-all-rankings
