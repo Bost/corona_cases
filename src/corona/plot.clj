@@ -53,8 +53,8 @@
   "Countries with the number of cases less than the threshold are grouped into
   \"Rest\"."
   [case-kw]
-  (data/from-cache (fn [] ((comp :val threshold) case-kw))
-                   [:threshold case-kw]))
+  (data/from-cache! (fn [] ((comp :val threshold) case-kw))
+                    [:threshold case-kw]))
 
 (defn threshold-increase
   "Case-dependent threshold recalculation increase."

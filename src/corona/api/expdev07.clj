@@ -36,10 +36,10 @@
     (swap! cache update-in ks (fn [_] data))
     data))
 
-(defn from-cache
+(defn from-cache!
   [fun ks]
   {:pre [(spec/valid? ::fun fun)]}
-  ;; (debugf "[from-cache] accessing %s" ks)
+  ;; (debugf "[from-cache!] accessing %s" ks)
   (if-let [v (get-in @cache ks)]
     v
     (cache! fun ks)))
@@ -70,7 +70,7 @@
           xs))))))
 
 (defn json-data []
-  (from-cache (fn [] (com/get-json url)) [:json]))
+  (from-cache! (fn [] (com/get-json url)) [:json]))
 
 (def xform-raw-dates
   (comp
@@ -106,17 +106,18 @@
   (count rd-cached)
   ;; 1010 items"
   []
-  (from-cache (fn []
-                (->> (transduce xform-raw-dates
-                                conj []
-                                #_[(keyword "2/22/20") (keyword "2/2/20")]
-                                (keys (:history
-                                       (last
-                                        (:locations
-                                         (:confirmed (json-data)))))))
-                     ;; I need at least 2 to calc difference
-                     #_(take-last 4)))
-              [:raw-dates]))
+  (from-cache! (fn []
+                 (->> (transduce xform-raw-dates
+                                 conj []
+                                 #_[(keyword "2/22/20") (keyword "2/2/20")]
+                                 (keys (:history
+                                        (last
+                                         (:locations
+                                          (:confirmed (json-data)))))))
+                      ;; I need at least 2 to calc difference
+                      #_(take-last 4)))
+               [:raw-dates])
+  )
 
 (defn population-cnt [ccode]
   (or (get ccr/population ccode)
@@ -132,8 +133,7 @@
 
 (defn date [rd] (.parse date-format (keyname rd)))
 
-(defn dates []
-  (from-cache (fn [] (map date (raw-dates))) [:dates]))
+(defn dates [] (from-cache! (fn [] (map date (raw-dates))) [:dates]))
 
 (defn calc-data-with-pop []
   (let [json (json-data)]
@@ -178,7 +178,7 @@
 (defn data-with-pop
   "Data with population numbers."
   []
-  (from-cache calc-data-with-pop [:data-with-pop]))
+  (from-cache! calc-data-with-pop [:data-with-pop]))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -189,7 +189,7 @@
   "Return sums for a given `case-kw` calculated for every single report."
   [case-kw {:keys [ccode pred-fun]}]
   ;; ignore predicate for the moment
-  (from-cache
+  (from-cache!
    (fn []
      (let [locations (filter pred-fun
                              ((comp :locations case-kw)
@@ -260,8 +260,8 @@
   "
   [{:keys [ccode #_pred-fun] :as pred-hm}]
   ;; ignore pred-fun for the moment
-  (from-cache (fn [] (calc-case-counts-report-by-report pred-hm))
-              [:cnts (keyword ccode)]))
+  (from-cache! (fn [] (calc-case-counts-report-by-report pred-hm))
+               [:cnts (keyword ccode)]))
 
 (defn eval-fun
   [fun pred-hm]
@@ -307,7 +307,7 @@
        ccc/all-country-codes))
 
 (defn stats-countries []
-  (from-cache calc-stats-countries [:stats]))
+  (from-cache! calc-stats-countries [:stats]))
 
 (defn rank-for-case [rank-kw]
   (map-indexed
@@ -334,7 +334,6 @@
        ;; TODO sets and set operations should be used clojure.set/difference
        (remove (fn [ccode] (= ccode ccc/zz)) ccc/all-country-codes)))
 
-(defn all-rankings []
-  (from-cache calc-all-rankings [:rankings]))
+(defn all-rankings [] (from-cache! calc-all-rankings [:rankings]))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.expdev07)
