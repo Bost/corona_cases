@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <groupId>corona_cases</groupId>
   <artifactId>corona_cases</artifactId>
-  <version>2.2.9</version>
+  <version>2.3.0</version>
   <name>corona_cases</name>
   <dependencies>
     <dependency>
@@ -23,9 +23,19 @@
       <version>0.19.2</version>
     </dependency>
     <dependency>
+      <groupId>metosin</groupId>
+      <artifactId>ring-http-response</artifactId>
+      <version>0.9.1</version>
+    </dependency>
+    <dependency>
       <groupId>compojure</groupId>
       <artifactId>compojure</artifactId>
       <version>1.6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>ring-basic-authentication</groupId>
+      <artifactId>ring-basic-authentication</artifactId>
+      <version>1.1.0</version>
     </dependency>
     <dependency>
       <groupId>incanter</groupId>
@@ -36,6 +46,21 @@
       <groupId>ring</groupId>
       <artifactId>ring-jetty-adapter</artifactId>
       <version>1.8.2</version>
+    </dependency>
+    <dependency>
+      <groupId>ring</groupId>
+      <artifactId>ring-json</artifactId>
+      <version>0.5.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.stuartsierra</groupId>
+      <artifactId>component</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>nrepl</groupId>
+      <artifactId>drawbridge</artifactId>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>clj-http</groupId>
@@ -71,6 +96,11 @@
       <groupId>environ</groupId>
       <artifactId>environ</artifactId>
       <version>1.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>data.xml</artifactId>
+      <version>0.0.8</version>
     </dependency>
     <dependency>
       <groupId>clojure.java-time</groupId>
