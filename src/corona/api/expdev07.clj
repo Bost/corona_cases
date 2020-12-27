@@ -199,7 +199,8 @@
               (if (and (empty? locations)
                        (= :recovered case-kw))
                 (let [default 0]
-                  #_(warnf "ccode %s %s %s missing locations; defaults to %s"
+                  #_
+                  (warnf "ccode %s %s %s missing locations; defaults to %s"
                          ccode case-kw (com/fmt-date-dbg (date raw-date)) default)
                   default)
                 (transduce

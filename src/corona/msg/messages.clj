@@ -6,7 +6,6 @@
             [clojure.string :as cstr]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
-            [corona.countries :as ccr]
             [corona.lang :as lang]
             [corona.msg.common :as msgc]
             [corona.plot :as plot]
@@ -46,16 +45,15 @@
 (defn worldwide-plots
   ([prm] (worldwide-plots "worldwide-plots" prm))
   ([msg-id {:keys [data]}]
-   (let [{ccode :ccode
-          chat-id :chat-id
-          type :type
-          case-kw :case-kw} (edn/read-string data)
-         options (reply-markup-btns {:chat-id chat-id :ccode ccode})
-         content (let [plot-fn (if (= type :sum)
+   (let [data-hm (edn/read-string data)
+         chat-id (:chat-id data-hm)
+         options ((comp reply-markup-btns (partial select-keys data-hm))
+                  [:chat-id :ccode])
+         content (let [plot-fn (if (= (:type data-hm) :sum)
                                  plot/plot-sum plot/plot-absolute)]
-                     ;; the plot is fetched from the cache, stats and report need not to be
-                     ;; specified
-                   (plot-fn case-kw))]
+                   ;; the plot is fetched from the cache, stats and report need
+                   ;; not to be specified
+                   (plot-fn (:case-kw data-hm)))]
      (doall
       (morse/send-photo com/telegram-token chat-id options content))
      (debugf "[%s] send-photo: %s bytes sent" msg-id (count content)))))
