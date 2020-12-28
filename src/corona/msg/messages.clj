@@ -27,20 +27,20 @@
     (format "[%s](%s)" name url)))
 
 (defn reply-markup-btns [prm]
-  {:reply_markup
-   (json/write-str
-    {:inline_keyboard
-     [(reduce
-       into
-       (mapv (fn [type]
-               (mapv (fn [case-kw]
-                       {:text (str (get lang/buttons case-kw)
-                                   (type lang/plot-type))
-                        :callback_data (pr-str (assoc prm
-                                                      :case-kw case-kw
-                                                      :type type))})
-                     com/absolute-cases))
-             [:sum :abs]))]})})
+  ((comp
+    (partial hash-map :reply_markup)
+    json/write-str
+    (partial hash-map :inline_keyboard)
+    vector
+    (partial reduce into))
+   (map (fn [aggregation-kw]
+          (map (fn [case-kw]
+                 {:text (lang/button-text case-kw aggregation-kw)
+                  :callback_data (pr-str (assoc prm
+                                                :case-kw case-kw
+                                                :type aggregation-kw))})
+               com/absolute-cases))
+        com/aggregation-cases)))
 
 (defn worldwide-plots
   ([prm] (worldwide-plots "worldwide-plots" prm))

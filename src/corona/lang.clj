@@ -99,23 +99,32 @@
 
 (def ^:const millions-rounded "Mill")
 
+(defn- lower-case-texts [case-kw texts]
+  ((comp s/lower-case
+         (partial co/text-for-case case-kw))
+   texts))
+
 (defn list-sorted-by [case-kw]
-  (s/lower-case
-   (co/text-for-case case-kw
-                     [conf recov deaths active
-                      cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5])))
+  (lower-case-texts
+   case-kw [conf recov deaths active
+            cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5]))
 
 (defn list-sorted-by-desc [case-kw]
-  (format "Countries sorted by nr. of %s" ;; "... in ascending order"
-          (s/lower-case
-           (co/text-for-case case-kw
-                             [confirmed-cases recovered-cases deaths active-cases
-                              active-per-1e5 recove-per-1e5 deaths-per-1e5]))))
+  ((comp
+    (partial format "Countries sorted by nr. of %s" #_"... in ascending order")
+    (partial lower-case-texts case-kw))
+   [confirmed-cases recovered-cases deaths active-cases
+    active-per-1e5 recove-per-1e5 deaths-per-1e5]))
 
-(def ^:const buttons "Shortened button names"
+(def ^:const short-case-name "Shortened case names"
   (zipmap co/absolute-cases ["Co" "Re" "De" "Ac"]))
 
-(def ^:const plot-type "Buttons for plot-types" {:sum "Σ" :abs "A"})
+(def ^:const aggregations "Aggregations for worldwide graphs"
+  (zipmap co/aggregation-cases ["Σ" "A"]))
+
+(defn button-text [case-kw aggregation-kw]
+  (str (get short-case-name case-kw)
+       (get aggregations aggregation-kw)))
 
 ;; (def ^:const language     (:language     lang-strings))
 ;; (def ^:const cmd-country  (format "<%s>" (:country lang-strings)))

@@ -223,6 +223,13 @@
               identity)]
     (fun lexical-token)))
 
+(defmacro tore
+  "->>-or-eduction. In fact both have the same performance.
+  See also https://github.com/rplevy/swiss-arrows"
+  [coll & fns]
+  `(->> ~coll ~@fns)
+  #_`(sequence (eduction ~@fns ~coll)))
+
 (def ^:const case-params
   ":idx - defines an order in appearance
   :p ~ population
@@ -247,12 +254,17 @@
    {:idx 12 :kw :c-rate} ;; closed-rate
    ])
 
-(defmacro tore
-  "->>-or-eduction. In fact both have the same performance.
-  See also https://github.com/rplevy/swiss-arrows"
-  [coll & fns]
-  `(->> ~coll ~@fns)
-  #_`(sequence (eduction ~@fns ~coll)))
+(def ^:const aggregation-params
+  ":idx - defines an order in appearance"
+  [
+   {:idx  0 :kw :sum}
+   {:idx  1 :kw :abs}
+   ])
+
+(def ^:const aggregation-cases
+  (tore aggregation-params
+        (filter (fn [m] (utc/in? [0 1] (:idx m))))
+        (map :kw)))
 
 (def ^:const absolute-cases
   (tore case-params
