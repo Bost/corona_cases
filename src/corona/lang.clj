@@ -2,8 +2,7 @@
 
 (ns corona.lang
   (:require
-   [corona.common :as co]
-   [clojure.string :as s]
+   [corona.common :as com]
    ))
 
 ;; (set! *warn-on-reflection* true)
@@ -100,8 +99,8 @@
 (def ^:const millions-rounded "Mill")
 
 (defn- lower-case-texts [case-kw texts]
-  ((comp s/lower-case
-         (partial co/text-for-case case-kw))
+  ((comp clojure.string/lower-case
+         (partial com/text-for-case case-kw))
    texts))
 
 (defn list-sorted-by [case-kw]
@@ -117,10 +116,10 @@
     active-per-1e5 recove-per-1e5 deaths-per-1e5]))
 
 (def ^:const short-case-name "Shortened case names"
-  (zipmap co/absolute-cases ["Co" "Re" "De" "Ac"]))
+  (zipmap com/absolute-cases ["Co" "Re" "De" "Ac"]))
 
 (def ^:const aggregations "Aggregations for worldwide graphs"
-  (zipmap co/aggregation-cases ["Σ" "A"]))
+  (zipmap com/aggregation-cases ["Σ" "A"]))
 
 (defn button-text [case-kw aggregation-kw]
   (str (get short-case-name case-kw)
