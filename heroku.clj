@@ -27,7 +27,7 @@
 (def heroku-envs (get-heroku-envs (keys env/environment)))
 #_(println "heroku-envs" heroku-envs)
 
-(def heroku-env-prod ((comp first get-heroku-envs) [env/prod]))
+(def heroku-env-prod ((comp first get-heroku-envs) [env/corona-cases]))
 #_(println "heroku-env-prod" heroku-env-prod)
 
 (def heroku-apps
@@ -64,8 +64,11 @@
   (str "The following errors occurred while parsing your command:\n\n"
        (cstr/join \newline errors)))
 
+;; actions
 (def restart "restart")
 (def deploy "deploy")
+;; TODO create setWebhook and make it to be the inverse to deleteWebhook
+(def deleteWebhook "deleteWebhook")
 
 (defn validate-args
   "Validate command line arguments. Either return a map indicating the program
@@ -83,7 +86,7 @@
       ;; custom validation on arguments
       (= 1 (count arguments))
       (cond
-        (#{restart deploy} (first arguments))
+        (#{restart deploy deleteWebhook} (first arguments))
         {:action (first arguments) :options options}
 
         :else
@@ -194,10 +197,18 @@
       (validate-args *command-line-args*)]
   (if exit-message
     (exit (if ok? 0 1) exit-message)
-    (condp = action
-      restart (do
-                (println (format "%s %s" action options))
-                (sh-heroku (str (:heroku-env options) "-bot") "ps:restart"))
-      deploy (do
-               (println (format "%s %s" action options))
-               (deploy! options)))))
+    (do
+      (printf "action: %s, options: %s\n" action options)
+      (condp = action
+        restart
+        (sh-heroku (str (:heroku-env options) "-bot") "ps:restart")
+
+        deploy
+        (deploy! options)
+
+        deleteWebhook
+        (sh "curl" "--form" "'drop_pending_updates=true'" "--request" "POST"
+            (format "https://api.telegram.org/bot%s/deleteWebhook"
+                    (get-in env/environment
+                            [(-> options :heroku-env keyword)
+                             :telegram-token])))))))

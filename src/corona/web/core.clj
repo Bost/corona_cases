@@ -42,19 +42,11 @@
 (defn webhook-url [telegram-token]
   (format "%s/%s" com/webapp-server telegram-token))
 
-(def token com/telegram-token)
-
 (declare tgram-handlers)
 
 (when com/use-webhook?
   (debugf "Defining tgram-handlers at compile time ...")
-  (moh/apply-macro moh/defhandler
-                   tgram-handlers
-                   #_[(moh/command-fn "help"
-                                      (fn [{{chat-id :id} :chat}
-                                           #_chat-id]
-                                        (moa/send-text token chat-id "Help is on the way")))]
-                   (tgram/create-handlers))
+  (moh/apply-macro moh/defhandler tgram-handlers (tgram/create-handlers))
   (debugf "Defining tgram-handlers at compile time ... done"))
 
 (defn setup-webhook
@@ -66,13 +58,12 @@
                           :body :result :url))
          (let [res (moa/set-webhook com/telegram-token
                                     (webhook-url com/telegram-token))]
-          ;; (debugf "[%s] (set-webhook %s %s)" msg-id com/telegram-token webhook-url)
+           ;; (debugf "[%s] (set-webhook %s %s)" msg-id com/telegram-token webhook-url)
            (debugf "[%s] (set-webhook ...) %s" msg-id (:body res)))))
-    ;; curl --form "drop_pending_updates=true" --request POST https://api.telegram.org/bot$TELEGRAM_TOKEN_HOKUSPOKUS/deleteWebhook
      (when-not (empty? (->> com/telegram-token moa/get-info-webhook
                             :body :result :url))
        (let [res (moa/del-webhook com/telegram-token)]
-        ;; (debugf "[%s] (del-webhook %s)" msg-id com/telegram-token)
+         ;; (debugf "[%s] (del-webhook %s)" msg-id com/telegram-token)
          (debugf "[%s] (del-webhook ...) %s" msg-id (:body res)))))))
 
 (defn- authenticated? [user pass]

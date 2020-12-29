@@ -17,7 +17,6 @@
 
 ;; (set! *warn-on-reflection* true)
 
-(def ^:const project-name envdef/project-name)
 (def ^:const ^String undef "<UNDEF>")
 
 (spec/def ::port number?)
@@ -46,7 +45,7 @@
   2. some config/env file - however not the .heroku-local.env
   3. environment variable
   "
-  (env/env :corona-env-type))
+  ((comp keyword cstr/lower-case :corona-env-type) env/env))
 
 (when-not (spec/valid? ::env-type env-type)
   (throw (Exception.
@@ -62,20 +61,26 @@
                                              [env-type :json-server]))
 
 ;; forward declarations
-(declare env-prod? env-hokuspokus? env-local? env-devel?)
+(declare env-corona-cases? env-hokuspokus? env-local? env-devel?)
 
 (defn- define-env-predicates
   "Defines vars:
-  `env-prod?`, `env-hokuspokus?`, `env-local?`, `env-devel?`"
+  `env-env-corona-cases?`, `env-hokuspokus?`, `env-local?`, `env-devel?`"
   []
   (run! (fn [v]
-          (let [symb-v (symbol (format "env-%s?" (cstr/lower-case v)))]
+          (def v v)
+          (let [symb-v ((comp symbol
+                              (partial format "env-%s?")
+                              cstr/lower-case
+                              name)
+                        v)]
             (reset-meta! (intern *ns* symb-v (= env-type v))
                          {:const true :tag `Boolean})))
         (keys environment)))
 
 (define-env-predicates)
 
+(def ^:const ^Boolean env-prod? env-corona-cases?)
 (def ^:const ^Boolean on-heroku? (or env-prod? env-hokuspokus?))
 
 (def use-webhook?

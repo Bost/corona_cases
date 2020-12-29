@@ -12,7 +12,7 @@
    java.lang.ProcessBuilder$Redirect
    ))
 
-(def prod (-> (get-in env/environment [env/prod :cli]) (keys) (first)))
+(def prod (-> (get-in env/environment [env/corona-cases :cli]) (keys) (first)))
 
 (def env-names
   (into {}
