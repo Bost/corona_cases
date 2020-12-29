@@ -103,6 +103,8 @@
             msg-id (count commands) (count callbacks))
      (into callbacks commands))))
 
+(defn api-error-handler [] (when com/env-prod? (com/system-exit 2)))
+
 (defn start-polling
   "Receiving incoming updates using long polling (getUpdates method)
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
@@ -116,10 +118,7 @@
    (let [opts {}
          channel (async/chan)]
      (debugf "[%s] Started channel %s" msg-id channel)
-     (let [producer (mop/create-producer
-                     channel token opts (fn api-error-handler []
-                                          (when com/env-prod?
-                                            (com/system-exit 2))))]
+     (let [producer (mop/create-producer channel token opts api-error-handler)]
        (infof "[%s] Created producer %s on channel %s" msg-id producer channel)
        #_(debugf "[%s] Creating consumer for produced %s with handler %s ..."
                  msg-id producer handler)
@@ -142,8 +141,7 @@
            (warnf "[%s] Taking vals on port %s stopped with retval-async<! %s"
                   msg-id port (if-let [v retval-async<!!] v "nil"))
            (fatalf "[%s] Further requests may NOT be answered!!!" msg-id)
-           (when com/env-prod?
-             (com/system-exit 2)))))
+           (api-error-handler))))
      #_(do
          (debugf "[%s] Created polling-handlers %s" msg-id polling-handlers)
          (let [port (start-polling tgram-token polling-handlers)]
