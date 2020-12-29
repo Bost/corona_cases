@@ -340,4 +340,7 @@
          (partial keep-indexed (fn [i k] (when (= k case-kw) i))))
    basic-cases))
 
+(def ^:const ^String bot-name-in-markdown
+  (cstr/replace bot-name #"_" "\\\\_"))
+
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

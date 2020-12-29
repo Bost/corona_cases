@@ -87,8 +87,7 @@
 
 (defn explain [parse_mode]
   (str
-   ;; escape underscores for the markdown parsing
-   (bot-name-formatted)
+   com/bot-name-in-markdown
    "🦠 @" com/botver " "
    (str
     (link "👩🏼‍💻 GitHub" "https://github.com/Bost/corona_cases" parse_mode) ", "

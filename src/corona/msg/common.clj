@@ -164,8 +164,7 @@
    (com/fmt-date (:t (data/last-report pred-hm)))
    (condp = parse_mode
      com/html com/bot-name
-     ;; i.e. com/markdown
-     (cstr/replace com/bot-name #"_" "\\\\_"))))
+     com/bot-name-in-markdown)))
 
 (defn footer
   "Listing commands in the message footer correspond to the columns in the listing.
