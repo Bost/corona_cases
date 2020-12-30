@@ -35,10 +35,14 @@
     (partial reduce into))
    (map (fn [aggregation-kw]
           (map (fn [case-kw]
-                 {:text (lang/button-text case-kw aggregation-kw)
-                  :callback_data (pr-str (assoc prm
-                                                :case-kw case-kw
-                                                :type aggregation-kw))})
+                 (conj
+                  {:text (lang/button-text case-kw aggregation-kw)
+                   :callback_data (pr-str (assoc prm
+                                                 :case-kw case-kw
+                                                 :type aggregation-kw))}
+                  ;; when used the Telegram Web doesn't display the picture
+                  ;; see also https://core.telegram.org/bots/api#sendphoto
+                  #_{:caption "Foo"}))
                com/absolute-cases))
         com/aggregation-cases)))
 
