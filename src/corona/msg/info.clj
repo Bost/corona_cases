@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.info)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.info)
 
 (ns corona.msg.info
   (:require [clojure.string :as cstr]
@@ -222,6 +222,6 @@
                    ks)
       (get-in @data/cache ks))))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.info)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.info)
 
 

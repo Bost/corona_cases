@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.lang)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.lang)
 
 (ns corona.lang
   (:require
@@ -130,4 +130,4 @@
 
 ;; (def ^:const lang-de "lang:de")
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.lang)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.lang)

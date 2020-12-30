@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web.core)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web.core)
 
 (ns corona.web.core
   (:require

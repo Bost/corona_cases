@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.pom-version-get)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.pom-version-get)
 
 (ns corona.pom-version-get
     "Thanks to Wilker Lucio
@@ -20,4 +20,4 @@ See https://github.com/borkdude/babashka/blob/master/examples/pom_version_get.cl
                       (first)
                       (tag-content-str)))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.pom-version-get)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.pom-version-get)

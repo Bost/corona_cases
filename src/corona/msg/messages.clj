@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.messages)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.messages)
 
 (ns corona.msg.messages
   (:require [clojure.data.json :as json]
@@ -144,4 +144,4 @@
   See https://core.telegram.org/bots/inline"
   [] "Coronavirus Information")
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.messages)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.messages)

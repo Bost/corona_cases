@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.common)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.common)
 
 (ns corona.common
   (:require clj-http.client
@@ -348,4 +348,4 @@
 (def ^:const ^String bot-name-in-markdown
   (cstr/replace bot-name #"_" "\\\\_"))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.telegram)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.telegram)
 
 ;; TODO replace `->>` with `comp` https://github.com/practicalli/clojure-content/issues/160
 ;; TODO replace loop-recur with functional implementation and parallelize it https://youtu.be/GvJm-eJ5o18?t=1617
@@ -355,4 +355,4 @@
    (start)
    (infof "[%s] Restarting ... done" fun-id)))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.telegram)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.telegram)

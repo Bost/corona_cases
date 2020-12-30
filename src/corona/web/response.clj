@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web.response)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web.response)
 
 (ns corona.web.response
   (:require
@@ -85,4 +85,4 @@
      ;; swapped order x y -> y x
      (into (sorted-map-by (fn [x y] (compare y x))))))})
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.web.response)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.web.response)

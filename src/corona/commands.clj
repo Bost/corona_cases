@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.commands)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.commands)
 
 (ns corona.commands
   (:require [clojure.string :as cstr]
@@ -174,4 +174,4 @@
        (map (fn [{:keys [name desc]}] (println name "-" desc)))
        (doall)))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.commands)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.commands)

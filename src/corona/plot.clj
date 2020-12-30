@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.plot)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.plot)
 
 (ns corona.plot
   (:require [cljplot.build :as b]
@@ -480,4 +480,4 @@
                    ks)
       (get-in @data/cache ks))))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.plot)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.plot)

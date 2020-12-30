@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.lists)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.lists)
 
 (ns corona.msg.lists
   (:require [clojure.string :as cstr]
@@ -135,5 +135,5 @@
   (get-from-cache! case-kw [:list :100k case-kw]
                    calc-list-per-100k msg-idx prm))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.lists)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.lists)
 

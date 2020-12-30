@@ -1,4 +1,4 @@
-#_(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.common)
+;; ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.common)
 
 (ns corona.msg.common
   (:require [clojure.string :as cstr]
@@ -189,4 +189,4 @@
   (utc/in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
             ccc/worldwide] ccode))
 
-#_(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.common)
+;; ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.common)

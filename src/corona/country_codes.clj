@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.country-codes)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.country-codes)
 
 (ns corona.country-codes
   "This namespace seems to be the first one loaded by the class loader."
@@ -467,4 +467,4 @@
   #_[gb sk de at cz us fr pl it es se ua hu zz]
   (keys country-code-2-to-3-hm))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.country-codes)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.country-codes)

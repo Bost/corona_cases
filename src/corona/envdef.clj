@@ -1,4 +1,4 @@
-(printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.envdef)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.envdef)
 
 (ns corona.envdef)
 
@@ -41,4 +41,4 @@
     :json-server "localhost:8000"
     :telegram-token token-hokuspokus}})
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.envdef)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.envdef)
