@@ -19,7 +19,7 @@
 
 (defn world
   ([prm] (world "world" prm))
-  ([msg-id {:keys [chat-id ccode] :as prm-orig}]
+  ([fun-id {:keys [chat-id ccode] :as prm-orig}]
    (let [prm
          ;; override default parse_mode
          (assoc prm-orig
@@ -29,7 +29,7 @@
            content (msgi/detailed-info ccode)]
        (doall
         (morse/send-text com/telegram-token chat-id options content))
-       (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
+       (debugf "[%s] send-text: %s chars sent" fun-id (count content)))
      (let [options (if (msgc/worldwide? ccode)
                      (msg/reply-markup-btns (select-keys prm [:chat-id :ccode]))
                      {})
@@ -39,7 +39,7 @@
        (when content
          (doall
           (morse/send-photo com/telegram-token chat-id options content))
-         (debugf "[%s] send-photo: %s bytes sent" msg-id (count content)))))))
+         (debugf "[%s] send-photo: %s bytes sent" fun-id (count content)))))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
@@ -47,19 +47,19 @@
 
 (defn explain
   ([prm] (explain "explain" prm))
-  ([msg-id {:keys [chat-id parse_mode]}]
+  ([fun-id {:keys [chat-id parse_mode]}]
    (let [content (msg/explain parse_mode)]
      (doall
       (morse/send-text com/telegram-token chat-id msg/options content))
-     (debugf "[%s] send-text: %s chars sent" msg-id (count content)))))
+     (debugf "[%s] send-text: %s chars sent" fun-id (count content)))))
 
 (defn feedback
   ([prm] (feedback "feedback" prm))
-  ([msg-id {:keys [chat-id]}]
+  ([fun-id {:keys [chat-id]}]
    (let [content (msg/feedback)]
      (doall
       (morse/send-text com/telegram-token chat-id msg/options content))
-     (debugf "[%s] send-text: %s chars sent" msg-id (count content)))))
+     (debugf "[%s] send-text: %s chars sent" fun-id (count content)))))
 
 ;; (defn language [{:keys [chat-id parse_mode]}]
 ;;   (doall
@@ -67,11 +67,11 @@
 
 (defn contributors
   ([prm] (contributors "contributors" prm))
-  ([msg-id {:keys [chat-id parse_mode]}]
+  ([fun-id {:keys [chat-id parse_mode]}]
    (let [content (msg/contributors parse_mode)]
      (doall
       (morse/send-text com/telegram-token chat-id msg/options content))
-     (debugf "[%s] send-text: %s chars sent" msg-id (count content)))))
+     (debugf "[%s] send-text: %s chars sent" fun-id (count content)))))
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
@@ -128,7 +128,7 @@
 (defn cmds-listing
   "Command map for listings."
   []
-  (let [msg-id "cmds-listing"]
+  (let [fun-id "cmds-listing"]
     (->> com/listing-cases-absolute
          (into com/listing-cases-per-100k)
          (map (fn [case-kw]
@@ -144,7 +144,7 @@
                            ;; collection.
                            (map (fn [content]
                                   (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
-                                  (debugf "[%s] send-text: %s chars sent" msg-id (count content)))
+                                  (debugf "[%s] send-text: %s chars sent" fun-id (count content)))
                                 contents))))
                  :desc (l/list-sorted-by-desc case-kw)})))))
 

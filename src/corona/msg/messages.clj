@@ -44,7 +44,7 @@
 
 (defn worldwide-plots
   ([prm] (worldwide-plots "worldwide-plots" prm))
-  ([msg-id {:keys [data]}]
+  ([fun-id {:keys [data]}]
    (let [data-hm (edn/read-string data)
          chat-id (:chat-id data-hm)
          options ((comp reply-markup-btns (partial select-keys data-hm))
@@ -56,7 +56,7 @@
                    (plot-fn (:case-kw data-hm)))]
      (doall
       (morse/send-photo com/telegram-token chat-id options content))
-     (debugf "[%s] send-photo: %s bytes sent" msg-id (count content)))))
+     (debugf "[%s] send-photo: %s bytes sent" fun-id (count content)))))
 
 ;; (defn language [prm]
 ;;   (format

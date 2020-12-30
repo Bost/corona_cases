@@ -34,11 +34,11 @@
   First param must be a function in order to have lazy evaluation."
   [fun ks]
   {:pre [(spec/valid? ::fun fun)]}
-  (let [msg-id "cache!"]
-    #_(debugf "[%s] %s Computing %s ..." msg-id @cnt fun)
+  (let [fun-id "cache!"]
+    #_(debugf "[%s] %s Computing %s ..." fun-id @cnt fun)
     #_(swap! cnt inc)
     (let [data (fun)]
-      ;; (debugf "[%s] %s Computing ... done." msg-id fun)
+      ;; (debugf "[%s] %s Computing ... done." fun-id fun)
       (swap! cache update-in ks (fn [_] data))
       data)))
 

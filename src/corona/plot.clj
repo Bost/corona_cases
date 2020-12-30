@@ -361,7 +361,7 @@
 (defn calc-sum
   "Case-specific plot for the sum of all countries."
   ([case-kw stats report] (calc-sum "calc-sum" case-kw stats report))
-  ([msg-id case-kw stats report]
+  ([fun-id case-kw stats report]
    (let [threshold (min-threshold case-kw)
          prm {:report report
               :stats stats
@@ -401,7 +401,7 @@
                             threshold-recaltulated)
              :label-conf {:color (c/darken :steelblue) :font-size 14}})]
        (let [img-byte-array (toByteArrayAutoClosable img)]
-         (debugf "[%s] %s img-size %s" msg-id case-kw (count img-byte-array))
+         (debugf "[%s] %s img-size %s" fun-id case-kw (count img-byte-array))
          img-byte-array)))))
 
 (defn plot-sum
@@ -424,7 +424,7 @@
 
 (defn calc-absolute
   ([case-kw stats report] (calc-absolute "calc-absolute" case-kw stats report))
-  ([msg-id case-kw stats report]
+  ([fun-id case-kw stats report]
    (let [threshold (min-threshold case-kw)
          prm {:report report
               :stats stats
@@ -468,7 +468,7 @@
                      threshold)
              :label-conf {:color (c/darken :steelblue) :font-size 14}})]
        (let [img-byte-array (toByteArrayAutoClosable img)]
-         (debugf "[%s] %s img-size %s" msg-id  case-kw (count img-byte-array))
+         (debugf "[%s] %s img-size %s" fun-id  case-kw (count img-byte-array))
          img-byte-array)))))
 
 (defn plot-absolute

@@ -179,7 +179,7 @@
   "
   ([ccode parse_mode pred-hm]
    (create-detailed-info "create-detailed-info" ccode parse_mode pred-hm))
-  ([msg-id ccode parse_mode pred-hm]
+  ([fun-id ccode parse_mode pred-hm]
    (let [last-report (data/last-report pred-hm)
          {population :p confirmed :c} last-report
          delta (data/delta pred-hm)
@@ -211,7 +211,7 @@
                                                   ccode
                                                   (count ccc/all-country-codes))}))))]
 
-     (debugf "[%s] ccode %s info-size %s" msg-id ccode (count info))
+     (debugf "[%s] ccode %s info-size %s" fun-id ccode (count info))
      info)))
 
 (defn detailed-info

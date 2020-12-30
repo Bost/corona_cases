@@ -51,20 +51,20 @@
 
 (defn setup-webhook
   ([] (setup-webhook "setup-webhook"))
-  ([msg-id]
+  ([fun-id]
    (if com/use-webhook?
      (do
        (when (empty? (->> com/telegram-token moa/get-info-webhook
                           :body :result :url))
          (let [res (moa/set-webhook com/telegram-token
                                     (webhook-url com/telegram-token))]
-           ;; (debugf "[%s] (set-webhook %s %s)" msg-id com/telegram-token webhook-url)
-           (debugf "[%s] (set-webhook ...) %s" msg-id (:body res)))))
+           ;; (debugf "[%s] (set-webhook %s %s)" fun-id com/telegram-token webhook-url)
+           (debugf "[%s] (set-webhook ...) %s" fun-id (:body res)))))
      (when-not (empty? (->> com/telegram-token moa/get-info-webhook
                             :body :result :url))
        (let [res (moa/del-webhook com/telegram-token)]
-         ;; (debugf "[%s] (del-webhook %s)" msg-id com/telegram-token)
-         (debugf "[%s] (del-webhook ...) %s" msg-id (:body res)))))))
+         ;; (debugf "[%s] (del-webhook %s)" fun-id com/telegram-token)
+         (debugf "[%s] (del-webhook ...) %s" fun-id (:body res)))))))
 
 (defn- authenticated? [user pass]
   ;; TODO: heroku config:add REPL_USER=[...] REPL_PASSWORD=[...]
@@ -134,8 +134,8 @@
 (defonce server (atom nil))
 
 (defn webapp-start [env-type port]
-  (let [msg-id "webapp"
-        msg (format "[%s] starting" msg-id)
+  (let [fun-id "webapp"
+        msg (format "[%s] starting" fun-id)
         version (if com/env-devel? com/undef com/botver)]
     (infof "%s version %s in environment %s on port %s ..."
            msg version env-type port)
@@ -149,16 +149,16 @@
                ;; (POST "..." {body :body} ...)
                (ring.middleware.json/wrap-json-body {:keywords? true}))
            {:port port :join? false})]
-      (debugf "[%s] web-server %s" msg-id web-server)
+      (debugf "[%s] web-server %s" fun-id web-server)
       (swap! server (fn [_] web-server))
       (infof "%s ... done" msg)
       web-server)))
 
 (defn -main [& [env-type port]]
-  (let [msg-id "-main"
+  (let [fun-id "-main"
         env-type (or env-type com/env-type)
         port (or port com/webapp-port)
-        msg (format "[%s] starting" msg-id)]
+        msg (format "[%s] starting" fun-id)]
     #_(infof "%s version %s in environment %s on port %s ..."
              msg (if com/env-devel? com/undef com/botver) env-type port)
     (debugf "%s ..." msg)
@@ -167,7 +167,7 @@
            (str (ZoneId/systemDefault))
            (.getID (TimeZone/getDefault)))
       (debugf "[%s] TimeZone: %s; current time: %s (%s in %s)"
-              msg-id
+              fun-id
               (str (ctc/default-time-zone))
               (cte/tnow)
               (cte/tnow ccc/zone-id)
@@ -192,8 +192,8 @@
 
 (defn webapp-stop
   ([] (webapp-stop "webapp"))
-  ([msg-id]
-   (let [msg (format "[%s] stopping" msg-id)]
+  ([fun-id]
+   (let [msg (format "[%s] stopping" fun-id)]
      (debugf "%s ..." msg)
      (.stop ^org.eclipse.jetty.server.Server @server)
      (let [objs ['corona.web/server]]
@@ -201,7 +201,7 @@
                (let [obj (eval obj-q)]
                  (swap! obj (fn [_] nil))
                  (debugf "[%s] %s new value: %s"
-                         msg-id
+                         fun-id
                          obj-q (if-let [v (deref obj)] v "nil"))))
              objs))
      (debugf "%s ... done" msg))))

@@ -13,7 +13,7 @@
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
   ([case-kw msg-idx prm] (calc-list-countries "calc-list-countries" case-kw msg-idx prm))
-  ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode pred-hm]}]
+  ([fun-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode pred-hm]}]
    (let [header-txt (msgc/header parse_mode pred-hm)
          spacer " "
          sort-indicator "▴" ;; " " "▲"
@@ -59,7 +59,7 @@
               "")
           (msgc/footer parse_mode))]
      (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
-             msg-id case-kw msg-idx (count msg))
+             fun-id case-kw msg-idx (count msg))
      msg)))
 
 (defn get-from-cache! [case-kw ks fun msg-idx prm]
@@ -78,7 +78,7 @@
   listing. See also `footer`, `bot-father-edit-cmds`."
   ([case-kw msg-idx prm] (calc-list-per-100k "calc-list-per-100k"
                                              case-kw msg-idx prm))
-  ([msg-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode pred-hm]}]
+  ([fun-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode pred-hm]}]
    (let [header-txt (msgc/header parse_mode pred-hm)
          spacer " "
          sort-indicator "▴" ;; " " "▲"
@@ -127,7 +127,7 @@
               "")
           (msgc/footer parse_mode))]
      (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
-             msg-id case-kw msg-idx (count msg))
+             fun-id case-kw msg-idx (count msg))
      msg)))
 
 (defn list-per-100k
