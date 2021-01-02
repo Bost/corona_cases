@@ -40,15 +40,17 @@
                 (select-keys prm (keys msg/options))
                 (msgi/detailed-info ccode))
      (let [options (if (msgc/worldwide? ccode)
-                     (msg/reply-markup-btns (select-keys prm [:chat-id :ccode]))
+                     (msg/reply-markup-btns (select-keys prm [:chat-id :ccode :message_id]))
                      {})
            ;; the plot is fetched from the cache, stats and report need not to be
            ;; specified
            content (p/plot-country ccode)]
        (when content
-         (doall
-          (morse/send-photo com/telegram-token chat-id options content))
-         (debugf "[%s] send-photo: %s bytes sent" fun-id (count content)))))))
+         (let [msg (doall
+                    (morse/send-photo com/telegram-token chat-id options content))]
+           (when false ;; do not log it for now
+             (debugf "[%s] msg %s" fun-id msg))
+           (debugf "[%s] send-photo: %s bytes sent" fun-id (count content))))))))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
