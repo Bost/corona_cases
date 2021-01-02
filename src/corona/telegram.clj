@@ -6,27 +6,21 @@
 
 (ns corona.telegram
   (:gen-class)
-  (:require
-   [clojure.core.async :as async]
-   [corona.common :as com]
-   [corona.countries :as ccr]
-   [corona.commands :as cmd]
-   [corona.msg.messages :as msg]
-   [corona.msg.info :as msgi]
-   [corona.msg.lists :as msgl]
-   [morse.handlers :as moh]
-   [morse.polling :as mop]
-   [corona.plot :as plot]
-   [taoensso.timbre :as timbre
-    :refer [debugf #_info infof #_warn warnf #_errorf fatalf]]
-   [corona.api.expdev07 :as data]
-   [corona.api.v1 :as v1]
-   [corona.country-codes :as ccc]
-   [net.cgrand.xforms :as x]
-   [utils.core :as u :refer [in?] :exclude [id]]
-   ;; [com.stuartsierra.component :as component]
-   ;; [clojure.inspector :refer :all]
-   ))
+  (:require [clojure.core.async :as async]
+            [corona.api.expdev07 :as data]
+            [corona.api.v1 :as v1]
+            [corona.commands :as cmd]
+            [corona.common :as com]
+            [corona.countries :as ccr]
+            [corona.country-codes :as ccc]
+            [corona.msg.info :as msgi]
+            [corona.msg.lists :as msgl]
+            [corona.msg.messages :as msg]
+            [corona.plot :as plot]
+            [morse.handlers :as moh]
+            [morse.polling :as mop]
+            [net.cgrand.xforms :as x]
+            [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -239,9 +233,9 @@
   (run! (fn [case-kw]
          (let [coll (sort-by case-kw < (data/stats-countries))
                ;; Split the long list of all countries into smaller sub-parts
+               ;; TODO move message partitioning to the corona.msg.lists
                sub-msgs (partition-all (/ (count coll)
-                                          #_com/cnt-messages-in-listing
-                                          7) coll)
+                                          cmd/cnt-messages-in-listing) coll)
                options {:parse_mode com/html}
                prm (conj options {:cnt-msgs (count sub-msgs)
                                   :cnt-reports (count (data/dates))
