@@ -74,16 +74,16 @@
            (Exception. (format "Value %d must be < max %d" max-val 1e9)))))
 
 (defn- boiler-plate [{:keys [series y-axis-formatter legend label label-conf]}]
-  ;; (-> series
-  ;;     (b/preprocess-series)
-  ;;     (b/add-axes :bottom)
-  ;;     (b/add-axes :left)
-  ;;     (b/update-scale :y :fmt y-axis-formatter)
-  ;;     (b/add-legend "" legend)
-  ;;     (b/add-label :top label label-conf)
-  ;;     (r/render-lattice {:width 800 :height 600})
-  ;;     (c2d/get-image))
-  (c2d/get-image
+  (-> series
+      (b/preprocess-series)
+      (b/add-axes :bottom)
+      (b/add-axes :left)
+      (b/update-scale :y :fmt y-axis-formatter)
+      (b/add-legend "" legend)
+      (b/add-label :top label label-conf)
+      (r/render-lattice {:width 800 :height 600})
+      (c2d/get-image))
+  #_(c2d/get-image
    (r/render-lattice
     (b/add-label
      (b/add-legend
@@ -190,7 +190,7 @@
   (conj line-cfg {:color
                   (last (c/palette-presets :ylgn-6))}))
 
-(def ^:const stroke-sick
+(def ^:const stroke-active
   (conj line-cfg {:color :black
                   :stroke {:size 1.5
                            ;; :dash [20.0] :dash-phase 10
@@ -228,8 +228,8 @@
       (.toByteArray out))))
 
 (defn calc-plot-country
-  "Country-specific cumulative plot of sick, recovered, deaths and sick-absolute
-  cases."
+  "Country-specific cumulative plot of active, recovered, deaths and
+  active-absolute cases."
   [ccode & [stats report]]
   (when-not (in? ccc/excluded-country-codes ccode)
     (let [base-data (stats-for-country ccode stats)
@@ -254,7 +254,7 @@
                        [:sarea sarea-data {:palette palette}]
                        #_[:line (line-data :p base-data) stroke-population]
                        [:line (line-data :c base-data) stroke-confirmed]
-                       [:line (line-data :a base-data) stroke-sick]
+                       [:line (line-data :a base-data) stroke-active]
                        [:line (line-data :e base-data) stroke-estimated])
               :y-axis-formatter (metrics-prefix-formatter
                                  ;; population numbers have the `max` values, all
@@ -264,12 +264,14 @@
               :legend (reverse
                        (conj (map #(vector :rect %2 {:color %1})
                                   palette
-                                  (map (fn [k] (get {:a lang/active :d lang/deaths :r lang/recovered
-                                                     :e lang/recov-estim} k))
+                                  (map (fn [k] (get {:a lang/active
+                                                    :d lang/deaths
+                                                    :r lang/recovered
+                                                    :e lang/recov-estim} k))
                                        curves))
-                             [:line lang/confirmed     stroke-confirmed]
-                             [:line lang/sick-absolute stroke-sick]
-                             [:line lang/recov-estim   stroke-estimated]
+                             [:line lang/confirmed       stroke-confirmed]
+                             [:line lang/active-absolute stroke-active]
+                             [:line lang/recov-estim     stroke-estimated]
                              #_[:line lang/people    stroke-population]))
               :label (plot-label report ccode stats)
               :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]

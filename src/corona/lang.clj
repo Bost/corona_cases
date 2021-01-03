@@ -63,7 +63,7 @@
 (def ^:const report
   "Coincidentally there is 1 report per day"
   "Day\\Report")
-(def ^:const sick-absolute "Active absolute")
+(def ^:const active-absolute "Active absolute")
 (def ^:const absolute      "absolute")
 (def ^:const people        "People") ;; "Population" is too long see `fmt-to-cols`
 (def ^:const stats         "Stats")
