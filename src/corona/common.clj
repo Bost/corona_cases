@@ -99,9 +99,9 @@
   "Telegram chat-id."
   "112885364")
 
-(defn calculate-active [confirmed recovered deaths] (- confirmed (+ recovered deaths)))
+(defn calculate-activ [confirmed recovered deaths] (- confirmed (+ recovered deaths)))
 
-(defn calculate-recovered [confirmed deaths] (- confirmed deaths))
+(defn calculate-recov [confirmed deaths] (- confirmed deaths))
 
 (defn calc-rate-active
   [{:keys [a c]}]
@@ -130,7 +130,7 @@
     (if (zero? p)
       0
       (per-1e5 (case case-kw
-                 :a (calculate-active c r d)
+                 :a (calculate-activ c r d)
                  :r r
                  :d d
                  :c c)

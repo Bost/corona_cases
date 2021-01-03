@@ -203,31 +203,29 @@
    (debugf "[%s] Starting ... done" fun-id)
    (warnf "[%s] Displayed data will NOT be updated!" fun-id)))
 
-(defn estimate-recov
-  [reports all-stats]
-  (apply map
-         ;; reducing two values into one... TODO is it an instance of eduction?
-         com/calculate-recovered
-         (map (comp
-               (fn [case-kw-stats] (into (drop-last reports case-kw-stats)
-                                        (repeat reports 0)))
-               (fn [case-kw] (map case-kw all-stats)))
-              [:c :d])))
-
-(defn estimate-recov-for-country
+(def estim-reports
   "Seems like different countries have different recovery reporting policies:
   * Germany  - 14 days/reports
   * Slovakia - 23 days/reports
 
   Warning: lucky coincidence of 1 report per 1 day!"
-  [[ccode stats-country-unsorted]]
-  (let [stats-country (sort-by :t stats-country-unsorted)]
-    (mapv (fn [est-rec stats-hm]
-            (conj stats-hm {:er est-rec}))
-          (estimate-recov
-           14
-           #_(+ 3 (* 2 7)) stats-country)
-          stats-country)))
+  14
+  #_(+ 3 (* 2 7)))
+
+(defn estim-for-country-fn [calculate-fun kw kws]
+  (fn [[ccode stats-country-unsorted]]
+    (let [stats-country (sort-by :t stats-country-unsorted)]
+      (mapv (fn [est-rec stats-hm]
+              (conj stats-hm {kw est-rec}))
+            ;; reducing two values into one... TODO is it an instance of eduction?
+            (apply map
+                   calculate-fun
+                   (map (comp
+                         (fn [case-kw-stats] (into (drop-last estim-reports case-kw-stats)
+                                                   (repeat estim-reports 0)))
+                         (fn [case-kw] (map case-kw stats-country)))
+                        kws))
+            stats-country))))
 
 (defn calc-listings [fun case-kws]
   (run! (fn [case-kw]
@@ -265,7 +263,14 @@
                       (transduce (comp
                                   ;; group together provinces of the given country
                                   (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
-                                  (map estimate-recov-for-country))
+                                  (map (estim-for-country-fn com/calculate-recov :er [:c :d])))
+                                 ;; the xform for the `into []`
+                                 into [])
+                      ;; estimate-activ-for-country depends on estimate-recov-for-country
+                      (transduce (comp
+                                  ;; group together provinces of the given country
+                                  (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
+                                  (map (estim-for-country-fn com/calculate-activ :ea [:c :er :d])))
                                  ;; the xform for the `into []`
                                  into [])
                       (sort-by :ccode))
@@ -280,9 +285,9 @@
                                     (data/create-pred-hm ccode))
                 (plot/plot-country ccode stats cnt-reports)
                 #_(pmap (fn [fun] (fun))
-                      [(fn [] (msgi/detailed-info ccode com/html
-                                                 (data/create-pred-hm ccode)))
-                       (fn [] (plot/plot-country ccode stats cnt-reports))]))
+                        [(fn [] (msgi/detailed-info ccode com/html
+                                                    (data/create-pred-hm ccode)))
+                         (fn [] (plot/plot-country ccode stats cnt-reports))]))
               ccc/all-country-codes))
        (doall
         (pmap (fn [plot-fn]

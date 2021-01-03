@@ -223,7 +223,7 @@
         (apply
          conj pcrd
          (mapv (fn [fun] (apply mapv (fn [_ c r d] (fun c r d)) pcrd))
-               [com/calculate-active]))]
+               [com/calculate-activ]))]
     (zipmap com/all-cases
             (apply
              conj pcrda

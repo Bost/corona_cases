@@ -5,8 +5,7 @@
   (:refer-clojure :exclude [pr])
   (:require
    [corona.common :as com]
-   #_[corona.country-codes :as ccc]
-   #_[utils.core :refer [in?] :exclude [id]]
+   [corona.country-codes :as ccc]
    [corona.api.expdev07 :as srvc]
    [net.cgrand.xforms :as x]
    #_[taoensso.timbre :as timbre :refer [debug debugf info infof warn errorf fatalf]]
@@ -29,7 +28,7 @@
 ;;   (->> (get-in (json-data) [case-kw :locations])
 ;;        (filter (fn [loc]
 ;;                  true
-;;                  #_(in? ccodes (:country_code loc))))
+;;                  #_(utils.core/in? ccodes (:country_code loc))))
 ;;        (map (fn [loc]
 ;;               (let [ccode (:country_code loc)]
 ;;                 (->> (sort-by
@@ -48,6 +47,7 @@
 
 (def ^:const ccodes
   #{
+    ccc/sk
     ;; cr tg za pe lc ch ru si au kr it fi sc tt my sy mn am dz uy td dj bi mk
     ;; mu li gr gy cg ml gm sa bh ne bn xk cd dk bj me bo jo cv ve ci uz tn is
     ;; ga tz at lt np bg il pk pt hr mr ge hu tw mm sr va kw se gb qq vn cf pa
@@ -83,7 +83,7 @@
 
     (into [] (comp (x/sort-by :t)
                    (map (fn [[t v]] {:ccode country_code :t (fmt t) case-kw v}))
-                   #_(x/take-last 2))
+                   #_(x/take-last 8))
           history))
 
   (defn process-date [[t hms]]
@@ -119,7 +119,7 @@
        (transduce (comp
                    (filter
                     (fn [_] true)
-                    #_(fn [loc] (in? ccodes (:country_code loc))))
+                    #_(fn [loc] (utils.core/in? ccodes (:country_code loc))))
                    (map process-location))
                   ;; works as flatten by 1 level
                   into [])
@@ -149,7 +149,7 @@
                       :r recovered
                       :d deaths
                       :p population
-                      :a (com/calculate-active confirmed recovered deaths)}]
+                      :a (com/calculate-activ confirmed recovered deaths)}]
              (assoc
               prm
               #_(dissoc prm :c)
