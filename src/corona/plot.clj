@@ -227,7 +227,7 @@
       (ImageIO/write image fmt-name out)
       (.toByteArray out))))
 
-(defn calc-plot-country
+(defn calc-plot-country-img
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
   [ccode & [stats report]]
@@ -247,37 +247,47 @@
       ;; :annotate? true
       ;; :annotate-fmt "%.1f"
       ;; {:label (plot-label report ccode stats)}
-      (let [img
-            (boiler-plate
-             {:series (b/series
-                       [:grid]
-                       [:sarea sarea-data {:palette palette}]
-                       #_[:line (line-data :p base-data) stroke-population]
-                       [:line (line-data :c base-data) stroke-confirmed]
-                       [:line (line-data :a base-data) stroke-active]
-                       [:line (line-data :e base-data) stroke-estimated])
-              :y-axis-formatter (metrics-prefix-formatter
+      (boiler-plate
+       {:series (b/series
+                 [:grid]
+                 [:sarea sarea-data {:palette palette}]
+                 #_[:line (line-data :p base-data) stroke-population]
+                 [:line (line-data :c base-data) stroke-confirmed]
+                 [:line (line-data :a base-data) stroke-active]
+                 [:line (line-data :e base-data) stroke-estimated])
+        :y-axis-formatter (metrics-prefix-formatter
                                  ;; population numbers have the `max` values, all
                                  ;; other numbers are derived from them
                                  ;; don't display the population data for the moment
-                                 (max-y-val + sarea-data))
-              :legend (reverse
-                       (conj (map #(vector :rect %2 {:color %1})
-                                  palette
-                                  (map (fn [k] (get {:a lang/active
-                                                    :d lang/deaths
-                                                    :r lang/recovered
-                                                    :e lang/recov-estim} k))
-                                       curves))
-                             [:line lang/confirmed       stroke-confirmed]
-                             [:line lang/active-absolute stroke-active]
-                             [:line lang/recov-estim     stroke-estimated]
-                             #_[:line lang/people    stroke-population]))
-              :label (plot-label report ccode stats)
-              :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})})]
-        (let [img-byte-array (toByteArrayAutoClosable img)]
-          (debugf "[plot-country] ccode %s img-size %s" ccode (count img-byte-array))
-          img-byte-array)))))
+                           (max-y-val + sarea-data))
+        :legend (reverse
+                 (conj (map #(vector :rect %2 {:color %1})
+                            palette
+                            (map (fn [k] (get {:a lang/active
+                                               :d lang/deaths
+                                               :r lang/recovered
+                                               :e lang/recov-estim} k))
+                                 curves))
+                       [:line lang/confirmed       stroke-confirmed]
+                       [:line lang/active-absolute stroke-active]
+                       [:line lang/recov-estim     stroke-estimated]
+                       #_[:line lang/people    stroke-population]))
+        :label (plot-label report ccode stats)
+        :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
+
+(defn img-byte-array [img] (when img (toByteArrayAutoClosable img)))
+
+(defn calc-plot-country
+  "Country-specific cumulative plot of active, recovered, deaths and
+  active-absolute cases."
+  [ccode & [stats report]]
+  ((comp
+    (fn [arr]
+      (debugf "[%s] ccode %s img-size %s" "plot-country" ccode (count arr))
+      arr)
+    img-byte-array
+    (fn [prms] (apply calc-plot-country-img prms)))
+   [ccode stats report]))
 
 (defn plot-country
   "The optional params `stats`, `report` are used only for the first calculation"
