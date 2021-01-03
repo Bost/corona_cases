@@ -126,6 +126,7 @@
                 #_(reduce + (map :p hms))
                 #_(bigint (/ (get population ccode) (bigint 1e3)))}
                {:ccode ccode :t t :case-kw :er :cnt (reduce + (map :er hms))}
+               {:ccode ccode :t t :case-kw :ea :cnt (reduce + (map :ea hms))}
                {:ccode ccode :t t :case-kw :c :cnt (reduce + (map :c hms))}
                {:ccode ccode :t t :case-kw :r :cnt (reduce + (map :r hms))}
                {:ccode ccode :t t :case-kw :d :cnt (reduce + (map :d hms))}
@@ -145,7 +146,7 @@
     ;; TODO try (map {:a 1 :b 2 :c 3 :d 4} [:a :d]) ;;=> (1 4)
     (reverse (transduce (map (fn [case-kw] (select-keys mapped-hm [case-kw])))
                         into []
-                        [:a :r :d :c :p :er]))))
+                        [:a :r :d :c :p :er :ea]))))
 
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :t last) (sort-by :t stats)))
@@ -186,25 +187,36 @@
 
 (def ^:const stroke-population (conj line-cfg {:color :red}))
 
-(def ^:const stroke-confirmed
+(def ^:const stroke-confir
   (conj line-cfg {:color
                   (last (c/palette-presets :ylgn-6))}))
 
-(def ^:const stroke-active
+(defn stroke-active []
   (conj line-cfg {:color :black
                   :stroke {:size 1.5
                            ;; :dash [20.0] :dash-phase 10
                            ;; :dash [5.0 2.0 2.0 2.0]
                            ;; :dash [10.0 5.0] :join :miter
-                           :dash [4.0] :dash-phase 2.0}}))
+                           :dash [2.0] :dash-phase 2.0
+                           }}))
 
-(def ^:const stroke-estimated
+(defn stroke-estim-recov []
   (conj line-cfg {:color :red
                   :stroke {:size 1.5
                            ;; :dash [20.0] :dash-phase 10
                            ;; :dash [5.0 2.0 2.0 2.0]
                            ;; :dash [10.0 5.0] :join :miter
-                           :dash [4.0] :dash-phase 2.0}}))
+                           :dash [2.0] :dash-phase 2.0
+                           }}))
+
+(defn stroke-estim-activ []
+  (conj line-cfg {:color :green
+                  :stroke {:size 1.5
+                           ;; :dash [20.0] :dash-phase 10
+                           ;; :dash [5.0 2.0 2.0 2.0]
+                           ;; :dash [10.0 5.0] :join :miter
+                           :dash [2.0] :dash-phase 2.0
+                           }}))
 
 (defn max-y-val [reducer data]
   (transduce (comp (map (fn [[_ v]] v))
@@ -234,7 +246,7 @@
   (when-not (in? ccc/excluded-country-codes ccode)
     (let [base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
-                               (in? #_[:c :a :r :d] [:c :p :er] case-kw))
+                               (in? #_[:c :a :r :d] [:c :p :er :ea] case-kw))
                              base-data)
           curves (keys sarea-data)
           palette (palette-colors (count curves))]
@@ -252,9 +264,10 @@
                  [:grid]
                  [:sarea sarea-data {:palette palette}]
                  #_[:line (line-data :p base-data) stroke-population]
-                 [:line (line-data :c base-data) stroke-confirmed]
-                 [:line (line-data :a base-data) stroke-active]
-                 [:line (line-data :er base-data) stroke-estimated])
+                 [:line (line-data :c base-data) stroke-confir]
+                 [:line (line-data :a base-data) (stroke-active)]
+                 [:line (line-data :er base-data) (stroke-estim-recov)]
+                 [:line (line-data :ea base-data) (stroke-estim-activ)])
         :y-axis-formatter (metrics-prefix-formatter
                                  ;; population numbers have the `max` values, all
                                  ;; other numbers are derived from them
@@ -264,13 +277,15 @@
                  (conj (map #(vector :rect %2 {:color %1})
                             palette
                             (map (fn [k] (get {:a lang/active
-                                              :d lang/deaths
-                                              :r lang/recovered
-                                              :er lang/recov-estim} k))
+                                               :d lang/deaths
+                                               :r lang/recovered
+                                               :er lang/recov-estim
+                                               :ea lang/activ-estim} k))
                                  curves))
-                       [:line lang/confirmed       stroke-confirmed]
-                       [:line lang/active-absolute stroke-active]
-                       [:line lang/recov-estim     stroke-estimated]
+                       [:line lang/confirmed       stroke-confir]
+                       [:line lang/active-absolute (stroke-active)]
+                       [:line lang/recov-estim     (stroke-estim-recov)]
+                       [:line lang/activ-estim     (stroke-estim-activ)]
                        #_[:line lang/people    stroke-population]))
         :label (plot-label report ccode stats)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
@@ -294,8 +309,12 @@
   [ccode & [stats report]]
   (let [ks [:plot (keyword ccode)]]
     (if (and stats report)
-      (data/cache! (fn [] (calc-plot-country ccode stats report))
-                   ks)
+      (do
+        (def ccode ccode)
+        (def stats stats)
+        (def report report)
+        (data/cache! (fn [] (calc-plot-country ccode stats report))
+                     ks))
       (get-in @data/cache ks))))
 
 (defn group-below-threshold

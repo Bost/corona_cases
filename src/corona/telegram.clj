@@ -203,7 +203,7 @@
    (debugf "[%s] Starting ... done" fun-id)
    (warnf "[%s] Displayed data will NOT be updated!" fun-id)))
 
-(def estim-reports
+(def ^:const estim-reports-recov
   "Seems like different countries have different recovery reporting policies:
   * Germany  - 14 days/reports
   * Slovakia - 23 days/reports
@@ -212,7 +212,16 @@
   14
   #_(+ 3 (* 2 7)))
 
-(defn estim-for-country-fn [calculate-fun kw kws]
+(def ^:const estim-reports-active
+  "Seems like different countries have different recovery reporting policies:
+  * Germany  - 14 days/reports
+  * Slovakia - 23 days/reports
+
+  Warning: lucky coincidence of 1 report per 1 day!"
+  0
+  #_(+ 3 (* 2 7)))
+
+(defn estim-for-country-fn [calculate-fun estim-reports kw kws]
   (fn [[ccode stats-country-unsorted]]
     (let [stats-country (sort-by :t stats-country-unsorted)]
       (mapv (fn [est-rec stats-hm]
@@ -263,14 +272,14 @@
                       (transduce (comp
                                   ;; group together provinces of the given country
                                   (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
-                                  (map (estim-for-country-fn com/calculate-recov :er [:c :d])))
+                                  (map (estim-for-country-fn com/calculate-recov estim-reports-recov :er [:c :d])))
                                  ;; the xform for the `into []`
                                  into [])
                       ;; estimate-activ-for-country depends on estimate-recov-for-country
                       (transduce (comp
                                   ;; group together provinces of the given country
                                   (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
-                                  (map (estim-for-country-fn com/calculate-activ :ea [:c :er :d])))
+                                  (map (estim-for-country-fn com/calculate-activ estim-reports-active :ea [:c :er :d])))
                                  ;; the xform for the `into []`
                                  into [])
                       (sort-by :ccode))

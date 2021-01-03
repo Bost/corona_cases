@@ -28,6 +28,7 @@
 (def ^:const recove          "Recove")
 (def ^:const recovered       "Recovered")
 (def ^:const recov-estim     "Recov. estimated")
+(def ^:const activ-estim     "Active estimated")
 (def ^:const recovered-cases "Recovered cases")
 (def ^:const active          "Active")
 (def ^:const active-cases    "Active cases")
