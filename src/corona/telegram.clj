@@ -223,7 +223,7 @@
   [[ccode stats-country-unsorted]]
   (let [stats-country (sort-by :t stats-country-unsorted)]
     (mapv (fn [est-rec stats-hm]
-            (conj stats-hm {:e est-rec}))
+            (conj stats-hm {:er est-rec}))
           (estimate-recov
            14
            #_(+ 3 (* 2 7)) stats-country)

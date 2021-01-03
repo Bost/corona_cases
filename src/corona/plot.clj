@@ -125,7 +125,7 @@
                 (bigint (/ (:p (first hms)) 1e3))
                 #_(reduce + (map :p hms))
                 #_(bigint (/ (get population ccode) (bigint 1e3)))}
-               {:ccode ccode :t t :case-kw :e :cnt (reduce + (map :e hms))}
+               {:ccode ccode :t t :case-kw :er :cnt (reduce + (map :er hms))}
                {:ccode ccode :t t :case-kw :c :cnt (reduce + (map :c hms))}
                {:ccode ccode :t t :case-kw :r :cnt (reduce + (map :r hms))}
                {:ccode ccode :t t :case-kw :d :cnt (reduce + (map :d hms))}
@@ -145,7 +145,7 @@
     ;; TODO try (map {:a 1 :b 2 :c 3 :d 4} [:a :d]) ;;=> (1 4)
     (reverse (transduce (map (fn [case-kw] (select-keys mapped-hm [case-kw])))
                         into []
-                        [:a :r :d :c :p :e]))))
+                        [:a :r :d :c :p :er]))))
 
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :t last) (sort-by :t stats)))
@@ -234,7 +234,7 @@
   (when-not (in? ccc/excluded-country-codes ccode)
     (let [base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
-                               (in? #_[:c :a :r :d] [:c :p :e] case-kw))
+                               (in? #_[:c :a :r :d] [:c :p :er] case-kw))
                              base-data)
           curves (keys sarea-data)
           palette (palette-colors (count curves))]
@@ -254,7 +254,7 @@
                  #_[:line (line-data :p base-data) stroke-population]
                  [:line (line-data :c base-data) stroke-confirmed]
                  [:line (line-data :a base-data) stroke-active]
-                 [:line (line-data :e base-data) stroke-estimated])
+                 [:line (line-data :er base-data) stroke-estimated])
         :y-axis-formatter (metrics-prefix-formatter
                                  ;; population numbers have the `max` values, all
                                  ;; other numbers are derived from them
@@ -264,9 +264,9 @@
                  (conj (map #(vector :rect %2 {:color %1})
                             palette
                             (map (fn [k] (get {:a lang/active
-                                               :d lang/deaths
-                                               :r lang/recovered
-                                               :e lang/recov-estim} k))
+                                              :d lang/deaths
+                                              :r lang/recovered
+                                              :er lang/recov-estim} k))
                                  curves))
                        [:line lang/confirmed       stroke-confirmed]
                        [:line lang/active-absolute stroke-active]
