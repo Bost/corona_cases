@@ -206,8 +206,8 @@
 (defn estimate-recov
   [reports all-stats]
   (apply map
-         ;; reducing two values into one... TODO identify here the transducer
-         (fn [confirmed deaths] (- confirmed deaths))
+         ;; reducing two values into one... TODO is it an instance of eduction?
+         com/calculate-recovered
          (map (comp
                (fn [case-kw-stats] (into (drop-last reports case-kw-stats)
                                         (repeat reports 0)))

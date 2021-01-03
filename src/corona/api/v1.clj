@@ -141,12 +141,15 @@
   []
   (apply map
          (fn [{:keys [population]}
-             {:keys [ccode t confirmed]}
-             {:keys [recovered]}
-             {:keys [deaths]}]
-           (let [prm-basic {:ccode ccode :t t :c confirmed :r recovered :d deaths
-                            :p population}
-                 prm (assoc prm-basic :a (com/calculate-active prm-basic))]
+              {:keys [ccode t confirmed]}
+              {:keys [recovered]}
+              {:keys [deaths]}]
+           (let [prm {:ccode ccode :t t
+                      :c confirmed
+                      :r recovered
+                      :d deaths
+                      :p population
+                      :a (com/calculate-active confirmed recovered deaths)}]
              (assoc
               prm
               #_(dissoc prm :c)
@@ -156,9 +159,8 @@
               :a-rate (com/calc-rate-active prm)
               :r-rate (com/calc-rate-recovered prm)
               :d-rate (com/calc-rate-deaths prm)
-              :c-rate (com/calc-rate-closed prm)
-              )
-             ))
+              :c-rate (com/calc-rate-closed prm))))
+
          (map xf-for-case [:population :confirmed :recovered :deaths])))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.v1)

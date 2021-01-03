@@ -222,12 +222,8 @@
         pcrda
         (apply
          conj pcrd
-         (->> [com/calculate-active]
-              (mapv (fn [fun] (apply mapv (fn [p c r d]
-                                            (->> [p c r d]
-                                                 (zipmap [:p :c :r :d])
-                                                 (fun)))
-                                     pcrd)))))]
+         (mapv (fn [fun] (apply mapv (fn [_ c r d] (fun c r d)) pcrd))
+               [com/calculate-active]))]
     (zipmap com/all-cases
             (apply
              conj pcrda
@@ -238,13 +234,12 @@
                    com/calc-rate-active
                    com/calc-rate-recovered
                    com/calc-rate-deaths
-                   com/calc-rate-closed
-                   ]
+                   com/calc-rate-closed]
                   (mapv (fn [fun] (apply mapv (fn [p c r d a]
-                                               (->> [p c r d a]
-                                                    (zipmap [:p :c :r :d :a])
-                                                    (fun)))
-                                        pcrda))))))))
+                                                (->> [p c r d a]
+                                                     (zipmap [:p :c :r :d :a])
+                                                     (fun)))
+                                         pcrda))))))))
 
 (defn case-counts-report-by-report
   "Returns a hash-map containing case-counts report-by-report. E.g.:

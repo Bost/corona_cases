@@ -99,8 +99,9 @@
   "Telegram chat-id."
   "112885364")
 
-(defn calculate-active [{:keys [c r d]}]
-  (- c (+ r d)))
+(defn calculate-active [confirmed recovered deaths] (- confirmed (+ recovered deaths)))
+
+(defn calculate-recovered [confirmed deaths] (- confirmed deaths))
 
 (defn calc-rate-active
   [{:keys [a c]}]
@@ -125,11 +126,11 @@
    (utn/round mode (/ (* place 1e5) total-count))))
 
 (defn calculate-cases-per-100k [case-kw]
-  (fn [{:keys [p c r d] :as prm}]
+  (fn [{:keys [p c r d]}]
     (if (zero? p)
       0
       (per-1e5 (case case-kw
-                 :a (calculate-active prm)
+                 :a (calculate-active c r d)
                  :r r
                  :d d
                  :c c)
