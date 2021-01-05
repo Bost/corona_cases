@@ -99,9 +99,21 @@
   "Telegram chat-id."
   "112885364")
 
-(defn calculate-activ [confirmed recovered deaths] (- confirmed (+ recovered deaths)))
+(defn calculate-activ [confirmed recovered deaths]
+  ((comp
+    #_(fn [result]
+      (printf "[calculate-activ] (- %s (+ %s %s): %s\n" confirmed recovered deaths result)
+      result)
+    (fn [confirmed recovered deaths] (- confirmed (+ recovered deaths))))
+   confirmed recovered deaths))
 
-(defn calculate-recov [confirmed deaths] (- confirmed deaths))
+(defn calculate-recov [confirmed deaths]
+  ((comp
+    #_(fn [result]
+      (printf "[calculate-recov] (+ %s %s): %s\n" confirmed deaths result)
+      result)
+    (fn [confirmed deaths] (- confirmed deaths)))
+   confirmed deaths))
 
 (defn calc-rate-active
   [{:keys [a c]}]

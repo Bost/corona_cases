@@ -245,6 +245,8 @@
   active-absolute cases."
   [ccode & [stats report]]
   (when-not (in? ccc/excluded-country-codes ccode)
+    #_(def stats stats)
+    #_(def report report)
     (let [base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
                                (in? #_[:c :a :r :d] [:c :p :er :ea] case-kw))
@@ -278,10 +280,10 @@
                  (conj (map #(vector :rect %2 {:color %1})
                             palette
                             (map (fn [k] (get {:a lang/active
-                                               :d lang/deaths
-                                               :r lang/recovered
-                                               :er lang/recov-estim
-                                               :ea lang/activ-estim} k))
+                                              :d lang/deaths
+                                              :r lang/recovered
+                                              :er lang/recov-estim
+                                              :ea lang/activ-estim} k))
                                  curves))
                        [:line lang/confirmed       stroke-confir]
                        [:line lang/active-absolute (stroke-active)]
@@ -322,7 +324,7 @@
                            (assoc hm :ccode ccc/default-2-country-code)
                            hm))
                  stats)]
-    ;; TODO implement recalculation for decreasing case-kw numbers (e.g. sics)
+    ;; TODO implement recalculation for decreasing case-kw numbers (e.g. active cases)
     (if (> (count (group-by :ccode res)) max-plot-lines)
       (let [raised-threshold (+ threshold-increase threshold)]
         (infof "Case %s; %s countries above threshold. Raise to %s"

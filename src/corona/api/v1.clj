@@ -83,7 +83,7 @@
 
     (into [] (comp (x/sort-by :t)
                    (map (fn [[t v]] {:ccode country_code :t (fmt t) case-kw v}))
-                   #_(x/take-last 8))
+                   #_(x/take-last 28))
           history))
 
   (defn process-date [[t hms]]
@@ -118,8 +118,9 @@
   (->> (get-in (srvc/data-with-pop) [case-kw :locations])
        (transduce (comp
                    (filter
-                    (fn [_] true)
-                    #_(fn [loc] (utils.core/in? ccodes (:country_code loc))))
+                    (fn [loc]
+                      true
+                      #_(utils.core/in? ccodes (:country_code loc))))
                    (map process-location))
                   ;; works as flatten by 1 level
                   into [])

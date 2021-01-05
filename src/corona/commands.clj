@@ -159,7 +159,7 @@
   "Evaluate this function and upload the results under:
      @BotFather -> ... -> Edit Bot -> Edit Commands
 
-  TODO can't type the '/re' command - collides with '/recov'
+  TODO commands /re, /de collide with /recov, /deaths
   TODO /<char> show a list of countries under starting with this letter."
   []
   (->> (cmds-general)

@@ -1,7 +1,6 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.telegram)
 
 ;; TODO replace `->>` with `comp` https://github.com/practicalli/clojure-content/issues/160
-;; TODO replace loop-recur with functional implementation and parallelize it https://youtu.be/GvJm-eJ5o18?t=1617
 ;; TODO https://stuartsierra.com/2016/01/09/how-to-name-clojure-functions
 
 (ns corona.telegram
@@ -203,38 +202,21 @@
    (debugf "[%s] Starting ... done" fun-id)
    (warnf "[%s] Displayed data will NOT be updated!" fun-id)))
 
-(def ^:const estim-reports-recov
-  "Seems like different countries have different recovery reporting policies:
-  * Germany  - 14 days/reports
-  * Slovakia - 23 days/reports
+(def ^:const shift-recovery
+  "Mean number of days/reports between symptoms outbreak and full recovery. (Lucky
+  coincidence of 1 report per 1 day!)
 
-  Warning: lucky coincidence of 1 report per 1 day!"
+  Seems like different countries have different recovery reporting policies:
+  * Germany  - 14 days/reports
+  * Slovakia - 23 days/reports"
   14
   #_(+ 3 (* 2 7)))
 
-(def ^:const estim-reports-active
-  "Seems like different countries have different recovery reporting policies:
-  * Germany  - 14 days/reports
-  * Slovakia - 23 days/reports
-
-  Warning: lucky coincidence of 1 report per 1 day!"
-  0
-  #_(+ 3 (* 2 7)))
-
-(defn estim-for-country-fn [calculate-fun estim-reports kw kws]
-  (fn [[ccode stats-country-unsorted]]
-    (let [stats-country (sort-by :t stats-country-unsorted)]
-      (mapv (fn [est-rec stats-hm]
-              (conj stats-hm {kw est-rec}))
-            ;; reducing two values into one... TODO is it an instance of eduction?
-            (apply map
-                   calculate-fun
-                   (map (comp
-                         (fn [case-kw-stats] (into (drop-last estim-reports case-kw-stats)
-                                                   (repeat estim-reports 0)))
-                         (fn [case-kw] (map case-kw stats-country)))
-                        kws))
-            stats-country))))
+(def ^:const shift-deaths
+  "https://www.spiegel.de/wissenschaft/medizin/coronavirus-infizierte-genesene-tote-alle-live-daten-a-242d71d5-554b-47b6-969a-cd920e8821f1
+  Mean number of days/reports between symptoms outbreak and death. (Lucky
+  coincidence of 1 report per 1 day!)"
+  18)
 
 (defn calc-listings [fun case-kws]
   (run! (fn [case-kw]
@@ -253,6 +235,51 @@
                          sub-msgs))))
        case-kws))
 
+(defn estimate [pic-data]
+  (defn estim-for-country-fn [calculate-fun kw-estim kw-shift-maps]
+    (fn [[_ stats-country-unsorted]]
+      (let [stats-country (sort-by :t stats-country-unsorted)]
+        #_(def stats-country stats-country)
+        #_(def kw-estim kw-estim)
+        #_(def kw-shift-maps kw-shift-maps)
+        (mapv (fn [estim stats-hm]
+                (conj stats-hm {kw-estim estim}))
+              (apply map
+                     (fn [& prm]
+                       ((comp
+                         #_(fn [result]
+                             (println {:prm prm :r result})
+                             result)
+                         (fn [prm] (apply calculate-fun prm)))
+                        prm))
+                     (map (comp
+                           (fn [{:keys [vs shift]}] (into (drop-last shift vs)
+                                                          (repeat shift 0)))
+                           (fn [{:keys [kw shift]}] {:vs (map kw stats-country) :shift shift}))
+                          kw-shift-maps))
+              stats-country))))
+  (->> pic-data
+       (transduce (comp
+                   (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
+                   (map (estim-for-country-fn com/calculate-recov :er [{:kw :c :shift shift-recovery}
+                                                                       {:kw :d :shift shift-deaths}])))
+                  into [])
+       (transduce (comp
+                   (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
+                   (map (estim-for-country-fn com/calculate-activ :ea [{:kw :c  :shift 0}
+                                                                       {:kw :er :shift 0}
+                                                                       {:kw :d  :shift shift-deaths}])))
+                  into [])
+       #_(transduce (comp
+                     (x/by-key :ccode (x/reduce conj)) ;
+                     (map (fn [[_ stats-country-unsorted]]
+                            (map (fn [m] (select-keys m [:c :r :d :a :er :ea]))
+                                 stats-country-unsorted))))
+                    into [])
+       (sort-by :ccode)))
+
+(def map-fn #_map pmap)
+
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
   ([fun-id]
@@ -268,44 +295,30 @@
       (run! (fn [prms] (apply calc-listings prms))
             [[msgl/list-countries com/listing-cases-absolute]
              [msgl/list-per-100k com/listing-cases-per-100k]]))
-     (let [stats (->> (v1/pic-data)
-                      (transduce (comp
-                                  ;; group together provinces of the given country
-                                  (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
-                                  (map (estim-for-country-fn com/calculate-recov estim-reports-recov :er [:c :d])))
-                                 ;; the xform for the `into []`
-                                 into [])
-                      ;; estimate-activ-for-country depends on estimate-recov-for-country
-                      (transduce (comp
-                                  ;; group together provinces of the given country
-                                  (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
-                                  (map (estim-for-country-fn com/calculate-activ estim-reports-active :ea [:c :er :d])))
-                                 ;; the xform for the `into []`
-                                 into [])
-                      (sort-by :ccode))
+     (let [stats (estimate (v1/pic-data))
            cnt-reports (count (data/dates))
            form '(< (count (corona.api.expdev07/raw-dates)) 10)]
        ;; TODO do not call calc-functions when the `form` evaluates to true
        (if (eval form)
          (warnf "Some stuff may not be calculated: %s" form))
        (doall
-        (pmap (fn [ccode]
-                (msgi/detailed-info ccode com/html
-                                    (data/create-pred-hm ccode))
-                (plot/plot-country ccode stats cnt-reports)
-                #_(pmap (fn [fun] (fun))
-                        [(fn [] (msgi/detailed-info ccode com/html
-                                                    (data/create-pred-hm ccode)))
-                         (fn [] (plot/plot-country ccode stats cnt-reports))]))
-              ccc/all-country-codes))
+        (map-fn (fn [ccode]
+                  (msgi/detailed-info ccode com/html
+                                      (data/create-pred-hm ccode))
+                  (plot/plot-country ccode stats cnt-reports)
+                  #_(map-fn (fn [fun] (fun))
+                            [(fn [] (msgi/detailed-info ccode com/html
+                                                        (data/create-pred-hm ccode)))
+                             (fn [] (plot/plot-country ccode stats cnt-reports))]))
+                ccc/all-country-codes))
        (doall
-        (pmap (fn [plot-fn]
-                (doall
-                 (pmap (fn [case-kw]
-                         #_(debugf "Calculating %s %s" plot-fn case-kw)
-                         (plot-fn case-kw stats cnt-reports))
-                       com/absolute-cases)))
-              [plot/plot-sum plot/plot-absolute])))
+        (map-fn (fn [plot-fn]
+                  (doall
+                   (map-fn (fn [case-kw]
+                             #_(debugf "Calculating %s %s" plot-fn case-kw)
+                             (plot-fn case-kw stats cnt-reports))
+                           com/absolute-cases)))
+                [plot/plot-sum plot/plot-absolute])))
      ;; discard the intermediary results, i.e. keep only those items in the
      ;; cache which contain the final results.
      (swap! data/cache (fn [_]

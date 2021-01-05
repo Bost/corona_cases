@@ -16,7 +16,7 @@
 ;; (set! *warn-on-reflection* true)
 
 (defn last-index-of
-  "TODO move last-index-of to utils"
+  "TODO move last-index-of to https://github.com/Bost/utils"
   [coll elem]
   ((comp last
          (partial keep-indexed (fn [i v] (when (= elem v) i))))
