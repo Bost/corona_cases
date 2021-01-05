@@ -231,13 +231,14 @@
                      into []
                      data)))
 
-(defn toByteArrayAutoClosable
+(defn to-byte-array-auto-closable
   "Thanks to https://stackoverflow.com/a/15414490"
   [^BufferedImage image]
-  (with-open [out (new ByteArrayOutputStream)]
-    (let [fmt-name "png"] ;; png is an informal format name.
-      (ImageIO/write image fmt-name out)
-      (.toByteArray out))))
+  (when image
+    (with-open [out (new ByteArrayOutputStream)]
+      (let [fmt-name "png"] ;; png is an informal format name.
+        (ImageIO/write image fmt-name out)
+        (.toByteArray out)))))
 
 (defn calc-plot-country-img
   "Country-specific cumulative plot of active, recovered, deaths and
@@ -290,8 +291,6 @@
         :label (plot-label report ccode stats)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
 
-(defn img-byte-array [img] (when img (toByteArrayAutoClosable img)))
-
 (defn calc-plot-country
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
@@ -300,7 +299,7 @@
     (fn [arr]
       (debugf "[%s] ccode %s img-size %s" "plot-country" ccode (count arr))
       arr)
-    img-byte-array
+    to-byte-array-auto-closable
     (fn [prms] (apply calc-plot-country-img prms)))
    [ccode stats report]))
 
@@ -309,12 +308,8 @@
   [ccode & [stats report]]
   (let [ks [:plot (keyword ccode)]]
     (if (and stats report)
-      (do
-        (def ccode ccode)
-        (def stats stats)
-        (def report report)
-        (data/cache! (fn [] (calc-plot-country ccode stats report))
-                     ks))
+      (data/cache! (fn [] (calc-plot-country ccode stats report))
+                   ks)
       (get-in @data/cache ks))))
 
 (defn group-below-threshold
@@ -389,51 +384,54 @@
     #_(sort-by-country-name mapped-hm)
     (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
 
-(defn calc-sum
+(defn calc-sum-img
   "Case-specific plot for the sum of all countries."
-  ([case-kw stats report] (calc-sum "calc-sum" case-kw stats report))
-  ([fun-id case-kw stats report]
-   (let [threshold (min-threshold case-kw)
-         prm {:report report
-              :stats stats
-              :threshold threshold
-              :threshold-increase (threshold-increase case-kw)
-              :case-kw case-kw}
-
-         {json-data :data threshold-recaltulated :threshold}
-         (stats-all-by-case prm)]
-     (let [img
-           (boiler-plate
-            {:series (b/series [:grid] [:sarea json-data])
-             :legend (reverse
-                      (map #(vector :rect %2 {:color %1})
-                           (cycle (c/palette-presets :category20b))
-                           (map
-                            ccr/country-alias
-                            ;; XXX b/add-legend doesn't accept newline char \n
-                            #_(fn [ccode] (format "%s %s"
-                                                  ccode
-                                                  (com/country-alias ccode)))
-                            (keys json-data))))
-             :y-axis-formatter (metrics-prefix-formatter
+  ([case-kw stats report] (calc-sum-img "calc-sum" case-kw stats report))
+  ([_ case-kw stats report]
+   (let [{json-data :data threshold-recaltulated :threshold}
+         (stats-all-by-case {:report report
+                             :stats stats
+                             :threshold (min-threshold case-kw)
+                             :threshold-increase (threshold-increase case-kw)
+                             :case-kw case-kw})]
+     (boiler-plate
+      {:series (b/series [:grid] [:sarea json-data])
+       :legend (reverse
+                (map #(vector :rect %2 {:color %1})
+                     (cycle (c/palette-presets :category20b))
+                     (map
+                      ccr/country-alias
+                      ;; XXX b/add-legend doesn't accept newline char \n
+                      #_(fn [ccode] (format "%s %s"
+                                            ccode
+                                            (com/country-alias ccode)))
+                      (keys json-data))))
+       :y-axis-formatter (metrics-prefix-formatter
                                 ;; `+` means: sum up all active cases
-                                (max-y-val + json-data))
-             :label (format "%s; %s; %s: %s > %s"
-                            (fmt-report report)
-                            (fmt-last-date stats)
-                            com/bot-name
-                            (com/text-for-case
-                             case-kw
-                             [lang/confirmed lang/recovered lang/deaths lang/active-cases])
-                            #_(->> [lang/confirmed lang/recovered lang/deaths lang/active-cases]
-                                   (zipmap com/basic-cases)
-                                   case-kw)
-                            #_(case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
-                            threshold-recaltulated)
-             :label-conf {:color (c/darken :steelblue) :font-size 14}})]
-       (let [img-byte-array (toByteArrayAutoClosable img)]
-         (debugf "[%s] %s img-size %s" fun-id case-kw (count img-byte-array))
-         img-byte-array)))))
+                          (max-y-val + json-data))
+       :label (format "%s; %s; %s: %s > %s"
+                      (fmt-report report)
+                      (fmt-last-date stats)
+                      com/bot-name
+                      (com/text-for-case
+                       case-kw
+                       [lang/confirmed lang/recovered lang/deaths lang/active-cases])
+                      #_(->> [lang/confirmed lang/recovered lang/deaths lang/active-cases]
+                             (zipmap com/basic-cases)
+                             case-kw)
+                      #_(case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
+                      threshold-recaltulated)
+       :label-conf {:color (c/darken :steelblue) :font-size 14}}))))
+
+(defn calc-sum
+  [case-kw stats report]
+  ((comp
+    (fn [arr]
+      (debugf "[%s] %s img-size %s" "calc-sum" case-kw (count arr))
+      arr)
+    to-byte-array-auto-closable
+    (fn [prms] (apply calc-sum-img prms)))
+   [case-kw stats report]))
 
 (defn plot-sum
   "The optional params `stats`, `report` are used only for the first calculation"
@@ -453,17 +451,16 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn calc-absolute
-  ([case-kw stats report] (calc-absolute "calc-absolute" case-kw stats report))
-  ([fun-id case-kw stats report]
-   (let [threshold (min-threshold case-kw)
-         prm {:report report
-              :stats stats
-              :threshold threshold
-              :threshold-increase (threshold-increase case-kw)
-              :case-kw case-kw}
-
-         json-data (->> (:data (stats-all-by-case prm))
+(defn calc-absolute-img
+  ([case-kw stats report] (calc-absolute-img "calc-absolute" case-kw stats report))
+  ([_ case-kw stats report]
+   (let [json-data (->> {:report report
+                         :stats stats
+                         :threshold (min-threshold case-kw)
+                         :threshold-increase (threshold-increase case-kw)
+                         :case-kw case-kw}
+                        (stats-all-by-case)
+                        :data
                         #_(remove (fn [[ccode _]] (= ccode ccc/qq))))
          palette (cycle (c/palette-presets
                          #_:tableau-10
@@ -471,36 +468,42 @@
                          #_:color-blind-10
                          #_:category10
                          :category20b))]
-     (let [img
-           (boiler-plate
-            {:series (->> (mapv (fn [[_ ccode-data] color]
-                                  [:line ccode-data (line-stroke color)])
-                                json-data
-                                palette)
-                          (into [[:grid]])
-                          (apply b/series))
-             :y-axis-formatter (metrics-prefix-formatter
+     (boiler-plate
+      {:series (->> (mapv (fn [[_ ccode-data] color]
+                            [:line ccode-data (line-stroke color)])
+                          json-data
+                          palette)
+                    (into [[:grid]])
+                    (apply b/series))
+       :y-axis-formatter (metrics-prefix-formatter
                                 ;; population numbers have the `max` values, all
                                 ;; other numbers are derived from them
 
                                 ;; don't display the population json-data for the moment
-                                (max-y-val + json-data))
-             :legend (map (fn [c r] (vector :rect r {:color c}))
-                          palette
-                          (map ccr/country-alias (keys json-data)))
-             :label (format
-                     "%s; %s; %s: %s > %s"
-                     (fmt-report report)
-                     (fmt-last-date stats)
-                     com/bot-name
-                     (str (case-kw {:c lang/confirmed :a lang/active-cases
-                                    :r lang/recovered :d lang/deaths})
-                          " " lang/absolute)
-                     threshold)
-             :label-conf {:color (c/darken :steelblue) :font-size 14}})]
-       (let [img-byte-array (toByteArrayAutoClosable img)]
-         (debugf "[%s] %s img-size %s" fun-id  case-kw (count img-byte-array))
-         img-byte-array)))))
+                          (max-y-val + json-data))
+       :legend (map (fn [c r] (vector :rect r {:color c}))
+                    palette
+                    (map ccr/country-alias (keys json-data)))
+       :label (format
+               "%s; %s; %s: %s > %s"
+               (fmt-report report)
+               (fmt-last-date stats)
+               com/bot-name
+               (str (case-kw {:c lang/confirmed :a lang/active-cases
+                              :r lang/recovered :d lang/deaths})
+                    " " lang/absolute)
+               threshold)
+       :label-conf {:color (c/darken :steelblue) :font-size 14}}))))
+
+(defn calc-absolute
+  [case-kw stats report]
+  ((comp
+    (fn [arr]
+      (debugf "[%s] %s img-size %s" "calc-absolute" case-kw (count arr))
+      arr)
+    to-byte-array-auto-closable
+    (fn [prms] (apply calc-absolute-img prms)))
+   [case-kw stats report]))
 
 (defn plot-absolute
   "The optional params `stats`, `report` are used only for the first calculation"
