@@ -12,17 +12,19 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 
 ## Setup environment
 
-* Install
-[Clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
-and [Babashka](https://github.com/babashka/babashka#installer-script)
+### Install
+* [Clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
+* [Babashka](https://github.com/babashka/babashka#installer-script)
+* [coronavirus-tracker-api](https://github.com/ExpDev07/coronavirus-tracker-api#installation)
 
-* Create a [Telegram Chatbot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
+### Create
+* [Telegram Chatbot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
+* [Heroku App](https://www.heroku.com/)
 
-* Setup a [Heroku App](https://www.heroku.com/)
-
-* Setup development environment - create `.env` file:
+### Configure
+* Local environment variables. Create `.env` file:
 ```bash
-touch .env
+$ touch .env
 ```
 containing:
 ```bash
@@ -37,13 +39,28 @@ CLOJURE_CLI_VERSION=1.10.1.763
 PAPERTRAIL_API_TOKEN=<...>
 TELEGRAM_TOKEN="<...>"
 ```
+* Heroku Config Vars. See [https://dashboard.heroku.com/apps/\<YOUR-HEROKU-APP-NAME\>/settings](). See also:
+```bash
+$ heroku config --app <YOUR-HEROKU-APP-NAME>
+CLOJURE_CLI_VERSION:  1.10.1.763
+COMMIT:               ...
+CORONA_ENV_TYPE:      HOKUSPOKUS
+PAPERTRAIL_API_TOKEN: ...
+REPL_PASSWORD:        ...
+REPL_USER:            ...
+TELEGRAM_TOKEN:       ...
+```
 
 ## Develop
-Emacs Cider `M-x cider-jack-in-clj`
 
-Or start the nREPL:
-```fish
-/usr/local/bin/clojure \
+1. Start the coronavirus-tracker-api:
+```bash
+$ pipenv run start
+```
+
+2. In Emacs Cider `M-x cider-jack-in-clj`, or start the nREPL from the command line:
+```bash
+$ clojure \
     -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} \
                     refactor-nrepl {:mvn/version "2.5.0"} \
                     cider/cider-nrepl {:mvn/version "0.25.5"}}}' \
@@ -51,30 +68,30 @@ Or start the nREPL:
     --middleware '["refactor-nrepl.middleware/wrap-refactor", \
                    "cider.nrepl/cider-middleware"]'
 ```
-And connect to it from the editor of your choice.
+and connect to it from the editor of your choice.
 
-Start telegram chatbot long-polling:
+3. Start the telegram chatbot long-polling:
 ```clojure
-(require '[corona.telegram])
-(corona.telegram/start)
+user> (require '[corona.telegram])
+user> (corona.telegram/start)
 ```
-Start web server:
+
+4. Start the web server:
 ```clojure
-(require '[corona.web])
-(alter-var-root #'system component/start)
+user> (require '[corona.web])
+user> (alter-var-root #'system component/start)
 ```
-Then check the [http://localhost:5050/](http://localhost:5050/)
+and check the [http://localhost:5050/](http://localhost:5050/) if it's running.
 
 ## Run locally
 
-```fish
-bin/build; and heroku local --env=.heroku-local.env
+```bash
+$ bin/build; and heroku local --env=.heroku-local.env
 # or:
-bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...`
+# bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...
 ```
 
 ## Deploy to Heroku
-Done using [babashka](https://github.com/borkdude/babashka). See also
-[heroku.clj](./heroku.clj).
-
-bb heroku.clj deploy --heroku-env <heroku-app-name>
+```bash
+$ bb heroku.clj deploy --heroku-env <YOUR-HEROKU-APP-NAME>
+```
