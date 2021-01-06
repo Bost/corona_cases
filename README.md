@@ -59,14 +59,9 @@ $ pipenv run start
 ```
 
 2. In Emacs Cider `M-x cider-jack-in-clj`, or start the nREPL from the command line:
+<!-- No line continuations '\' accepted -->
 ```bash
-$ clojure \
-    -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} \
-                    refactor-nrepl/refactor-nrepl {:mvn/version "2.5.0"} \
-                    cider/cider-nrepl {:mvn/version "0.25.5"}}}' \
-    -m nrepl.cmdline \
-    --middleware '["refactor-nrepl.middleware/wrap-refactor", \
-                   "cider.nrepl/cider-middleware"]'
+$ clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.0"} cider/cider-nrepl {:mvn/version "0.25.5"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
 ```
 and connect to it from the editor of your choice.
 
