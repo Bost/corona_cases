@@ -19,10 +19,10 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 
 ### Create
 * [Telegram Chatbot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
-* [Heroku App](https://www.heroku.com/)
+* [Heroku App](https://www.heroku.com/), optionally add the Papertrail add-on
 
 ### Configure
-* Local environment variables. Create `.env` file:
+* Local environment variables. Create `.env` file in your project root directory:
 ```bash
 $ touch .env
 ```
@@ -62,7 +62,7 @@ $ pipenv run start
 ```bash
 $ clojure \
     -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} \
-                    refactor-nrepl {:mvn/version "2.5.0"} \
+                    refactor-nrepl/refactor-nrepl {:mvn/version "2.5.0"} \
                     cider/cider-nrepl {:mvn/version "0.25.5"}}}' \
     -m nrepl.cmdline \
     --middleware '["refactor-nrepl.middleware/wrap-refactor", \
