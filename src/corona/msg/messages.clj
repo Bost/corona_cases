@@ -114,7 +114,7 @@
                 "  %s\n")
            lang/active-last-7
            (:doc (meta #'lang/active-last-7)))
-   (format (str "• %s:\n"
+   #_(format (str "• %s:\n"
                 "  %s\n")
            lang/active-last-7-med
            (:doc (meta #'lang/active-last-7-med)))
