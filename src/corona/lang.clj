@@ -100,19 +100,32 @@
 (def ^:const write-a-message-to
   "Just write a message to @RostislavSvoboda thanks.")
 
+(def ^:const data-source-text
+  (str
+   "Data provided by the "
+   "[JHU CSSE](https://github.com/CSSEGISandData/COVID-19)"
+   ", via the "
+   "[ExpDev07/coronavirus-tracker-api]"
+   "(https://github.com/ExpDev07/coronavirus-tracker-api) service"))
+
 (def ^:const contributors-text
   (str
    "The rest of the contributors prefer anonymity or haven't "
    "approved their inclusion to this list yet. 🙏 Thanks folks."))
 
+(def ^:const estim-motivation
+  (str
+   "For many countries the recovery data is missing or incomplete therefore we "
+   "provide" ))
+
 (def ^:const recov-estim-explained
   (str
-   "Estimated number of recovered cased, based on the average number "
+   "Estimated number of recovered cases, based on the average number "
    "of days between symptoms outbreak and full recovery being"))
 
 (def ^:const activ-estim-explained
   (str
-   "Estimated number of deaths, based on the average number of days "
+   "Estimated number of active cases, based on the average number of days "
    "between symptoms outbreak and death being"))
 
 (def ^:const millions-rounded "Mill")

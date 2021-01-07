@@ -100,6 +100,9 @@
   (str
    (header-simple parse_mode)
    "\n"
+   (format "%s\n"
+           lang/data-source-text)
+   "\n"
    (format "• %s %s = %s + %s\n"
            lang/closed lang/cases lang/recovered lang/deaths)
    (format "• %s: <%s> / %s\n" lang/percentage-calc lang/cases lang/confirmed)
@@ -133,6 +136,7 @@
            lang/closed-per-1e5
            lang/cases-per-1e5)
    "\n"
+   (format "%s:\n" lang/estim-motivation)
    (format (str "• %s:\n"
                 "  %s: %s\n")
            lang/recov-estim
