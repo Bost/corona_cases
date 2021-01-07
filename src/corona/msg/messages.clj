@@ -74,27 +74,31 @@
 ;; mapvals
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 
-(defn feedback [] lang/feedback)
+(defn feedback [] lang/write-a-message-to)
+
+(defn header-simple [parse_mode]
+  (format
+   "🦠 @%s %s %s, %s\n"
+   com/bot-name-in-markdown
+   com/botver
+   (link "👩🏼‍💻 GitHub" "https://github.com/Bost/corona_cases" parse_mode)
+   (link "👨🏻‍💻 GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" parse_mode)))
 
 (defn contributors [parse_mode]
-  (format "%s\n\n%s\n\n%s"
-          (cstr/join "\n" ["@DerAnweiser"
+  (format "%s\n%s\n\n%s\n\n%s"
+          (header-simple parse_mode)
+          (cstr/join "\n" ["DerAnweiser"
                            (link "maty535" "https://github.com/maty535" parse_mode)
                            "@kostanjsek"
                            "@DistrictBC"
                            "Michael J."
                            "Johannes D."])
-          lang/contributors
+          lang/contributors-text
           (msgc/footer parse_mode)))
 
 (defn explain [parse_mode]
   (str
-   com/bot-name-in-markdown
-   "🦠 @" com/botver " "
-   (str
-    (link "👩🏼‍💻 GitHub" "https://github.com/Bost/corona_cases" parse_mode) ", "
-    (link "👨🏻‍💻 GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" parse_mode)
-    "\n")
+   (header-simple parse_mode)
    "\n"
    (format "• %s %s = %s + %s\n"
            lang/closed lang/cases lang/recovered lang/deaths)

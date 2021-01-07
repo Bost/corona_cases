@@ -1,19 +1,28 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.envdef)
 
-(ns corona.envdef)
+(ns corona.envdef
+  (:require [clojure.string :as cstr]))
 
-(def prod "prod")
-(def corona-cases "corona-cases")
-(def hokuspokus "hokuspokus")
+(def ^:const ^String prod "prod")
+(def ^:const ^String corona-cases "corona-cases")
+(def ^:const ^String hokuspokus "hokuspokus")
 
 (def token-corona-cases (System/getenv "TELEGRAM_TOKEN_CORONA_CASES"))
 (def token-hokuspokus   (System/getenv "TELEGRAM_TOKEN_HOKUSPOKUS"))
+
+(def fmt-bot-name-fn (comp
+                      (fn [s] (cstr/replace s #"-" "\\_"))
+                      (partial format "%s_bot")))
+
+(def ^:const ^String hokuspokus-bot (fmt-bot-name-fn hokuspokus))
+
+(def ^:const ^String corona-cases-bot (fmt-bot-name-fn corona-cases))
 
 (def environment
   "Mapping env-type -> bot-name"
   {(keyword corona-cases)
    {:level 0
-    :bot-name (clojure.string/replace corona-cases #"-" "\\_")
+    :bot-name corona-cases-bot
     :web-server "https://corona-cases-bot.herokuapp.com"
     :json-server "covid-tracker-us.herokuapp.com"
     :cli {"--prod" "corona-cases"}
@@ -21,7 +30,7 @@
 
    (keyword hokuspokus)
    {:level 1
-    :bot-name hokuspokus
+    :bot-name hokuspokus-bot
     :web-server "https://hokuspokus-bot.herokuapp.com"
     :json-server "covid-tracker-us.herokuapp.com"
     :cli {"--test" "hokuspokus"}
@@ -29,14 +38,14 @@
 
    (keyword "local")
    {:level 2
-    :bot-name hokuspokus
+    :bot-name hokuspokus-bot
     :web-server nil ;; intentionally undefined
     :json-server "covid-tracker-us.herokuapp.com"
     :telegram-token token-hokuspokus}
 
    (keyword "devel")
    {:level 3
-    :bot-name hokuspokus
+    :bot-name hokuspokus-bot
     :web-server nil ;; intentionally undefined
     :json-server "localhost:8000"
     :telegram-token token-hokuspokus}})

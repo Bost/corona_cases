@@ -97,10 +97,10 @@
   "Active cases Change - simple moving Average of last 7 values"
   "ActCL7Avg")
 
-(def ^:const feedback
+(def ^:const write-a-message-to
   "Just write a message to @RostislavSvoboda thanks.")
 
-(def ^:const contributors
+(def ^:const contributors-text
   (str
    "The rest of the contributors prefer anonymity or haven't "
    "approved their inclusion to this list yet. 🙏 Thanks folks."))
