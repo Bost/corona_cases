@@ -180,8 +180,8 @@
      spacer
      "\n"
      ;; lang/listings ":  "
-     (->> (mapv lang/list-sorted-by (into com/listing-cases-absolute
-                                       com/listing-cases-per-100k))
+     (->> (mapv lang/list-sorted-by (concat com/listing-cases-per-100k
+                                            com/listing-cases-absolute))
           (map com/encode-cmd)
           (cstr/join spacer)))))
 
