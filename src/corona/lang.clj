@@ -97,6 +97,24 @@
   "Active cases Change - simple moving Average of last 7 values"
   "ActCL7Avg")
 
+(def ^:const feedback
+  "Just write a message to @RostislavSvoboda thanks.")
+
+(def ^:const contributors
+  (str
+   "The rest of the contributors prefer anonymity or haven't "
+   "approved their inclusion to this list yet. 🙏 Thanks folks."))
+
+(def ^:const recov-estim-explained
+  (str
+   "Estimated number of recovered cased, based on the average number "
+   "of days between symptoms outbreak and full recovery being"))
+
+(def ^:const activ-estim-explained
+  (str
+   "Estimated number of deaths, based on the average number of days "
+   "between symptoms outbreak and death being"))
+
 (def ^:const millions-rounded "Mill")
 
 (defn- lower-case-texts [case-kw texts]

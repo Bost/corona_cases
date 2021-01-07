@@ -15,10 +15,10 @@
             [corona.msg.info :as msgi]
             [corona.msg.lists :as msgl]
             [corona.msg.messages :as msg]
+            [corona.estimate :as est]
             [corona.plot :as plot]
             [morse.handlers :as moh]
             [morse.polling :as mop]
-            [net.cgrand.xforms :as x]
             [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]]))
 
 ;; (set! *warn-on-reflection* true)
@@ -191,6 +191,23 @@
      (fatalf "[%s] polling-handlers not created" fun-id))
    (infof "[%s] Starting ... done" fun-id)))
 
+(defn calc-listings [fun case-kws]
+  (run! (fn [case-kw]
+          (let [coll (sort-by case-kw < (data/stats-countries))
+               ;; Split the long list of all countries into smaller sub-parts
+               ;; TODO move message partitioning to the corona.msg.lists
+                sub-msgs (partition-all (/ (count coll)
+                                           cmd/cnt-messages-in-listing) coll)
+                options {:parse_mode com/html}
+                prm (conj options {:cnt-msgs (count sub-msgs)
+                                   :cnt-reports (count (data/dates))
+                                   :pred-hm (msg/create-pred-hm (ccr/get-country-code ccc/worldwide))})]
+            (doall
+             (map-indexed (fn [idx sub-msg]
+                            (fun case-kw (inc idx) (conj prm {:data sub-msg})))
+                          sub-msgs))))
+        case-kws))
+
 (defn endlessly
   "Invoke fun and put the thread to sleep for millis in an endless loop."
   ([fun ttl] (endlessly "endlessly" fun ttl))
@@ -201,82 +218,6 @@
      (fun))
    (debugf "[%s] Starting ... done" fun-id)
    (warnf "[%s] Displayed data will NOT be updated!" fun-id)))
-
-(def ^:const shift-recovery
-  "Mean number of days/reports between symptoms outbreak and full recovery. (Lucky
-  coincidence of 1 report per 1 day!)
-
-  Seems like different countries have different recovery reporting policies:
-  * Germany  - 14 days/reports
-  * Slovakia - 23 days/reports"
-  14
-  #_(+ 3 (* 2 7)))
-
-(def ^:const shift-deaths
-  "https://www.spiegel.de/wissenschaft/medizin/coronavirus-infizierte-genesene-tote-alle-live-daten-a-242d71d5-554b-47b6-969a-cd920e8821f1
-  Mean number of days/reports between symptoms outbreak and death. (Lucky
-  coincidence of 1 report per 1 day!)"
-  18)
-
-(defn calc-listings [fun case-kws]
-  (run! (fn [case-kw]
-         (let [coll (sort-by case-kw < (data/stats-countries))
-               ;; Split the long list of all countries into smaller sub-parts
-               ;; TODO move message partitioning to the corona.msg.lists
-               sub-msgs (partition-all (/ (count coll)
-                                          cmd/cnt-messages-in-listing) coll)
-               options {:parse_mode com/html}
-               prm (conj options {:cnt-msgs (count sub-msgs)
-                                  :cnt-reports (count (data/dates))
-                                  :pred-hm (msg/create-pred-hm (ccr/get-country-code ccc/worldwide))})]
-           (doall
-            (map-indexed (fn [idx sub-msg]
-                           (fun case-kw (inc idx) (conj prm {:data sub-msg})))
-                         sub-msgs))))
-       case-kws))
-
-(defn estimate [pic-data]
-  (defn estim-for-country-fn [calculate-fun kw-estim kw-shift-maps]
-    (fn [[_ stats-country-unsorted]]
-      (let [stats-country (sort-by :t stats-country-unsorted)]
-        #_(def stats-country stats-country)
-        #_(def kw-estim kw-estim)
-        #_(def kw-shift-maps kw-shift-maps)
-        (mapv (fn [estim stats-hm]
-                (conj stats-hm {kw-estim estim}))
-              (apply map
-                     (fn [& prm]
-                       ((comp
-                         #_(fn [result]
-                             (println {:prm prm :r result})
-                             result)
-                         (fn [prm] (apply calculate-fun prm)))
-                        prm))
-                     (map (comp
-                           (fn [{:keys [vs shift]}] (into (drop-last shift vs)
-                                                          (repeat shift 0)))
-                           (fn [{:keys [kw shift]}] {:vs (map kw stats-country) :shift shift}))
-                          kw-shift-maps))
-              stats-country))))
-  (->> pic-data
-       (transduce (comp
-                   (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
-                   (map (estim-for-country-fn com/calculate-recov :er [{:kw :c :shift shift-recovery}
-                                                                       {:kw :d :shift shift-deaths}])))
-                  into [])
-       (transduce (comp
-                   (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
-                   (map (estim-for-country-fn com/calculate-activ :ea [{:kw :c  :shift 0}
-                                                                       {:kw :er :shift 0}
-                                                                       {:kw :d  :shift shift-deaths}])))
-                  into [])
-       #_(transduce (comp
-                     (x/by-key :ccode (x/reduce conj)) ;
-                     (map (fn [[_ stats-country-unsorted]]
-                            (map (fn [m] (select-keys m [:c :r :d :a :er :ea]))
-                                 stats-country-unsorted))))
-                    into [])
-       (sort-by :ccode)))
 
 (def map-fn #_map pmap)
 
@@ -295,7 +236,9 @@
       (run! (fn [prms] (apply calc-listings prms))
             [[msgl/list-countries com/listing-cases-absolute]
              [msgl/list-per-100k com/listing-cases-per-100k]]))
-     (let [stats (estimate (v1/pic-data))
+     (let [stats ((comp
+                   est/estimate)
+                  (v1/pic-data))
            cnt-reports (count (data/dates))
            form '(< (count (corona.api.expdev07/raw-dates)) 10)]
        ;; TODO do not call calc-functions when the `form` evaluates to true

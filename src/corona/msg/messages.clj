@@ -7,6 +7,7 @@
             [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.lang :as lang]
+            [corona.estimate :as est]
             [corona.msg.common :as msgc]
             [corona.plot :as plot]
             [morse.api :as morse]
@@ -73,8 +74,7 @@
 ;; mapvals
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 
-(defn feedback []
-  (str "Just write a message to @RostislavSvoboda thanks."))
+(defn feedback [] lang/feedback)
 
 (defn contributors [parse_mode]
   (format "%s\n\n%s\n\n%s"
@@ -84,9 +84,7 @@
                            "@DistrictBC"
                            "Michael J."
                            "Johannes D."])
-          (str
-           "The rest of the contributors prefer anonymity or haven't "
-           "approved their inclusion to this list yet. 🙏 Thanks folks.")
+          lang/contributors
           (msgc/footer parse_mode)))
 
 (defn explain [parse_mode]
@@ -130,6 +128,17 @@
            lang/deaths-per-1e5
            lang/closed-per-1e5
            lang/cases-per-1e5)
+   "\n"
+   (format (str "• %s:\n"
+                "  %s: %s\n")
+           lang/recov-estim
+           lang/recov-estim-explained
+           est/shift-recovery)
+   (format (str "• %s:\n"
+                "  %s: %s\n")
+           lang/activ-estim
+           lang/activ-estim-explained
+           est/shift-deaths)
    "\n"
    (format "🙏 Thanks goes to %s. Please ✍️ write %s\n"
            (com/encode-cmd lang/contributors)
