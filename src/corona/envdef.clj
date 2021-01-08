@@ -39,14 +39,14 @@
    (keyword "local")
    {:level 2
     :bot-name hokuspokus-bot
-    :web-server nil ;; intentionally undefined
+    ;; :web-server nil ;; intentionally undefined
     :json-server "covid-tracker-us.herokuapp.com"
     :telegram-token token-hokuspokus}
 
    (keyword "devel")
    {:level 3
     :bot-name hokuspokus-bot
-    :web-server nil ;; intentionally undefined
+    ;; :web-server nil ;; intentionally undefined
     :json-server "localhost:8000"
     :telegram-token token-hokuspokus}})
 
