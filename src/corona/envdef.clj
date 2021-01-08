@@ -24,7 +24,9 @@
    {:level 0
     :bot-name corona-cases-bot
     :web-server "https://corona-cases-bot.herokuapp.com"
-    :json-server "covid-tracker-us.herokuapp.com"
+    :json-server
+    #_"covid-tracker-us.herokuapp.com" ; is down
+     "coronavirus-tracker-api.herokuapp.com"
     :cli {"--prod" "corona-cases"}
     :telegram-token token-corona-cases}
 
