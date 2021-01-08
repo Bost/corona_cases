@@ -27,7 +27,10 @@
 (def heroku-envs (get-heroku-envs (keys env/environment)))
 #_(println "heroku-envs" heroku-envs)
 
-(def heroku-env-prod ((comp first get-heroku-envs) [env/corona-cases]))
+(def heroku-env-prod ((comp first
+                            get-heroku-envs
+                            keyword)
+                      [env/corona-cases]))
 #_(println "heroku-env-prod" heroku-env-prod)
 
 (def heroku-apps
