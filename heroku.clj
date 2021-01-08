@@ -29,8 +29,9 @@
 
 (def heroku-env-prod ((comp first
                             get-heroku-envs
+                            vector
                             keyword)
-                      [env/corona-cases]))
+                      env/corona-cases))
 #_(println "heroku-env-prod" heroku-env-prod)
 
 (def heroku-apps
