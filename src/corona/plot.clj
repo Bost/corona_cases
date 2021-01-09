@@ -456,14 +456,12 @@
 (defn calc-absolute-img
   ([case-kw stats report] (calc-absolute-img "calc-absolute" case-kw stats report))
   ([_ case-kw stats report]
-   (let [json-data (->> {:report report
-                         :stats stats
-                         :threshold (min-threshold case-kw)
-                         :threshold-increase (threshold-increase case-kw)
-                         :case-kw case-kw}
-                        (stats-all-by-case)
-                        :data
-                        #_(remove (fn [[ccode _]] (= ccode ccc/qq))))
+   (let [{json-data :data threshold-recaltulated :threshold}
+         (stats-all-by-case {:report report
+                             :stats stats
+                             :threshold (min-threshold case-kw)
+                             :threshold-increase (threshold-increase case-kw)
+                             :case-kw case-kw})
          palette (cycle (c/palette-presets
                          #_:tableau-10
                          #_:tableau-10-2
@@ -494,7 +492,7 @@
                (str (case-kw {:c lang/confirmed :a lang/active-cases
                               :r lang/recovered :d lang/deaths})
                     " " lang/absolute)
-               threshold)
+               threshold-recaltulated)
        :label-conf {:color (c/darken :steelblue) :font-size 14}}))))
 
 (defn calc-absolute
