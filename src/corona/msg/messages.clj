@@ -1,17 +1,18 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.messages)
 
 (ns corona.msg.messages
-  (:require [clojure.data.json :as json]
+  (:require [clj-http.client :as http]
+            [clojure.data.json :as json]
             [clojure.edn :as edn]
             [clojure.string :as cstr]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
-            [corona.lang :as lang]
             [corona.estimate :as est]
+            [corona.lang :as lang]
             [corona.msg.common :as msgc]
             [corona.plot :as plot]
-            [morse.api :as morse]
-            [taoensso.timbre :as timbre :refer [debugf]]))
+            [taoensso.timbre :as timbre :refer [debugf]])
+  (:import java.util.Base64))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -27,7 +28,8 @@
     (format "<a href=\"%s\">%s</a>" url name)
     (format "[%s](%s)" name url)))
 
-(defn reply-markup-btns [prm]
+(defn reply-markup-btns [{:keys [message_id] :as prm}]
+  (debugf "[%s] message_id %s" "reply-markup-btns" message_id)
   ((comp
     (partial hash-map :reply_markup)
     json/write-str
@@ -38,7 +40,8 @@
           (map (fn [case-kw]
                  (conj
                   {:text (lang/button-text case-kw aggregation-kw)
-                   :callback_data (pr-str (assoc prm
+                   ;; :message_id message_id
+                   :callback_data (pr-str (assoc (dissoc prm :message_id)
                                                  :case-kw case-kw
                                                  :type aggregation-kw))}
                   ;; when used the Telegram Web doesn't display the picture
@@ -47,21 +50,48 @@
                com/absolute-cases))
         com/aggregation-cases)))
 
+
+(def base-url "https://api.telegram.org/bot")
+
+(defn edit-media
+  "Edits a animation, audio, document, photo, or video messages
+  (https://core.telegram.org/bots/api#editmessagemedia)
+
+  TODO alternatively send file to a dump channel, get file id, edit message
+  media, delete message from channel"
+  ([token chat-id message-id media] (edit-media token chat-id message-id {}
+                                                media))
+  ([token chat-id message-id options media]
+   (let [url   (str base-url token "/editMessageMedia")
+         query (into {:chat_id chat-id :media media :message_id message-id}
+                     options)
+         resp  (http/post url {:content-type :json
+                               :as           :json
+                               :form-params  query})]
+     (-> resp :body))))
+
 (defn worldwide-plots
   ([prm] (worldwide-plots "worldwide-plots" prm))
-  ([fun-id {:keys [data]}]
+  ([fun-id {:keys [data message] :as prm}]
    (let [data-hm (edn/read-string data)
-         chat-id (:chat-id data-hm)
-         options ((comp reply-markup-btns (partial select-keys data-hm))
-                  [:chat-id :ccode])
-         content (let [plot-fn (if (= (:type data-hm) :sum)
-                                 plot/plot-sum plot/plot-absolute)]
-                   ;; the plot is fetched from the cache, stats and report need
-                   ;; not to be specified
-                   (plot-fn (:case-kw data-hm)))]
-     (doall
-      (morse/send-photo com/telegram-token chat-id options content))
-     (debugf "[%s] send-photo: %s bytes sent" fun-id (count content)))))
+
+         {chat-id :chat-id ccode :ccode plot-type :type case-kw :case-kw}
+         data-hm
+
+         message-id (:message_id message)
+         options (reply-markup-btns {:chat-id chat-id :ccode ccode
+                                     :message_id message-id})]
+     (let [msg (doall
+                (edit-media com/telegram-token chat-id message-id options
+                            {:type "photo"
+                             :media
+                             (let [url (format "%s/graphs/%s/%s"
+                                               com/webapp-server
+                                               (name plot-type)
+                                               (name case-kw))]
+                               (debugf "[%s] url" fun-id url)
+                               url)}))]
+       (debugf "[%s] (count msg) %s" fun-id (count msg))))))
 
 ;; (defn language [prm]
 ;;   (format

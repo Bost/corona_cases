@@ -174,6 +174,7 @@
          'corona.common/telegram-token
          'corona.common/repl-user
          'corona.common/repl-password
+         'corona.common/webapp-server
          'corona.common/webapp-port
          'corona.common/bot-name
          'corona.common/botver]))
