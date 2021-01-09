@@ -18,15 +18,18 @@
 
 (def ^:const ^String corona-cases-bot (fmt-bot-name-fn corona-cases))
 
+(def api-servers
+  "TODO iterate over the list in case of status 503 - service not available"
+  (second
+   ["covid-tracker-us.herokuapp.com" ; is down
+    "coronavirus-tracker-api.herokuapp.com"]))
 (def environment
   "Mapping env-type -> bot-name"
   {(keyword corona-cases)
    {:level 0
     :bot-name corona-cases-bot
     :web-server "https://corona-cases-bot.herokuapp.com"
-    :json-server
-    #_"covid-tracker-us.herokuapp.com" ; is down
-    "coronavirus-tracker-api.herokuapp.com"
+    :json-server api-servers
     :cli {"--prod" "corona-cases"}
     :telegram-token token-corona-cases}
 
@@ -34,7 +37,7 @@
    {:level 1
     :bot-name hokuspokus-bot
     :web-server "https://hokuspokus-bot.herokuapp.com"
-    :json-server "covid-tracker-us.herokuapp.com"
+    :json-server api-servers
     :cli {"--test" "hokuspokus"}
     :telegram-token token-hokuspokus}
 
@@ -42,7 +45,7 @@
    {:level 2
     :bot-name hokuspokus-bot
     ;; :web-server nil ;; intentionally undefined
-    :json-server "covid-tracker-us.herokuapp.com"
+    :json-server api-servers
     :telegram-token token-hokuspokus}
 
    (keyword "devel")
