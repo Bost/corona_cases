@@ -97,11 +97,12 @@
      :body
      (json/write-str {:chat_id (->> req :params :message :chat :id)
                       :text (format "Hello from %s webhook" google-hook)})})
-
   (cjc/GET "/" []
     (home-page))
   (cjc/GET "/links" []
-    (webresp/links))
+           (webresp/links))
+  (cjc/GET "/graphs" args
+           (debugf "args %s" args))
   (cjc/GET (format "/%s/beds" ws-path) []
     (webresp/web-service {:type :beds}))
   (cjc/GET (format "/%s/names" ws-path) []
