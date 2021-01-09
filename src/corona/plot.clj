@@ -386,6 +386,39 @@
     #_(sort-by-country-name mapped-hm)
     (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
 
+
+(defn legend [json-data]
+  (map (fn [c r] (vector :rect r {:color c}))
+       (cycle (c/palette-presets :category20b))
+       (map ccr/country-alias
+            ;; XXX b/add-legend doesn't accept newline char \n
+            #_(fn [ccode] (format "%s %s"
+                                  ccode
+                                  (com/country-alias ccode)))
+            (keys json-data))))
+
+(defn y-axis-formatter [json-data]
+   ;; `+` means: sum up all active cases
+  (metrics-prefix-formatter (max-y-val + json-data)))
+
+(def label-conf {:color (c/darken :steelblue) :font-size 14})
+
+(defn- label
+  [report stats case-kw threshold-recaltulated & [postfix]]
+  (format "%s; %s; %s: %s > %s"
+          (fmt-report report)
+          (fmt-last-date stats)
+          com/bot-name
+          ((comp
+            (fn [s] (str s postfix))
+            (partial com/text-for-case case-kw))
+           [lang/confirmed lang/recovered lang/deaths lang/active-cases])
+          #_(->> [lang/confirmed lang/recovered lang/deaths lang/active-cases]
+                 (zipmap com/basic-cases)
+                 case-kw)
+          #_(case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
+          threshold-recaltulated))
+
 (defn calc-sum-img
   "Case-specific plot for the sum of all countries."
   ([case-kw stats report] (calc-sum-img "calc-sum" case-kw stats report))
@@ -398,32 +431,10 @@
                              :case-kw case-kw})]
      (boiler-plate
       {:series (b/series [:grid] [:sarea json-data])
-       :legend (reverse
-                (map #(vector :rect %2 {:color %1})
-                     (cycle (c/palette-presets :category20b))
-                     (map
-                      ccr/country-alias
-                      ;; XXX b/add-legend doesn't accept newline char \n
-                      #_(fn [ccode] (format "%s %s"
-                                            ccode
-                                            (com/country-alias ccode)))
-                      (keys json-data))))
-       :y-axis-formatter (metrics-prefix-formatter
-                                ;; `+` means: sum up all active cases
-                          (max-y-val + json-data))
-       :label (format "%s; %s; %s: %s > %s"
-                      (fmt-report report)
-                      (fmt-last-date stats)
-                      com/bot-name
-                      (com/text-for-case
-                       case-kw
-                       [lang/confirmed lang/recovered lang/deaths lang/active-cases])
-                      #_(->> [lang/confirmed lang/recovered lang/deaths lang/active-cases]
-                             (zipmap com/basic-cases)
-                             case-kw)
-                      #_(case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
-                      threshold-recaltulated)
-       :label-conf {:color (c/darken :steelblue) :font-size 14}}))))
+       :legend ((comp reverse legend) json-data)
+       :y-axis-formatter (y-axis-formatter json-data)
+       :label (label report stats case-kw threshold-recaltulated)
+       :label-conf label-conf}))))
 
 (defn calc-sum
   [case-kw stats report]
@@ -461,39 +472,18 @@
                              :stats stats
                              :threshold (min-threshold case-kw)
                              :threshold-increase (threshold-increase case-kw)
-                             :case-kw case-kw})
-         palette (cycle (c/palette-presets
-                         #_:tableau-10
-                         #_:tableau-10-2
-                         #_:color-blind-10
-                         #_:category10
-                         :category20b))]
+                             :case-kw case-kw})]
      (boiler-plate
       {:series (->> (mapv (fn [[_ ccode-data] color]
                             [:line ccode-data (line-stroke color)])
                           json-data
-                          palette)
+                          (cycle (c/palette-presets :category20b)))
                     (into [[:grid]])
                     (apply b/series))
-       :y-axis-formatter (metrics-prefix-formatter
-                                ;; population numbers have the `max` values, all
-                                ;; other numbers are derived from them
-
-                                ;; don't display the population json-data for the moment
-                          (max-y-val + json-data))
-       :legend (map (fn [c r] (vector :rect r {:color c}))
-                    palette
-                    (map ccr/country-alias (keys json-data)))
-       :label (format
-               "%s; %s; %s: %s > %s"
-               (fmt-report report)
-               (fmt-last-date stats)
-               com/bot-name
-               (str (case-kw {:c lang/confirmed :a lang/active-cases
-                              :r lang/recovered :d lang/deaths})
-                    " " lang/absolute)
-               threshold-recaltulated)
-       :label-conf {:color (c/darken :steelblue) :font-size 14}}))))
+       :legend ((comp #_reverse legend) json-data)
+       :y-axis-formatter (y-axis-formatter json-data)
+       :label (label report stats case-kw threshold-recaltulated (str " " lang/absolute))
+       :label-conf label-conf}))))
 
 (defn calc-absolute
   [case-kw stats report]
