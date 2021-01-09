@@ -36,20 +36,19 @@
     (partial hash-map :inline_keyboard)
     vector
     (partial reduce into))
-   (map (fn [aggregation-kw]
-          (map (fn [case-kw]
-                 (conj
-                  {:text (lang/button-text case-kw aggregation-kw)
+   (mapv (fn [aggregation-kw]
+           (mapv (fn [case-kw]
+                   (conj
+                    {:text (lang/button-text case-kw aggregation-kw)
                    ;; :message_id message_id
-                   :callback_data (pr-str (assoc (dissoc prm :message_id)
-                                                 :case-kw case-kw
-                                                 :type aggregation-kw))}
+                     :callback_data (pr-str (assoc (dissoc prm :message_id)
+                                                   :case-kw case-kw
+                                                   :type aggregation-kw))}
                   ;; when used the Telegram Web doesn't display the picture
                   ;; see also https://core.telegram.org/bots/api#sendphoto
-                  #_{:caption "Foo"}))
-               com/absolute-cases))
-        com/aggregation-cases)))
-
+                    #_{:caption "Foo"}))
+                 com/absolute-cases))
+         com/aggregation-cases)))
 
 (def base-url "https://api.telegram.org/bot")
 
