@@ -10,9 +10,9 @@
             [corona.estimate :as est]
             [corona.lang :as lang]
             [corona.msg.common :as msgc]
+            [morse.api :as morse]
             [corona.plot :as plot]
-            [taoensso.timbre :as timbre :refer [debugf]])
-  (:import java.util.Base64))
+            [taoensso.timbre :as timbre :refer [debugf]]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -40,12 +40,12 @@
            (mapv (fn [case-kw]
                    (conj
                     {:text (lang/button-text case-kw aggregation-kw)
-                   ;; :message_id message_id
+                     ;; :message_id message_id
                      :callback_data (pr-str (assoc (dissoc prm :message_id)
                                                    :case-kw case-kw
                                                    :type aggregation-kw))}
-                  ;; when used the Telegram Web doesn't display the picture
-                  ;; see also https://core.telegram.org/bots/api#sendphoto
+                    ;; when used the Telegram Web doesn't display the picture
+                    ;; see also https://core.telegram.org/bots/api#sendphoto
                     #_{:caption "Foo"}))
                  com/absolute-cases))
          com/aggregation-cases)))
@@ -71,7 +71,7 @@
 
 (defn worldwide-plots
   ([prm] (worldwide-plots "worldwide-plots" prm))
-  ([fun-id {:keys [data message] :as prm}]
+  ([fun-id {:keys [data message]}]
    (let [data-hm (edn/read-string data)
 
          {chat-id :chat-id ccode :ccode plot-type :type case-kw :case-kw}
@@ -81,15 +81,22 @@
          options (reply-markup-btns {:chat-id chat-id :ccode ccode
                                      :message_id message-id})]
      (let [msg (doall
-                (edit-media com/telegram-token chat-id message-id options
-                            {:type "photo"
-                             :media
-                             (let [url (format "%s/graphs/%s/%s"
-                                               com/webapp-server
-                                               (name plot-type)
-                                               (name case-kw))]
-                               (debugf "[%s] url" fun-id url)
-                               url)}))]
+                (if com/use-webhook?
+                  (edit-media com/telegram-token chat-id message-id options
+                              {:type "photo"
+                               :media
+                               (let [url (format "%s/graphs/%s/%s"
+                                                 com/webapp-server
+                                                 (name plot-type)
+                                                 (name case-kw))]
+                                 (debugf "[%s] url %s" fun-id url)
+                                 url)})
+                  (morse/send-photo com/telegram-token chat-id options
+                                    (let [plot-fn (if (= (:type data-hm) :sum)
+                                                    plot/plot-sum plot/plot-absolute)]
+                                      ;; the plot is fetched from the cache, stats and report need
+                                      ;; not to be specified
+                                      (plot-fn (:case-kw data-hm))))))]
        (debugf "[%s] (count msg) %s" fun-id (count msg))))))
 
 ;; (defn language [prm]
