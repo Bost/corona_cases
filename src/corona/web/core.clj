@@ -105,15 +105,10 @@
   #_{:status 200
      :headers {"Content-Type" "text/plain"}
      :body "graphs 2"}
-  (cjc/GET "/graphs/sum/a" [] {:status 200 :headers {"Content-Type" "image/png"} :body (plot/plot-sum :a)})
-  (cjc/GET "/graphs/sum/d" [] {:status 200 :headers {"Content-Type" "image/png"} :body (plot/plot-sum :d)})
-  (cjc/GET "/graphs/sum/r" [] {:status 200 :headers {"Content-Type" "image/png"} :body (plot/plot-sum :r)})
-  (cjc/GET "/graphs/sum/c" [] {:status 200 :headers {"Content-Type" "image/png"} :body (plot/plot-sum :c)})
-
-  (cjc/GET "/graphs/abs/a" [] {:status 200 :headers {"Content-Type" "image/png"} :body (plot/plot-absolute :a)})
-  (cjc/GET "/graphs/abs/d" [] {:status 200 :headers {"Content-Type" "image/png"} :body (plot/plot-absolute :d)})
-  (cjc/GET "/graphs/abs/r" [] {:status 200 :headers {"Content-Type" "image/png"} :body (plot/plot-absolute :r)})
-  (cjc/GET "/graphs/abs/c" [] {:status 200 :headers {"Content-Type" "image/png"} :body (plot/plot-absolute :c)})
+  (cjc/GET "/graphs/:aggregation/:case" [aggregation case]
+           ;; TODO make sure strings and keywords are not getting confused
+           {:status 200 :headers {"Content-Type" "image/png"}
+            :body (plot/plot-aggregation (keyword aggregation) (keyword case))})
   (cjc/GET (format "/%s/beds" ws-path) []
     (webresp/web-service {:type :beds}))
   (cjc/GET (format "/%s/names" ws-path) []

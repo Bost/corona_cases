@@ -92,11 +92,9 @@
                                  (debugf "[%s] url %s" fun-id url)
                                  url)})
                   (morse/send-photo com/telegram-token chat-id options
-                                    (let [plot-fn (if (= (:type data-hm) :sum)
-                                                    plot/plot-sum plot/plot-absolute)]
-                                      ;; the plot is fetched from the cache, stats and report need
-                                      ;; not to be specified
-                                      (plot-fn (:case-kw data-hm))))))]
+                                    ;; the plot is fetched from the cache, stats and report need
+                                    ;; not to be specified
+                                    (plot/plot-aggregation (:type data-hm) (:case-kw data-hm)))))]
        (debugf "[%s] (count msg) %s" fun-id (count msg))))))
 
 ;; (defn language [prm]

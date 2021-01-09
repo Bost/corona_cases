@@ -404,7 +404,7 @@
 (def label-conf {:color (c/darken :steelblue) :font-size 14})
 
 (defn- label
-  [report stats case-kw threshold-recaltulated & [postfix]]
+  [report stats case-kw threshold & [postfix]]
   (format "%s; %s; %s: %s > %s"
           (fmt-report report)
           (fmt-last-date stats)
@@ -417,7 +417,7 @@
                  (zipmap com/basic-cases)
                  case-kw)
           #_(case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
-          threshold-recaltulated))
+          threshold))
 
 (defn calc-sum-img
   "Case-specific plot for the sum of all countries."
@@ -451,8 +451,7 @@
   [case-kw & [stats report]]
   (let [ks [:plot :sum case-kw]]
     (if (and stats report)
-      (data/cache! (fn [] (calc-sum case-kw stats report))
-                   ks)
+      (data/cache! (fn [] (calc-sum case-kw stats report)) ks)
       (get-in @data/cache ks))))
 
 (defn line-stroke [color]
@@ -500,7 +499,18 @@
   [case-kw & [stats report]]
   (let [ks [:plot :abs case-kw]]
     (if (and stats report)
-      (data/cache! (fn [] (calc-absolute case-kw stats report))
+      (data/cache! (fn [] (calc-absolute case-kw stats report)) ks)
+      (get-in @data/cache ks))))
+
+(defn plot-aggregation
+  "The optional params `stats`, `report` are used only for the first calculation"
+  [aggregation-kw case-kw & [stats report]]
+  (let [ks [:plot aggregation-kw case-kw]]
+    (if (and stats report)
+      (data/cache! (fn []
+                     ((condp = aggregation-kw
+                        :abs calc-absolute
+                        :sum calc-sum) case-kw stats report))
                    ks)
       (get-in @data/cache ks))))
 

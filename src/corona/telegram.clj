@@ -255,15 +255,15 @@
                              (fn [] (plot/plot-country ccode stats cnt-reports))]))
                 ccc/all-country-codes))
        (doall
-        (map-fn (fn [plot-fn]
+        (map-fn (fn [aggregation-kw]
                   (doall
                    (map-fn (fn [case-kw]
-                             #_(debugf "Calculating %s %s" plot-fn case-kw)
-                             (plot-fn case-kw stats cnt-reports))
+                             (plot/plot-aggregation aggregation-kw case-kw stats cnt-reports))
                            com/absolute-cases)))
-                [plot/plot-sum plot/plot-absolute])))
+                com/aggregation-cases)))
      ;; discard the intermediary results, i.e. keep only those items in the
      ;; cache which contain the final results.
+
      (swap! data/cache (fn [_]
                          (select-keys @data/cache [:plot :msg :list :threshold])))
 
