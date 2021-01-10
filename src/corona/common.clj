@@ -221,7 +221,7 @@
       ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
       ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
       ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
-      (infof "Requesting json-data from %s ... done. %s chars received in %s ms"
+      (infof "Requesting json-data from %s ... %s chars received in %s ms"
              url
              (count (str result))
              (- (System/currentTimeMillis) tbeg))

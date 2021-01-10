@@ -48,9 +48,9 @@
 (defn min-threshold
   "Countries with the number of cases less than the threshold are grouped into
   \"Rest\"."
-  [case-kw]
+  [aggregation-kw case-kw]
   (data/from-cache! (fn [] ((comp :val threshold) case-kw))
-                    [:threshold case-kw]))
+                    [:threshold aggregation-kw case-kw]))
 
 (defn threshold-increase
   "Case-dependent threshold recalculation increase."
@@ -440,7 +440,7 @@
    (let [{json-data :data threshold-recalced :threshold}
          (stats-all-by-case {:report report
                              :stats stats
-                             :threshold (min-threshold case-kw)
+                             :threshold (min-threshold aggregation-kw case-kw)
                              :threshold-increase (threshold-increase case-kw)
                              :case-kw case-kw})]
      (boiler-plate
@@ -468,7 +468,7 @@
   [aggregation-kw case-kw stats report]
   ((comp
     (fn [arr]
-      (debugf "[%s] %s img-size %s" "calc-aggregation"
+      (debugf "[%s] aggregation-kw %s case-kw %s; img-size %s" "calc-aggregation"
               aggregation-kw case-kw (count arr))
       arr)
     to-byte-array-auto-closable
