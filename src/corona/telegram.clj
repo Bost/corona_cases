@@ -220,6 +220,7 @@
    (warnf "[%s] Displayed data will NOT be updated!" fun-id)))
 
 (def map-fn #_map pmap)
+(def map-aggr-fn map #_pmap)
 
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
@@ -255,12 +256,12 @@
                              (fn [] (plot/plot-country ccode stats cnt-reports))]))
                 ccc/all-country-codes))
        (doall
-        (map-fn (fn [aggregation-kw]
-                  (doall
-                   (map-fn (fn [case-kw]
-                             (plot/plot-aggregation aggregation-kw case-kw stats cnt-reports))
-                           com/absolute-cases)))
-                com/aggregation-cases)))
+        (map-aggr-fn (fn [aggregation-kw]
+                       (doall
+                        (map-aggr-fn (fn [case-kw]
+                                       (plot/plot-aggregation aggregation-kw case-kw stats cnt-reports))
+                                     com/absolute-cases)))
+                     com/aggregation-cases)))
      ;; discard the intermediary results, i.e. keep only those items in the
      ;; cache which contain the final results.
 

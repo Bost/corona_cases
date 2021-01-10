@@ -360,13 +360,16 @@
                     (map (fn [[t hms]]
                            (cset/union
                             hms
-                            (map (fn [ccode] {:ccode ccode :t t case-kw 0})
-                                 (cset/difference countries-threshold
-                                                  (set (keys (group-by :ccode hms))))))
+                            (set
+                             (map (fn [ccode] {:ccode ccode :t t case-kw 0})
+                                  (cset/difference countries-threshold
+                                                   (set (keys (group-by :ccode hms)))))))
                            #_(->> (group-by :ccode hms)
                                   (keys)
+                                  (set)
                                   (cset/difference countries-threshold)
                                   (map (fn [ccode] {:ccode ccode :t t :a 0}))
+                                  (set)
                                   (cset/union hms)))
                          (group-by :t sum-all-by-date-by-case-threshold)))]
     (update date-sums :data (fn [_] res))))
@@ -403,8 +406,9 @@
 
 (def label-conf {:color (c/darken :steelblue) :font-size 14})
 
-(defn- label
+(defn label-str
   [report stats case-kw threshold postfix]
+  (debugf "[%s] threshold %s" "label-str" threshold)
   (format "%s; %s; %s: %s > %s"
           (fmt-report report)
           (fmt-last-date stats)
@@ -433,7 +437,7 @@
    (calc-aggregation-img "calc-aggregation-img"
                          aggregation-kw case-kw stats report))
   ([_ aggregation-kw case-kw stats report]
-   (let [{json-data :data threshold-recaltulated :threshold}
+   (let [{json-data :data threshold-recalced :threshold}
          (stats-all-by-case {:report report
                              :stats stats
                              :threshold (min-threshold case-kw)
@@ -454,10 +458,10 @@
                       legend)
                 json-data)
        :y-axis-formatter (y-axis-formatter json-data)
-       :label (label report stats case-kw threshold-recaltulated
-                     (condp = aggregation-kw
-                       :abs (str " " lang/absolute)
-                       :sum ""))
+       :label (label-str report stats case-kw threshold-recalced
+                         (condp = aggregation-kw
+                           :abs (str " " lang/absolute)
+                           :sum ""))
        :label-conf label-conf}))))
 
 (defn calc-aggregation

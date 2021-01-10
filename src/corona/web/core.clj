@@ -247,7 +247,7 @@ e.g. via `s-u` my=cider-save-and-load-current-buffer."]
 (def system (web-server))
 
 (comment
-  (alter-var-root #'system component/start)
-  (alter-var-root #'system component/stop))
+  (alter-var-root #'corona.web.core/system com.stuartsierra.component/start)
+  (alter-var-root #'corona.web.core/system com.stuartsierra.component/stop))
 
 (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.web.core)
