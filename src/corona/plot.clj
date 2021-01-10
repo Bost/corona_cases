@@ -362,7 +362,7 @@
                             hms
                             (map (fn [ccode] {:ccode ccode :t t case-kw 0})
                                  (cset/difference countries-threshold
-                                                  (keys (group-by :ccode hms)))))
+                                                  (set (keys (group-by :ccode hms))))))
                            #_(->> (group-by :ccode hms)
                                   (keys)
                                   (cset/difference countries-threshold)
@@ -404,7 +404,7 @@
 (def label-conf {:color (c/darken :steelblue) :font-size 14})
 
 (defn- label
-  [report stats case-kw threshold & [postfix]]
+  [report stats case-kw threshold postfix]
   (format "%s; %s; %s: %s > %s"
           (fmt-report report)
           (fmt-last-date stats)
@@ -419,41 +419,6 @@
           #_(case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
           threshold))
 
-(defn calc-sum-img
-  "Case-specific plot for the sum of all countries."
-  ([case-kw stats report] (calc-sum-img "calc-sum" case-kw stats report))
-  ([_ case-kw stats report]
-   (let [{json-data :data threshold-recaltulated :threshold}
-         (stats-all-by-case {:report report
-                             :stats stats
-                             :threshold (min-threshold case-kw)
-                             :threshold-increase (threshold-increase case-kw)
-                             :case-kw case-kw})]
-     (boiler-plate
-      {:series (b/series [:grid] [:sarea json-data])
-       :legend ((comp reverse legend) json-data)
-       :y-axis-formatter (y-axis-formatter json-data)
-       :label (label report stats case-kw threshold-recaltulated)
-       :label-conf label-conf}))))
-
-(defn calc-sum
-  [case-kw stats report]
-  ((comp
-    (fn [arr]
-      (debugf "[%s] %s img-size %s" "calc-sum" case-kw (count arr))
-      arr)
-    to-byte-array-auto-closable
-    (fn [prms] (apply calc-sum-img prms)))
-   [case-kw stats report]))
-
-(defn plot-sum
-  "The optional params `stats`, `report` are used only for the first calculation"
-  [case-kw & [stats report]]
-  (let [ks [:plot :sum case-kw]]
-    (if (and stats report)
-      (data/cache! (fn [] (calc-sum case-kw stats report)) ks)
-      (get-in @data/cache ks))))
-
 (defn line-stroke [color]
   (conj line-cfg {:color color
                   :stroke {:size 3
@@ -463,9 +428,11 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn calc-absolute-img
-  ([case-kw stats report] (calc-absolute-img "calc-absolute" case-kw stats report))
-  ([_ case-kw stats report]
+(defn calc-aggregation-img
+  ([aggregation-kw case-kw stats report]
+   (calc-aggregation-img "calc-aggregation-img"
+                         aggregation-kw case-kw stats report))
+  ([_ aggregation-kw case-kw stats report]
    (let [{json-data :data threshold-recaltulated :threshold}
          (stats-all-by-case {:report report
                              :stats stats
@@ -473,34 +440,36 @@
                              :threshold-increase (threshold-increase case-kw)
                              :case-kw case-kw})]
      (boiler-plate
-      {:series (->> (mapv (fn [[_ ccode-data] color]
-                            [:line ccode-data (line-stroke color)])
-                          json-data
-                          (cycle (c/palette-presets :category20b)))
-                    (into [[:grid]])
-                    (apply b/series))
-       :legend ((comp #_reverse legend) json-data)
+      {:series (condp = aggregation-kw
+                 :abs (->> (mapv (fn [[_ ccode-data] color]
+                                   [:line ccode-data (line-stroke color)])
+                                 json-data
+                                 (cycle (c/palette-presets :category20b)))
+                           (into [[:grid]])
+                           (apply b/series))
+                 :sum (b/series [:grid] [:sarea json-data]))
+       :legend ((comp (condp = aggregation-kw
+                        :abs identity
+                        :sum reverse)
+                      legend)
+                json-data)
        :y-axis-formatter (y-axis-formatter json-data)
-       :label (label report stats case-kw threshold-recaltulated (str " " lang/absolute))
+       :label (label report stats case-kw threshold-recaltulated
+                     (condp = aggregation-kw
+                       :abs (str " " lang/absolute)
+                       :sum ""))
        :label-conf label-conf}))))
 
-(defn calc-absolute
-  [case-kw stats report]
+(defn calc-aggregation
+  [aggregation-kw case-kw stats report]
   ((comp
     (fn [arr]
-      (debugf "[%s] %s img-size %s" "calc-absolute" case-kw (count arr))
+      (debugf "[%s] %s img-size %s" "calc-aggregation"
+              aggregation-kw case-kw (count arr))
       arr)
     to-byte-array-auto-closable
-    (fn [prms] (apply calc-absolute-img prms)))
-   [case-kw stats report]))
-
-(defn plot-absolute
-  "The optional params `stats`, `report` are used only for the first calculation"
-  [case-kw & [stats report]]
-  (let [ks [:plot :abs case-kw]]
-    (if (and stats report)
-      (data/cache! (fn [] (calc-absolute case-kw stats report)) ks)
-      (get-in @data/cache ks))))
+    (fn [prms] (apply calc-aggregation-img prms)))
+   [aggregation-kw case-kw stats report]))
 
 (defn plot-aggregation
   "The optional params `stats`, `report` are used only for the first calculation"
@@ -508,9 +477,7 @@
   (let [ks [:plot aggregation-kw case-kw]]
     (if (and stats report)
       (data/cache! (fn []
-                     ((condp = aggregation-kw
-                        :abs calc-absolute
-                        :sum calc-sum) case-kw stats report))
+                     (calc-aggregation aggregation-kw case-kw stats report))
                    ks)
       (get-in @data/cache ks))))
 
