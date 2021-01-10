@@ -257,6 +257,7 @@
                 ccc/all-country-codes))
        (doall
         (map-aggr-fn (fn [aggregation-kw]
+                       ;; TODO delete picture from telegram servers
                        (doall
                         (map-aggr-fn (fn [case-kw]
                                        (plot/plot-aggregation aggregation-kw case-kw stats cnt-reports))

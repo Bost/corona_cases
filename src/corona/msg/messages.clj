@@ -81,7 +81,7 @@
          options (reply-markup-btns {:chat-id chat-id :ccode ccode
                                      :message_id message-id})]
      (let [msg (doall
-                (if false #_com/use-webhook?
+                (if com/use-webhook?
                   (edit-media com/telegram-token chat-id message-id options
                               {:type "photo"
                                :media
