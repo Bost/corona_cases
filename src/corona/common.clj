@@ -350,7 +350,7 @@
   #_"csbs")
 
 (def ttl
-  "Time to live in (* <hours> <minutes> <seconds> <miliseconds>)."
+  "Time to live in (* <hours> <minutes> <seconds> <milliseconds>)."
   (* 3 60 60 1000))
 
 (defn text-for-case [case-kw texts]
