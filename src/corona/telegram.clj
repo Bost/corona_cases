@@ -220,7 +220,51 @@
    (warnf "[%s] Displayed data will NOT be updated!" fun-id)))
 
 (def map-fn #_map pmap)
-(def map-aggr-fn map #_pmap)
+
+(defn do-reset-cache!
+  ([new-hash tbeg] (do-reset-cache! "do-reset-cache!" new-hash tbeg))
+  ([fun-id new-hash tbeg]
+   (swap! data/cache update-in [:hash] (fn [_] new-hash))
+   (doall
+    (run! (fn [prms] (apply calc-listings prms))
+          [[msgl/list-countries com/listing-cases-absolute]
+           [msgl/list-per-100k com/listing-cases-per-100k]]))
+   (let [stats ((comp
+                 est/estimate)
+                (v1/pic-data))
+         cnt-reports (count (data/dates))
+         form '(< (count (corona.api.expdev07/raw-dates)) 10)]
+             ;; TODO do not call calc-functions when the `form` evaluates to true
+     (if (eval form)
+       (warnf "Some stuff may not be calculated: %s" form))
+     (doall
+      (map-fn (fn [ccode]
+                (msgi/detailed-info ccode com/html
+                                    (data/create-pred-hm ccode))
+                (plot/plot-country ccode stats cnt-reports)
+                #_(map-fn (fn [fun] (fun))
+                          [(fn [] (msgi/detailed-info ccode com/html
+                                                      (data/create-pred-hm ccode)))
+                           (fn [] (plot/plot-country ccode stats cnt-reports))]))
+              ccc/all-country-codes))
+     (doall
+      (pmap (fn [aggregation-kw]
+                       ;; TODO delete picture from telegram servers
+              (doall
+               (pmap (fn [case-kw]
+                       (plot/plot-aggregation
+                        new-hash
+                        aggregation-kw case-kw stats cnt-reports))
+                     com/absolute-cases)))
+            com/aggregation-cases)))
+           ;; discard the intermediary results, i.e. keep only those items in the
+           ;; cache which contain the final results.
+   (swap! data/cache
+          (fn [_] (select-keys
+                   @data/cache [:hash :plot :msg :list :threshold])))
+   (debugf "[%s] %s chars cached in %s ms"
+           fun-id
+           (count (str @data/cache)) (- (System/currentTimeMillis) tbeg))))
 
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
@@ -233,45 +277,16 @@
         #_(data/stats-countries)
         #_(data/dates)
         #_(data/json-data))
-     (doall
-      (run! (fn [prms] (apply calc-listings prms))
-            [[msgl/list-countries com/listing-cases-absolute]
-             [msgl/list-per-100k com/listing-cases-per-100k]]))
-     (let [stats ((comp
-                   est/estimate)
-                  (v1/pic-data))
-           cnt-reports (count (data/dates))
-           form '(< (count (corona.api.expdev07/raw-dates)) 10)]
-       ;; TODO do not call calc-functions when the `form` evaluates to true
-       (if (eval form)
-         (warnf "Some stuff may not be calculated: %s" form))
-       (doall
-        (map-fn (fn [ccode]
-                  (msgi/detailed-info ccode com/html
-                                      (data/create-pred-hm ccode))
-                  (plot/plot-country ccode stats cnt-reports)
-                  #_(map-fn (fn [fun] (fun))
-                            [(fn [] (msgi/detailed-info ccode com/html
-                                                        (data/create-pred-hm ccode)))
-                             (fn [] (plot/plot-country ccode stats cnt-reports))]))
-                ccc/all-country-codes))
-       (doall
-        (map-aggr-fn (fn [aggregation-kw]
-                       ;; TODO delete picture from telegram servers
-                       (doall
-                        (map-aggr-fn (fn [case-kw]
-                                       (plot/plot-aggregation aggregation-kw case-kw stats cnt-reports))
-                                     com/absolute-cases)))
-                     com/aggregation-cases)))
-     ;; discard the intermediary results, i.e. keep only those items in the
-     ;; cache which contain the final results.
-
-     (swap! data/cache (fn [_]
-                         (select-keys @data/cache [:plot :msg :list :threshold])))
-
-     (debugf "[%s] %s chars cached in %s ms"
-             fun-id
-             (count (str @data/cache)) (- (System/currentTimeMillis) tbeg)))))
+     (let [new-hash (com/hash-fn (data/json-data))]
+       (debugf "[%s] json-data hash - cached: %s new: %s equal: %s"
+               fun-id
+               (get-in @data/cache [:hash])
+               new-hash
+               (= (get-in @data/cache [:hash]) new-hash))
+       (when-not (= (get-in @data/cache [:hash]) new-hash)
+         (do-reset-cache! new-hash tbeg))
+       ;; :json introduced by the (data/json-data)
+       (swap! data/cache (fn [_] (dissoc @data/cache :json)))))))
 
 (defn start
   "Fetch api service data and only then register the telegram commands."

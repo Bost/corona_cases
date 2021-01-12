@@ -79,14 +79,17 @@
 
          message-id (:message_id message)
          options (reply-markup-btns {:chat-id chat-id :ccode ccode
-                                     :message_id message-id})]
+                                     :message_id message-id})
+         id (System/currentTimeMillis)]
      (let [msg (doall
                 (if com/use-webhook?
                   (edit-media com/telegram-token chat-id message-id options
                               {:type "photo"
                                :media
-                               (let [url (format "%s/graphs/%s/%s"
+                               (let [url (format "%s/%s/%s/%s/%s"
                                                  com/webapp-server
+                                                 com/graphs-path
+                                                 id
                                                  (name plot-type)
                                                  (name case-kw))]
                                  (debugf "[%s] url %s" fun-id url)
@@ -94,7 +97,9 @@
                   (morse/send-photo com/telegram-token chat-id options
                                     ;; the plot is fetched from the cache, stats and report need
                                     ;; not to be specified
-                                    (plot/plot-aggregation (:type data-hm) (:case-kw data-hm)))))]
+                                    (plot/plot-aggregation
+                                     id
+                                     (:type data-hm) (:case-kw data-hm)))))]
        (debugf "[%s] (count msg) %s" fun-id (count msg))))))
 
 ;; (defn language [prm]

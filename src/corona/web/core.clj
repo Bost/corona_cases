@@ -105,10 +105,14 @@
   #_{:status 200
      :headers {"Content-Type" "text/plain"}
      :body "graphs 2"}
-  (cjc/GET "/graphs/:aggregation/:case" [aggregation case]
+  (cjc/GET (format "/%s/:id/:aggregation/:case" com/graphs-path)
+           [id aggregation case]
            ;; TODO make sure strings and keywords are not getting confused
            {:status 200 :headers {"Content-Type" "image/png"}
-            :body (plot/plot-aggregation (keyword aggregation) (keyword case))})
+            :body (plot/plot-aggregation
+                   id
+                   (keyword aggregation)
+                   (keyword case))})
   (cjc/GET (format "/%s/beds" ws-path) []
     (webresp/web-service {:type :beds}))
   (cjc/GET (format "/%s/names" ws-path) []

@@ -13,7 +13,8 @@
             [environ.core :as env]
             [taoensso.timbre :as timbre :refer [debugf infof]]
             [utils.core :as utc]
-            [utils.num :as utn]))
+            [utils.num :as utn])
+  (:import java.security.MessageDigest))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -59,6 +60,7 @@
                                              [env-type :web-server]))
 (def ^:const ^String json-api-server (get-in environment
                                              [env-type :json-server]))
+(def ^:const ^String graphs-path "graphs")
 
 ;; forward declarations
 (declare env-corona-cases? env-hokuspokus? env-local? env-devel?)
@@ -207,6 +209,14 @@
   ([s with padding-len]
    (str s
         (cstr/join (repeat (- padding-len (count s)) with)))))
+
+(defn hash-fn [data]
+  (let [hash-size 6
+        algorith "md5" ;; "sha1" "sha-256" "sha-512"
+        raw (.digest (MessageDigest/getInstance algorith)
+                     (.getBytes (str data)))]
+    (-> (format "%x" (BigInteger. 1 raw))
+        (subs 0 hash-size))))
 
 (defn get-json [url]
   (infof "Requesting json-data from %s ..." url)

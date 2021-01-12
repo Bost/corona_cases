@@ -408,7 +408,6 @@
 
 (defn label-str
   [report stats case-kw threshold postfix]
-  (debugf "[%s] threshold %s" "label-str" threshold)
   (format "%s; %s; %s: %s > %s"
           (fmt-report report)
           (fmt-last-date stats)
@@ -477,8 +476,9 @@
 
 (defn plot-aggregation
   "The optional params `stats`, `report` are used only for the first calculation"
-  [aggregation-kw case-kw & [stats report]]
-  (let [ks [:plot aggregation-kw case-kw]]
+  [id aggregation-kw case-kw & [stats report]]
+  {:pre [(string? id)]}
+  (let [ks [:plot (keyword id) aggregation-kw case-kw]]
     (if (and stats report)
       (data/cache! (fn []
                      (calc-aggregation aggregation-kw case-kw stats report))
