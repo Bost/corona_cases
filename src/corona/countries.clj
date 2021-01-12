@@ -40,11 +40,11 @@
     ;; see
     ;; https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
     {
-     ccc/xk "Republic of Kosovo"
-     ccc/xd "United Nations Neutral Zone"
-     ccc/xe "Iraq-Saudi Arabia Neutral Zone"
-     ccc/xs "Spratly Islands"
-     ccc/xx "Disputed Territory"
+     "XK" "Republic of Kosovo"
+     "XD" "United Nations Neutral Zone"
+     "XE" "Iraq-Saudi Arabia Neutral Zone"
+     "XS" "Spratly Islands"
+     "XX" "Disputed Territory"
      }))
 
 ;; java.util.Locale doesn't show country names according to the ISO norm
@@ -70,199 +70,199 @@
   "Mapping of alternative names, spelling, typos to the names of countries used by
   the ISO 3166-1 norm. \"Others\" has no mapping."
   {
-   "World"                            ccc/zz ; "Worldwide"
+   "World"                            "ZZ" ; "Worldwide"
 
-   "Czechia"                          ccc/cz ; "Czech Republic"
+   "Czechia"                          "CZ" ; "Czech Republic"
 
-   "Mainland China"                   ccc/cn ; "China"
+   "Mainland China"                   "CN" ; "China"
 
-   "South Korea"                      ccc/kr ; "Korea, Republic of"
-   "Korea, South"                     ccc/kr ; "Korea, Republic of"
-   "Korea South"                      ccc/kr ; "Korea, Republic of"
-   "Republic of Korea"                ccc/kr ; "Korea, Republic of"
+   "South Korea"                      "KR" ; "Korea, Republic of"
+   "Korea, South"                     "KR" ; "Korea, Republic of"
+   "Korea South"                      "KR" ; "Korea, Republic of"
+   "Republic of Korea"                "KR" ; "Korea, Republic of"
 
-   "Taiwan"                           ccc/tw ; "Taiwan, Province of China"
-   "Taiwan*"                          ccc/tw ; "Taiwan, Province of China"
-   "Taipei and environs"              ccc/tw ; "Taiwan, Province of China"
+   "Taiwan"                           "TW" ; "Taiwan, Province of China"
+   "Taiwan*"                          "TW" ; "Taiwan, Province of China"
+   "Taipei and environs"              "TW" ; "Taiwan, Province of China"
 
-   "US"                               ccc/us ; "United States"
-   "Puerto Rico (US)"                 ccc/pr
-   "Guam (US)"                        ccc/gu
-   "American Samoa (US)"              ccc/as
-   "Northern Mariana Islands (US)"    ccc/mp
+   "US"                               "US" ; "United States"
+   "Puerto Rico (US)"                 "PR"
+   "Guam (US)"                        "GU"
+   "American Samoa (US)"              "AS"
+   "Northern Mariana Islands (US)"    "MP"
 
-   "Macau"                            ccc/mo ; "Macao"
-   "Macao SAR"                        ccc/mo ; "Macao"
-   "Macau (China)"                    ccc/mo
+   "Macau"                            "MO" ; "Macao"
+   "Macao SAR"                        "MO" ; "Macao"
+   "Macau (China)"                    "MO"
 
-   "Vietnam"                          ccc/vn ; "Viet Nam"
+   "Vietnam"                          "VN" ; "Viet Nam"
 
-   "UK"                               ccc/gb ; "United Kingdom"
+   "UK"                               "GB" ; "United Kingdom"
    ;; Conjoin on United Kingdom
-   "North Ireland"                    ccc/gb
+   "North Ireland"                    "GB"
 
-   "Isle of Man (UK)"                 ccc/im
-   "Turks and Caicos Islands (UK)"    ccc/tc
-   "Gibraltar (UK)"                   ccc/gi
-   "Cayman Islands (UK)"              ccc/ky
-   "Bermuda (UK)"                     ccc/bm
-   "Anguilla (UK)"                    ccc/ai
-   "Montserrat (UK)"                  ccc/ms
+   "Isle of Man (UK)"                 "IM"
+   "Turks and Caicos Islands (UK)"    "TC"
+   "Gibraltar (UK)"                   "GI"
+   "Cayman Islands (UK)"              "KY"
+   "Bermuda (UK)"                     "BM"
+   "Anguilla (UK)"                    "AI"
+   "Montserrat (UK)"                  "MS"
 
-   "Russia"                           ccc/ru ; "Russian Federation"
+   "Russia"                           "RU" ; "Russian Federation"
    ;; Conjoin on Russian Federation
-   "South Ossetia"                    ccc/ru
+   "South Ossetia"                    "RU"
 
-   "Iran"                             ccc/ir ; "Iran, Islamic Republic of"
-   "Iran (Islamic Republic of)"       ccc/ir ; "Iran, Islamic Republic of"
+   "Iran"                             "IR" ; "Iran, Islamic Republic of"
+   "Iran (Islamic Republic of)"       "IR" ; "Iran, Islamic Republic of"
 
-   "Saint Barthelemy"                 ccc/bl ; "Saint Barthélemy"
-   "Saint Barthélemy (France)"        ccc/bl
+   "Saint Barthelemy"                 "BL" ; "Saint Barthélemy"
+   "Saint Barthélemy (France)"        "BL"
 
-   "Palestine"                        ccc/ps ; "Palestine, State of"
-   "State of Palestine"               ccc/ps ; "Palestine, State of"
-   "occupied Palestinian territory"   ccc/ps ; "Palestine, State of"
+   "Palestine"                        "PS" ; "Palestine, State of"
+   "State of Palestine"               "PS" ; "Palestine, State of"
+   "occupied Palestinian territory"   "PS" ; "Palestine, State of"
 
-   "Vatican City"                     ccc/va ; "Holy See (Vatican City State)"
-   "Holy See"                         ccc/va ; "Holy See (Vatican City State)"
+   "Vatican City"                     "VA" ; "Holy See (Vatican City State)"
+   "Holy See"                         "VA" ; "Holy See (Vatican City State)"
 
-   "DR Congo"                         ccc/cd ; "Congo, the Democratic Republic of the"
-   "Congo (Kinshasa)"                 ccc/cd ; "Congo, the Democratic Republic of the"
-   "Democratic Republic of the Congo" ccc/cd ; "Congo, the Democratic Republic of the"
-   "Congo-Kinshasa"                   ccc/cd
+   "DR Congo"                         "CD" ; "Congo, the Democratic Republic of the"
+   "Congo (Kinshasa)"                 "CD" ; "Congo, the Democratic Republic of the"
+   "Democratic Republic of the Congo" "CD" ; "Congo, the Democratic Republic of the"
+   "Congo-Kinshasa"                   "CD"
 
-   "Congo (Brazzaville)"              ccc/cg ; "Congo"
-   "Republic of the Congo"            ccc/cg ; "Congo"
-   "Congo-Brazzaville"                ccc/cg
+   "Congo (Brazzaville)"              "CG" ; "Congo"
+   "Republic of the Congo"            "CG" ; "Congo"
+   "Congo-Brazzaville"                "CG"
 
-   "Tanzania"                         ccc/tz ; "Tanzania, United Republic of"
-   "Venezuela"                        ccc/ve ; "Venezuela, Bolivarian Republic of"
-   "North Korea"                      ccc/kp ; "Korea, Democratic People's Republic of"
-   "Syria"                            ccc/sy ; "Syrian Arab Republic"
-   "Bolivia"                          ccc/bo ; "Bolivia, Plurinational State of"
-   "Laos"                             ccc/la ; "Lao People's Democratic Republic"
+   "Tanzania"                         "TZ" ; "Tanzania, United Republic of"
+   "Venezuela"                        "VE" ; "Venezuela, Bolivarian Republic of"
+   "North Korea"                      "KP" ; "Korea, Democratic People's Republic of"
+   "Syria"                            "SY" ; "Syrian Arab Republic"
+   "Bolivia"                          "BO" ; "Bolivia, Plurinational State of"
+   "Laos"                             "LA" ; "Lao People's Democratic Republic"
 
-   "Moldova"                          ccc/md ; "Moldova, Republic of"
-   "Republic of Moldova"              ccc/md ; "Moldova, Republic of"
+   "Moldova"                          "MD" ; "Moldova, Republic of"
+   "Republic of Moldova"              "MD" ; "Moldova, Republic of"
 
-   "Swaziland"                        ccc/sz ; "Eswatini"
-   "Cabo Verde"                       ccc/cv ; "Cape Verde"
-   "Brunei"                           ccc/bn ; "Brunei Darussalam"
+   "Swaziland"                        "SZ" ; "Eswatini"
+   "Cabo Verde"                       "CV" ; "Cape Verde"
+   "Brunei"                           "BN" ; "Brunei Darussalam"
 
-   "Sao Tome & Principe"              ccc/st ; "Sao Tome and Principe"
-   "São Tomé and Príncipe"            ccc/st ; "Sao Tome and Principe"
-   "Sao Tome and Principe"            ccc/st ; "Sao Tome and Principe"
+   "Sao Tome & Principe"              "ST" ; "Sao Tome and Principe"
+   "São Tomé and Príncipe"            "ST" ; "Sao Tome and Principe"
+   "Sao Tome and Principe"            "ST" ; "Sao Tome and Principe"
 
-   "Micronesia"                       ccc/fm ; "Micronesia, Federated States of"
-   "F.S. Micronesia"                  ccc/fm ; "Micronesia, Federated States of"
-   "Federated States of Micronesia"   ccc/fm ; "Micronesia, Federated States of"
+   "Micronesia"                       "FM" ; "Micronesia, Federated States of"
+   "F.S. Micronesia"                  "FM" ; "Micronesia, Federated States of"
+   "Federated States of Micronesia"   "FM" ; "Micronesia, Federated States of"
 
-   "St. Vincent & Grenadines"         ccc/vc ; "Saint Vincent and the Grenadines"
-   "Saint Vincent"                    ccc/vc ; "Saint Vincent and the Grenadines"
+   "St. Vincent & Grenadines"         "VC" ; "Saint Vincent and the Grenadines"
+   "Saint Vincent"                    "VC" ; "Saint Vincent and the Grenadines"
 
-   "U.S. Virgin Islands"              ccc/vi ; "Virgin Islands, U.S."
-   "U.S. Virgin Islands (US)"         ccc/vi ; "Virgin Islands, U.S."
+   "U.S. Virgin Islands"              "VI" ; "Virgin Islands, U.S."
+   "U.S. Virgin Islands (US)"         "VI" ; "Virgin Islands, U.S."
 
-   "British Virgin Islands"           ccc/vg ; "Virgin Islands, British"
-   "British Virgin Islands (UK)"      ccc/vg
+   "British Virgin Islands"           "VG" ; "Virgin Islands, British"
+   "British Virgin Islands (UK)"      "VG"
 
    ;; Conjoin on France
-   "Saint Martin (France)"            ccc/fr ; "France"
+   "Saint Martin (France)"            "FR" ; "France"
 
-   "New Caledonia (France)"           ccc/nc
-   "French Polynesia (France)"        ccc/pf
+   "New Caledonia (France)"           "NC"
+   "French Polynesia (France)"        "PF"
 
-   "Saint Kitts & Nevis"              ccc/kn ; "Saint Kitts and Nevis"
-   "St. Kitts & Nevis"                ccc/kn ; "Saint Kitts and Nevis"
+   "Saint Kitts & Nevis"              "KN" ; "Saint Kitts and Nevis"
+   "St. Kitts & Nevis"                "KN" ; "Saint Kitts and Nevis"
 
-   "Faeroe Islands"                   ccc/fo ; "Faroe Islands"
+   "Faeroe Islands"                   "FO" ; "Faroe Islands"
 
-   "Sint Maarten"                     ccc/sx ; "Sint Maarten (Dutch part)"
-   "Sint Maarten (Netherlands)"       ccc/sx
+   "Sint Maarten"                     "SX" ; "Sint Maarten (Dutch part)"
+   "Sint Maarten (Netherlands)"       "SX"
 
-   "Aruba (Netherlands)"              ccc/aw
+   "Aruba (Netherlands)"              "AW"
 
-   "Turks and Caicos"                 ccc/tc ; "Turks and Caicos Islands"
+   "Turks and Caicos"                 "TC" ; "Turks and Caicos Islands"
 
-   "Wallis & Futuna"                  ccc/wf ; "Wallis and Futuna"
-   "Wallis and Futuna (France)"       ccc/wf
+   "Wallis & Futuna"                  "WF" ; "Wallis and Futuna"
+   "Wallis and Futuna (France)"       "WF"
 
-   "Saint Helena"                                     ccc/sh
-   "Saint Helena, Ascensionand Tristan da Cunha (UK)" ccc/sh
+   "Saint Helena"                                     "SH"
+   "Saint Helena, Ascensionand Tristan da Cunha (UK)" "SH"
 
-   "Saint Pierre & Miquelon"            ccc/pm ; "Saint Pierre and Miquelon"
-   "Saint Pierre and Miquelon (France)" ccc/pm
+   "Saint Pierre & Miquelon"            "PM" ; "Saint Pierre and Miquelon"
+   "Saint Pierre and Miquelon (France)" "PM"
 
-   "Falkland Islands"                 ccc/fk ; "Falkland Islands (Malvinas)"
-   "Falkland Islands (UK)"            ccc/fk
+   "Falkland Islands"                 "FK" ; "Falkland Islands (Malvinas)"
+   "Falkland Islands (UK)"            "FK"
 
-   "Republic of Ireland"              ccc/ie ; "Ireland"
-   " Azerbaijan"                      ccc/az ; "Azerbaijan"
+   "Republic of Ireland"              "IE" ; "Ireland"
+   " Azerbaijan"                      "AZ" ; "Azerbaijan"
 
-   "East Timor"                       ccc/tl ; "Timor-Leste"
+   "East Timor"                       "TL" ; "Timor-Leste"
 
    ;; Guernsey and Jersey form Channel Islands. They should have separate statistics.
    ;; https://en.wikipedia.org/wiki/Channel_Islands
    ;; "Guernsey and Jersey"
    ;; "Channel Islands"
 
-   "Jersey (UK)"                      ccc/je
-   "Guernsey (UK)"                    ccc/gg
+   "Jersey (UK)"                      "JE"
+   "Guernsey (UK)"                    "GG"
 
-   "Caribbean Netherlands"            ccc/bq ; "Bonaire, Sint Eustatius and Saba"
+   "Caribbean Netherlands"            "BQ" ; "Bonaire, Sint Eustatius and Saba"
 
-   "Emirates"                         ccc/ae ; "United Arab Emirates"
+   "Emirates"                         "AE" ; "United Arab Emirates"
 
-   "Bosnia–Herzegovina"               ccc/ba ; "Bosnia and Herzegovina"
-   "Bosnia"                           ccc/ba ; "Bosnia and Herzegovina"
+   "Bosnia–Herzegovina"               "BA" ; "Bosnia and Herzegovina"
+   "Bosnia"                           "BA" ; "Bosnia and Herzegovina"
 
-   "Dominican Rep"                    ccc/do ; "Dominican Republic"
+   "Dominican Rep"                    "DO" ; "Dominican Republic"
 
-   "Macedonia"                        ccc/mk ; "North Macedonia, Republic of"
-   "North Macedonia"                  ccc/mk ; "North Macedonia, Republic of"
+   "Macedonia"                        "MK" ; "North Macedonia, Republic of"
+   "North Macedonia"                  "MK" ; "North Macedonia, Republic of"
 
-   "Ivory Coast"                      ccc/ci ; "Côte d'Ivoire"
-   "Cote d'Ivoire"                    ccc/ci ; "Côte d'Ivoire"
+   "Ivory Coast"                      "CI" ; "Côte d'Ivoire"
+   "Cote d'Ivoire"                    "CI" ; "Côte d'Ivoire"
 
-   "Saint Martin"                     ccc/mf ; "Saint Martin (French part)"
-   "St. Martin"                       ccc/mf ; "Saint Martin (French part)"
+   "Saint Martin"                     "MF" ; "Saint Martin (French part)"
+   "St. Martin"                       "MF" ; "Saint Martin (French part)"
 
-   "Hong Kong SAR"                    ccc/hk ; "Hong Kong"
-   "Hong Kong (China)"                ccc/hk
+   "Hong Kong SAR"                    "HK" ; "Hong Kong"
+   "Hong Kong (China)"                "HK"
 
-   ;; "Transnistria" recognized as part of Moldova `ccc/md` but may have a different
+   ;; "Transnistria" recognized as part of Moldova `"MD"` but may have a different
    ;; medical system
 
-   ;; "Northern Cyprus" considered to be a part of Cyprus `ccc/cy` but may have a
+   ;; "Northern Cyprus" considered to be a part of Cyprus `"CY"` but may have a
    ;; different medical system
 
-   ;; "Abkhazia" recognized as part of Georgia `ccc/ge` but may have a different
+   ;; "Abkhazia" recognized as part of Georgia `"GE"` but may have a different
    ;; medical system
 
-   "Republic of Artsakh"              ccc/am ; "Armenia"
-   "Cook Islands (NZ)"                ccc/ck
-   "Christmas Island (Australia)"     ccc/cx
-   "Norfolk Island (Australia)"       ccc/nf
-   "Niue (NZ)"                        ccc/nu
-   "Tokelau (NZ)"                     ccc/tk
-   "Greenland (Denmark)"              ccc/gl
-   "Faroe Islands (Denmark)"          ccc/fo
-   "Åland Islands (Finland)"          ccc/ax
-   "Reunion"                          ccc/re ; "Réunion"
+   "Republic of Artsakh"              "AM" ; "Armenia"
+   "Cook Islands (NZ)"                "CK"
+   "Christmas Island (Australia)"     "CX"
+   "Norfolk Island (Australia)"       "NF"
+   "Niue (NZ)"                        "NU"
+   "Tokelau (NZ)"                     "TK"
+   "Greenland (Denmark)"              "GL"
+   "Faroe Islands (Denmark)"          "FO"
+   "Åland Islands (Finland)"          "AX"
+   "Reunion"                          "RE" ; "Réunion"
 
-   "Curacao"                          ccc/cw ; "Curaçao"
-   "Curaçao (Netherlands)"            ccc/cw
+   "Curacao"                          "CW" ; "Curaçao"
+   "Curaçao (Netherlands)"            "CW"
 
-   "The Bahamas"                      ccc/bs ; "Bahamas"
-   "Kosovo"                           ccc/xk ; "Kosovo, Republic of"
-   "Trinidad & Tobago"                ccc/tt ; "Trinidad and Tobago"
-   "Antigua & Barbuda"                ccc/ag ; "Antigua and Barbuda"
-   "Central African Rep"              ccc/cf ; "Central African Republic"
+   "The Bahamas"                      "BS" ; "Bahamas"
+   "Kosovo"                           "XK" ; "Kosovo, Republic of"
+   "Trinidad & Tobago"                "TT" ; "Trinidad and Tobago"
+   "Antigua & Barbuda"                "AG" ; "Antigua and Barbuda"
+   "Central African Rep"              "CF" ; "Central African Republic"
 
-   "Burma"                            ccc/mm ; Myanmar
+   "Burma"                            "MM" ; Myanmar
 
-   "Pitcairn Islands (UK)"               ccc/pn
-   "Cocos (Keeling) Islands (Australia)" ccc/cc
+   "Pitcairn Islands (UK)"               "PN"
+   "Cocos (Keeling) Islands (Australia)" "CC"
 
    ;; "Others" has no mapping
    ;; "Cruise Ship" is mapped to the default val
@@ -274,59 +274,59 @@
    ;; (clojure.set/map-invert country-alias--country-code)
    ;; select desired aliases
    {
-    ccc/va "Vatican"
-    ccc/tw "Taiwan"
-    ccc/do "Dom Rep"
-    ccc/ir "Iran"
-    ccc/ru "Russia"
-    ccc/ps "Palestine"
-    ccc/ae "UA Emirates"
-    ccc/kr "South Korea"
-    ccc/mk "Macedonia"
-    ccc/ba "Bosnia"
-    ccc/bo "Bolivia"
-    ccc/md "Moldova"
-    ccc/bn "Brunei"
-    ccc/ve "Venezuela"
-    ccc/vc "St Vincent"
-    ccc/kp "North Korea"
-    ccc/tz "Tanzania"
-    ccc/xk "Kosovo"
-    ccc/la "Laos"
-    ccc/sy "Syria"
-    ccc/kn "St Kitts Nevis"
-    ccc/tt "Trinidad Tobago"
-    ccc/ag "Antigua Barbuda"
-    ccc/cf "Central Africa"
-    ccc/us "USA"
-    ccc/gb "UK"
-    ccc/cz "Czechia"
-    ;; ccc/st "St Tome & Prin"
-    ccc/st "St Tome Principe"
-    ccc/pg "Papua N Guinea"
-    ccc/gq "Equat Guinea"
-    ccc/qq "Rest"
-    ccc/fm "Micronesia"
-    ccc/pm "St Pierre Miquelo"
-    ccc/sj "Svalbard J. Mayen"
-    ccc/tc "Turks Caicos Isla"
-    ccc/vi "Virgin Islands US"
-    ccc/hm "Heard McDonald Is"
-    ccc/sx "St Maarten, Dutch"
-    ccc/mf "St Martin, French"
-    ccc/sh "St He Ascen Cunha"
-    ccc/fk "Falklands/Malvina"
-    ccc/cc "Cocos/Keeling Isl"
-    ccc/mp "Northern Mariana"
-    ccc/vg "Brit Virgin Islan"
-    ccc/bq "Bona St Eust Saba"
-    ccc/io "Br Indian Ocean T"
-    ccc/um "US Min Outlying I"
-    ccc/tf "Fr Southern Terri"
-    ccc/gs "S Georgia Sandwic"
-    ccc/cg "Congo-Brazzaville"
-    ccc/cd "Congo-Kinshasa"
-    ccc/vn "Vietnam"
+    "VA" "Vatican"
+    "TW" "Taiwan"
+    "DO" "Dom Rep"
+    "IR" "Iran"
+    "RU" "Russia"
+    "PS" "Palestine"
+    "AE" "UA Emirates"
+    "KR" "South Korea"
+    "MK" "Macedonia"
+    "BA" "Bosnia"
+    "BO" "Bolivia"
+    "MD" "Moldova"
+    "BN" "Brunei"
+    "VE" "Venezuela"
+    "VC" "St Vincent"
+    "KP" "North Korea"
+    "TZ" "Tanzania"
+    "XK" "Kosovo"
+    "LA" "Laos"
+    "SY" "Syria"
+    "KN" "St Kitts Nevis"
+    "TT" "Trinidad Tobago"
+    "AG" "Antigua Barbuda"
+    "CF" "Central Africa"
+    "US" "USA"
+    "GB" "UK"
+    "CZ" "Czechia"
+    ;; "ST" "St Tome & Prin"
+    "ST" "St Tome Principe"
+    "PG" "Papua N Guinea"
+    "GQ" "Equat Guinea"
+    "QQ" "Rest"
+    "FM" "Micronesia"
+    "PM" "St Pierre Miquelo"
+    "SJ" "Svalbard J. Mayen"
+    "TC" "Turks Caicos Isla"
+    "VI" "Virgin Islands US"
+    "HM" "Heard McDonald Is"
+    "SX" "St Maarten, Dutch"
+    "MF" "St Martin, French"
+    "SH" "St He Ascen Cunha"
+    "FK" "Falklands/Malvina"
+    "CC" "Cocos/Keeling Isl"
+    "MP" "Northern Mariana"
+    "VG" "Brit Virgin Islan"
+    "BQ" "Bona St Eust Saba"
+    "IO" "Br Indian Ocean T"
+    "UM" "US Min Outlying I"
+    "TF" "Fr Southern Terri"
+    "GS" "S Georgia Sandwic"
+    "CG" "Congo-Brazzaville"
+    "CD" "Congo-Kinshasa"
+    "VN" "Vietnam"
     }))
 
 (defn- lower-case-keyword
@@ -363,12 +363,10 @@
   [ccode]
   (if (in?
        [
-        ccc/va ccc/tw ccc/do ccc/ir ccc/ru ccc/ps ccc/ae ccc/kr ccc/mk ccc/ba
-        ccc/cd ccc/bo ccc/md ccc/bn ccc/ve ccc/vc ccc/kp ccc/tz ccc/xk ccc/la
-        ccc/sy ccc/kn ccc/tt ccc/ag ccc/cf ccc/cz ccc/st ccc/pg ccc/gq ccc/qq
-        ccc/fm ccc/pm ccc/sj ccc/tc ccc/vi ccc/hm ccc/sx ccc/mf ccc/sh ccc/fk
-        ccc/cc ccc/bq ccc/mp ccc/vg ccc/io ccc/um ccc/tf ccc/gs ccc/cd ccc/cg
-        ccc/vn
+        "VA" "TW" "DO" "IR" "RU" "PS" "AE" "KR" "MK" "BA" "CD" "BO" "MD" "BN"
+        "VE" "VC" "KP" "TZ" "XK" "LA" "SY" "KN" "TT" "AG" "CF" "CZ" "ST" "PG"
+        "GQ" "QQ" "FM" "PM" "SJ" "TC" "VI" "HM" "SX" "MF" "SH" "FK" "CC" "BQ"
+        "MP" "VG" "IO" "UM" "TF" "GS" "CD" "CG" "VN"
         ]
        ccode)
     (country-alias ccode)
@@ -382,260 +380,260 @@
   `corona.tables/population`
 
   Countries not listed:
-  zz - Worldwide
-  tf - Fr Southern Terri
-  mf - St Martin, French
-  sj - Svalbard J. Mayen
-  qq - Rest
-  um - US Min Outlying I
-  bq - Bona St Eust Saba
-  bv - Bouvet Island
-  gs - S Georgia Sandwic
-  aq - Antarctica
-  hm - Heard McDonald Is
+  ZZ - Worldwide
+  TF - Fr Southern Terri
+  MF - St Martin, French
+  SJ - Svalbard J. Mayen
+  QQ - Rest
+  UM - US Min Outlying I
+  BQ - Bona St Eust Saba
+  BV - Bouvet Island
+  GS - S Georgia Sandwic
+  AQ - Antarctica
+  HM - Heard McDonald Is
   "
   [
-   ["China"                                            1404614720]
-   ["India"                                            1367703110]
-   ["United States"                                    330375132]
-   ["Indonesia"                                        269603400]
-   ["Pakistan"                                         220892331]
-   ["Brazil"                                           212122227]
-   ["Nigeria"                                          206139587]
-   ["Bangladesh"                                       169373348]
-   ["Russia"                                           146748590]
-   ["Mexico"                                           127792286]
-   ["Japan"                                            125810000]
-   ["Philippines"                                      109218624]
-   ["Egypt"                                            100967392]
-   ["Ethiopia"                                         100829000]
-   ["Vietnam"                                          96208984]
-   ["DR Congo"                                         91994000]
-   ["Iran"                                             83816683]
-   ["Germany"                                          83157201]
-   ["Turkey"                                           83154997]
-   ["France"                                           67132000]
-   ["United Kingdom"                                   66796807]
-   ["Thailand"                                         66557580]
-   ["Italy"                                            60095164]
-   ["South Africa"                                     59622350]
-   ["Tanzania"                                         57637628]
-   ["Myanmar"                                          54817919]
-   ["South Korea"                                      51839953]
-   ["Colombia"                                         50372424]
-   ["Kenya"                                            47564296]
-   ["Spain"                                            47329981]
-   ["Argentina"                                        45376763]
-   ["Algeria"                                          43900000]
-   ["Sudan"                                            42862170]
-   ["Ukraine"                                          41743935]
-   ["Uganda"                                           41583600]
-   ["Iraq"                                             40150200]
-   ["Poland"                                           38353000]
-   ["Canada"                                           38187300]
-   ["Morocco"                                          36028348]
-   ["Uzbekistan"                                       34434659]
-   ["Saudi Arabia"                                     34218169]
-   ["Afghanistan"                                      32890171]
-   ["Malaysia"                                         32689860]
-   ["Peru"                                             32625948]
-   ["Angola"                                           31127674]
-   ["Ghana"                                            30955202]
-   ["Mozambique"                                       30066648]
-   ["Nepal"                                            29996478]
-   ["Yemen"                                            29825968]
-   ["Venezuela"                                        28435943]
-   ["Ivory Coast"                                      26453542]
-   ["Madagascar"                                       26251309]
-   ["Australia"                                        25670803]
-   ["North Korea"                                      25550000]
-   ["Cameroon"                                         24348251]
-   ["Taiwan"                                           23574334]
-   ["Niger"                                            23196002]
-   ["Sri Lanka"                                        21803000]
-   ["Burkina Faso"                                     21510181]
-   ["Mali"                                             20250833]
-   ["Chile"                                            19458310]
-   ["Romania"                                          19317984]
-   ["Malawi"                                           19129952]
-   ["Kazakhstan"                                       18784120]
-   ["Zambia"                                           17885422]
-   ["Ecuador"                                          17577052]
-   ["Netherlands"                                      17513331]
-   ["Syria"                                            17500657]
-   ["Guatemala"                                        16858333]
-   ["Senegal"                                          16705608]
-   ["Chad"                                             16244513]
-   ["Somalia"                                          15893219]
-   ["Zimbabwe"                                         15473818]
-   ["Cambodia"                                         15288489]
-   ["South Sudan"                                      13249924]
-   ["Rwanda"                                           12663116]
-   ["Guinea"                                           12559623]
-   ["Burundi"                                          12309600]
-   ["Benin"                                            12114193]
-   ["Haiti"                                            11743017]
-   ["Tunisia"                                          11708370]
-   ["Bolivia"                                          11633371]
-   ["Belgium"                                          11535652]
-   ["Cuba"                                             11193470]
-   ["Jordan"                                           10778268]
-   ["Greece"                                           10724599]
-   ["Czech Republic"                                   10699142]
-   ["Dominican Republic"                               10448499]
-   ["Sweden"                                           10358538]
-   ["Portugal"                                         10295909]
-   ["Azerbaijan"                                       10095900]
-   ["United Arab Emirates"                             9890400]
-   ["Hungary"                                          9769526]
-   ["Belarus"                                          9408400]
-   ["Tajikistan"                                       9313800]
-   ["Honduras"                                         9304380]
-   ["Israel"                                           9258150]
-   ["Papua New Guinea"                                 8935000]
-   ["Austria"                                          8915382]
-   ["Switzerland"                                      8632703]
-   ["Sierra Leone"                                     8100318]
-   ["Togo"                                             7706000]
-   ["Hong Kong (China)"                                7509200]
-   ["Paraguay"                                         7252672]
-   ["Laos"                                             7231210]
-   ["Bulgaria"                                         6951482]
-   ["Serbia"                                           6926705]
-   ["Libya"                                            6871287]
-   ["Lebanon"                                          6825442]
-   ["El Salvador"                                      6765753]
-   ["Kyrgyzstan"                                       6586600]
-   ["Nicaragua"                                        6527691]
-   ["Turkmenistan"                                     6031187]
-   ["Denmark"                                          5825337]
-   ["Singapore"                                        5685807]
-   ["Central African Republic"                         5633412]
-   ["Congo"                                            5518092]
-   ["Finland"                                          5502259]
-   ["Slovakia"                                         5460136]
-   ["Norway"                                           5374807]
-   ["Costa Rica"                                       5111238]
-   ["Palestine"                                        5101152]
-   ["New Zealand"                                      5091527]
-   ["Ireland"                                          4977400]
-   ["Liberia"                                          4568298]
-   ["Oman"                                             4480333]
-   ["Kuwait"                                           4464521]
-   ["Panama"                                           4278500]
-   ["Mauritania"                                       4173077]
-   ["Croatia"                                          4058165]
-   ["Georgia"                                          3716858]
-   ["Eritrea"                                          3546000]
-   ["Uruguay"                                          3530912]
-   ["Mongolia"                                         3339765]
-   ["Bosnia and Herzegovina"                           3332593]
-   ["Puerto Rico (US)"                                 3193694]
-   ["Armenia"                                          2963000]
-   ["Albania"                                          2845955]
-   ["Lithuania"                                        2795459]
-   ["Qatar"                                            2735707]
-   ["Jamaica"                                          2726667]
-   ["Moldova"                                          2640438]
-   ["Namibia"                                          2504498]
-   ["Botswana"                                         2374698]
-   ["Gambia"                                           2335504]
-   ["Gabon"                                            2176766]
-   ["Slovenia"                                         2097195]
-   ["North Macedonia"                                  2076255]
-   ["Lesotho"                                          2007201]
-   ["Latvia"                                           1899200]
-   ["Kosovo"                                           1782115]
-   ["Guinea-Bissau"                                    1624945]
-   ["Bahrain"                                          1592000]
-   ["Equatorial Guinea"                                1454789]
-   ["Trinidad and Tobago"                              1363985]
-   ["Estonia"                                          1328976]
-   ["East Timor"                                       1299412]
-   ["Mauritius"                                        1266000]
-   ["Eswatini"                                         1093238]
-   ["Djibouti"                                         962452]
-   ["Fiji"                                             889327]
-   ["Cyprus"                                           875900]
-   ["Comoros"                                          758316]
-   ["Bhutan"                                           748931]
-   ["Guyana"                                           744962]
-   ["Solomon Islands"                                  694619]
-   ["Macau (China)"                                    685400]
-   ["Luxembourg"                                       626108]
-   ["Montenegro"                                       621873]
-   ["Western Sahara"                                   597000]
-   ["Suriname"                                         590100]
-   ["Cape Verde"                                       556857]
-   ["Malta"                                            514564]
-   ["Transnistria"                                     469000]
-   ["Brunei"                                           459500]
-   ["Belize"                                           419199]
-   ["Bahamas"                                          389410]
-   ["Maldives"                                         383135]
-   ["Iceland"                                          366700]
-   ["Northern Cyprus"                                  351965]
-   ["Vanuatu"                                          304500]
-   ["Barbados"                                         287025]
-   ["French Polynesia (France)"                        278400]
-   ["New Caledonia (France)"                           271407]
-   ["Abkhazia"                                         245246]
-   ["São Tomé and Príncipe"                            210240]
-   ["Samoa"                                            202506]
-   ["Saint Lucia"                                      178696]
-   ["Guam (US)"                                        172400]
-   ["Curaçao (Netherlands)"                            156223]
-   ["Republic of Artsakh"                              148800]
-   ["Kiribati"                                         120100]
-   ["Aruba (Netherlands)"                              112269]
-   ["Grenada"                                          112003]
-   ["Saint Vincent and the Grenadines"                 110696]
-   ["Jersey (UK)"                                      107800]
-   ["F.S. Micronesia"                                  104650]
-   ["U.S. Virgin Islands (US)"                         104578]
-   ["Tonga"                                            100651]
-   ["Seychelles"                                       98462]
-   ["Antigua and Barbuda"                              97895]
-   ["Isle of Man (UK)"                                 83314]
-   ["Andorra"                                          77543]
-   ["Dominica"                                         71808]
-   ["Cayman Islands (UK)"                              69914]
-   ["Bermuda (UK)"                                     64054]
-   ["Guernsey (UK)"                                    63276]
-   ["American Samoa (US)"                              56700]
-   ["Greenland (Denmark)"                              56367]
-   ["Northern Mariana Islands (US)"                    56200]
-   ["Marshall Islands"                                 55500]
-   ["South Ossetia"                                    53532]
-   ["Saint Kitts and Nevis"                            52823]
-   ["Faroe Islands (Denmark)"                          52816]
-   ["Turks and Caicos Islands (UK)"                    42953]
-   ["Sint Maarten (Netherlands)"                       40614]
-   ["Liechtenstein"                                    38749]
-   ["Monaco"                                           38100]
-   ["Saint Martin (France)"                            35334]
-   ["Gibraltar (UK)"                                   33691]
-   ["San Marino"                                       33630]
-   ["Åland Islands (Finland)"                          30074]
-   ["British Virgin Islands (UK)"                      30030]
-   ["Palau"                                            17900]
-   ["Cook Islands (NZ)"                                15200]
-   ["Anguilla (UK)"                                    14869]
-   ["Wallis and Futuna (France)"                       11558]
-   ["Nauru"                                            11000]
-   ["Tuvalu"                                           10200]
-   ["Saint Barthélemy (France)"                        9961]
-   ["Saint Pierre and Miquelon (France)"               5997]
-   ["Saint Helena, Ascensionand Tristan da Cunha (UK)" 5633]
-   ["Montserrat (UK)"                                  4989]
-   ["Falkland Islands (UK)"                            3198]
-   ["Christmas Island (Australia)"                     1955]
-   ["Norfolk Island (Australia)"                       1735]
-   ["Niue (NZ)"                                        1520]
-   ["Tokelau (NZ)"                                     1400]
-   ["Vatican City"                                     825]
-   ["Cocos (Keeling) Islands (Australia)"              555]
-   ["Pitcairn Islands (UK)"                            50]
+   ["CN" #_"China"                                            1404614720]
+   ["IN" #_"India"                                            1367703110]
+   ["US" #_"United States"                                    330375132]
+   ["ID" #_"Indonesia"                                        269603400]
+   ["PK" #_"Pakistan"                                         220892331]
+   ["BR" #_"Brazil"                                           212122227]
+   ["NG" #_"Nigeria"                                          206139587]
+   ["BD" #_"Bangladesh"                                       169373348]
+   ["RU" #_"Russia"                                           146748590]
+   ["MX" #_"Mexico"                                           127792286]
+   ["JP" #_"Japan"                                            125810000]
+   ["PH" #_"Philippines"                                      109218624]
+   ["EG" #_"Egypt"                                            100967392]
+   ["ET" #_"Ethiopia"                                         100829000]
+   ["VN" #_"Vietnam"                                          96208984]
+   ["CD" #_"DR Congo"                                         91994000]
+   ["IR" #_"Iran"                                             83816683]
+   ["DE" #_"Germany"                                          83157201]
+   ["TR" #_"Turkey"                                           83154997]
+   ["FR" #_"France"                                           67132000]
+   ["GB" #_"United Kingdom"                                   66796807]
+   ["TH" #_"Thailand"                                         66557580]
+   ["IT" #_"Italy"                                            60095164]
+   ["ZA" #_"South Africa"                                     59622350]
+   ["TZ" #_"Tanzania"                                         57637628]
+   ["MM" #_"Myanmar"                                          54817919]
+   ["KR" #_"South Korea"                                      51839953]
+   ["CO" #_"Colombia"                                         50372424]
+   ["KE" #_"Kenya"                                            47564296]
+   ["ES" #_"Spain"                                            47329981]
+   ["AR" #_"Argentina"                                        45376763]
+   ["DZ" #_"Algeria"                                          43900000]
+   ["SD" #_"Sudan"                                            42862170]
+   ["UA" #_"Ukraine"                                          41743935]
+   ["UG" #_"Uganda"                                           41583600]
+   ["IQ" #_"Iraq"                                             40150200]
+   ["PL" #_"Poland"                                           38353000]
+   ["CA" #_"Canada"                                           38187300]
+   ["MA" #_"Morocco"                                          36028348]
+   ["UZ" #_"Uzbekistan"                                       34434659]
+   ["SA" #_"Saudi Arabia"                                     34218169]
+   ["AF" #_"Afghanistan"                                      32890171]
+   ["MY" #_"Malaysia"                                         32689860]
+   ["PE" #_"Peru"                                             32625948]
+   ["AO" #_"Angola"                                           31127674]
+   ["GH" #_"Ghana"                                            30955202]
+   ["MZ" #_"Mozambique"                                       30066648]
+   ["NP" #_"Nepal"                                            29996478]
+   ["YE" #_"Yemen"                                            29825968]
+   ["VE" #_"Venezuela"                                        28435943]
+   ["CI" #_"Ivory Coast"                                      26453542]
+   ["MG" #_"Madagascar"                                       26251309]
+   ["AU" #_"Australia"                                        25670803]
+   ["KP" #_"North Korea"                                      25550000]
+   ["CM" #_"Cameroon"                                         24348251]
+   ["TW" #_"Taiwan"                                           23574334]
+   ["NE" #_"Niger"                                            23196002]
+   ["LK" #_"Sri Lanka"                                        21803000]
+   ["BF" #_"Burkina Faso"                                     21510181]
+   ["ML" #_"Mali"                                             20250833]
+   ["CL" #_"Chile"                                            19458310]
+   ["RO" #_"Romania"                                          19317984]
+   ["MW" #_"Malawi"                                           19129952]
+   ["KZ" #_"Kazakhstan"                                       18784120]
+   ["ZM" #_"Zambia"                                           17885422]
+   ["EC" #_"Ecuador"                                          17577052]
+   ["NL" #_"Netherlands"                                      17513331]
+   ["SY" #_"Syria"                                            17500657]
+   ["GT" #_"Guatemala"                                        16858333]
+   ["SN" #_"Senegal"                                          16705608]
+   ["TD" #_"Chad"                                             16244513]
+   ["SO" #_"Somalia"                                          15893219]
+   ["ZW" #_"Zimbabwe"                                         15473818]
+   ["KH" #_"Cambodia"                                         15288489]
+   ["SS" #_"South Sudan"                                      13249924]
+   ["RW" #_"Rwanda"                                           12663116]
+   ["GN" #_"Guinea"                                           12559623]
+   ["BI" #_"Burundi"                                          12309600]
+   ["BJ" #_"Benin"                                            12114193]
+   ["HT" #_"Haiti"                                            11743017]
+   ["TN" #_"Tunisia"                                          11708370]
+   ["BO" #_"Bolivia"                                          11633371]
+   ["BE" #_"Belgium"                                          11535652]
+   ["CU" #_"Cuba"                                             11193470]
+   ["JO" #_"Jordan"                                           10778268]
+   ["GR" #_"Greece"                                           10724599]
+   ["CZ" #_"Czech Republic"                                   10699142]
+   ["DO" #_"Dominican Republic"                               10448499]
+   ["SE" #_"Sweden"                                           10358538]
+   ["PT" #_"Portugal"                                         10295909]
+   ["AZ" #_"Azerbaijan"                                       10095900]
+   ["AE" #_"United Arab Emirates"                             9890400]
+   ["HU" #_"Hungary"                                          9769526]
+   ["BY" #_"Belarus"                                          9408400]
+   ["TJ" #_"Tajikistan"                                       9313800]
+   ["HN" #_"Honduras"                                         9304380]
+   ["IL" #_"Israel"                                           9258150]
+   ["PG" #_"Papua New Guinea"                                 8935000]
+   ["AT" #_"Austria"                                          8915382]
+   ["CH" #_"Switzerland"                                      8632703]
+   ["SL" #_"Sierra Leone"                                     8100318]
+   ["TG" #_"Togo"                                             7706000]
+   ["HK" #_"Hong Kong (China)"                                7509200]
+   ["PY" #_"Paraguay"                                         7252672]
+   ["LA" #_"Laos"                                             7231210]
+   ["BG" #_"Bulgaria"                                         6951482]
+   ["RS" #_"Serbia"                                           6926705]
+   ["LY" #_"Libya"                                            6871287]
+   ["LB" #_"Lebanon"                                          6825442]
+   ["SV" #_"El Salvador"                                      6765753]
+   ["KG" #_"Kyrgyzstan"                                       6586600]
+   ["NI" #_"Nicaragua"                                        6527691]
+   ["TM" #_"Turkmenistan"                                     6031187]
+   ["DK" #_"Denmark"                                          5825337]
+   ["SG" #_"Singapore"                                        5685807]
+   ["CF" #_"Central African Republic"                         5633412]
+   ["CG" #_"Congo"                                            5518092]
+   ["FI" #_"Finland"                                          5502259]
+   ["SK" #_"Slovakia"                                         5460136]
+   ["NO" #_"Norway"                                           5374807]
+   ["CR" #_"Costa Rica"                                       5111238]
+   ["PS" #_"Palestine"                                        5101152]
+   ["NZ" #_"New Zealand"                                      5091527]
+   ["IE" #_"Ireland"                                          4977400]
+   ["LR" #_"Liberia"                                          4568298]
+   ["OM" #_"Oman"                                             4480333]
+   ["KW" #_"Kuwait"                                           4464521]
+   ["PA" #_"Panama"                                           4278500]
+   ["MR" #_"Mauritania"                                       4173077]
+   ["HR" #_"Croatia"                                          4058165]
+   ["GE" #_"Georgia"                                          3716858]
+   ["ER" #_"Eritrea"                                          3546000]
+   ["UY" #_"Uruguay"                                          3530912]
+   ["MN" #_"Mongolia"                                         3339765]
+   ["BA" #_"Bosnia and Herzegovina"                           3332593]
+   ["PR" #_"Puerto Rico (US)"                                 3193694]
+   ["AM" #_"Armenia"                                          2963000]
+   ["AL" #_"Albania"                                          2845955]
+   ["LT" #_"Lithuania"                                        2795459]
+   ["QA" #_"Qatar"                                            2735707]
+   ["JM" #_"Jamaica"                                          2726667]
+   ["MD" #_"Moldova"                                          2640438]
+   ["NA" #_"Namibia"                                          2504498]
+   ["BW" #_"Botswana"                                         2374698]
+   ["GM" #_"Gambia"                                           2335504]
+   ["GA" #_"Gabon"                                            2176766]
+   ["SI" #_"Slovenia"                                         2097195]
+   ["MK" #_"North Macedonia"                                  2076255]
+   ["LS" #_"Lesotho"                                          2007201]
+   ["LV" #_"Latvia"                                           1899200]
+   ["XK" #_"Kosovo"                                           1782115]
+   ["GW" #_"Guinea-Bissau"                                    1624945]
+   ["BH" #_"Bahrain"                                          1592000]
+   ["GQ" #_"Equatorial Guinea"                                1454789]
+   ["TT" #_"Trinidad and Tobago"                              1363985]
+   ["EE" #_"Estonia"                                          1328976]
+   ["TL" #_"East Timor"                                       1299412]
+   ["MU" #_"Mauritius"                                        1266000]
+   ["SZ" #_"Eswatini"                                         1093238]
+   ["DJ" #_"Djibouti"                                         962452]
+   ["FJ" #_"Fiji"                                             889327]
+   ["CY" #_"Cyprus"                                           875900]
+   ["KM" #_"Comoros"                                          758316]
+   ["BT" #_"Bhutan"                                           748931]
+   ["GY" #_"Guyana"                                           744962]
+   ["SB" #_"Solomon Islands"                                  694619]
+   ["MO" #_"Macau (China)"                                    685400]
+   ["LU" #_"Luxembourg"                                       626108]
+   ["ME" #_"Montenegro"                                       621873]
+   ["EH" #_"Western Sahara"                                   597000]
+   ["SR" #_"Suriname"                                         590100]
+   ["CV" #_"Cape Verde"                                       556857]
+   ["MT" #_"Malta"                                            514564]
+   ;; [nil  #_"Transnistria"                                     469000]
+   ["BN" #_"Brunei"                                           459500]
+   ["BZ" #_"Belize"                                           419199]
+   ["BS" #_"Bahamas"                                          389410]
+   ["MV" #_"Maldives"                                         383135]
+   ["IS" #_"Iceland"                                          366700]
+   ;; [nil  #_"Northern Cyprus"                                  351965]
+   ["VU" #_"Vanuatu"                                          304500]
+   ["BB" #_"Barbados"                                         287025]
+   ["PF" #_"French Polynesia (France)"                        278400]
+   ["NC" #_"New Caledonia (France)"                           271407]
+   ;; [nil  #_"Abkhazia"                                         245246]
+   ["ST" #_"São Tomé and Príncipe"                            210240]
+   ["WS" #_"Samoa"                                            202506]
+   ["LC" #_"Saint Lucia"                                      178696]
+   ["GU" #_"Guam (US)"                                        172400]
+   ["CW" #_"Curaçao (Netherlands)"                            156223]
+   ["AM" #_"Republic of Artsakh"                              148800]
+   ["KI" #_"Kiribati"                                         120100]
+   ["AW" #_"Aruba (Netherlands)"                              112269]
+   ["GD" #_"Grenada"                                          112003]
+   ["VC" #_"Saint Vincent and the Grenadines"                 110696]
+   ["JE" #_"Jersey (UK)"                                      107800]
+   ["FM" #_"F.S. Micronesia"                                  104650]
+   ["VI" #_"U.S. Virgin Islands (US)"                         104578]
+   ["TO" #_"Tonga"                                            100651]
+   ["SC" #_"Seychelles"                                       98462]
+   ["AG" #_"Antigua and Barbuda"                              97895]
+   ["IM" #_"Isle of Man (UK)"                                 83314]
+   ["AD" #_"Andorra"                                          77543]
+   ["DM" #_"Dominica"                                         71808]
+   ["KY" #_"Cayman Islands (UK)"                              69914]
+   ["BM" #_"Bermuda (UK)"                                     64054]
+   ["GG" #_"Guernsey (UK)"                                    63276]
+   ["AS" #_"American Samoa (US)"                              56700]
+   ["GL" #_"Greenland (Denmark)"                              56367]
+   ["MP" #_"Northern Mariana Islands (US)"                    56200]
+   ["MH" #_"Marshall Islands"                                 55500]
+   ["RU" #_"South Ossetia"                                    53532]
+   ["KN" #_"Saint Kitts and Nevis"                            52823]
+   ["FO" #_"Faroe Islands (Denmark)"                          52816]
+   ["TC" #_"Turks and Caicos Islands (UK)"                    42953]
+   ["SX" #_"Sint Maarten (Netherlands)"                       40614]
+   ["LI" #_"Liechtenstein"                                    38749]
+   ["MC" #_"Monaco"                                           38100]
+   ["FR" #_"Saint Martin (France)"                            35334]
+   ["GI" #_"Gibraltar (UK)"                                   33691]
+   ["SM" #_"San Marino"                                       33630]
+   ["AX" #_"Åland Islands (Finland)"                          30074]
+   ["VG" #_"British Virgin Islands (UK)"                      30030]
+   ["PW" #_"Palau"                                            17900]
+   ["CK" #_"Cook Islands (NZ)"                                15200]
+   ["AI" #_"Anguilla (UK)"                                    14869]
+   ["WF" #_"Wallis and Futuna (France)"                       11558]
+   ["NR" #_"Nauru"                                            11000]
+   ["TV" #_"Tuvalu"                                           10200]
+   ["BL" #_"Saint Barthélemy (France)"                        9961]
+   ["PM" #_"Saint Pierre and Miquelon (France)"               5997]
+   ["SH" #_"Saint Helena, Ascensionand Tristan da Cunha (UK)" 5633]
+   ["MS" #_"Montserrat (UK)"                                  4989]
+   ["FK" #_"Falkland Islands (UK)"                            3198]
+   ["CX" #_"Christmas Island (Australia)"                     1955]
+   ["NF" #_"Norfolk Island (Australia)"                       1735]
+   ["NU" #_"Niue (NZ)"                                        1520]
+   ["TK" #_"Tokelau (NZ)"                                     1400]
+   ["VA" #_"Vatican City"                                     825]
+   ["CC" #_"Cocos (Keeling) Islands (Australia)"              555]
+   ["PN" #_"Pitcairn Islands (UK)"                            50]
    ])
 
 (def population
@@ -655,14 +653,15 @@
   #_corona.tables/population
   ;; TODO See net.cgrand.xforms/transjuxt - perform several transductions at once
   #_(eduction
-   (map (fn [[cname population-nr]]
-          {(get-country-code cname) population-nr}))
+     (map (fn [[cname population-nr]]
+            {(get-country-code cname) population-nr}))
        ;; because e.g. population of Russia is mainland + South Ossetia
-   (fn [maps] (apply merge-with + maps))
-   population-table)
+     (fn [maps] (apply merge-with + maps))
+     population-table)
   (->> population-table
        (map (fn [[cname population-nr]]
-              {(get-country-code cname) population-nr}))
+              (hash-map cname population-nr)
+              #_{(get-country-code cname) population-nr}))
        ;; because e.g. population of Russia is mainland + South Ossetia
        (apply merge-with +)))
 

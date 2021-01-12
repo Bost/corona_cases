@@ -47,15 +47,20 @@
 
 (def ^:const ccodes
   #{
-    ccc/de
-    ;; cr tg za pe lc ch ru si au kr it fi sc tt my sy mn am dz uy td dj bi mk
-    ;; mu li gr gy cg ml gm sa bh ne bn xk cd dk bj me bo jo cv ve ci uz tn is
-    ;; ga tz at lt np bg il pk pt hr mr ge hu tw mm sr va kw se gb qq vn cf pa
-    ;; vc jp ir af ly mz ro qa cm by sd ar br zw nz fj id sv cn ht rw ba tl jm
-    ;; ke py cy gh ma sg lk ph sm tr ps bz cu ad dm lr om so do al fr gw bb ca
-    ;; mg kh la hn th de lb kz ec no ao et md ag be mv sz cz cl bt nl eg sn ee
-    ;; kn bw ni pg iq kg us zm mc gt bf lu ua ie lv gd mw bs az sk gq in es co
-    ;; rs ng ug sl er ae bd mt gn na mx pl
+    "DE"
+    ;; "CR" "TG" "ZA" "PE" "LC" "CH" "RU" "SI" "AU" "KR" "IT" "FI" "SC" "TT"
+    ;; "MY" "SY" "MN" "AM" "DZ" "UY" "TD" "DJ" "BI" "MK" "MU" "LI" "GR" "GY"
+    ;; "CG" "ML" "GM" "SA" "BH" "NE" "BN" "XK" "CD" "DK" "BJ" "ME" "BO" "JO"
+    ;; "CV" "VE" "CI" "UZ" "TN" "IS" "GA" "TZ" "AT" "LT" "NP" "BG" "IL" "PK"
+    ;; "PT" "HR" "MR" "GE" "HU" "TW" "MM" "SR" "VA" "KW" "SE" "GB" "QQ" "VN"
+    ;; "CF" "PA" "VC" "JP" "IR" "AF" "LY" "MZ" "RO" "QA" "CM" "BY" "SD" "AR"
+    ;; "BR" "ZW" "NZ" "FJ" "ID" "SV" "CN" "HT" "RW" "BA" "TL" "JM" "KE" "PY"
+    ;; "CY" "GH" "MA" "SG" "LK" "PH" "SM" "TR" "PS" "BZ" "CU" "AD" "DM" "LR"
+    ;; "OM" "SO" "DO" "AL" "FR" "GW" "BB" "CA" "MG" "KH" "LA" "HN" "TH" "DE"
+    ;; "LB" "KZ" "EC" "NO" "AO" "ET" "MD" "AG" "BE" "MV" "SZ" "CZ" "CL" "BT"
+    ;; "NL" "EG" "SN" "EE" "KN" "BW" "NI" "PG" "IQ" "KG" "US" "ZM" "MC" "GT"
+    ;; "BF" "LU" "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ" "IN" "ES" "CO"
+    ;; "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"
     })
 
 (defn xf-for-case

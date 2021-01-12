@@ -234,7 +234,7 @@
                 (v1/pic-data))
          cnt-reports (count (data/dates))
          form '(< (count (corona.api.expdev07/raw-dates)) 10)]
-             ;; TODO do not call calc-functions when the `form` evaluates to true
+     ;; TODO do not call calc-functions when the `form` evaluates to true
      (if (eval form)
        (warnf "Some stuff may not be calculated: %s" form))
      (doall
@@ -249,7 +249,7 @@
               ccc/all-country-codes))
      (doall
       (pmap (fn [aggregation-kw]
-                       ;; TODO delete picture from telegram servers
+              ;; TODO delete picture from telegram servers
               (doall
                (pmap (fn [case-kw]
                        (plot/plot-aggregation

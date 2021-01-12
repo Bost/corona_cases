@@ -288,7 +288,7 @@
 
                  ccc/default-2-country-code
                  ;; XX comes from the service
-                 (= ccc/xx (:country_code loc))
+                 (= "XX" (:country_code loc))
 
                  (= ccode (:country_code loc))))})
 
@@ -307,7 +307,7 @@
                 (fn [_] (inc idx))))
    (sort-by rank-kw >
             ;; TODO sets and set operations should be used clojure.set/difference
-            (remove (fn [hm] (= (:ccode hm) ccc/zz)) (stats-countries)))))
+            (remove (fn [hm] (= (:ccode hm) "ZZ")) (stats-countries)))))
 
 (defn calc-all-rankings
   "TODO verify ranking for one and zero countries"
@@ -320,7 +320,7 @@
                              (utc/transpose (map rank-for-case
                                                  com/ranking-cases))))))
        ;; TODO sets and set operations should be used clojure.set/difference
-       (remove (fn [ccode] (= ccode ccc/zz)) ccc/all-country-codes)))
+       (remove (fn [ccode] (= ccode "ZZ")) ccc/all-country-codes)))
 
 (defn all-rankings [] (from-cache! calc-all-rankings [:rankings]))
 
