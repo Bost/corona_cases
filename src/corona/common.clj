@@ -226,11 +226,17 @@
                      :body
                      (json/read-str :key-fn clojure.core/keyword))]
       ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
-      ;; TODO sanitize against http status 503 - service not available
+      ;; TODO sanitize against:
+      ;; 1. http status 503 - service not available
       ;; Requesting json-data from http://covid-tracker-us.herokuapp.com/all ...
       ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
       ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
       ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
+      ;;
+      ;; 2.
+      ;; Requesting json-data from http://coronavirus-tracker-api.herokuapp.com/all ...
+      ;; Execution error (ConnectionClosedException) at org.apache.http.impl.io.ContentLengthInputStream/read (ContentLengthInputStream.java:178).
+      ;; Premature end of Content-Length delimited message body (expected: 840,718; received: 515,312)
       (infof "Requesting json-data from %s ... %s chars received in %s ms"
              url
              (count (str result))
@@ -269,8 +275,8 @@
   [
    {:idx  0 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  1 :kw :c                :threshold {:inc 50000     :val (int 1960e3)}}
-   {:idx  2 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 1157e3)}}
-   {:idx  3 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 52e3)}}
+   {:idx  2 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 1167e3)}}
+   {:idx  3 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 53e3)}}
    {:idx  4 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 649e3)}}
    {:idx  5 :kw :a100k}
    {:idx  6 :kw :r100k}
