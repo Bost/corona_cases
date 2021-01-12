@@ -135,59 +135,6 @@
                   fun-id port (if-let [v retval-async<!!] v "nil"))
            (fatalf "[%s] Further requests may NOT be answered!!!" fun-id)
            (api-error-handler))))
-     #_(do
-         (debugf "[%s] Created polling-handlers %s" fun-id polling-handlers)
-         (let [port (start-polling tgram-token polling-handlers)]
-           (swap! telegram-port (fn [_] port))
-           (async/go-loop []
-             (debugf "[%s] Taking vals on port %s ..." fun-id port)
-             (let [fst-retval<! (async/<! port)]
-               (warnf "[%s] Taking vals on port %s stopped with fst-retval<! %s"
-                      fun-id port (if-let [v fst-retval<!] v "nil"))
-               (fatalf "[%s] Further telegram requests may NOT be answered!!!"
-                       fun-id)
-               (debugf "[%s] @initialized %s" fun-id @initialized)
-               (when @initialized
-                 #_com/env-prod?
-                 #_(com/system-exit 2)
-                 (debugf "[%s] Closing port %s ..." fun-id port)
-                 (async/close! port)
-                 (debugf "[%s] Closing port ... done. Current port value: %s"
-                         fun-id port)
-                 (let [dummy-channel-timeout 10000]
-                   (debugf "[%s] Creating a dummy-channel (closes in %s msecs) ..."
-                           fun-id dummy-channel-timeout)
-                   (let [dummy-channel-port (async/timeout dummy-channel-timeout)]
-                     (debugf "[%s] Taking vals on dummy-channel-port %s ..."
-                             fun-id dummy-channel-port)
-                     (let [retval-dummy-channel<! (async/<! dummy-channel-port)]
-                       (debugf (str
-                                "[%s] As expected (check log tstp), "
-                                "taking vals on dummy-channel-port %s stopped with retval-dummy-channel<! %s")
-                               fun-id dummy-channel-port retval-dummy-channel<!)
-                       (let [snd-retval<! (async/<! port)]
-                         #_(debugf "[%s WTF?] Taking vals on port %s stopped with snd-retval<! %s"
-                                   fun-id port (if-let [v snd-retval<!] v "nil"))
-                         (if (nil? snd-retval<!)
-                           (do
-                             #_(debugf "[%s WTF?] Closing port %s again ..."
-                                       fun-id port)
-                             #_(async/close! port)
-                             #_(debugf "[%s WTF?] Port closed again. Current port value: %s"
-                                       fun-id port)
-                             (debugf "[%s WTF?] New start-polling invocation ..."
-                                     fun-id)
-                             (let [new-port (start-polling tgram-token polling-handlers)]
-                               (swap! telegram-port (fn [_] new-port))
-                               (debugf "[%s WTF?] Recuring the go-loop on a new-port %s ..." fun-id new-port)
-                               (recur)))
-                           (do
-                             (debugf "[%s WTF?] Recuring the go-loop on the old port %s ..." fun-id port)
-                             (recur)))))))))))
-         #_(let [sleep-time Long/MAX_VALUE]
-             (warnf "[%] async/go-loop will sleep forever, i.e. %s msecs"
-                    fun-id sleep-time)
-             (Thread/sleep sleep-time)))
      (fatalf "[%s] polling-handlers not created" fun-id))
    (infof "[%s] Starting ... done" fun-id)))
 
@@ -241,11 +188,7 @@
       (map-fn (fn [ccode]
                 (msgi/detailed-info ccode com/html
                                     (data/create-pred-hm ccode))
-                (plot/plot-country ccode stats cnt-reports)
-                #_(map-fn (fn [fun] (fun))
-                          [(fn [] (msgi/detailed-info ccode com/html
-                                                      (data/create-pred-hm ccode)))
-                           (fn [] (plot/plot-country ccode stats cnt-reports))]))
+                (plot/plot-country ccode stats cnt-reports))
               ccc/all-country-codes))
      (doall
       (pmap (fn [aggregation-kw]
@@ -273,10 +216,6 @@
    #_(swap! data/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
-     #_(doall
-        #_(data/stats-countries)
-        #_(data/dates)
-        #_(data/json-data))
      (let [new-hash (com/hash-fn (data/json-data))]
        (debugf "[%s] json-data hash - cached: %s new: %s equal: %s"
                fun-id
@@ -318,10 +257,7 @@
                    (debugf "[%s] Closing old-tgram-port %s ..."
                            fun-id old-tgram-port)
                    (async/close! old-tgram-port))
-                 (debugf "[%s] No old-tgram-port defined" fun-id))
-               (do
-                 #_(debugf "[%s] obj-q %s is not the %s"
-                           fun-id obj-q 'corona.telegram/telegram-port)))
+                 (debugf "[%s] No old-tgram-port defined" fun-id)))
              (swap! obj (fn [_] nil))
              (debugf "[%s] %s new value: %s"
                      fun-id

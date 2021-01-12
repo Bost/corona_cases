@@ -102,14 +102,6 @@
                                      (:type data-hm) (:case-kw data-hm)))))]
        (debugf "[%s] (count msg) %s" fun-id (count msg))))))
 
-;; (defn language [prm]
-;;   (format
-;;    "/lang:%s\n/lang:%s\n/lang:%s\n"
-;;    "sk"
-;;    "de"
-;;    "en"
-;;    (footer prm)))
-
 ;; mapvals
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
 

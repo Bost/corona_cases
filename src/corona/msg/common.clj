@@ -72,50 +72,6 @@
      (com/left-pad "" blank max-diff-order-of-magnitude)
      (plus-minus diff))))
 
-#_
-(defn fmt-to-cols
-    "Info-message numbers of aligned to columns for better readability"
-    [{:keys [s n diff rate show-plus-minus]}]
-    (format
-     "<code>%s┃%s┃%s┃%s</code>"
-   ;; "<code>%s┃%s %s</code>"
-     (com/right-pad s " " padding-s)
-     (let [formatted-n (format (if show-plus-minus "%+,2d" "%,2d") n)
-           padded-n (com/left-pad
-                     (format "%s%s"
-                             (format "%s"
-                                     (reduce str (repeat
-                                                  (- 2 (count (re-seq #"," formatted-n)))
-                                                  ",")))
-                             formatted-n)
-                     " " padding-n)]
-       (str (.replaceAll padded-n "," " ")
-            (if show-plus-minus
-              (pos-neg n)
-              "")))
-     #_(com/left-pad (if rate (str rate "%") " ") " " 4)
-     (format "%s%s"
-             (com/left-pad (if (nil? diff)
-                             ""
-                             #_(format "%+d" diff)
-                             (let [formatted-n (format "%+,2d" diff)
-                                   padded-n (com/left-pad
-                                             (format "%s%s"
-                                                     (format "%s"
-                                                             (reduce str (repeat
-                                                                          (- 1 (count (re-seq #"," formatted-n)))
-                                                                          ",")))
-                                                     formatted-n)
-                                             " "
-                                             (- padding-n 2))]
-                               (.replaceAll padded-n "," " ")))
-                           " " max-diff-order-of-magnitude)
-             (if (nil? diff)
-               ""
-               (pos-neg n)))
-     ""
-     #_(com/left-pad (if rate (str rate "%") " ") " " 4)))
-
 (defn format-linewise
   "
   line-fmt e.g.: \"%s: %s\n\"

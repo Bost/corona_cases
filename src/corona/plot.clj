@@ -416,10 +416,6 @@
             (fn [s] (str s postfix))
             (partial com/text-for-case case-kw))
            [lang/confirmed lang/recovered lang/deaths lang/active-cases])
-          #_(->> [lang/confirmed lang/recovered lang/deaths lang/active-cases]
-                 (zipmap com/basic-cases)
-                 case-kw)
-          #_(case-kw {:c lang/confirmed :a lang/active-cases :r lang/recovered :d lang/deaths})
           threshold))
 
 (defn line-stroke [color]

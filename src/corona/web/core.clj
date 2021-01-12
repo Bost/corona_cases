@@ -59,12 +59,10 @@
                           :body :result :url))
          (let [res (moa/set-webhook com/telegram-token
                                     (webhook-url com/telegram-token))]
-           ;; (debugf "[%s] (set-webhook %s %s)" fun-id com/telegram-token webhook-url)
            (debugf "[%s] (set-webhook ...) %s" fun-id (:body res)))))
      (when-not (empty? (->> com/telegram-token moa/get-info-webhook
                             :body :result :url))
        (let [res (moa/del-webhook com/telegram-token)]
-         ;; (debugf "[%s] (del-webhook %s)" fun-id com/telegram-token)
          (debugf "[%s] (del-webhook ...) %s" fun-id (:body res)))))))
 
 (defn- authenticated? [user pass]
@@ -98,13 +96,8 @@
      :body
      (json/write-str {:chat_id (->> req :params :message :chat :id)
                       :text (format "Hello from %s webhook" google-hook)})})
-  (cjc/GET "/" []
-    (home-page))
-  (cjc/GET "/links" []
-    (webresp/links))
-  #_{:status 200
-     :headers {"Content-Type" "text/plain"}
-     :body "graphs 2"}
+  (cjc/GET "/" [] (home-page))
+  (cjc/GET "/links" [] (webresp/links))
   (cjc/GET (format "/%s/:id/:aggregation/:case" com/graphs-path)
            [id aggregation case]
            ;; TODO make sure strings and keywords are not getting confused
@@ -152,7 +145,6 @@
            msg version env-type port)
     (let [web-server
           (ring.adapter.jetty/run-jetty
-           #_(compojure.handler/api #'app-routes)
            (-> #'app-routes
                (wrap-drawbridge)
                (compojure.handler/site)
@@ -170,8 +162,6 @@
         env-type (or env-type com/env-type)
         port (or port com/webapp-port)
         msg (format "[%s] starting" fun-id)]
-    #_(infof "%s version %s in environment %s on port %s ..."
-             msg (if com/env-devel? com/undef com/botver) env-type port)
     (debugf "%s ..." msg)
     (infof "\n  %s" (clojure.string/join "\n  " (com/show-env)))
     (if (= (str (ctc/default-time-zone))
@@ -223,23 +213,11 @@
     (Thread/sleep 400))
   (webapp-start com/env-type com/webapp-port))
 
-#_(let [doc
-        "Attention!
-Value is reset to nil when reloading current buffer,
-e.g. via `s-u` my=cider-save-and-load-current-buffer."]
-    (->> ['corona.web/server 'data/cache 'tgram/continue 'tgram/my-component]
-         (run! (fn [v] (alter-meta! (get (ns-interns *ns*) v) assoc :doc doc)))))
-
 (defrecord WebServer [http-server app-component]
   component/Lifecycle
-  (start [this]
-    (assoc this :http-server
-           (webapp-start com/env-type com/webapp-port)
-           #_(web-framework/start-http-server (app-routes app-component))))
-  (stop [this]
-    (webapp-stop)
-    #_(stop-http-server http-server)
-    this))
+  (start [this] (assoc this :http-server
+                       (webapp-start com/env-type com/webapp-port)))
+  (stop [this] (webapp-stop) this))
 
 (defn web-server
   "Returns a new instance of the web server component which

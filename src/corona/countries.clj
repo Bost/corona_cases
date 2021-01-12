@@ -47,15 +47,6 @@
      "XX" "Disputed Territory"
      }))
 
-;; java.util.Locale doesn't show country names according to the ISO norm
-;; (defn country-code--country-locale
-;;   []
-;;   (->> (java.util.Locale/getISOCountries)
-;;        (map (fn [ccode] [ccode
-;;                      (-> (.getDisplayCountry (new Locale "" ccode))
-;;                          #_(cstr/replace "&" "and"))]))
-;;        (into {})))
-
 (def ^:const country--country-code
   "Mapping: country-names -> 2-letter country codes.
   https://en.wikipedia.org/wiki/ISO_3166-1#Officially_assigned_code_elements"
@@ -271,7 +262,6 @@
 (def ^:const country-alias--country-code-inverted
   "See also `country-name-aliased`"
   (conj
-   ;; (clojure.set/map-invert country-alias--country-code)
    ;; select desired aliases
    {
     "VA" "Vatican"
@@ -660,8 +650,7 @@
      population-table)
   (->> population-table
        (map (fn [[cname population-nr]]
-              (hash-map cname population-nr)
-              #_{(get-country-code cname) population-nr}))
+              (hash-map cname population-nr)))
        ;; because e.g. population of Russia is mainland + South Ossetia
        (apply merge-with +)))
 

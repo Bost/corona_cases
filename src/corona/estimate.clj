@@ -23,17 +23,11 @@
 (defn estim-for-country-fn [calculate-fun kw-estim kw-shift-maps]
   (fn [[_ stats-country-unsorted]]
     (let [stats-country (sort-by :t stats-country-unsorted)]
-      #_(def stats-country stats-country)
-      #_(def kw-estim kw-estim)
-      #_(def kw-shift-maps kw-shift-maps)
       (mapv (fn [estim stats-hm]
               (conj stats-hm {kw-estim estim}))
             (apply map
                    (fn [& prm]
                      ((comp
-                       #_(fn [result]
-                           (println {:prm prm :r result})
-                           result)
                        (fn [prm] (apply calculate-fun prm)))
                       prm))
                    (map (comp
@@ -56,12 +50,6 @@
                                                                        {:kw :er :shift 0}
                                                                        {:kw :d  :shift shift-deaths}])))
                   into [])
-       #_(transduce (comp
-                     (x/by-key :ccode (x/reduce conj)) ;
-                     (map (fn [[_ stats-country-unsorted]]
-                            (map (fn [m] (select-keys m [:c :r :d :a :er :ea]))
-                                 stats-country-unsorted))))
-                    into [])
        (sort-by :ccode)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.estimate)

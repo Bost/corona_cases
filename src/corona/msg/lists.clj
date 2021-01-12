@@ -49,14 +49,8 @@
                             (com/left-pad d " " omag-deaths)
                             (com/right-pad cname 17)
                             (cstr/lower-case (com/encode-cmd ccode)))))
-                (->> data
-                     #_(take-last 11)
-                     #_(partition-all 2)
-                     #_(map (fn [part] (cstr/join "       " part))))))
+                data))
           ""
-          #_(if (= msg-idx cnt-msgs)
-              (str "\n\n" (lang/list-sorted-by-desc case-kw))
-              "")
           (msgc/footer parse_mode))]
      (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
              fun-id case-kw msg-idx (count msg))
@@ -117,14 +111,8 @@
                             (com/left-pad d100k " " omag-deaths-per-100k)
                             (com/right-pad cname 17)
                             (cstr/lower-case (com/encode-cmd ccode)))))
-                (->> data
-                     #_(take-last 11)
-                     #_(partition-all 2)
-                     #_(map (fn [part] (cstr/join "       " part))))))
+                data))
           ""
-          #_(if (= msg-idx cnt-msgs)
-              (str "\n\n" (lang/list-sorted-by-desc case-kw))
-              "")
           (msgc/footer parse_mode))]
      (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
              fun-id case-kw msg-idx (count msg))
