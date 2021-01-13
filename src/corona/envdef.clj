@@ -20,8 +20,8 @@
 
 (def api-servers
   "TODO iterate over the list in case of status 503 - service not available"
-  (second
-   ["covid-tracker-us.herokuapp.com" ; is down
+  (first
+   ["covid-tracker-us.herokuapp.com"
     "coronavirus-tracker-api.herokuapp.com"]))
 (def environment
   "Mapping env-type -> bot-name"
