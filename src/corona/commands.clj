@@ -105,7 +105,7 @@
     #(cstr/upper-case (ccc/country-code-3-letter %)) ;; /DEU
     #(cstr/capitalize (ccc/country-code-3-letter %)) ;; /Deu
     #(cstr/lower-case (normalize %))   ;; /unitedstates
-    #(cstr/upper-case (normalize %))   ;; /UNITEDSTATES
+    ;; #(cstr/upper-case (normalize %))   ;; /UNITEDSTATES
     #(normalize %)]))
 
 (defn cmds-general []
