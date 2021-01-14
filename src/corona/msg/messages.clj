@@ -80,7 +80,7 @@
          message-id (:message_id message)
          options (reply-markup-btns {:chat-id chat-id :ccode ccode
                                      :message_id message-id})
-         id (get-in @data/cache [:hash])]
+         id (get-in @data/cache [:json-hash])]
      (let [msg (doall
                 (if com/use-webhook?
                   (edit-media com/telegram-token chat-id message-id options

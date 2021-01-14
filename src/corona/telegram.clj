@@ -171,7 +171,7 @@
 (defn do-reset-cache!
   ([new-hash tbeg] (do-reset-cache! "do-reset-cache!" new-hash tbeg))
   ([fun-id new-hash tbeg]
-   (swap! data/cache update-in [:hash] (fn [_] new-hash))
+   (swap! data/cache update-in [:json-hash] (fn [_] new-hash))
    (doall
     (run! (fn [prms] (apply calc-listings prms))
           [[msgl/list-countries com/listing-cases-absolute]
@@ -204,10 +204,11 @@
            ;; cache which contain the final results.
    (swap! data/cache
           (fn [_] (select-keys
-                   @data/cache [:hash :plot :msg :list :threshold])))
+                   @data/cache [:json-hash :plot :msg :list :threshold])))
    (debugf "[%s] %s chars cached in %s ms"
            fun-id
-           (count (str @data/cache)) (- (System/currentTimeMillis) tbeg))))
+           (com/measure @data/cache)
+           ((comp count str) @data/cache) (- (System/currentTimeMillis) tbeg))))
 
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
@@ -217,12 +218,12 @@
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
      (let [new-hash (com/hash-fn (data/json-data))]
-       (debugf "[%s] json-data hash - cached: %s new: %s equal: %s"
+       (debugf "[%s] (:json-hash @data/cache): %s new hash: %s equal: %s"
                fun-id
-               (get-in @data/cache [:hash])
+               (get-in @data/cache [:json-hash])
                new-hash
-               (= (get-in @data/cache [:hash]) new-hash))
-       (when-not (= (get-in @data/cache [:hash]) new-hash)
+               (= (get-in @data/cache [:json-hash]) new-hash))
+       (when-not (= (get-in @data/cache [:json-hash]) new-hash)
          (do-reset-cache! new-hash tbeg))
        ;; :json introduced by the (data/json-data)
        (swap! data/cache (fn [_] (dissoc @data/cache :json)))))))

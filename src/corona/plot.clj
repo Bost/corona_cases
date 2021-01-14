@@ -299,7 +299,8 @@
   [ccode & [stats report]]
   ((comp
     (fn [arr]
-      (debugf "[%s] ccode %s img-size %s" "plot-country" ccode (count arr))
+      (debugf "[%s] ccode %s img-size %s" "plot-country"
+              ccode (if arr (com/measure arr) 0))
       arr)
     to-byte-array-auto-closable
     (fn [prms] (apply calc-plot-country-img prms)))
@@ -464,7 +465,7 @@
   ((comp
     (fn [arr]
       (debugf "[%s] aggregation-kw %s case-kw %s; img-size %s" "calc-aggregation"
-              aggregation-kw case-kw (count arr))
+              aggregation-kw case-kw (com/measure arr))
       arr)
     to-byte-array-auto-closable
     (fn [prms] (apply calc-aggregation-img prms)))

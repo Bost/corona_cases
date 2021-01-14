@@ -11,6 +11,7 @@
             [incanter.stats :as istats]
             [taoensso.timbre :as timbre :refer [debugf]]
             [utils.core :as utc]
+            #_[clj-memory-meter.core :as meter]
             [utils.num :as utn]))
 
 ;; (set! *warn-on-reflection* true)
@@ -211,7 +212,7 @@
                                                   ccode
                                                   (count ccc/all-country-codes))}))))]
 
-     (debugf "[%s] ccode %s info-size %s" fun-id ccode (count info))
+     (debugf "[%s] ccode %s info-size %s" fun-id ccode (com/measure info))
      info)))
 
 (defn detailed-info

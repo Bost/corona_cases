@@ -53,7 +53,7 @@
           ""
           (msgc/footer parse_mode))]
      (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
-             fun-id case-kw msg-idx (count msg))
+             fun-id case-kw msg-idx (com/measure msg))
      msg)))
 
 (defn get-from-cache! [case-kw ks fun msg-idx prm]
@@ -115,7 +115,7 @@
           ""
           (msgc/footer parse_mode))]
      (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
-             fun-id case-kw msg-idx (count msg))
+             fun-id case-kw msg-idx (com/measure msg))
      msg)))
 
 (defn list-per-100k

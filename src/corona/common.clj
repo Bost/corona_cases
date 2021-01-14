@@ -13,6 +13,7 @@
             [environ.core :as env]
             [taoensso.timbre :as timbre :refer [debugf infof]]
             [utils.core :as utc]
+            [clj-memory-meter.core :as meter]
             [utils.num :as utn])
   (:import java.security.MessageDigest))
 
@@ -218,6 +219,11 @@
     (-> (format "%x" (BigInteger. 1 raw))
         (subs 0 hash-size))))
 
+(defn measure
+  "require [corona.common :as com]"
+  [obj]
+  (meter/measure obj :bytes true :shallow true))
+
 (defn get-json [url]
   (infof "Requesting json-data from %s ..." url)
   (let [tbeg (System/currentTimeMillis)]
@@ -237,9 +243,9 @@
       ;; Requesting json-data from http://coronavirus-tracker-api.herokuapp.com/all ...
       ;; Execution error (ConnectionClosedException) at org.apache.http.impl.io.ContentLengthInputStream/read (ContentLengthInputStream.java:178).
       ;; Premature end of Content-Length delimited message body (expected: 840,718; received: 515,312)
-      (infof "Requesting json-data from %s ... %s chars received in %s ms"
+      (infof "Requesting json-data from %s ... %s bytes received in %s ms"
              url
-             (count (str result))
+             (measure result)
              (- (System/currentTimeMillis) tbeg))
       result)))
 
