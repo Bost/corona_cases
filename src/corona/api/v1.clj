@@ -73,28 +73,29 @@
   {:ccode \"US\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :c 188172 :r 7024  :d 3873 :p 331002651 :a 177275}
 )"
   []
-  (apply map
-         (fn [{:keys [population]}
-             {:keys [ccode t confirmed]}
-             {:keys [recovered]}
-             {:keys [deaths]}]
-           (let [prm {:ccode ccode :t t
-                      :c confirmed
-                      :r recovered
-                      :d deaths
-                      :p population
-                      :a (com/calculate-activ confirmed recovered deaths)}]
-             (assoc
-              prm
-              #_(dissoc prm :c)
-              :a100k ((com/calculate-cases-per-100k :a) prm)
-              :r100k ((com/calculate-cases-per-100k :r) prm)
-              :d100k ((com/calculate-cases-per-100k :d) prm)
-              :a-rate (com/calc-rate-active prm)
-              :r-rate (com/calc-rate-recovered prm)
-              :d-rate (com/calc-rate-deaths prm)
-              :c-rate (com/calc-rate-closed prm))))
-
-         (map xf-for-case [:population :confirmed :recovered :deaths])))
+  ((comp
+    (partial apply map
+             (fn [{:keys [population]}
+                  {:keys [ccode t confirmed]}
+                  {:keys [recovered]}
+                  {:keys [deaths]}]
+               (let [prm {:ccode ccode :t t
+                          :c confirmed
+                          :r recovered
+                          :d deaths
+                          :p population
+                          :a (com/calculate-activ confirmed recovered deaths)}]
+                 (assoc
+                  prm
+                  #_(dissoc prm :c)
+                  :a100k ((com/calculate-cases-per-100k :a) prm)
+                  :r100k ((com/calculate-cases-per-100k :r) prm)
+                  :d100k ((com/calculate-cases-per-100k :d) prm)
+                  :a-rate (com/calc-rate-active prm)
+                  :r-rate (com/calc-rate-recovered prm)
+                  :d-rate (com/calc-rate-deaths prm)
+                  :c-rate (com/calc-rate-closed prm)))))
+    (partial map xf-for-case))
+   [:population :confirmed :recovered :deaths]))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.v1)
