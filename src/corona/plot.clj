@@ -454,13 +454,17 @@
     (fn [arr]
       (debugf "[%s] aggregation-kw %s case-kw %s; img-size %s" "calc-aggregation"
               aggregation-kw case-kw (com/measure arr))
+    (fn [arr]
+      (debugf "[%s] aggregation-kw %s case-kw %s; img-size %s"
+              "calc-aggregation" aggregation-kw case-kw (com/measure arr))
       arr)
     to-byte-array-auto-closable
     (fn [prms] (apply calc-aggregation-img prms)))
    [aggregation-kw case-kw stats report]))
 
 (defn plot-aggregation
-  "The optional params `stats`, `report` are used only for the first calculation"
+  "The optional params `stats`, `report` are used only for the first
+  calculation"
   [id aggregation-kw case-kw & [stats report]]
   {:pre [(string? id)]}
   (let [ks [:plot (keyword id) aggregation-kw case-kw]]
