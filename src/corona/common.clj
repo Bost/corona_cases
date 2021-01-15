@@ -222,7 +222,7 @@
 (defn measure
   "require [corona.common :as com]"
   [obj]
-  (meter/measure obj :bytes true :shallow true))
+  (meter/measure obj :bytes true))
 
 (defn get-json [url]
   (infof "Requesting json-data from %s ..." url)
