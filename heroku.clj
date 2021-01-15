@@ -71,8 +71,8 @@
 ;; actions
 (def restart "restart")
 (def deploy "deploy")
-;; TODO create setWebhook and make it to be the inverse to deleteWebhook
 (def deleteWebhook "deleteWebhook")
+(def setWebhook "setWebhook")
 
 (defn validate-args
   "Validate command line arguments. Either return a map indicating the program
@@ -90,7 +90,7 @@
       ;; custom validation on arguments
       (= 1 (count arguments))
       (cond
-        (#{restart deploy deleteWebhook} (first arguments))
+        (#{restart deploy deleteWebhook setWebhook} (first arguments))
         {:action (first arguments) :options options}
 
         :else
@@ -201,18 +201,27 @@
       (validate-args *command-line-args*)]
   (if exit-message
     (exit (if ok? 0 1) exit-message)
-    (do
+    (let [heroku-env (:heroku-env options)
+          heroku-app (str heroku-env "-bot")
+          telegram-token (get-in env/environment
+                                 [(keyword heroku-env) :telegram-token])]
       (printf "action: %s, options: %s\n" action options)
       (condp = action
         restart
-        (sh-heroku (str (:heroku-env options) "-bot") "ps:restart")
+        (sh-heroku heroku-app "ps:restart")
 
         deploy
         (deploy! options)
 
         deleteWebhook
         (sh "curl" "--form" "'drop_pending_updates=true'" "--request" "POST"
-            (format "https://api.telegram.org/bot%s/deleteWebhook"
-                    (get-in env/environment
-                            [(-> options :heroku-env keyword)
-                             :telegram-token])))))))
+            (format "https://api.telegram.org/bot%s/%s"
+                    deleteWebhook telegram-token))
+
+        setWebhook
+        (sh "curl"
+            "--form" (format "'url=https://%s.herokuapp.com/%s'"
+                             heroku-app telegram-token)
+            "--form" "'drop_pending_updates=true'" "--request" "POST"
+            (format "https://api.telegram.org/bot%s/%s"
+                    setWebhook telegram-token))))))
