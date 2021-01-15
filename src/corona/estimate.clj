@@ -1,8 +1,7 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.estimate)
 
 (ns corona.estimate
-  (:require [corona.common :as com]
-            [net.cgrand.xforms :as x]))
+  (:require [corona.common :as com]))
 
 (def ^:const shift-recovery
   "Mean number of days/reports between symptoms outbreak and full recovery. (Lucky
@@ -23,33 +22,33 @@
 (defn estim-for-country-fn [calculate-fun kw-estim kw-shift-maps]
   (fn [[_ stats-country-unsorted]]
     (let [stats-country (sort-by :t stats-country-unsorted)]
-      (mapv (fn [estim stats-hm]
-              (conj stats-hm {kw-estim estim}))
-            (apply map
-                   (fn [& prm]
-                     ((comp
-                       (fn [prm] (apply calculate-fun prm)))
-                      prm))
+      (mapv (fn [estim stats-hm] (conj stats-hm {kw-estim estim}))
+            (apply map (fn [& prm]
+                         ((comp
+                           (fn [prm] (apply calculate-fun prm)))
+                          prm))
                    (map (comp
                          (fn [{:keys [vs shift]}] (into (drop-last shift vs)
                                                         (repeat shift 0)))
-                         (fn [{:keys [kw shift]}] {:vs (map kw stats-country) :shift shift}))
+                         (fn [{:keys [kw shift]}] {:vs (map kw stats-country)
+                                                  :shift shift}))
                         kw-shift-maps))
             stats-country))))
 
 (defn estimate [pic-data]
-  (->> pic-data
-       (transduce (comp
-                   (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
-                   (map (estim-for-country-fn com/calculate-recov :er [{:kw :c :shift shift-recovery}
-                                                                       {:kw :d :shift shift-deaths}])))
-                  into [])
-       (transduce (comp
-                   (x/by-key :ccode (x/reduce conj)) ; (group-by :ccode)
-                   (map (estim-for-country-fn com/calculate-activ :ea [{:kw :c  :shift 0}
-                                                                       {:kw :er :shift 0}
-                                                                       {:kw :d  :shift shift-deaths}])))
-                  into [])
-       (sort-by :ccode)))
+  ((comp
+    (partial sort-by :ccode)
+    flatten
+    (partial map (estim-for-country-fn com/calculate-activ
+                                       :ea [{:kw :c  :shift 0}
+                                            {:kw :er :shift 0}
+                                            {:kw :d  :shift shift-deaths}]))
+    (partial group-by :ccode)
+    flatten
+    (partial map (estim-for-country-fn com/calculate-recov
+                                       :er [{:kw :c :shift shift-recovery}
+                                            {:kw :d :shift shift-deaths}]))
+    (partial group-by :ccode))
+   pic-data))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.estimate)

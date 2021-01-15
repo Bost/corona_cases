@@ -641,17 +641,11 @@
                                       nil)}))
                      (reduce into)))"
   #_corona.tables/population
-  ;; TODO See net.cgrand.xforms/transjuxt - perform several transductions at once
-  #_(eduction
-     (map (fn [[cname population-nr]]
-            {(get-country-code cname) population-nr}))
-       ;; because e.g. population of Russia is mainland + South Ossetia
-     (fn [maps] (apply merge-with + maps))
-     population-table)
-  (->> population-table
-       (map (fn [[cname population-nr]]
-              (hash-map cname population-nr)))
-       ;; because e.g. population of Russia is mainland + South Ossetia
-       (apply merge-with +)))
+  ((comp
+    ;; because e.g. population of Russia is mainland + South Ossetia
+    (partial apply merge-with +)
+    (partial map (fn [[cname population-nr]]
+                   (hash-map cname population-nr))))
+   population-table))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.countries)

@@ -27,19 +27,7 @@
 (defn- threshold
   "See also https://github.com/rplevy/swiss-arrows"
   [case-kw]
-  #_
-  (->> case-params
-       (filter (fn [m] (= (:kw m) case-kw)))
-       (map :threshold)
-       (first))
-  #_
-  (transduce (comp
-              (filter (fn [m] (= (:kw m) case-kw)))
-              (map :threshold))
-             ;; there's only one element so we can use the net.cgrand.xforms.rfs/last
-             net.cgrand.xforms.rfs/last []
-             case-params)
-  (first
+(first
    (com/tore
     com/case-params
     (filter (fn [m] (= (:kw m) case-kw)))

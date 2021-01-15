@@ -333,10 +333,6 @@
   (->> case-params
         (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
         (sort-by :listing-idx)
-        (map :kw))
-  #_(tore case-params
-        (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
-        (net.cgrand.xforms/sort-by :listing-idx)
         (map :kw)))
 
 (defn fmt-date-fun [fmts]
