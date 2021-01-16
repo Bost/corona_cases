@@ -190,6 +190,9 @@
                                     (data/create-pred-hm ccode))
                 (plot/plot-country ccode stats cnt-reports))
               ccc/all-country-codes))
+     (com/log-heap-info)
+     (System/gc) ;; also (.gc (Runtime/getRuntime))
+     (com/log-heap-info)
      (doall
       (pmap (fn [aggregation-kw]
               ;; TODO delete picture from telegram servers

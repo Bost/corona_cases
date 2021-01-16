@@ -448,51 +448,10 @@
                            :sum ""))
        :label-conf label-conf}))))
 
-(defn format-bytes
-  "Nicely format `num-bytes` as kilobytes/megabytes/etc.
-    (format-bytes 1024) ; -> 2.0 KB
-  See
-  https://github.com/metabase/metabase
-  metabase.util/format-bytes "
-  [num-bytes]
-  (loop [n num-bytes [suffix & more] ["B" "kB" "MB" "GB"]]
-    (if (and (seq more)
-             (>= n 1024))
-      (recur (/ n 1024) more)
-      (format "%.1f %s" (float n) suffix))))
-
-(defn fmap
-  "See clojure.algo.generic.functor/fmap"
-  [f m]
-  (into (empty m) (for [[k v] m] [k (f v)])))
-
 (defn calc-aggregation
   [aggregation-kw case-kw stats report]
   ((comp
-    ;; See https://github.com/metrics-clojure/metrics-clojure
-    (fn [arr]
-      (debugf "[%s] heap %s" "calc-aggregation"
-              (let [runtime (Runtime/getRuntime)
-                    ;; current size of heap in bytes
-                    size (.totalMemory runtime)
-
-                    ;; maximum size of heap in bytes. The heap cannot grow
-                    ;; beyond this size. Any attempt will result in an
-                    ;; OutOfMemoryException.
-                    max-size (.maxMemory runtime)
-
-                    ;; amount of free memory within the heap in bytes. This size
-                    ;; will increase after garbage collection and decrease as
-                    ;; new objects are created.
-                    free-size (.freeMemory runtime)]
-                ((comp
-                  (partial fmap format-bytes))
-                 {:size size :max-size max-size :free-size free-size})))
-      arr)
-    (fn [arr]
-      (debugf "[%s] aggregation-kw %s case-kw %s; img-size %s"
-              "calc-aggregation" aggregation-kw case-kw (com/measure arr))
-      arr)
+    (fn [arr] (com/log-heap-info) arr)
     to-byte-array-auto-closable
     (fn [prms] (apply calc-aggregation-img prms)))
    [aggregation-kw case-kw stats report]))
