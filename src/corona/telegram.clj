@@ -167,6 +167,7 @@
    (warnf "[%s] Displayed data will NOT be updated!" fun-id)))
 
 (def map-fn #_map pmap)
+(def map-aggregation-fn map #_pmap)
 
 (defn do-reset-cache!
   ([new-hash tbeg] (do-reset-cache! "do-reset-cache!" new-hash tbeg))
@@ -191,20 +192,21 @@
                 (plot/plot-country ccode stats cnt-reports))
               ccc/all-country-codes))
      (com/log-heap-info)
+     (Thread/sleep 100)
      (System/gc) ;; also (.gc (Runtime/getRuntime))
      (com/log-heap-info)
      (doall
-      (pmap (fn [aggregation-kw]
-              ;; TODO delete picture from telegram servers
-              (doall
-               (pmap (fn [case-kw]
-                       (plot/plot-aggregation
-                        new-hash
-                        aggregation-kw case-kw stats cnt-reports))
-                     com/absolute-cases)))
-            com/aggregation-cases)))
-           ;; discard the intermediary results, i.e. keep only those items in the
-           ;; cache which contain the final results.
+      (map-aggregation-fn
+       (fn [aggregation-kw]
+         ;; TODO delete picture from telegram servers
+         (doall
+          (map-aggregation-fn
+           (fn [case-kw]
+             (plot/plot-aggregation new-hash aggregation-kw case-kw stats cnt-reports))
+           com/absolute-cases)))
+       com/aggregation-cases)))
+   ;; discard the intermediary results, i.e. keep only those items in the
+   ;; cache which contain the final results.
    (swap! data/cache
           (fn [_] (select-keys
                    @data/cache [:json-hash :plot :msg :list :threshold])))

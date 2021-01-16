@@ -368,11 +368,11 @@
    "EH" ;; Western Sahara Cases https://github.com/CSSEGISandData/COVID-19/issues/3436
 
    ;; 0 active cases - fighting OutOfMemoryError, saving memory
-   "IM" "MP" "CK" "GF" "SX" "TK" "TF" "KP" "NU" "NF" "AX" "CX" "MF" "SJ" "EH"
-   "TM" "GU" "PF" "BM" "VG" "PN" "PR" "QQ" "UM" "GG" "BQ" "MO" "KY" "NR" "AW"
-   "FM" "CC" "TO" "SH" "WF" "TV" "BL" "MS" "GP" "BV" "AS" "FK" "GS" "MQ" "FO"
-   "AQ" "VI" "GI" "NC" "YT" "TC" "RE" "GL" "KI" "HK" "IO" "CW" "JE" "HM" "PM"
-   "AI" "PW"
+   ;; "IM" "MP" "CK" "GF" "SX" "TK" "TF" "KP" "NU" "NF" "AX" "CX" "MF" "SJ" "EH"
+   ;; "TM" "GU" "PF" "BM" "VG" "PN" "PR" "QQ" "UM" "GG" "BQ" "MO" "KY" "NR" "AW"
+   ;; "FM" "CC" "TO" "SH" "WF" "TV" "BL" "MS" "GP" "BV" "AS" "FK" "GS" "MQ" "FO"
+   ;; "AQ" "VI" "GI" "NC" "YT" "TC" "RE" "GL" "KI" "HK" "IO" "CW" "JE" "HM" "PM"
+   ;; "AI" "PW"
    ])
 
 (def all-country-codes
@@ -381,6 +381,6 @@
   #_["GB" "SK" "DE" "AT" "CZ" "US" "FR" "PL" "IT" "ES" "SE" "UA" "HU" "ZZ"]
   (clojure.set/difference
    (set (keys country-code-2-to-3-hm))
-   (set excluded-country-codes)))
+   #_(set excluded-country-codes)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.country-codes)
