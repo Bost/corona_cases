@@ -88,3 +88,9 @@ $ bin/build; and heroku local --env=.heroku-local.env
 ```bash
 $ bb heroku.clj deploy --heroku-env <YOUR-HEROKU-APP-NAME>
 ```
+
+## Others
+
+```bash
+heroku pt ":type -'ssl-client-cert' -'$MY_TELEGRAM_ID'" --app <YOUR-HEROKU-APP-NAME> | grep -v -e '^[[:space:]]*$
+```

@@ -73,6 +73,7 @@
 (def deploy "deploy")
 (def deleteWebhook "deleteWebhook")
 (def setWebhook "setWebhook")
+(def users "users")
 
 (defn validate-args
   "Validate command line arguments. Either return a map indicating the program
@@ -90,7 +91,7 @@
       ;; custom validation on arguments
       (= 1 (count arguments))
       (cond
-        (#{restart deploy deleteWebhook setWebhook} (first arguments))
+        (#{restart deploy deleteWebhook setWebhook users} (first arguments))
         {:action (first arguments) :options options}
 
         :else
@@ -224,4 +225,11 @@
                              heroku-app telegram-token)
             "--form" "'drop_pending_updates=true'" "--request" "POST"
             (format "https://api.telegram.org/bot%s/%s"
-                    setWebhook telegram-token))))))
+                    setWebhook telegram-token))
+
+        users
+        ;; TODO -'ssl-client-cert' etc. doesn't work
+        ((comp)
+         (sh-heroku heroku-app "pt" "\":type\""))
+        #_(sh-heroku heroku-app "pt" (format ":type -ssl-client-cert -%s"
+                                           (System/getenv "MY_TELEGRAM_ID")))))))
