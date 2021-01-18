@@ -13,15 +13,12 @@
   :license {:name "Eclipse Public License v1.0"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :plugins
-  [
-   ;; needed as a plugin to be able to start lein repl :connect ... from the
+  [;; needed as a plugin to be able to start lein repl :connect ... from the
    ;; same directory
-   [nrepl/drawbridge "0.2.1"]
-   ]
+   [nrepl/drawbridge "0.2.1"]]
 
   :dependencies
-  [
-   [org.clojure/clojure     "1.10.1"]
+  [[org.clojure/clojure     "1.10.1"]
 
    ;; CSV reader/writer to/from Clojure data structures.
    [org.clojure/data.csv    "1.0.0"]
@@ -93,15 +90,18 @@
 
    ;; for drawbridge
    [ring-basic-authentication "1.1.0"]
-   ]
+
+   ;; how much memory an object occupies together with all its child fields
+   [com.clojure-goes-fast/clj-memory-meter "0.1.3"]
+
+   [org.clojure/java.jdbc "0.7.11"]
+   [org.postgresql/postgresql "42.2.18"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"
   :profiles
-  {
-   ;; TODO test :uberjar {:aot :all}
-   :production {:env {:production true}}
-   })
+  {;; TODO test :uberjar {:aot :all}
+   :production {:env {:production true}}})
 
 ;; TODO analyze results of lein nvd check
 ;; $ lein nvd check

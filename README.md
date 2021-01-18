@@ -11,9 +11,44 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 ## Setup environment
 
 ### Install
+<!-- ```bash -->
+<!-- nix-env -iA nixpkgs.clojure -->
+<!-- nix-env -iA nixpkgs.babashka -->
+<!-- nix-env -iA nixpkgs.python3 -->
+<!-- nix-env -iA nixpkgs.pipenv -->
+<!-- nix-env -iA nixpkgs.jdk -->
+<!-- # nixpkgs.postgresql is version 11 -->
+<!-- # nix-env -iA nixpkgs.postgresql_12 -->
+<!-- ``` -->
+
 * [Clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
 * [Babashka](https://github.com/babashka/babashka#installer-script)
 * [coronavirus-tracker-api](https://github.com/ExpDev07/coronavirus-tracker-api#installation)
+* postgresql:
+```bash
+sudo apt install postgresql postgresql-contrib
+sudo systemctl status postgresql.service
+sudo systemctl stop postgresql.service
+# set --export PATH /usr/lib/postgresql/*/bin $PATH
+initdb pg
+sudo chown --recursive postgres:postgres pg/
+sudo chmod --recursive u=rwx,g=---,o=--- pg/
+sudo -su postgres
+fish # start he fish-shell for the postgres user
+set --export PATH /usr/lib/postgresql/*/bin $PATH
+postgres -D pg &   # this doesn't work: pg_ctl -D pg -l logfile start
+```
+Open new console and log in
+```bash
+psql --dbname=postgres
+```
+```postgres
+\conninfo
+-- list databases:
+\l
+\l+
+SELECT datname FROM pg_database;
+```
 
 ### Create
 * [Telegram Chatbot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
@@ -89,6 +124,20 @@ $ bin/build; and heroku local --env=.heroku-local.env
 $ bb heroku.clj deploy --heroku-env <YOUR-HEROKU-APP-NAME>
 ```
 
+## MySQL -> PostgreSQL script conversion
+
+```bash
+psql --dbname=postgres -a -f dbase/postgres.sql
+psql --dbname=postgres -q -a -f dbase/postgres.sql | rg "ERROR\|NOTICE|WARN"
+# psql --dbname=postgres -q -a -f dbase/drop-everything.sql
+psql --dbname=postgres
+```
+
+```postgres
+\dt  -- list tables
+\ds  -- list sequences
+\di  -- list indices
+```
 ## Others
 
 ```bash
