@@ -382,7 +382,8 @@
 
 (def all-country-codes
   "TODO all-country-codes should be a set"
-  #_["SK" "CZ" "GG" "ZZ"]
+  #_["SK"]
+  #_["SK" "ZZ"]
   #_["GB" "SK" "DE" "AT" "CZ" "US" "FR" "PL" "IT" "ES" "SE" "UA" "HU" "ZZ"]
   (clojure.set/difference
    (set (keys country-code-2-to-3-hm))

@@ -5,15 +5,13 @@
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
+   [corona.api.vaccination :as vac]
    [utils.core :as utc]
-   [taoensso.timbre :as timbre :refer [
-                                       debugf infof
+   [taoensso.timbre :as timbre :refer [debugf infof
                                        warnf
                                        errorf
-                                       #_fatalf
-                                       ]]
-   [corona.api.cache :as cache]
-   )
+                                       #_fatalf]]
+   [corona.api.cache :as cache])
   (:import java.text.SimpleDateFormat))
 
 ;; (set! *warn-on-reflection* true)
@@ -110,7 +108,7 @@
 
 (defn dates [json]
   ((comp
-    (fn [val] (cache/from-cache! (fn [] val) [::dates]))
+    (fn [val] (cache/from-cache! (fn [] val) [:dates]))
     (partial map date))
    (raw-dates json)))
 
@@ -127,6 +125,23 @@
                     (comp (partial hash-map :history)
                           (partial zipmap raw-dates)
                           repeat
+                          population-cnt)))))
+   ccc/all-country-codes))
+
+(defn vaccination-data [raw-dates]
+  ((comp
+    (partial hash-map :vaccinated)
+    (partial hash-map :locations)
+    (partial map
+             (comp
+              (partial apply merge)
+              (juxt (comp (partial hash-map :country)
+                          ccr/country-name-aliased)
+                    (partial hash-map :country_code)
+                    (comp (partial hash-map :history)
+                          (partial zipmap raw-dates)
+                          repeat
+                          (fn [n] (int (/ n 10)))
                           population-cnt)))))
    ccc/all-country-codes))
 
@@ -152,7 +167,7 @@
                                                  (comp
                                                   (partial utc/in? (raw-dates json))
                                                   first))))))
-                          ;; here the country_code keyword comes from the json
+                       ;; here the country_code keyword comes from the json
                        (partial filter
                                 (comp
                                  (partial utc/in? ccc/all-country-codes)
@@ -165,6 +180,8 @@
 
 (defn calc-data-with-pop [json]
   (conj (corona-data json)
+        (vaccination-data (raw-dates json))
+        #_(vac/vaccination-data (raw-dates json))
         (population-data (raw-dates json))))
 
 (defn data-with-pop
@@ -207,31 +224,33 @@
    [:sums case-kw ccode]))
 
 (defn calc-case-counts-report-by-report [pred-hm]
-  (let [pcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
-                   [:population :confirmed :recovered :deaths])
+  (let [vpcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
+                    [:vaccinated :population :confirmed :recovered :deaths])
 
         ;; pre-calculate active numbers - needed for com/calc-rate-active
-        pcrda
+        vpcrda
         (apply
-         conj pcrd
-         (mapv (fn [fun] (apply mapv (fn [_ c r d] (fun c r d)) pcrd))
+         conj vpcrd
+         (mapv (fn [fun] (apply mapv (fn [_ _ c r d] (fun c r d)) vpcrd))
                [com/calculate-activ]))]
     (zipmap com/all-cases
             (apply
-             conj pcrda
-             (->> [(com/calculate-cases-per-100k :a)
+             conj vpcrda
+             (->> [(com/calculate-cases-per-100k :v)
+                   (com/calculate-cases-per-100k :a)
                    (com/calculate-cases-per-100k :r)
                    (com/calculate-cases-per-100k :d)
                    (com/calculate-cases-per-100k :c)
+                   (com/calc-rate :v)
                    (com/calc-rate :a)
                    (com/calc-rate :r)
                    (com/calc-rate :d)
                    (com/calc-rate :c)]
-                  (mapv (fn [fun] (apply mapv (fn [p c r d a]
-                                                (->> [p c r d a]
-                                                     (zipmap [:p :c :r :d :a])
+                  (mapv (fn [fun] (apply mapv (fn [v p c r d a]
+                                                (->> [v p c r d a]
+                                                     (zipmap [:v :p :c :r :d :a])
                                                      (fun)))
-                                         pcrda))))))))
+                                         vpcrda))))))))
 
 (defn case-counts-report-by-report
   "Returns a hash-map containing case-counts report-by-report. E.g.:

@@ -31,6 +31,7 @@
      country-commands-txt
      cnt-reports-txt
      population-txt
+     vaccinated-txt
      confirmed-txt
      footer-txt
      details-txt]}]
@@ -42,6 +43,7 @@
     ["%s\n" [cnt-reports-txt]]
     ["%s\n" [(msgc/format-linewise (apply conj
                                           [["%s\n" [population-txt]]
+                                           ["%s\n" [vaccinated-txt]]
                                            ["%s\n" [confirmed-txt]]]
                                           details-txt))]]
     ["%s\n" [footer-txt]]]))
@@ -184,7 +186,7 @@
   ([fun-id ccode parse_mode pred-hm]
    (let [dates (data/dates (data/json-data))
          last-report (data/last-report pred-hm)
-         {population :p confirmed :c} last-report
+         {vaccinated :v population :p confirmed :c} last-report
          delta (data/delta pred-hm)
          delta-confirmed (:c delta)
          info (format-detailed-info
@@ -196,6 +198,11 @@
                                               (map (comp com/encode-cmd cstr/lower-case)
                                                    [ccode (ccc/country-code-3-letter ccode)]))
                  :cnt-reports-txt (str lang/report " " (count dates))
+                 :vaccinated-txt (format "<code>%s %s</code> = %s %s"
+                                         (com/right-pad lang/vaccinated " " (- msgc/padding-s 2))
+                                         (com/left-pad vaccinated " " (+ msgc/padding-n 2))
+                                         (utn/round-div-precision vaccinated 1e6 1)
+                                         lang/millions-rounded)
                  :population-txt (format "<code>%s %s</code> = %s %s"
                                          (com/right-pad lang/people " " (- msgc/padding-s 2))
                                          (com/left-pad population " " (+ msgc/padding-n 2))

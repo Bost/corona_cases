@@ -119,9 +119,10 @@
    confirmed deaths))
 
 (defn calc-rate [case-kw]
-  (fn [{:keys [a d r c]}]
+  (fn [{:keys [v a d r c]}]
     (utn/percentage
      (case case-kw
+       :v v
        :a a
        :r r
        :d d
@@ -135,10 +136,11 @@
    (utn/round mode (/ (* place 1e5) total-count))))
 
 (defn calculate-cases-per-100k [case-kw]
-  (fn [{:keys [p c r d]}]
+  (fn [{:keys [v p c r d]}]
     (if (zero? p)
       0
       (per-1e5 (case case-kw
+                 :v v
                  :a (calculate-activ c r d)
                  :r r
                  :d d
@@ -272,7 +274,7 @@
   :r ~ recovered cased
   :d ~ deaths
   :a ~ active cases i.e. ill"
-  [
+  [{:idx -1 :kw :v                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  0 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  1 :kw :c                :threshold {:inc 50000     :val (int 2110e3)}}
    {:idx  2 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 1257e3)}}

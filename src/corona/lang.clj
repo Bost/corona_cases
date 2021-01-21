@@ -67,6 +67,7 @@
 (def ^:const active-absolute "Active absolute")
 (def ^:const absolute      "absolute")
 (def ^:const people        "People") ;; "Population" is too long see `fmt-to-cols`
+(def ^:const vaccinated    "Vaccin")
 (def ^:const stats         "Stats")
 (def ^:const list-desc     "List of countries")
 (def ^:const listings      "lists")
