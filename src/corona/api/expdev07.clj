@@ -108,49 +108,64 @@
 
 (defn date [rd] (.parse date-format (keyname rd)))
 
-(defn calc-data-with-pop []
-  (let [json (json-data)]
-    (conj
-     (->> (keys json)
-          (map (fn [case-kw-full-name]
-                 {case-kw-full-name
-                  (let [case-m (get json case-kw-full-name)]
-                    (if (contains? case-m :locations)
-                      (update-in
-                       case-m [:locations]
-                       (fn [locs]
-                         (->> locs
-                              ;; here the country_code keyword comes from the json
-                              (filter (fn [{:keys [country_code]}]
-                                        (utc/in? ccc/all-country-codes country_code)))
-                              (map (fn [m]
-                                     (update-in m [:history]
-                                                (fn [history]
-                                                  (->> history
-                                                       (filter (fn [[raw-date _]]
-                                                                 (utc/in? (raw-dates) raw-date)))
-                                                       (into {}))))))
-                              (into []))))
-                      case-m))}))
-          (into {}))
-     {:population
-      {:locations
-       (let [the-dates (raw-dates)]
-         (map (fn [ccode]
-                {:country (ccr/country-name-aliased ccode)
-                 :country_code ccode
-                 :history
-                 ;; {:1/23/20 1e6 ;; start number
-                 ;;    ;; other reports - calc diff
-                 ;; }
-                 (zipmap the-dates ((comp repeat population-cnt) ccode))})
-              ccc/all-country-codes))}})))
 (defn dates []
   ((comp
     (fn [val] (cache/from-cache! (fn [] val) [::dates]))
     (partial map date))
    (raw-dates)))
 
+(defn population-data [raw-dates]
+  ((comp
+    (partial hash-map :population)
+    (partial hash-map :locations)
+    (partial map
+             (comp
+              (partial apply merge)
+              (juxt (comp (partial hash-map :country)
+                          ccr/country-name-aliased)
+                    (partial hash-map :country_code)
+                    (comp (partial hash-map :history)
+                          (partial zipmap raw-dates)
+                          repeat
+                          population-cnt)))))
+   ccc/all-country-codes))
+
+(defn corona-data [json raw-dates]
+  ((comp
+    (partial into {})
+    (partial map
+             (fn [case-kw-full-name]
+               ((comp
+                 (partial hash-map case-kw-full-name)
+                 (fn [case-m]
+                   (if (contains? case-m :locations)
+                     (update-in
+                      case-m [:locations]
+                      (comp
+                       (partial into [])
+                       (partial map (fn [m]
+                                      (update-in
+                                       m [:history]
+                                       (comp
+                                        (partial into {})
+                                        (partial filter
+                                                 (comp
+                                                  (partial utc/in? raw-dates)
+                                                  first))))))
+                          ;; here the country_code keyword comes from the json
+                       (partial filter
+                                (comp
+                                 (partial utc/in? ccc/all-country-codes)
+                                 :country_code))))
+                     case-m))
+                 (partial get json))
+                case-kw-full-name)))
+    keys)
+   json))
+
+(defn calc-data-with-pop [json raw-dates]
+  (conj (corona-data json raw-dates)
+        (population-data raw-dates)))
 
 (defn data-with-pop
   "Data with population numbers."
