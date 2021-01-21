@@ -118,21 +118,15 @@
     (fn [confirmed deaths] (- confirmed deaths)))
    confirmed deaths))
 
-(defn calc-rate-active
-  [{:keys [a c]}]
-  (utn/percentage a c))
-
-(defn calc-rate-recovered
-  [{:keys [r c]}]
-  (utn/percentage r c))
-
-(defn calc-rate-deaths
-  [{:keys [d c]}]
-  (utn/percentage d c))
-
-(defn calc-rate-closed
-  [{:keys [d r c]}]
-  (utn/percentage (+ d r) c))
+(defn calc-rate [case-kw]
+  (fn [{:keys [a d r c]}]
+    (utn/percentage
+     (case case-kw
+       :a a
+       :r r
+       :d d
+       :c (+ d r))
+     c)))
 
 (defn per-1e5
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
@@ -331,9 +325,9 @@
 
 (def ^:const listing-cases-absolute
   (->> case-params
-        (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
-        (sort-by :listing-idx)
-        (map :kw)))
+       (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
+       (sort-by :listing-idx)
+       (map :kw)))
 
 (defn fmt-date-fun [fmts]
   (fn [date]

@@ -270,7 +270,7 @@
                      fun-id
                      obj-q (if-let [v (deref obj)] v "nil"))))
          ['corona.telegram/initialized
-          'corona.api.expdev07/cache
+          'corona.api.cache/cache
           'corona.telegram/continue
           'corona.telegram/telegram-port])
    (infof "[%s] Stopping ... done" fun-id)))

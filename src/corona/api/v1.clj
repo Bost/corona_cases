@@ -94,13 +94,13 @@
                  (assoc
                   prm
                   #_(dissoc prm :c)
-                  :a100k ((com/calculate-cases-per-100k :a) prm)
-                  :r100k ((com/calculate-cases-per-100k :r) prm)
-                  :d100k ((com/calculate-cases-per-100k :d) prm)
-                  :a-rate (com/calc-rate-active prm)
-                  :r-rate (com/calc-rate-recovered prm)
-                  :d-rate (com/calc-rate-deaths prm)
-                  :c-rate (com/calc-rate-closed prm)))))
+                  :a100k  ((com/calculate-cases-per-100k :a) prm)
+                  :r100k  ((com/calculate-cases-per-100k :r) prm)
+                  :d100k  ((com/calculate-cases-per-100k :d) prm)
+                  :a-rate ((com/calc-rate :a) prm)
+                  :r-rate ((com/calc-rate :r) prm)
+                  :d-rate ((com/calc-rate :d) prm)
+                  :c-rate ((com/calc-rate :c) prm)))))
     (partial map xf-for-case))
    [:population :confirmed :recovered :deaths]))
 

@@ -208,10 +208,10 @@
                    (com/calculate-cases-per-100k :r)
                    (com/calculate-cases-per-100k :d)
                    (com/calculate-cases-per-100k :c)
-                   com/calc-rate-active
-                   com/calc-rate-recovered
-                   com/calc-rate-deaths
-                   com/calc-rate-closed]
+                   (com/calc-rate :a)
+                   (com/calc-rate :r)
+                   (com/calc-rate :d)
+                   (com/calc-rate :c)]
                   (mapv (fn [fun] (apply mapv (fn [p c r d a]
                                                 (->> [p c r d a]
                                                      (zipmap [:p :c :r :d :a])
