@@ -10,7 +10,7 @@
             [clojure.set :as cset]
             [clojure2d.color :as c]
             [clojure2d.core :as c2d]
-            [corona.api.expdev07 :as data]
+            [corona.api.cache :as cache]
             [corona.common :as com]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -37,7 +37,7 @@
   "Countries with the number of cases less than the threshold are grouped into
   \"Rest\"."
   [aggregation-kw case-kw]
-  (data/from-cache! (fn [] ((comp :val threshold) case-kw))
+  (cache/from-cache! (fn [] ((comp :val threshold) case-kw))
                     [:threshold aggregation-kw case-kw]))
 
 (defn threshold-increase
@@ -299,9 +299,9 @@
   [ccode & [stats report]]
   (let [ks [:plot (keyword ccode)]]
     (if (and stats report)
-      (data/cache! (fn [] (calc-plot-country ccode stats report))
+      (cache/cache! (fn [] (calc-plot-country ccode stats report))
                    ks)
-      (get-in @data/cache ks))))
+      (get-in @cache/cache ks))))
 
 (defn group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
@@ -318,7 +318,7 @@
       (let [raised-threshold (+ threshold-increase threshold)]
         (infof "Case %s; %s countries above threshold. Raise to %s"
                case-kw (count (group-by :ccode res)) raised-threshold)
-        (swap! data/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
+        (swap! cache/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
         (group-below-threshold (assoc prm :threshold raised-threshold)))
       {:data res :threshold threshold})))
 
@@ -463,9 +463,9 @@
   {:pre [(string? id)]}
   (let [ks [:plot (keyword id) aggregation-kw case-kw]]
     (if (and stats report)
-      (data/cache! (fn []
+      (cache/cache! (fn []
                      (calc-aggregation aggregation-kw case-kw stats report))
                    ks)
-      (get-in @data/cache ks))))
+      (get-in @cache/cache ks))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.plot)

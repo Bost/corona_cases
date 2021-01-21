@@ -12,43 +12,13 @@
                                        errorf
                                        #_fatalf
                                        ]]
-   [clojure.spec.alpha :as spec]
-   #_[clojure.string :as cstr]
-   #_[clojure.inspector :refer :all]
+   [corona.api.cache :as cache]
    )
   (:import java.text.SimpleDateFormat))
 
 ;; (set! *warn-on-reflection* true)
 
 (def ^:const url (format "http://%s/all" com/json-api-server))
-
-(defonce cache (atom {}))
-
-(spec/def ::fun clojure.core/fn?)
-(spec/def ::pred-fn (spec/or :nil nil? :fn clojure.core/fn?))
-
-(defonce cnt (atom 0))
-
-(defn cache!
-  "Also return the cached value for further consumption.
-  First param must be a function in order to have lazy evaluation."
-  [fun ks]
-  {:pre [(spec/valid? ::fun fun)]}
-  (let [fun-id "cache!"]
-    #_(debugf "[%s] %s Computing %s ..." fun-id @cnt fun)
-    #_(swap! cnt inc)
-    (let [data (fun)]
-      ;; (debugf "[%s] %s Computing ... done." fun-id fun)
-      (swap! cache update-in ks (fn [_] data))
-      data)))
-
-(defn from-cache!
-  [fun ks]
-  {:pre [(spec/valid? ::fun fun)]}
-  ;; (debugf "[from-cache!] accessing %s" ks)
-  (if-let [v (get-in @cache ks)]
-    v
-    (cache! fun ks)))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
@@ -76,7 +46,7 @@
           xs))))))
 
 (defn json-data []
-  (from-cache! (fn [] (com/get-json url)) [:json]))
+  (cache/from-cache! (fn [] (com/get-json url)) [:json]))
 
 (def xform-raw-dates
   (comp
@@ -96,6 +66,7 @@
                       str
                       [m d y]))))))
 
+;; TODO raw-dates should have json-data as a param
 (defn raw-dates
   "Size:
   (apply + (map (fn [rd] (count (str rd))) (get-in @cache [:raw-dates])))
@@ -112,15 +83,16 @@
   (count rd-cached)
   ;; 1010 items"
   []
-  (from-cache! (fn []
-                 (transduce xform-raw-dates
-                            conj []
-                            ((comp
+  (cache/from-cache!
+   (fn []
+     (transduce xform-raw-dates
+                conj []
+                ((comp
                               ;; at least 2 values needed to calc difference
-                              #_(partial take-last 4)
-                              keys :history last :locations :confirmed)
-                             (json-data))))
-               [:raw-dates]))
+                  #_(partial take-last 4)
+                  keys :history last :locations :confirmed)
+                 (json-data))))
+   [:raw-dates]))
 
 (defn population-cnt [ccode]
   (or (get ccr/population ccode)
@@ -135,8 +107,6 @@
 (def date-format (new SimpleDateFormat "MM/dd/yy"))
 
 (defn date [rd] (.parse date-format (keyname rd)))
-
-(defn dates [] (from-cache! (fn [] (map date (raw-dates))) [:dates]))
 
 (defn calc-data-with-pop []
   (let [json (json-data)]
@@ -175,11 +145,18 @@
                  ;; }
                  (zipmap the-dates ((comp repeat population-cnt) ccode))})
               ccc/all-country-codes))}})))
+(defn dates []
+  ((comp
+    (fn [val] (cache/from-cache! (fn [] val) [::dates]))
+    (partial map date))
+   (raw-dates)))
+
 
 (defn data-with-pop
   "Data with population numbers."
   []
-  (from-cache! calc-data-with-pop [:data-with-pop]))
+  (cache/from-cache! (fn [] (calc-data-with-pop (json-data) (raw-dates)))
+                     [:data-with-pop]))
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
@@ -190,7 +167,7 @@
   "Return sums for a given `case-kw` calculated for every single report."
   [case-kw {:keys [ccode pred-fun]}]
   ;; ignore predicate for the moment
-  (from-cache!
+  (cache/from-cache!
    (fn []
      (let [locations (filter pred-fun
                              ((comp :locations case-kw) (data-with-pop)))]
@@ -255,8 +232,8 @@
   "
   [{:keys [ccode #_pred-fun] :as pred-hm}]
   ;; ignore pred-fun for the moment
-  (from-cache! (fn [] (calc-case-counts-report-by-report pred-hm))
-               [:cnts (keyword ccode)]))
+  (cache/from-cache! (fn [] (calc-case-counts-report-by-report pred-hm))
+                     [:cnts (keyword ccode)]))
 
 (defn eval-fun
   [fun pred-hm]
@@ -297,7 +274,7 @@
                         (last-report (create-pred-hm ccode))))
        ccc/all-country-codes))
 
-(defn stats-countries [] (from-cache! calc-stats-countries [:stats]))
+(defn stats-countries [] (cache/from-cache! calc-stats-countries [:stats]))
 
 (defn rank-for-case [rank-kw]
   (map-indexed
@@ -322,6 +299,6 @@
        ;; TODO sets and set operations should be used clojure.set/difference
        (remove (fn [ccode] (= ccode "ZZ")) ccc/all-country-codes)))
 
-(defn all-rankings [] (from-cache! calc-all-rankings [:rankings]))
+(defn all-rankings [] (cache/from-cache! calc-all-rankings [:rankings]))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.expdev07)

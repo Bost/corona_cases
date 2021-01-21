@@ -23,6 +23,7 @@
   (first
    ["covid-tracker-us.herokuapp.com"
     "coronavirus-tracker-api.herokuapp.com"]))
+
 (def environment
   "Mapping env-type -> bot-name"
   {(keyword corona-cases)

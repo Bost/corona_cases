@@ -6,6 +6,7 @@
             [clojure.edn :as edn]
             [clojure.string :as cstr]
             [corona.api.expdev07 :as data]
+            [corona.api.cache :as cache]
             [corona.common :as com]
             [corona.estimate :as est]
             [corona.lang :as lang]
@@ -80,7 +81,7 @@
          message-id (:message_id message)
          options (reply-markup-btns {:chat-id chat-id :ccode ccode
                                      :message_id message-id})
-         id (get-in @data/cache [:json-hash])]
+         id (get-in @cache/cache [:json-hash])]
      (let [msg (doall
                 (if com/use-webhook?
                   (edit-media com/telegram-token chat-id message-id options

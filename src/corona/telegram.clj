@@ -7,6 +7,7 @@
   (:gen-class)
   (:require [clojure.core.async :as async]
             [corona.api.expdev07 :as data]
+            [corona.api.cache :as cache]
             [corona.api.v1 :as v1]
             [corona.commands :as cmd]
             [corona.common :as com]
@@ -172,7 +173,7 @@
 (defn do-reset-cache!
   ([new-hash tbeg] (do-reset-cache! "do-reset-cache!" new-hash tbeg))
   ([fun-id new-hash tbeg]
-   (swap! data/cache update-in [:json-hash] (fn [_] new-hash))
+   (swap! cache/cache update-in [:json-hash] (fn [_] new-hash))
    (doall
     (run! (fn [prms] (apply calc-listings prms))
           [[msgl/list-countries com/listing-cases-absolute]
@@ -207,31 +208,31 @@
        com/aggregation-cases)))
    ;; discard the intermediary results, i.e. keep only those items in the
    ;; cache which contain the final results.
-   (swap! data/cache
+   (swap! cache/cache
           (fn [_] (select-keys
-                   @data/cache [:json-hash :plot :msg :list :threshold])))
+                   @cache/cache [:json-hash :plot :msg :list :threshold])))
    (debugf "[%s] %s chars cached in %s ms"
            fun-id
-           (com/measure @data/cache)
-           ((comp count str) @data/cache) (- (System/currentTimeMillis) tbeg))))
+           (com/measure @cache/cache)
+           ((comp count str) @cache/cache) (- (System/currentTimeMillis) tbeg))))
 
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
   ([fun-id]
    ;; full cache cleanup is not really necessary
-   #_(swap! data/cache (fn [_] {}))
+   #_(swap! cache/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings))
      (let [new-hash (com/hash-fn (data/json-data))]
-       (debugf "[%s] (:json-hash @data/cache): %s new hash: %s equal: %s"
+       (debugf "[%s] (:json-hash @cache/cache): %s new hash: %s equal: %s"
                fun-id
-               (get-in @data/cache [:json-hash])
+               (get-in @cache/cache [:json-hash])
                new-hash
-               (= (get-in @data/cache [:json-hash]) new-hash))
-       (when-not (= (get-in @data/cache [:json-hash]) new-hash)
+               (= (get-in @cache/cache [:json-hash]) new-hash))
+       (when-not (= (get-in @cache/cache [:json-hash]) new-hash)
          (do-reset-cache! new-hash tbeg))
        ;; :json introduced by the (data/json-data)
-       (swap! data/cache (fn [_] (dissoc @data/cache :json)))))))
+       (swap! cache/cache (fn [_] (dissoc @cache/cache :json)))))))
 
 (defn start
   "Fetch api service data and only then register the telegram commands."

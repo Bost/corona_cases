@@ -2,7 +2,7 @@
 
 (ns corona.msg.lists
   (:require [clojure.string :as cstr]
-            [corona.api.expdev07 :as data]
+            [corona.api.cache :as cache]
             [corona.common :as com]
             [corona.countries :as ccr]
             [corona.lang :as lang]
@@ -58,9 +58,9 @@
 
 (defn get-from-cache! [case-kw ks fun msg-idx prm]
   (if prm
-    (data/cache! (fn [] (fun case-kw msg-idx prm))
+    (cache/cache! (fn [] (fun case-kw msg-idx prm))
                  (conj ks (keyword (str msg-idx))))
-    (vals (get-in @data/cache ks))))
+    (vals (get-in @cache/cache ks))))
 
 (defn list-countries
   [case-kw & [msg-idx prm]]

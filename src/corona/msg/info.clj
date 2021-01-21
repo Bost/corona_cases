@@ -3,6 +3,7 @@
 (ns corona.msg.info
   (:require [clojure.string :as cstr]
             [corona.api.expdev07 :as data]
+            [corona.api.cache :as cache]
             [corona.common :as com]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -219,9 +220,9 @@
   [ccode & [parse_mode pred-hm]]
   (let [ks [:msg (keyword ccode)]]
     (if (and parse_mode pred-hm)
-      (data/cache! (fn [] (create-detailed-info ccode parse_mode pred-hm))
+      (cache/cache! (fn [] (create-detailed-info ccode parse_mode pred-hm))
                    ks)
-      (get-in @data/cache ks))))
+      (get-in @cache/cache ks))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.info)
 
