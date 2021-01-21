@@ -270,22 +270,21 @@
                      [:cnts (keyword ccode)]))
 
 (defn eval-fun
-  [fun pred-hm]
-  (into {:t (fun (dates (json-data)))}
+  [fun pred-hm json]
+  (into {:t (fun (dates json))}
         (map (fn [[k v]] {k (fun v)})
              (case-counts-report-by-report pred-hm))))
 
 (defn delta
-  [pred-hm]
   ((comp
     (partial reduce into {})
     (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))}) com/all-cases)))
     (partial map (fn [fun] (eval-fun fun pred-hm))))
    [get-prev get-last]))
 
-(defn last-report [pred-hm] (eval-fun get-last pred-hm))
-
-(defn last-8-reports [pred-hm] (eval-fun (partial take-last 8) pred-hm))
+  [pred-hm json]
+(defn last-report [pred-hm json]
+(defn last-8-reports [pred-hm json] (eval-fun (partial take-last 8) pred-hm json))
 
 (defn create-pred-hm [ccode]
   {:ccode ccode
@@ -300,14 +299,14 @@
 
                  (= ccode (:country_code loc))))})
 
-(defn calc-stats-countries []
+(defn calc-stats-countries [json]
   (map (fn [ccode] (conj {:ccode ccode}
-                        (last-report (create-pred-hm ccode))))
+                        (last-report (create-pred-hm ccode) json)))
        ccc/all-country-codes))
 
-(defn stats-countries [] (cache/from-cache! calc-stats-countries [:stats]))
+(defn stats-countries [json] (cache/from-cache! (fn [] (calc-stats-countries json)) [:stats]))
 
-(defn rank-for-case [rank-kw]
+(defn rank-for-case [rank-kw json]
   (map-indexed
    (fn [idx hm]
      (update-in (select-keys hm [:ccode]) [:rank rank-kw]
@@ -315,21 +314,21 @@
                 (fn [_] (inc idx))))
    (sort-by rank-kw >
             ;; TODO sets and set operations should be used clojure.set/difference
-            (remove (fn [hm] (= (:ccode hm) "ZZ")) (stats-countries)))))
+            (remove (fn [hm] (= (:ccode hm) "ZZ")) (stats-countries json)))))
 
 (defn calc-all-rankings
   "TODO verify ranking for one and zero countries"
-  []
+  [json]
   (map (fn [ccode]
          (apply utc/deep-merge
                 (reduce into []
                         (map (fn [ranking]
                                (filter (fn [hm] (= (:ccode hm) ccode)) ranking))
-                             (utc/transpose (map rank-for-case
+                             (utc/transpose (map (fn [case-kw] (rank-for-case case-kw json))
                                                  com/ranking-cases))))))
        ;; TODO sets and set operations should be used clojure.set/difference
        (remove (fn [ccode] (= ccode "ZZ")) ccc/all-country-codes)))
 
-(defn all-rankings [] (cache/from-cache! calc-all-rankings [:rankings]))
+(defn all-rankings [json] (cache/from-cache! (fn [] (calc-all-rankings json)) [:rankings]))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.expdev07)

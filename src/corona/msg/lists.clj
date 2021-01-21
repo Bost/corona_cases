@@ -3,6 +3,7 @@
 (ns corona.msg.lists
   (:require [clojure.string :as cstr]
             [corona.api.cache :as cache]
+            [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.countries :as ccr]
             [corona.lang :as lang]
@@ -14,7 +15,8 @@
   See also `footer`, `bot-father-edit-cmds`."
   ([case-kw msg-idx prm] (calc-list-countries "calc-list-countries" case-kw msg-idx prm))
   ([fun-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode pred-hm]}]
-   (let [header-txt (msgc/header parse_mode pred-hm)
+   (let [json (data/json-data)
+         header-txt (msgc/header parse_mode pred-hm json)
          spacer " "
          sort-indicator "▴" ;; " " "▲"
          omag-active 7 ;; order of magnitude i.e. number of digits
@@ -73,7 +75,8 @@
   ([case-kw msg-idx prm] (calc-list-per-100k "calc-list-per-100k"
                                              case-kw msg-idx prm))
   ([fun-id case-kw msg-idx {:keys [cnt-msgs cnt-reports data parse_mode pred-hm]}]
-   (let [header-txt (msgc/header parse_mode pred-hm)
+   (let [json (data/json-data)
+         header-txt (msgc/header parse_mode pred-hm json)
          spacer " "
          sort-indicator "▴" ;; " " "▲"
          ;; omag - order of magnitude i.e. number of digits

@@ -139,16 +139,16 @@
      (fatalf "[%s] polling-handlers not created" fun-id))
    (infof "[%s] Starting ... done" fun-id)))
 
-(defn calc-listings [fun case-kws]
+(defn calc-listings [json fun case-kws]
   (run! (fn [case-kw]
-          (let [coll (sort-by case-kw < (data/stats-countries))
+          (let [coll (sort-by case-kw < (data/stats-countries json))
                ;; Split the long list of all countries into smaller sub-parts
                ;; TODO move message partitioning to the corona.msg.lists
                 sub-msgs (partition-all (/ (count coll)
                                            cmd/cnt-messages-in-listing) coll)
                 options {:parse_mode com/html}
                 prm (conj options {:cnt-msgs (count sub-msgs)
-                                   :cnt-reports (count (data/dates (data/json-data)))
+                                   :cnt-reports (count (data/dates json))
                                    :pred-hm (msg/create-pred-hm (ccr/get-country-code ccc/worldwide))})]
             (doall
              (map-indexed (fn [idx sub-msg]
@@ -219,7 +219,7 @@
    ;; full cache cleanup is not really necessary
    #_(swap! cache/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
-     ;; enforce evaluation; can't be done by (force (all-rankings))
+     ;; enforce evaluation; can't be done by (force (all-rankings json))
      (let [new-hash (com/hash-fn (data/json-data))]
        (debugf "[%s] (:json-hash @cache/cache): %s new hash: %s equal: %s"
                fun-id

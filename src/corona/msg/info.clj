@@ -52,7 +52,9 @@
 
 (defn- confirmed-info
   [last-report pred-hm delta max-active-val max-active-date ccode cnt-countries]
-  (let [{deaths          :d
+  (let [fun-id "confirmed-info"
+        json (data/json-data)
+        {deaths          :d
          recove          :r
          active          :a
          active-per-100k :a100k
@@ -64,7 +66,7 @@
          d-rate          :d-rate
          c-rate          :c-rate ;; closed-rate
          } last-report
-        active-last-8-reports (:a (data/last-8-reports pred-hm))
+        active-last-8-reports (:a (data/last-8-reports pred-hm json))
         [active-last-8th-report & active-last-7-reports] active-last-8-reports
         closed (+ deaths recove)
         {delta-deaths :d
@@ -167,7 +169,7 @@
                                 (first
                                  (map :rank
                                       (filter (fn [hm] (= (:ccode hm) ccode))
-                                              (data/all-rankings))))
+                                              (data/all-rankings json))))
                                 (last args))))))]])]))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
@@ -184,14 +186,15 @@
   ([ccode parse_mode pred-hm]
    (create-detailed-info "create-detailed-info" ccode parse_mode pred-hm))
   ([fun-id ccode parse_mode pred-hm]
-   (let [dates (data/dates (data/json-data))
-         last-report (data/last-report pred-hm)
+   (let [json (data/json-data)
+         dates (data/dates json)
+         last-report (data/last-report pred-hm json)
          {vaccinated :v population :p confirmed :c} last-report
-         delta (data/delta pred-hm)
+         delta (data/delta pred-hm json)
          delta-confirmed (:c delta)
          info (format-detailed-info
                (conj
-                {:header-txt (msgc/header parse_mode pred-hm)
+                {:header-txt (msgc/header parse_mode pred-hm json)
                  :cname-aliased-txt (ccr/country-name-aliased ccode)
                  :country-commands-txt (apply (fn [ccode c3code]
                                                 (format "     %s    %s" ccode c3code))
