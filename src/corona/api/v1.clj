@@ -3,7 +3,7 @@
 (ns corona.api.v1
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
-  (:require [corona.api.expdev07 :as srvc]
+  (:require [corona.api.expdev07 :as data]
             [corona.common :as com])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
@@ -17,7 +17,7 @@
     (.setTimeZone sdf (TimeZone/getDefault))
     sdf))
 
-(defn fmt [raw-date] (.parse sdf (srvc/keyname raw-date)))
+(defn fmt [raw-date] (.parse sdf (data/keyname raw-date)))
 
 (defn xf-for-case
   "E.g.
@@ -67,7 +67,7 @@
                   "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ" "IN" "ES" "CO"
                   "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"]
                   (:country_code loc))))
-    (partial get-in (srvc/data-with-pop)))
+    (partial get-in (data/data-with-pop)))
    [case-kw :locations]))
 
 (defn pic-data
