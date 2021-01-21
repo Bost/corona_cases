@@ -182,7 +182,8 @@
   ([ccode parse_mode pred-hm]
    (create-detailed-info "create-detailed-info" ccode parse_mode pred-hm))
   ([fun-id ccode parse_mode pred-hm]
-   (let [last-report (data/last-report pred-hm)
+   (let [dates (data/dates (data/json-data))
+         last-report (data/last-report pred-hm)
          {population :p confirmed :c} last-report
          delta (data/delta pred-hm)
          delta-confirmed (:c delta)
@@ -194,7 +195,7 @@
                                                 (format "     %s    %s" ccode c3code))
                                               (map (comp com/encode-cmd cstr/lower-case)
                                                    [ccode (ccc/country-code-3-letter ccode)]))
-                 :cnt-reports-txt (str lang/report " " (count (data/dates)))
+                 :cnt-reports-txt (str lang/report " " (count dates))
                  :population-txt (format "<code>%s %s</code> = %s %s"
                                          (com/right-pad lang/people " " (- msgc/padding-s 2))
                                          (com/left-pad population " " (+ msgc/padding-n 2))
@@ -208,7 +209,7 @@
                         max-active-val (apply max data-active)]
                     {:details-txt (confirmed-info last-report pred-hm delta
                                                   max-active-val
-                                                  (nth (data/dates)
+                                                  (nth dates
                                                        (last-index-of data-active max-active-val))
                                                   ccode
                                                   (count ccc/all-country-codes))}))))]

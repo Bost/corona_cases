@@ -82,16 +82,16 @@
   ;; 4.040 msecs
   (count rd-cached)
   ;; 1010 items"
-  []
+  [json]
   (cache/from-cache!
    (fn []
      (transduce xform-raw-dates
                 conj []
                 ((comp
-                              ;; at least 2 values needed to calc difference
+                  ;; at least 2 values needed to calc difference
                   #_(partial take-last 4)
                   keys :history last :locations :confirmed)
-                 (json-data))))
+                 json)))
    [:raw-dates]))
 
 (defn population-cnt [ccode]
@@ -108,11 +108,11 @@
 
 (defn date [rd] (.parse date-format (keyname rd)))
 
-(defn dates []
+(defn dates [json]
   ((comp
     (fn [val] (cache/from-cache! (fn [] val) [::dates]))
     (partial map date))
-   (raw-dates)))
+   (raw-dates json)))
 
 (defn population-data [raw-dates]
   ((comp
@@ -130,7 +130,7 @@
                           population-cnt)))))
    ccc/all-country-codes))
 
-(defn corona-data [json raw-dates]
+(defn corona-data [json]
   ((comp
     (partial into {})
     (partial map
@@ -150,7 +150,7 @@
                                         (partial into {})
                                         (partial filter
                                                  (comp
-                                                  (partial utc/in? raw-dates)
+                                                  (partial utc/in? (raw-dates json))
                                                   first))))))
                           ;; here the country_code keyword comes from the json
                        (partial filter
@@ -163,14 +163,14 @@
     keys)
    json))
 
-(defn calc-data-with-pop [json raw-dates]
-  (conj (corona-data json raw-dates)
-        (population-data raw-dates)))
+(defn calc-data-with-pop [json]
+  (conj (corona-data json)
+        (population-data (raw-dates json))))
 
 (defn data-with-pop
   "Data with population numbers."
   []
-  (cache/from-cache! (fn [] (calc-data-with-pop (json-data) (raw-dates)))
+  (cache/from-cache! (fn [] (calc-data-with-pop (json-data)))
                      [:data-with-pop]))
 
 (defn get-last [coll] (first (take-last 1 coll)))
@@ -203,7 +203,7 @@
                        :history))
                  + 0
                  locations)))
-            (raw-dates))))
+            (raw-dates (json-data)))))
    [:sums case-kw ccode]))
 
 (defn calc-case-counts-report-by-report [pred-hm]
@@ -252,7 +252,7 @@
 
 (defn eval-fun
   [fun pred-hm]
-  (into {:t (fun (dates))}
+  (into {:t (fun (dates (json-data)))}
         (map (fn [[k v]] {k (fun v)})
              (case-counts-report-by-report pred-hm))))
 
