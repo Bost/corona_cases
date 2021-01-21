@@ -357,6 +357,11 @@
   [ccode]
   (get country-code-2-to-3-hm ccode))
 
+(defn country-code-2-letter
+  "2-letter country code from 3-letter country code: \"DEU\" -> \"DE\" "
+  [cccode]
+  (get (clojure.set/map-invert country-code-2-to-3-hm) cccode))
+
 (def excluded-country-codes
   "No data provided for this countries in the API service (the json)"
   [
