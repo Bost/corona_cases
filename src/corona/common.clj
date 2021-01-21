@@ -413,6 +413,6 @@
                 free-size (.freeMemory runtime)]
             ((comp
               (partial fmap format-bytes))
-             {:size size :max-size max-size :free-size free-size}))))
+             {:size size :max max-size :free free-size}))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

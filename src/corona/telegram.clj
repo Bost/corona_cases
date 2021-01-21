@@ -53,18 +53,18 @@
   ([cmds] (create-commands "create-commands" cmds))
   ([fun-id cmds]
    (map
-    (fn [{:keys [name fun]}]
-      (->>
-       #_(fn [prm] (fun (-> prm :chat :id)))
-       (fn [{{chat-id :id} :chat}] (fun chat-id))
-       (wrap-in-hooks {:pre (fn [& args]
-                              (let [chat (:chat (first args))]
-                                (infof "[%s] :pre /%s chat %s" fun-id name chat)))
-                       :post (fn [& args]
-                               (let [[fn-result {:keys [chat]}] args]
-                                 (infof "[%s] :post /%s chat %s" fun-id name chat)
-                                 fn-result))})
-       (moh/command-fn name)))
+    (fn [m]
+      (let [{name :name fun :fun} m]
+        ((comp
+          (partial moh/command-fn name)
+          (partial wrap-in-hooks {:pre (fn [& args]
+                                         (let [chat (:chat (first args))]
+                                           (infof "[%s] :pre /%s chat %s" fun-id name chat)))
+                                  :post (fn [& args]
+                                          (let [[fn-result {:keys [chat]}] args]
+                                            (infof "[%s] :post /%s chat %s" fun-id name chat)
+                                            fn-result))}))
+         (fn [m] (fun (:id (:chat m)))))))
     cmds)))
 
 (defn create-callbacks

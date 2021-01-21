@@ -13,8 +13,8 @@
 
 (def ^:const padding-s "Stays constant" (+ 3 9))
 (def ^:const padding-n
-  "Count of digits to display. Increase it when the nr of cases. Increases by an
-  order of magnitude" 8)
+  "Count of digits to display. Increase it when the nr of cases rises. Increases
+  by an order of magnitude" 8)
 
 ;; The worldwide population has 3 commas:
 ;; (count (re-seq #"," (format "%+,2d" 7697236610))) ; => 3

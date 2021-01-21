@@ -277,14 +277,11 @@
 
 (defn delta
   [pred-hm]
-  (->> [get-prev get-last]
-       (map (fn [fun]
-              (eval-fun fun pred-hm)))
-       (apply (fn [prv lst]
-                (map (fn [k]
-                       {k (- (k lst) (k prv))})
-                     com/all-cases)))
-       (reduce into {})))
+  ((comp
+    (partial reduce into {})
+    (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))}) com/all-cases)))
+    (partial map (fn [fun] (eval-fun fun pred-hm))))
+   [get-prev get-last]))
 
 (defn last-report [pred-hm] (eval-fun get-last pred-hm))
 
