@@ -148,7 +148,7 @@
                                            cmd/cnt-messages-in-listing) coll)
                 options {:parse_mode com/html}
                 prm (conj options {:cnt-msgs (count sub-msgs)
-                                   :cnt-reports (count (data/dates))
+                                   :cnt-reports (count (data/dates (data/json-data)))
                                    :pred-hm (msg/create-pred-hm (ccr/get-country-code ccc/worldwide))})]
             (doall
              (map-indexed (fn [idx sub-msg]
@@ -178,14 +178,11 @@
     (run! (fn [prms] (apply calc-listings prms))
           [[msgl/list-countries com/listing-cases-absolute]
            [msgl/list-per-100k com/listing-cases-per-100k]]))
-   (let [stats ((comp
-                 est/estimate)
-                (v1/pic-data))
-         cnt-reports (count (data/dates))
-         form '(< (count (corona.api.expdev07/raw-dates)) 10)]
+   (let [stats (est/estimate (v1/pic-data))
+         cnt-reports (count (data/dates (data/json-data)))]
      ;; TODO do not call calc-functions when the `form` evaluates to true
-     (if (eval form)
-       (warnf "Some stuff may not be calculated: %s" form))
+     (when (< cnt-reports 10)
+       (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
      (doall
       (map-fn (fn [ccode]
                 (msgi/detailed-info ccode com/html
