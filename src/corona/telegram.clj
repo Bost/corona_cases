@@ -7,6 +7,7 @@
   (:gen-class)
   (:require [clojure.core.async :as async]
             [corona.api.expdev07 :as data]
+            [corona.api.vaccination :as vac]
             [corona.api.cache :as cache]
             [corona.api.v1 :as v1]
             [corona.commands :as cmd]
@@ -175,7 +176,9 @@
 (def map-aggregation-fn map #_pmap)
 
 (def json-hash-v1 [:json-hash :v1])
+(def json-hash-owid [:json-hash :owid])
 (def json-v1 [:json :v1])
+(def json-owid [:json :owid])
 
 (defn do-reset-cache!
   ([new-hash tbeg] (do-reset-cache! "do-reset-cache!" new-hash tbeg))
@@ -228,17 +231,28 @@
    #_(swap! cache/cache (fn [_] {}))
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings json))
-     (let [new-hash (com/hash-fn (data/json-data))]
+     (let [new-hash-v1 (com/hash-fn (data/json-data))]
        (debugf "[%s] (get-in @cache/cache json-hash-v1): %s new hash: %s equal: %s"
                fun-id
                (get-in @cache/cache json-hash-v1)
-               new-hash
-               (= (get-in @cache/cache json-hash-v1) new-hash))
-       (when-not (= (get-in @cache/cache json-hash-v1) new-hash)
-         (do-reset-cache! new-hash tbeg))
+               new-hash-v1
+               (= (get-in @cache/cache json-hash-v1) new-hash-v1))
+       (when-not (= (get-in @cache/cache json-hash-v1) new-hash-v1)
+         (do-reset-cache! new-hash-v1 tbeg))
        ;; :json introduced by the (data/json-data)
        (swap! cache/cache (fn [_]
-                            (update-in @cache/cache [:json] dissoc :v1)))))))
+                            (update-in @cache/cache [:json] dissoc :v1))))
+     (let [new-hash-owid (com/hash-fn (vac/json-data))]
+       (debugf "[%s] (get-in @cache/cache json-hash-owid): %s new hash: %s equal: %s"
+               fun-id
+               (get-in @cache/cache json-hash-owid)
+               new-hash-owid
+               (= (get-in @cache/cache json-hash-owid) new-hash-owid))
+       (when-not (= (get-in @cache/cache json-hash-owid) new-hash-owid)
+         (do-reset-cache! new-hash-owid tbeg))
+       ;; :json introduced by the (vac/json-data)
+       (swap! cache/cache (fn [_]
+                            (update-in @cache/cache [:json] dissoc :owid)))))))
 
 (defn start
   "Fetch api service data and only then register the telegram commands."
