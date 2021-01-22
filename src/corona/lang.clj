@@ -18,10 +18,12 @@
 (def ^:const explain         "explain")
 (def ^:const contributors    "contributors")
 (def ^:const feedback        "feedback")
+(def ^:const vacc            "Vacc")
 (def ^:const conf            "Conf")
 (def ^:const confir          "Confir")
 (def ^:const confirmed       "Confirmed")
 (def ^:const confirmed-cases "Confirmed cases")
+(def ^:const vaccinated-cases "Vaccinated cases")
 (def ^:const deaths          "Deaths")
 (def ^:const death-cases     "Death cases")
 (def ^:const recov           "Recov")
@@ -39,8 +41,12 @@
 (def ^:const cmd-recove-per-1e5 (str "r" hundred-k))
 (def ^:const cmd-deaths-per-1e5 (str "d" hundred-k))
 (def ^:const cmd-closed-per-1e5 (str "c" hundred-k))
+(def ^:const cmd-vaccin-per-1e5 (str "v" hundred-k))
 (def ^:const cases-per-1e5 "Cases per 100 000 people")
 
+(def ^:const vaccin-per-1e5
+  "Active cases per 100 000"
+  (str "Vac" hundred-k))
 (def ^:const active-per-1e5
   "Active cases per 100 000"
   (str "Act" hundred-k))
@@ -138,18 +144,18 @@
 
 (defn list-sorted-by [case-kw]
   (lower-case-texts
-   case-kw [conf recov deaths active
+   case-kw [vacc conf recov deaths active
             cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5]))
 
 (defn list-sorted-by-desc [case-kw]
   ((comp
     (partial format "Countries sorted by nr. of %s" #_"... in ascending order")
     (partial lower-case-texts case-kw))
-   [confirmed-cases recovered-cases deaths active-cases
-    active-per-1e5 recove-per-1e5 deaths-per-1e5]))
+   [vaccinated-cases confirmed-cases recovered-cases deaths active-cases
+    cmd-vaccin-per-1e5 active-per-1e5 recove-per-1e5 deaths-per-1e5]))
 
 (def ^:const short-case-name "Shortened case names"
-  (zipmap com/absolute-cases ["Co" "Re" "De" "Ac"]))
+  (zipmap com/absolute-cases ["Va" "Co" "Re" "De" "Ac"]))
 
 (def ^:const aggregations "Aggregations for worldwide graphs"
   (zipmap com/aggregation-cases ["Σ" "A"]))

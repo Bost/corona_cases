@@ -404,7 +404,7 @@
           ((comp
             (fn [s] (str s postfix))
             (partial com/text-for-case case-kw))
-           [lang/confirmed lang/recovered lang/deaths lang/active-cases])
+           [lang/vaccinated lang/confirmed lang/recovered lang/deaths lang/active-cases])
           threshold))
 
 (defn line-stroke [color]
@@ -451,7 +451,7 @@
 (defn calc-aggregation
   [aggregation-kw case-kw stats report]
   ((comp
-    (fn [arr] (com/log-heap-info) arr)
+    (fn [arr] (com/heap-info) arr)
     to-byte-array-auto-closable
     (fn [prms] (apply calc-aggregation-img prms)))
    [aggregation-kw case-kw stats report]))

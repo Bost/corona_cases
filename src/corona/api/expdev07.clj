@@ -44,7 +44,11 @@
           xs))))))
 
 (defn json-data []
-  (cache/from-cache! (fn [] (com/get-json url)) [:json]))
+  (let [ks [:json :v1]]
+    (if (get-in @cache/cache ks)
+      (debugf "[%s] cache-hit %s" "json-data" ks)
+      (debugf "[%s] cache-miss %s" "json-data" ks))
+    (cache/from-cache! (fn [] (com/get-json url)) ks)))
 
 (def xform-raw-dates
   (comp
@@ -141,6 +145,7 @@
                     (comp (partial hash-map :history)
                           (partial zipmap raw-dates)
                           repeat
+                          #_(fn [n] (int (/ n 2)))
                           (fn [n] (int (/ n 10)))
                           population-cnt)))))
    ccc/all-country-codes))
@@ -180,8 +185,10 @@
 
 (defn calc-data-with-pop [json]
   (conj (corona-data json)
-        (vaccination-data (raw-dates json))
-        #_(vac/vaccination-data (raw-dates json))
+        (vac/vaccination-data {:raw-dates-v1
+                               (raw-dates (json-data))
+                               :raw-dates-owid
+                               (vac/raw-dates (vac/json-data))})
         (population-data (raw-dates json))))
 
 (defn data-with-pop
@@ -256,6 +263,7 @@
   "Returns a hash-map containing case-counts report-by-report. E.g.:
   ;; => ;; last 5 values
   {
+   :v (...  545636  545636  545636  545636  545636)
    :p (... 5456362 5456362 5456362 5456362 5456362)
    :c (...    2566    2596    2599    2615    2690)
    :r (...    1861    1864    1866    1874    1884)
@@ -276,14 +284,26 @@
              (case-counts-report-by-report pred-hm))))
 
 (defn delta
-  ((comp
-    (partial reduce into {})
-    (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))}) com/all-cases)))
-    (partial map (fn [fun] (eval-fun fun pred-hm))))
-   [get-prev get-last]))
-
   [pred-hm json]
+  (->> [get-prev get-last]
+       (map (fn [fun]
+              (eval-fun fun pred-hm json)))
+       (apply (fn [prv lst]
+                (map (fn [k]
+                       {k (- (k lst) (k prv))})
+                     com/all-cases)))
+       (reduce into {}))
+  #_((comp
+      (partial reduce into {})
+      (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))}) com/all-cases)))
+      (partial map (fn [fun] (eval-fun fun pred-hm))))
+     [get-prev get-last]))
+
 (defn last-report [pred-hm json]
+  (let [ret (eval-fun get-last pred-hm json)]
+    #_(debugf "[%s] ret %s" "last-report" (select-keys ret [:a-rate :v-rate]))
+    ret))
+
 (defn last-8-reports [pred-hm json] (eval-fun (partial take-last 8) pred-hm json))
 
 (defn create-pred-hm [ccode]

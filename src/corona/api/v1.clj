@@ -4,6 +4,7 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require [corona.api.expdev07 :as data]
+            [taoensso.timbre :as timbre :refer [debugf]]
             [corona.common :as com])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
@@ -81,7 +82,8 @@
   []
   ((comp
     (partial apply map
-             (fn [{:keys [population]}
+             (fn [{:keys [vaccinated]}
+                  {:keys [population]}
                   {:keys [ccode t confirmed]}
                   {:keys [recovered]}
                   {:keys [deaths]}]
@@ -89,6 +91,7 @@
                           :c confirmed
                           :r recovered
                           :d deaths
+                          :v vaccinated
                           :p population
                           :a (com/calculate-activ confirmed recovered deaths)}]
                  (assoc
@@ -97,11 +100,19 @@
                   :a100k  ((com/calculate-cases-per-100k :a) prm)
                   :r100k  ((com/calculate-cases-per-100k :r) prm)
                   :d100k  ((com/calculate-cases-per-100k :d) prm)
-                  :a-rate ((com/calc-rate :a) prm)
+                  :v100k  ((com/calculate-cases-per-100k :v) prm)
+                  :a-rate
+                  (let [ret ((com/calc-rate :a) prm)]
+                    #_(debugf "[%s] :a-rate %s" "pic-data" ret)
+                    ret)
                   :r-rate ((com/calc-rate :r) prm)
                   :d-rate ((com/calc-rate :d) prm)
+                  :v-rate
+                  (let [ret ((com/calc-rate :v) prm)]
+                    #_(debugf "[%s] :v-rate %s" "pic-data" ret)
+                    ret)
                   :c-rate ((com/calc-rate :c) prm)))))
     (partial map xf-for-case))
-   [:population :confirmed :recovered :deaths]))
+   [:vaccinated :population :confirmed :recovered :deaths]))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.v1)

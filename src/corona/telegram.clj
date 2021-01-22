@@ -49,8 +49,8 @@
 ;; https://github.com/camsaul/methodical
 ;; https://github.com/technomancy/robert-hooke
 
-(defn create-commands
-  ([cmds] (create-commands "create-commands" cmds))
+(defn create-cmds
+  ([cmds] (create-cmds "create-cmds" cmds))
   ([fun-id cmds]
    (map
     (fn [m]
@@ -92,7 +92,7 @@
   ([] (create-handlers "create-handlers"))
   ([fun-id]
    (let [callbacks (create-callbacks [msg/worldwide-plots])
-         commands (create-commands cmd/cmds)]
+         commands (create-cmds cmd/cmds)]
      (infof "[%s] registering %s chatbot commands and %s callbacks ..."
             fun-id (count commands) (count callbacks))
      (into callbacks commands))))
@@ -111,14 +111,16 @@
   ([fun-id token handler]
    (let [opts {}
          channel (async/chan)]
-     (debugf "[%s] Started channel %s" fun-id channel)
+     (debugf "[%s] Started channel %s" fun-id (com/log-obj channel))
      (let [producer (mop/create-producer channel token opts api-error-handler)]
-       (infof "[%s] Created producer %s on channel %s" fun-id producer channel)
+       (infof "[%s] Created producer %s on channel %s"
+              fun-id (com/log-obj producer) (com/log-obj channel))
        #_(debugf "[%s] Creating consumer for produced %s with handler %s ..."
                  fun-id producer handler)
        (let [consumer (mop/create-consumer producer handler)]
          (infof "[%s] Created consumer %s for producer %s with handler %s"
-                fun-id consumer producer handler)
+                fun-id (com/log-obj consumer) (com/log-obj producer)
+                (com/log-obj handler))
          channel)))))
 
 (defn long-polling
@@ -128,12 +130,14 @@
    (infof "[%s] Starting ..." fun-id)
    (if-let [polling-handlers (apply moh/handlers (create-handlers))]
      (do
-       (debugf "[%s] Created polling-handlers %s" fun-id polling-handlers)
+       (debugf "[%s] Created polling-handlers %s"
+               fun-id (com/log-obj polling-handlers))
        (let [port (start-polling tgram-token polling-handlers)]
          (swap! telegram-port (fn [_] port))
          (let [retval-async<!! (async/<!! port)]
            (warnf "[%s] Taking vals on port %s stopped with retval-async<! %s"
-                  fun-id port (if-let [v retval-async<!!] v "nil"))
+                  fun-id
+                  (com/log-obj port) (if-let [v retval-async<!!] v "nil"))
            (fatalf "[%s] Further requests may NOT be answered!!!" fun-id)
            (api-error-handler))))
      (fatalf "[%s] polling-handlers not created" fun-id))
@@ -170,39 +174,43 @@
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)
 
+(def json-hash-v1 [:json-hash :v1])
+(def json-v1 [:json :v1])
+
 (defn do-reset-cache!
   ([new-hash tbeg] (do-reset-cache! "do-reset-cache!" new-hash tbeg))
   ([fun-id new-hash tbeg]
-   (swap! cache/cache update-in [:json-hash] (fn [_] new-hash))
-   (doall
-    (run! (fn [prms] (apply calc-listings prms))
-          [[msgl/list-countries com/listing-cases-absolute]
-           [msgl/list-per-100k com/listing-cases-per-100k]]))
-   (let [stats (est/estimate (v1/pic-data))
-         cnt-reports (count (data/dates (data/json-data)))]
+   (swap! cache/cache update-in json-hash-v1 (fn [_] new-hash))
+   (let [json (data/json-data)]
+     (doall
+      (run! (fn [prms] (apply (partial calc-listings json) prms))
+            [[msgl/list-countries com/listing-cases-absolute]
+             [msgl/list-per-100k com/listing-cases-per-100k]]))
+     (let [stats (est/estimate (v1/pic-data))
+           cnt-reports (count (data/dates json))]
      ;; TODO do not call calc-functions when the `form` evaluates to true
-     (when (< cnt-reports 10)
-       (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
-     (doall
-      (map-fn (fn [ccode]
-                (msgi/detailed-info ccode com/html
-                                    (data/create-pred-hm ccode))
-                (plot/plot-country ccode stats cnt-reports))
-              ccc/all-country-codes))
-     (com/log-heap-info)
-     (Thread/sleep 100)
-     (System/gc) ;; also (.gc (Runtime/getRuntime))
-     (com/log-heap-info)
-     (doall
-      (map-aggregation-fn
-       (fn [aggregation-kw]
+       (when (< cnt-reports 10)
+         (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
+       (doall
+        (map-fn (fn [ccode]
+                  (msgi/detailed-info ccode com/html
+                                      (data/create-pred-hm ccode))
+                  (plot/plot-country ccode stats cnt-reports))
+                ccc/all-country-codes))
+       (com/heap-info)
+       (Thread/sleep 100)
+       (System/gc) ;; also (.gc (Runtime/getRuntime))
+       (com/heap-info)
+       (doall
+        (map-aggregation-fn
+         (fn [aggregation-kw]
          ;; TODO delete picture from telegram servers
-         (doall
-          (map-aggregation-fn
-           (fn [case-kw]
-             (plot/plot-aggregation new-hash aggregation-kw case-kw stats cnt-reports))
-           com/absolute-cases)))
-       com/aggregation-cases)))
+           (doall
+            (map-aggregation-fn
+             (fn [case-kw]
+               (plot/plot-aggregation new-hash aggregation-kw case-kw stats cnt-reports))
+             com/absolute-cases)))
+         com/aggregation-cases))))
    ;; discard the intermediary results, i.e. keep only those items in the
    ;; cache which contain the final results.
    (swap! cache/cache
@@ -221,15 +229,16 @@
    (let [tbeg (System/currentTimeMillis)]
      ;; enforce evaluation; can't be done by (force (all-rankings json))
      (let [new-hash (com/hash-fn (data/json-data))]
-       (debugf "[%s] (:json-hash @cache/cache): %s new hash: %s equal: %s"
+       (debugf "[%s] (get-in @cache/cache json-hash-v1): %s new hash: %s equal: %s"
                fun-id
-               (get-in @cache/cache [:json-hash])
+               (get-in @cache/cache json-hash-v1)
                new-hash
-               (= (get-in @cache/cache [:json-hash]) new-hash))
-       (when-not (= (get-in @cache/cache [:json-hash]) new-hash)
+               (= (get-in @cache/cache json-hash-v1) new-hash))
+       (when-not (= (get-in @cache/cache json-hash-v1) new-hash)
          (do-reset-cache! new-hash tbeg))
        ;; :json introduced by the (data/json-data)
-       (swap! cache/cache (fn [_] (dissoc @cache/cache :json)))))))
+       (swap! cache/cache (fn [_]
+                            (update-in @cache/cache [:json] dissoc :v1)))))))
 
 (defn start
   "Fetch api service data and only then register the telegram commands."

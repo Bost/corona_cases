@@ -119,15 +119,19 @@
    confirmed deaths))
 
 (defn calc-rate [case-kw]
-  (fn [{:keys [v a d r c]}]
-    (utn/percentage
-     (case case-kw
-       :v v
-       :a a
-       :r r
-       :d d
-       :c (+ d r))
-     c)))
+  (fn [{:keys [v p c r d a] :as prm}]
+    (let [ret (case case-kw
+                :v (utn/percentage v p)
+                (utn/percentage
+                 (case case-kw
+                   :a a
+                   :r r
+                   :d d
+                   :c (+ d r))
+                 c))]
+      #_(when (utc/in? [:a :v] case-kw)
+        (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
+      ret)))
 
 (defn per-1e5
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
@@ -267,67 +271,71 @@
   `(->> ~coll ~@fns)
   #_`(sequence (eduction ~@fns ~coll)))
 
-(def ^:const case-params
+(def case-params
   ":idx - defines an order in appearance
+  :v ~ vaccinated
   :p ~ population
   :c ~ closed cased
   :r ~ recovered cased
   :d ~ deaths
   :a ~ active cases i.e. ill"
-  [{:idx -1 :kw :v                :threshold {:inc (int 1e6) :val (int 1e7)}}
-   {:idx  0 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
-   {:idx  1 :kw :c                :threshold {:inc 50000     :val (int 2110e3)}}
-   {:idx  2 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 1257e3)}}
-   {:idx  3 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 55e3)}}
-   {:idx  4 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 669e3)}}
-   {:idx  5 :kw :a100k}
-   {:idx  6 :kw :r100k}
-   {:idx  7 :kw :d100k}
-   {:idx  8 :kw :c100k}
+  [{:idx  0 :kw :v                :threshold {:inc (int 1e6) :val (int 1e7)}}
+   {:idx  1 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
+   {:idx  2 :kw :c                :threshold {:inc 50000     :val (int 2110e3)}}
+   {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 1257e3)}}
+   {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 55e3)}}
+   {:idx  5 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 669e3)}}
+   {:idx  6 :kw :a100k}
+   {:idx  7 :kw :r100k}
+   {:idx  8 :kw :d100k}
+   {:idx  9 :kw :c100k}
+   {:idx 10 :kw :v100k}
 
-   {:idx  9 :kw :a-rate}
-   {:idx 10 :kw :r-rate}
-   {:idx 11 :kw :d-rate}
-   {:idx 12 :kw :c-rate} ;; closed-rate
+   ;; The order of the following maps must be the same as in the info-message
+   {:idx 11 :kw :v-rate}
+   {:idx 12 :kw :a-rate}
+   {:idx 13 :kw :r-rate}
+   {:idx 14 :kw :d-rate}
+   {:idx 15 :kw :c-rate} ;; closed-rate
    ])
 
-(def ^:const aggregation-params
+(def aggregation-params
   ":idx - defines an order in appearance"
   [
    {:idx  0 :kw :sum}
    {:idx  1 :kw :abs}
    ])
 
-(def ^:const aggregation-cases
+(def aggregation-cases
   (tore aggregation-params
         (filter (fn [m] (utc/in? [0 1] (:idx m))))
         (map :kw)))
 
-(def ^:const absolute-cases
+(def absolute-cases
   (tore case-params
-        (filter (fn [m] (utc/in? [1 2 3 4] (:idx m))))
+        (filter (fn [m] (utc/in? [2 3 4 5] (:idx m))))
         (map :kw)))
 
-(def ^:const basic-cases
+(def basic-cases
   (tore case-params
-        (filter (fn [m] (utc/in? [1 2 3 4 5 6 7 8] (:idx m))))
+        (filter (fn [m] (utc/in? [2 3 4 5 6 7 8 9] (:idx m))))
         (map :kw)))
 
-(def ^:const all-cases
+(def all-cases
   (tore case-params
         (map :kw)))
 
-(def ^:const ranking-cases [:p :c100k :r100k :d100k :a100k])
+(def ranking-cases [:p :c100k :r100k :d100k :a100k :v100k])
 
-(def ^:const listing-cases-per-100k
+(def listing-cases-per-100k
   "No listing of :c100k - Closed cases per 100k"
   (tore case-params
-        (filter (fn [m] (utc/in? [5 6 7] (:idx m))))
+        (filter (fn [m] (utc/in? [5 6 7 8] (:idx m))))
         (map :kw)))
 
-(def ^:const listing-cases-absolute
+(def listing-cases-absolute
   (->> case-params
-       (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
+       (filter (fn [m] (utc/in? [0 1 2 3] (:listing-idx m))))
        (sort-by :listing-idx)
        (map :kw)))
 
@@ -335,6 +343,14 @@
   (fn [date]
     (ctf/unparse (ctf/with-zone (ctf/formatter fmts) (ctime/default-time-zone))
                  (ctc/from-date date))))
+
+;; "Convert 2021-01-15 -> 1/15/20"
+(def fmt-vaccination-date
+  "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
+            \"4/26/20\"))"
+  (fmt-date-fun
+   "M/dd/yy"
+   #_"dd MMM yy"))
 
 (def fmt-date
   "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
@@ -394,10 +410,10 @@
   [f m]
   (into (empty m) (for [[k v] m] [k (f v)])))
 
-(defn log-heap-info
+(defn heap-info
   "See https://github.com/metrics-clojure/metrics-clojure"
   []
-  (debugf "[%s] heap %s" "log-heap-info"
+  (debugf "[%s] heap %s" "heap-info"
           (let [runtime (Runtime/getRuntime)
                     ;; current size of heap in bytes
                 size (.totalMemory runtime)
@@ -414,5 +430,12 @@
             ((comp
               (partial fmap format-bytes))
              {:size size :max max-size :free free-size}))))
+
+#_(def obj "clojure.core.async.impl.channels.ManyToManyChannel@490f97e1")
+#_(def obj "morse.handlers$handlers$fn__65503@5fbc0011")
+
+(defn log-obj [obj]
+  (let [sobj (str obj)]
+    (subs sobj (.indexOf sobj "@"))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

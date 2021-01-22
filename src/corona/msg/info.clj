@@ -57,24 +57,29 @@
         {deaths          :d
          recove          :r
          active          :a
+         vaccin          :v
          active-per-100k :a100k
          recove-per-100k :r100k
          deaths-per-100k :d100k
          closed-per-100k :c100k
+         vaccin-per-100k :v100k
          a-rate          :a-rate
          r-rate          :r-rate
          d-rate          :d-rate
          c-rate          :c-rate ;; closed-rate
-         } last-report
+         v-rate          :v-rate} last-report
         active-last-8-reports (:a (data/last-8-reports pred-hm json))
         [active-last-8th-report & active-last-7-reports] active-last-8-reports
         closed (+ deaths recove)
         {delta-deaths :d
          delta-recove :r
          delta-active :a
+         delta-vaccin :v
          delta-d100k  :d100k
          delta-r100k  :r100k
-         delta-a100k  :a100k} delta
+         delta-a100k  :a100k
+         delta-v100k  :v100k}
+        delta
         delta-closed (+ delta-deaths delta-recove)
         active-last-7-avg (-> active-last-7-reports istats/mean round-nr)
 
@@ -91,7 +96,14 @@
         ;; = (active(t0) - active(t0-7d)) / 7
         active-change-last-7-avg (-> (/ (- active active-last-8th-report) 7.0)
                                      round-nr #_plus-minus)]
-    [["%s\n" [(msgc/fmt-to-cols
+    [
+     #_["%s\n" [(msgc/fmt-to-cols
+                 {:emoji "💉" :s lang/vaccinated :n vaccin
+                  :diff delta-vaccin :rate v-rate})]]
+     #_["%s\n" [(msgc/fmt-to-cols
+                 {:s lang/vaccin-per-1e5 :n vaccin-per-100k
+                  :diff delta-v100k})]]
+     ["%s\n" [(msgc/fmt-to-cols
                {:emoji "🤒" :s lang/active :n active
                 :diff delta-active :rate a-rate})]]
      ["%s\n" [(msgc/fmt-to-cols
@@ -192,6 +204,7 @@
          {vaccinated :v population :p confirmed :c} last-report
          delta (data/delta pred-hm json)
          delta-confirmed (:c delta)
+         ;; delta-vaccinated (:v delta)
          info (format-detailed-info
                (conj
                 {:header-txt (msgc/header parse_mode pred-hm json)
@@ -201,15 +214,15 @@
                                               (map (comp com/encode-cmd cstr/lower-case)
                                                    [ccode (ccc/country-code-3-letter ccode)]))
                  :cnt-reports-txt (str lang/report " " (count dates))
-                 :vaccinated-txt (format "<code>%s %s</code> = %s %s"
-                                         (com/right-pad lang/vaccinated " " (- msgc/padding-s 2))
-                                         (com/left-pad vaccinated " " (+ msgc/padding-n 2))
-                                         (utn/round-div-precision vaccinated 1e6 1)
-                                         lang/millions-rounded)
                  :population-txt (format "<code>%s %s</code> = %s %s"
-                                         (com/right-pad lang/people " " (- msgc/padding-s 2))
+                                         (com/right-pad lang/people " " (- msgc/padding-s 3))
                                          (com/left-pad population " " (+ msgc/padding-n 2))
                                          (utn/round-div-precision population 1e6 1)
+                                         lang/millions-rounded)
+                 :vaccinated-txt (format "<code>%s %s</code> = %s %s"
+                                         (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
+                                         (com/left-pad vaccinated " " (+ msgc/padding-n 2))
+                                         (utn/round-div-precision vaccinated 1e6 1)
                                          lang/millions-rounded)
                  :confirmed-txt (msgc/fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
                                                    :diff delta-confirmed})
@@ -217,7 +230,9 @@
                 (when (pos? confirmed)
                   (let [data-active (:a (data/case-counts-report-by-report pred-hm))
                         max-active-val (apply max data-active)]
-                    {:details-txt (confirmed-info last-report pred-hm delta
+                    {:details-txt (confirmed-info last-report
+                                                  pred-hm
+                                                  delta
                                                   max-active-val
                                                   (nth dates
                                                        (last-index-of data-active max-active-val))
@@ -230,10 +245,10 @@
 (defn detailed-info
   [ccode & [parse_mode pred-hm]]
   (let [ks [:msg (keyword ccode)]]
-    (if (and parse_mode pred-hm)
-      (cache/cache! (fn [] (create-detailed-info ccode parse_mode pred-hm))
-                   ks)
-      (get-in @cache/cache ks))))
+      (if (and parse_mode pred-hm)
+        (cache/cache! (fn [] (create-detailed-info ccode parse_mode pred-hm))
+                      ks)
+        (get-in @cache/cache ks))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.info)
 
