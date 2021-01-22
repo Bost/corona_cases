@@ -7,6 +7,7 @@
    [corona.country-codes :as ccc]
    [corona.api.vaccination :as vac]
    [utils.core :as utc]
+   [clojure.stacktrace]
    [taoensso.timbre :as timbre :refer [debugf infof
                                        warnf
                                        errorf
@@ -44,10 +45,10 @@
           xs))))))
 
 (defn json-data []
-  (let [ks [:json :v1]]
-    (if (get-in @cache/cache ks)
-      (debugf "[%s] cache-hit %s" "json-data" ks)
-      (debugf "[%s] cache-miss %s" "json-data" ks))
+  (let [ks [:v1 :json]]
+    (when-not (get-in @cache/cache ks)
+      (debugf "[%s] cache-miss %s;" "json-data" ks)
+      #_(clojure.stacktrace/print-stack-trace (Exception.)))
     (cache/from-cache! (fn [] (com/get-json url)) ks)))
 
 (def xform-raw-dates
@@ -71,7 +72,7 @@
 ;; TODO raw-dates should have json-data as a param
 (defn raw-dates
   "Size:
-  (apply + (map (fn [rd] (count (str rd))) (get-in @cache [:raw-dates])))
+  (apply + (map (fn [rd] (count (str rd))) (get-in @cache [:v1 :raw-dates])))
   ;; 2042 chars
 
   (time ...) measurement:
@@ -94,7 +95,7 @@
                   #_(partial take-last 4)
                   keys :history last :locations :confirmed)
                  json)))
-   [:raw-dates]))
+   [:v1 :raw-dates]))
 
 (defn population-cnt [ccode]
   (or (get ccr/population ccode)
@@ -112,7 +113,7 @@
 
 (defn dates [json]
   ((comp
-    (fn [val] (cache/from-cache! (fn [] val) [:dates]))
+    (fn [val] (cache/from-cache! (fn [] val) [:v1 :dates]))
     (partial map date))
    (raw-dates json)))
 
@@ -184,12 +185,11 @@
    json))
 
 (defn calc-data-with-pop [json]
-  (conj (corona-data json)
-        (vac/vaccination-data {:raw-dates-v1
-                               (raw-dates (json-data))
-                               :raw-dates-owid
-                               (vac/raw-dates (vac/json-data))})
-        (population-data (raw-dates json))))
+  (let [raw-dates (raw-dates json)]
+    (conj (corona-data json)
+          (vac/vaccination-data {:raw-dates-v1 raw-dates
+                                 :json-owid (vac/json-data)})
+          (population-data raw-dates))))
 
 (defn data-with-pop
   "Data with population numbers."

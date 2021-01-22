@@ -2,6 +2,7 @@
 
 (ns corona.api.cache
   (:require
+   [clojure.string :as cstr]
    [clojure.spec.alpha :as spec]))
 
 (defonce cache (atom {}))
@@ -31,5 +32,12 @@
   (if-let [v (get-in @cache ks)]
     v
     (cache! fun ks)))
+
+(defn aggregation-hash
+  "TODO aggregation-hash should not be here"
+  []
+  (cstr/join "-"
+             [(get-in @cache (conj [:v1]   :json-hash))
+              (get-in @cache (conj [:owid] :json-hash))]))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.cache)

@@ -32,6 +32,7 @@
      cnt-reports-txt
      population-txt
      vaccinated-txt
+     vaccinated-last-7
      confirmed-txt
      footer-txt
      details-txt]}]
@@ -44,6 +45,7 @@
     ["%s\n" [(msgc/format-linewise (apply conj
                                           [["%s\n" [population-txt]]
                                            ["%s\n" [vaccinated-txt]]
+                                           ["%s\n\n" [vaccinated-last-7]]
                                            ["%s\n" [confirmed-txt]]]
                                           details-txt))]]
     ["%s\n" [footer-txt]]]))
@@ -68,8 +70,11 @@
          d-rate          :d-rate
          c-rate          :c-rate ;; closed-rate
          v-rate          :v-rate} last-report
-        active-last-8-reports (:a (data/last-8-reports pred-hm json))
+
+        {vaccin-last-8-reports :v active-last-8-reports :a} (data/last-8-reports pred-hm json)
+        [_                      & vaccin-last-7-reports] vaccin-last-8-reports
         [active-last-8th-report & active-last-7-reports] active-last-8-reports
+
         closed (+ deaths recove)
         {delta-deaths :d
          delta-recove :r
@@ -155,12 +160,13 @@
                   ;; TODO create command lang/cmd-closed-per-1e5
                   #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})]]
      ["%s\n" [(format
-               #_"%s\n%s"
                "<code>%s</code>\n%s"
-               #_"<code>%s\n%s</code>" lang/active-last-7
+               (let [emoji "🤒🗓"
+                     s lang/active-last-7]
+                 (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank s)
+                                msgc/blank msgc/padding-s))
                (utc/sjoin active-last-7-reports))]]
-
-               ;; no country ranking can be displayed for worldwide statistics
+     ;; no country ranking can be displayed for worldwide statistics
      (if (msgc/worldwide? ccode)
        ["" [""]]
        ["\n%s"
@@ -201,10 +207,20 @@
    (let [json (data/json-data)
          dates (data/dates json)
          last-report (data/last-report pred-hm json)
-         {vaccinated :v population :p confirmed :c} last-report
+         {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
          delta (data/delta pred-hm json)
          delta-confirmed (:c delta)
+
+         {vaccin-last-8-reports :v} (data/last-8-reports pred-hm json)
+         [_                      & vaccin-last-7-reports] vaccin-last-8-reports
+
+         vaccin-last-7-reports-with-rate (map (fn [v] (format "%s=%s%s"
+                                                             v
+                                                             (utn/percentage v population)
+                                                             msgc/percent))
+                                              vaccin-last-7-reports)
          ;; delta-vaccinated (:v delta)
+
          info (format-detailed-info
                (conj
                 {:header-txt (msgc/header parse_mode pred-hm json)
@@ -219,11 +235,21 @@
                                          (com/left-pad population " " (+ msgc/padding-n 2))
                                          (utn/round-div-precision population 1e6 1)
                                          lang/millions-rounded)
-                 :vaccinated-txt (format "<code>%s %s</code> = %s %s"
+                 :vaccinated-txt (format "<code>%s %s %s%s</code> %s"
                                          (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
                                          (com/left-pad vaccinated " " (+ msgc/padding-n 2))
-                                         (utn/round-div-precision vaccinated 1e6 1)
-                                         lang/millions-rounded)
+                                         v-rate
+                                         msgc/percent
+                                         (if (zero? vaccinated) lang/missing-vaccin-data ""))
+                 :vaccinated-last-7
+                 (format
+                  "<code>%s</code>\n%s"
+                  (let [emoji "💉🗓"
+                        s lang/vaccin-last-7]
+                    (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank s)
+                                   msgc/blank msgc/padding-s))
+                  (utc/sjoin vaccin-last-7-reports-with-rate))
+
                  :confirmed-txt (msgc/fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
                                                    :diff delta-confirmed})
                  :footer-txt (msgc/footer parse_mode)}
@@ -251,5 +277,3 @@
         (get-in @cache/cache ks))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.info)
-
-

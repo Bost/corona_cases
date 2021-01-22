@@ -88,6 +88,13 @@
   "Active cases in last 7 reports"
   "ActL7")
 
+(def ^:const vaccin-last-7
+  "Vaccinated in last 7 reports"
+  "VacL7")
+
+(def ^:const missing-vaccin-data
+  (format "No data for today. See <code>%s</code>:" vaccin-last-7))
+
 (def ^:const active-last-7-med
   "Active cases in last 7 reports - simple moving Median rounded"
   (str active-last-7 "Med"))
@@ -155,7 +162,7 @@
     cmd-vaccin-per-1e5 active-per-1e5 recove-per-1e5 deaths-per-1e5]))
 
 (def ^:const short-case-name "Shortened case names"
-  (zipmap com/absolute-cases ["Va" "Co" "Re" "De" "Ac"]))
+  (zipmap com/absolute-cases ["Co" "Re" "De" "Ac"]))
 
 (def ^:const aggregations "Aggregations for worldwide graphs"
   (zipmap com/aggregation-cases ["Σ" "A"]))

@@ -1,11 +1,12 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.api.vaccination)
 
 (ns corona.api.vaccination
-  (:require [corona.api.cache :as cache]
+  (:require clojure.stacktrace
+            [corona.api.cache :as cache]
             [corona.common :as com]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
-            [taoensso.timbre :as timbre :refer [errorf debugf]])
+            [taoensso.timbre :as timbre :refer [debugf]])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
@@ -13,10 +14,10 @@
   "https://covid.ourworldindata.org/data/owid-covid-data.json")
 
 (defn json-data []
-  (let [ks [:json :owid]]
-    (if (get-in @cache/cache ks)
-      (debugf "[%s] cache-hit %s" "json-data" ks)
-      (debugf "[%s] cache-miss %s" "json-data" ks))
+  (let [ks [:owid :json]]
+    (when-not (get-in @cache/cache ks)
+      (debugf "[%s] cache-miss %s;" "json-data" ks)
+      #_(clojure.stacktrace/print-stack-trace (Exception.)))
     (cache/from-cache! (fn [] (com/get-json url)) ks)))
 
 #_(defn population-cnt [ccode])
@@ -31,15 +32,13 @@
 
 (defn raw-dates [json]
   ((comp
-    ;; (fn [val] (cache/from-cache! (fn [] val) [:vacc :dates]))
     #_(partial take-last 4)
     (partial map :date)
     (fn [m] (get-in m [:ITA :data])))
-   (json-data)))
+   json))
 
 (defn dates [raw-dates]
   ((comp
-    ;; (fn [val] (cache/from-cache! (fn [] val) [:vacc :dates]))
     #_(partial take-last 4)
     (partial map date))
    raw-dates))
@@ -54,9 +53,8 @@
     (fn [s] (.parse date-format s)))
    s))
 
-(defn vaccination [raw-dates ccode]
+(defn vaccination [json ccode]
   ((comp
-    #_(fn [val] (cache/from-cache! (fn [] val) [:vacc :vacc]))
     (partial reduce merge)
     (partial map (fn [m]
                    ((comp
@@ -73,14 +71,14 @@
           (get ccode-map :data)
           (let [default
                 #_{kw-ccode {:data (mapv (fn [rd] {:date rd}) raw-dates)}}
-                (mapv (fn [rd] {:date rd}) raw-dates)]
+                (mapv (fn [rd] {:date rd}) (raw-dates json))]
             #_(errorf "ccode %s not found in json; using %s"
                       ccode
                       default)
             default)))))
-   (json-data)))
+   json))
 
-(defn vaccination-data [{:keys [raw-dates-v1 raw-dates-owid]}]
+(defn vaccination-data [{:keys [raw-dates-v1 json-owid]}]
   ((comp
     (partial hash-map :vaccinated)
     (partial hash-map :locations)
@@ -94,7 +92,7 @@
                (comp
                 (partial hash-map :history)
                 (partial merge (zipmap raw-dates-v1 (cycle [0])))
-                (partial vaccination raw-dates-owid)
+                (partial vaccination json-owid)
                 #_(partial zipmap raw-dates-v1)
                 #_cycle
                 #_(fn [_] [245 2350 9822 18554 21775 22411 27371 32293 43317 49488 57226 59930 60302 71982 72060]))))))

@@ -81,7 +81,7 @@
          message-id (:message_id message)
          options (reply-markup-btns {:chat-id chat-id :ccode ccode
                                      :message_id message-id})
-         id (get-in @cache/cache [:json-hash])]
+         id (cache/aggregation-hash)]
      (let [msg (doall
                 (if com/use-webhook?
                   (edit-media com/telegram-token chat-id message-id options
@@ -146,10 +146,14 @@
                 "  %s\n")
            lang/active-last-7
            (:doc (meta #'lang/active-last-7)))
-   #_(format (str "• %s:\n"
+   (format (str "• %s:\n"
                 "  %s\n")
-           lang/active-last-7-med
-           (:doc (meta #'lang/active-last-7-med)))
+           lang/vaccin-last-7
+           (:doc (meta #'lang/vaccin-last-7)))
+   #_(format (str "• %s:\n"
+                  "  %s\n")
+             lang/active-last-7-med
+             (:doc (meta #'lang/active-last-7-med)))
    (format (str "• %s:\n"
                 "  %s\n")
            lang/active-last-7-avg

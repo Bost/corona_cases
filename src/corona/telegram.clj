@@ -175,15 +175,9 @@
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)
 
-(def json-hash-v1 [:json-hash :v1])
-(def json-hash-owid [:json-hash :owid])
-(def json-v1 [:json :v1])
-(def json-owid [:json :owid])
-
-(defn do-reset-cache!
-  ([new-hash tbeg] (do-reset-cache! "do-reset-cache!" new-hash tbeg))
-  ([fun-id new-hash tbeg]
-   (swap! cache/cache update-in json-hash-v1 (fn [_] new-hash))
+(defn calc-cache!
+  ([aggegation-hash] (calc-cache! "calc-cache!" aggegation-hash))
+  ([fun-id aggegation-hash]
    (let [json (data/json-data)]
      (doall
       (run! (fn [prms] (apply (partial calc-listings json) prms))
@@ -211,48 +205,55 @@
            (doall
             (map-aggregation-fn
              (fn [case-kw]
-               (plot/plot-aggregation new-hash aggregation-kw case-kw stats cnt-reports))
+               (plot/plot-aggregation aggegation-hash aggregation-kw case-kw stats cnt-reports))
              com/absolute-cases)))
-         com/aggregation-cases))))
-   ;; discard the intermediary results, i.e. keep only those items in the
-   ;; cache which contain the final results.
-   (swap! cache/cache
-          (fn [_] (select-keys
-                   @cache/cache [:json-hash :plot :msg :list :threshold])))
-   (debugf "[%s] %s chars cached in %s ms"
-           fun-id
-           (com/measure @cache/cache)
-           ((comp count str) @cache/cache) (- (System/currentTimeMillis) tbeg))))
+         com/aggregation-cases))))))
+
+(defn- json-changed!
+  ([m] (json-changed! "json-changed!" m))
+  ([fun-id {:keys [json-fn cache-storage] :as m}]
+   (debugf "[%s] %s" fun-id m)
+   ;; TODO spec: cache-storage must be vector; json-fns must be function
+   (let [hash-kws (conj cache-storage :json-hash)
+         new-hash (com/hash-fn (json-fn))  ;; (json-fn) also stores the json-data in the cache
+         hashes-changed (not= (get-in @cache/cache hash-kws)
+                              new-hash)]
+     (debugf "[%s] %s; hashes-changed: %s" fun-id cache-storage hashes-changed)
+     (when hashes-changed
+       (swap! cache/cache update-in hash-kws (fn [_] new-hash)))
+     hashes-changed)))
 
 (defn reset-cache!
   ([] (reset-cache! "reset-cache!"))
   ([fun-id]
    ;; full cache cleanup is not really necessary
    #_(swap! cache/cache (fn [_] {}))
-   (let [tbeg (System/currentTimeMillis)]
-     ;; enforce evaluation; can't be done by (force (all-rankings json))
-     (let [new-hash-v1 (com/hash-fn (data/json-data))]
-       (debugf "[%s] (get-in @cache/cache json-hash-v1): %s new hash: %s equal: %s"
+   (let [tbeg (System/currentTimeMillis)
+         any-json-changed ((comp
+                            boolean
+                            (partial some true?)
+                            (partial pmap json-changed!))
+                           [{:json-fn data/json-data :cache-storage [:v1]}
+                            {:json-fn vac/json-data  :cache-storage [:owid]}])]
+     (debugf "[%s] any-json-changed %s" fun-id any-json-changed)
+     (when any-json-changed
+       (calc-cache! (cache/aggregation-hash))
+       ;; discard the intermediary results, i.e. keep only those items in the
+       ;; cache which contain the final results.
+       (swap! cache/cache
+              (fn [_]
+                (conj
+                 {:v1   {:json-hash (get-in @cache/cache [:v1   :json-hash])}}
+                 {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
+                 (select-keys
+                  @cache/cache [:plot :msg :list :threshold]))))
+       (debugf "[%s] %s bytes recalculated and cached in %s ms"
                fun-id
-               (get-in @cache/cache json-hash-v1)
-               new-hash-v1
-               (= (get-in @cache/cache json-hash-v1) new-hash-v1))
-       (when-not (= (get-in @cache/cache json-hash-v1) new-hash-v1)
-         (do-reset-cache! new-hash-v1 tbeg))
-       ;; :json introduced by the (data/json-data)
-       (swap! cache/cache (fn [_]
-                            (update-in @cache/cache [:json] dissoc :v1))))
-     (let [new-hash-owid (com/hash-fn (vac/json-data))]
-       (debugf "[%s] (get-in @cache/cache json-hash-owid): %s new hash: %s equal: %s"
-               fun-id
-               (get-in @cache/cache json-hash-owid)
-               new-hash-owid
-               (= (get-in @cache/cache json-hash-owid) new-hash-owid))
-       (when-not (= (get-in @cache/cache json-hash-owid) new-hash-owid)
-         (do-reset-cache! new-hash-owid tbeg))
-       ;; :json introduced by the (vac/json-data)
-       (swap! cache/cache (fn [_]
-                            (update-in @cache/cache [:json] dissoc :owid)))))))
+               (com/measure @cache/cache)
+               ((comp count str) @cache/cache) (- (System/currentTimeMillis) tbeg)))
+
+     (swap! cache/cache update-in [:v1]   dissoc :json)
+     (swap! cache/cache update-in [:owid] dissoc :json))))
 
 (defn start
   "Fetch api service data and only then register the telegram commands."
