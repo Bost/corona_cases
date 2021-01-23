@@ -281,9 +281,9 @@
   :a ~ active cases i.e. ill"
   [{:idx  0 :kw :v                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  1 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
-   {:idx  2 :kw :c                :threshold {:inc 50000     :val (int 2110e3)}}
-   {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 1257e3)}}
-   {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 55e3)}}
+   {:idx  2 :kw :c                :threshold {:inc 50000     :val (int 2160e3)}}
+   {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 1297e3)}}
+   {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 56e3)}}
    {:idx  5 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 669e3)}}
    ;; TODO the order matters: it must be the same as in the info-message
    {:idx  6 :kw :v100k}
