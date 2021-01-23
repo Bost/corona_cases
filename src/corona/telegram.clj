@@ -176,38 +176,39 @@
 (def map-aggregation-fn map #_pmap)
 
 (defn calc-cache!
-  ([aggegation-hash] (calc-cache! "calc-cache!" aggegation-hash))
-  ([fun-id aggegation-hash]
-   (let [json (data/json-data)]
-     (doall
-      (run! (fn [prms] (apply (partial calc-listings json) prms))
-            [[msgl/list-countries com/listing-cases-absolute]
-             [msgl/list-per-100k com/listing-cases-per-100k]]))
-     (let [stats (est/estimate (v1/pic-data))
-           cnt-reports (count (data/dates json))]
+  ([aggegation-hash json] (calc-cache! "calc-cache!" aggegation-hash json))
+  ([fun-id aggegation-hash json]
+   (doall
+    (run! (fn [prms] (apply (partial calc-listings json) prms))
+          [[msgl/list-countries com/listing-cases-absolute]
+           [msgl/list-per-100k com/listing-cases-per-100k]]))
+   (let [stats (est/estimate (v1/pic-data))
+         cnt-reports (count (data/dates json))]
      ;; TODO do not call calc-functions when the `form` evaluates to true
-       (when (< cnt-reports 10)
-         (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
-       (doall
-        (map-fn (fn [ccode]
-                  (msgi/detailed-info ccode com/html
-                                      (data/create-pred-hm ccode))
-                  (plot/plot-country ccode stats cnt-reports))
-                ccc/all-country-codes))
-       (com/heap-info)
-       (Thread/sleep 100)
-       (System/gc) ;; also (.gc (Runtime/getRuntime))
-       (com/heap-info)
-       (doall
-        (map-aggregation-fn
-         (fn [aggregation-kw]
+     (when (< cnt-reports 10)
+       (warnf "[%s] Some stuff may not be calculated: %s" "(< cnt-reports 10)"
+              fun-id))
+     (doall
+      (map-fn (fn [ccode]
+                (msgi/detailed-info ccode com/html
+                                    (data/create-pred-hm ccode))
+                (plot/plot-country ccode stats cnt-reports))
+              ccc/all-country-codes))
+     (com/heap-info)
+     (Thread/sleep 100)
+     (System/gc) ;; also (.gc (Runtime/getRuntime))
+     (com/heap-info)
+     (doall
+      (map-aggregation-fn
+       (fn [aggregation-kw]
          ;; TODO delete picture from telegram servers
-           (doall
-            (map-aggregation-fn
-             (fn [case-kw]
-               (plot/plot-aggregation aggegation-hash aggregation-kw case-kw stats cnt-reports))
-             com/absolute-cases)))
-         com/aggregation-cases))))))
+         (doall
+          (map-aggregation-fn
+           (fn [case-kw]
+             (plot/plot-aggregation aggegation-hash aggregation-kw case-kw stats
+                                    cnt-reports))
+           com/absolute-cases)))
+       com/aggregation-cases)))))
 
 (defn- json-changed!
   ([m] (json-changed! "json-changed!" m))
@@ -215,7 +216,8 @@
    (debugf "[%s] %s" fun-id m)
    ;; TODO spec: cache-storage must be vector; json-fns must be function
    (let [hash-kws (conj cache-storage :json-hash)
-         new-hash (com/hash-fn (json-fn))  ;; (json-fn) also stores the json-data in the cache
+         ;; (json-fn) also stores the json-data in the cache
+         new-hash (com/hash-fn (json-fn))
          hashes-changed (not= (get-in @cache/cache hash-kws)
                               new-hash)]
      (debugf "[%s] %s; hashes-changed: %s" fun-id cache-storage hashes-changed)
@@ -237,7 +239,7 @@
                             {:json-fn vac/json-data  :cache-storage [:owid]}])]
      (debugf "[%s] any-json-changed %s" fun-id any-json-changed)
      (when any-json-changed
-       (calc-cache! (cache/aggregation-hash))
+       (calc-cache! (cache/aggregation-hash) (data/json-data))
        ;; discard the intermediary results, i.e. keep only those items in the
        ;; cache which contain the final results.
        (swap! cache/cache
