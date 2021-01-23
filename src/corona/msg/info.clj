@@ -239,8 +239,9 @@
                                          lang/millions-rounded)
                  :vaccinated-txt
                  (if (zero? vaccinated)
-                   (format "<code>%s </code>%s"
+                   (format "<code>%s %s</code> - %s"
                            (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
+                           (com/left-pad vaccinated " " (+ msgc/padding-n 2))
                            lang/missing-vaccin-data)
                    (format "<code>%s %s %s%s</code>"
                            (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
