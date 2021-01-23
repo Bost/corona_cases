@@ -6,22 +6,23 @@
 (ns corona.telegram
   (:gen-class)
   (:require [clojure.core.async :as async]
-            [corona.api.expdev07 :as data]
-            [corona.api.vaccination :as vac]
             [corona.api.cache :as cache]
+            [corona.api.expdev07 :as data]
             [corona.api.v1 :as v1]
+            [corona.api.vaccination :as vac]
             [corona.commands :as cmd]
             [corona.common :as com]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
+            [corona.estimate :as est]
             [corona.msg.info :as msgi]
             [corona.msg.lists :as msgl]
             [corona.msg.messages :as msg]
-            [corona.estimate :as est]
             [corona.plot :as plot]
             [morse.handlers :as moh]
             [morse.polling :as mop]
-            [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]]))
+            [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]])
+  (:import [java.time LocalDateTime ZoneId Instant]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -167,10 +168,14 @@
   ([fun-id fun ttl]
    (infof "[%s] Starting ..." fun-id)
    (while @continue
+     (infof "[%s] Next eval of %s scheduled at %s" fun-id
+            fun
+            (LocalDateTime/ofInstant
+             (Instant/ofEpochMilli (+ (System/currentTimeMillis) ttl))
+             (ZoneId/of ccc/zone-id)))
      (Thread/sleep ttl)
      (fun))
-   (debugf "[%s] Starting ... done" fun-id)
-   (warnf "[%s] Displayed data will NOT be updated!" fun-id)))
+   (warnf "[%s] Starting ... done. Data will NOT be updated!" fun-id)))
 
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)

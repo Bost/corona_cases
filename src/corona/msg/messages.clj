@@ -29,8 +29,7 @@
     (format "<a href=\"%s\">%s</a>" url name)
     (format "[%s](%s)" name url)))
 
-(defn reply-markup-btns [{:keys [message_id] :as prm}]
-  (debugf "[%s] message_id %s" "reply-markup-btns" message_id)
+(defn reply-markup-btns [prm]
   ((comp
     (partial hash-map :reply_markup)
     json/write-str
@@ -41,7 +40,6 @@
            (mapv (fn [case-kw]
                    (conj
                     {:text (lang/button-text case-kw aggregation-kw)
-                     ;; :message_id message_id
                      :callback_data (pr-str (assoc (dissoc prm :message_id)
                                                    :case-kw case-kw
                                                    :type aggregation-kw))}
