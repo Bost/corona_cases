@@ -136,8 +136,9 @@
      spacer
      "\n"
      ;; lang/listings ":  "
-     (->> (mapv lang/list-sorted-by (concat com/listing-cases-per-100k
-                                            com/listing-cases-absolute))
+     (->> (concat com/listing-cases-per-100k
+                  com/listing-cases-absolute)
+          (mapv lang/list-sorted-by)
           (map com/encode-cmd)
           (cstr/join spacer)))))
 

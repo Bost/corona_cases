@@ -3,6 +3,7 @@
 (ns corona.lang
   (:require
    [corona.common :as com]
+   [clojure.string :as cstr]
    ))
 
 ;; (set! *warn-on-reflection* true)
@@ -145,14 +146,20 @@
 (def ^:const millions-rounded "Mill")
 
 (defn- lower-case-texts [case-kw texts]
-  ((comp clojure.string/lower-case
-         (partial com/text-for-case case-kw))
+  ((comp
+    cstr/lower-case
+    (partial com/text-for-case case-kw))
    texts))
 
 (defn list-sorted-by [case-kw]
   (lower-case-texts
-   case-kw [vacc conf recov deaths active
-            cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5]))
+   case-kw
+   ;; TODO the order matters
+   [
+    conf recov deaths active
+    cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5
+    vacc
+    ]))
 
 (defn list-sorted-by-desc [case-kw]
   ((comp

@@ -243,7 +243,9 @@
     (zipmap com/all-cases
             (apply
              conj vpcrda
-             (->> [(com/calculate-cases-per-100k :v)
+             (->> [
+                   ;; TODO order matters
+                   (com/calculate-cases-per-100k :v)
                    (com/calculate-cases-per-100k :a)
                    (com/calculate-cases-per-100k :r)
                    (com/calculate-cases-per-100k :d)

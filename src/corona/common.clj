@@ -285,13 +285,13 @@
    {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 1257e3)}}
    {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 55e3)}}
    {:idx  5 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 669e3)}}
-   {:idx  6 :kw :a100k}
-   {:idx  7 :kw :r100k}
-   {:idx  8 :kw :d100k}
-   {:idx  9 :kw :c100k}
-   {:idx 10 :kw :v100k}
+   ;; TODO the order matters: it must be the same as in the info-message
+   {:idx  6 :kw :v100k}
+   {:idx  7 :kw :a100k}
+   {:idx  8 :kw :r100k}
+   {:idx  9 :kw :d100k}
+   {:idx 10 :kw :c100k}
 
-   ;; The order of the following maps must be the same as in the info-message
    {:idx 11 :kw :v-rate}
    {:idx 12 :kw :a-rate}
    {:idx 13 :kw :r-rate}
@@ -318,7 +318,7 @@
 
 (def basic-cases
   (tore case-params
-        (filter (fn [m] (utc/in? [2 3 4 5 6 7 8 9] (:idx m))))
+        (filter (fn [m] (utc/in? [2 3 4 5 #_6 7 8 9 10] (:idx m))))
         (map :kw)))
 
 (def all-cases
@@ -330,12 +330,12 @@
 (def listing-cases-per-100k
   "No listing of :c100k - Closed cases per 100k"
   (tore case-params
-        (filter (fn [m] (utc/in? [5 6 7 8] (:idx m))))
+        (filter (fn [m] (utc/in? [7 8 9] (:idx m))))
         (map :kw)))
 
 (def listing-cases-absolute
   (->> case-params
-       (filter (fn [m] (utc/in? [0 1 2 3] (:listing-idx m))))
+       (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
        (sort-by :listing-idx)
        (map :kw)))
 
