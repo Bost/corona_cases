@@ -215,9 +215,11 @@
          [_                      & vaccin-last-7-reports] vaccin-last-8-reports
 
          vaccin-last-7-reports-with-rate (map (fn [v] (format "%s=%s%s"
-                                                             v
-                                                             (utn/percentage v population)
-                                                             msgc/percent))
+                                                              v
+                                                              #_(utn/percentage v population)
+                                                              ;; TODO see calc-rate
+                                                              (utn/round-precision (/ (* v 100.0) population) 1)
+                                                              msgc/percent))
                                               vaccin-last-7-reports)
          ;; delta-vaccinated (:v delta)
 
@@ -235,12 +237,16 @@
                                          (com/left-pad population " " (+ msgc/padding-n 2))
                                          (utn/round-div-precision population 1e6 1)
                                          lang/millions-rounded)
-                 :vaccinated-txt (format "<code>%s %s %s%s</code> %s"
-                                         (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
-                                         (com/left-pad vaccinated " " (+ msgc/padding-n 2))
-                                         v-rate
-                                         msgc/percent
-                                         (if (zero? vaccinated) lang/missing-vaccin-data ""))
+                 :vaccinated-txt
+                 (if (zero? vaccinated)
+                   (format "<code>%s </code>%s"
+                           (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
+                           lang/missing-vaccin-data)
+                   (format "<code>%s %s %s%s</code>"
+                           (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
+                           (com/left-pad vaccinated " " (+ msgc/padding-n 2))
+                           v-rate
+                           msgc/percent))
                  :vaccinated-last-7
                  (format
                   "<code>%s</code>\n%s"

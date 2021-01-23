@@ -121,7 +121,11 @@
 (defn calc-rate [case-kw]
   (fn [{:keys [v p c r d a] :as prm}]
     (let [ret (case case-kw
-                :v (utn/percentage v p)
+                :v
+                #_(utn/percentage v p)
+                ;; TODO see create-detailed-info
+                (utn/round-precision (/ (* v 100.0) p) 1)
+
                 (utn/percentage
                  (case case-kw
                    :a a
