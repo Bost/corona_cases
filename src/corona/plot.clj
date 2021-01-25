@@ -404,7 +404,7 @@
           ((comp
             (fn [s] (str s postfix))
             (partial com/text-for-case case-kw))
-           [lang/vaccinated lang/confirmed lang/recovered lang/deaths lang/active-cases])
+           [lang/confirmed lang/recovered lang/deaths lang/active-cases])
           threshold))
 
 (defn line-stroke [color]
