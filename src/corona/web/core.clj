@@ -1,31 +1,30 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web.core)
 
 (ns corona.web.core
-  (:require
-   [clj-time-ext.core :as cte]
-   [clj-time.core :as ctc]
-   [clojure.data.json :as json]
-   [clojure.string :as cstr]
-   [com.stuartsierra.component :as component]
-   [compojure.core :as cjc]
-   [corona.plot :as plot]
-   compojure.handler
-   [corona.common :as com]
-   [corona.country-codes :as ccc]
-   [corona.telegram :as tgram]
-   [corona.web.response :as webresp]
-   drawbridge.core
-   [morse.api :as moa]
-   [morse.handlers :as moh]
-   ring.adapter.jetty
-   [ring.middleware.basic-authentication :as basic]
-   ring.middleware.json
-   ring.middleware.keyword-params
-   ring.middleware.nested-params
-   ring.middleware.params
-   [ring.middleware.session :as session]
-   ring.util.http-response
-   [taoensso.timbre :as timbre :refer [debugf info infof]])
+  (:require [clj-time-ext.core :as cte]
+            [clj-time.core :as ctc]
+            [clojure.data.json :as json]
+            [clojure.string :as cstr]
+            [com.stuartsierra.component :as component]
+            [compojure.core :as cjc]
+            compojure.handler
+            [corona.common :as com]
+            [corona.country-codes :as ccc]
+            [corona.plot :as plot]
+            [corona.telegram :as tgram]
+            [corona.web.response :as webresp]
+            drawbridge.core
+            [morse.api :as moa]
+            [morse.handlers :as moh]
+            ring.adapter.jetty
+            [ring.middleware.basic-authentication :as basic]
+            ring.middleware.json
+            ring.middleware.keyword-params
+            ring.middleware.nested-params
+            ring.middleware.params
+            [ring.middleware.session :as session]
+            ring.util.http-response
+            [taoensso.timbre :as timbre :refer [debugf infof]])
   (:import java.time.ZoneId
            java.util.TimeZone))
 
@@ -138,7 +137,7 @@
 (defonce server (atom nil))
 
 (defn webapp-start [env-type port]
-  (let [fun-id "webapp"
+  (let [fun-id "webapp-start"
         msg (format "[%s] starting" fun-id)
         version (if com/env-devel? com/undef com/botver)]
     (infof "%s version %s in environment %s on port %s ..."
@@ -163,7 +162,7 @@
         port (or port com/webapp-port)
         msg (format "[%s] starting" fun-id)]
     (debugf "%s ..." msg)
-    (infof "\n  %s" (clojure.string/join "\n  " (com/show-env)))
+    (infof "\n  %s" (cstr/join "\n  " (com/show-env)))
     (if (= (str (ctc/default-time-zone))
            (str (ZoneId/systemDefault))
            (.getID (TimeZone/getDefault)))

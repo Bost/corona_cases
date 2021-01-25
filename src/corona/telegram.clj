@@ -6,6 +6,7 @@
 (ns corona.telegram
   (:gen-class)
   (:require [clojure.core.async :as async]
+            [clojure.string :as cstr]
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
             [corona.api.v1 :as v1]
@@ -22,7 +23,7 @@
             [morse.handlers :as moh]
             [morse.polling :as mop]
             [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]])
-  (:import [java.time LocalDateTime ZoneId Instant]))
+  (:import [java.time Instant LocalDateTime ZoneId]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -127,7 +128,7 @@
 
 (defn long-polling
   "TODO see https://github.com/Otann/morse/issues/32"
-  ([tgram-token] (long-polling "telegram" tgram-token))
+  ([tgram-token] (long-polling "long-polling" tgram-token))
   ([fun-id tgram-token]
    (infof "[%s] Starting ..." fun-id)
    (if-let [polling-handlers (apply moh/handlers (create-handlers))]
@@ -155,7 +156,10 @@
                 options {:parse_mode com/html}
                 prm (conj options {:cnt-msgs (count sub-msgs)
                                    :cnt-reports (count (data/dates json))
-                                   :pred-hm (msg/create-pred-hm (ccr/get-country-code ccc/worldwide))})]
+                                   :pred-hm ((comp
+                                              msg/create-pred-hm
+                                              ccr/get-country-code)
+                                             ccc/worldwide)})]
             (doall
              (map-indexed (fn [idx sub-msg]
                             (fun case-kw (inc idx) (conj prm {:data sub-msg})))
@@ -222,10 +226,11 @@
    ;; TODO spec: cache-storage must be vector; json-fns must be function
    (let [hash-kws (conj cache-storage :json-hash)
          ;; (json-fn) also stores the json-data in the cache
+         old-hash (get-in @cache/cache hash-kws)
          new-hash (com/hash-fn (json-fn))
-         hashes-changed (not= (get-in @cache/cache hash-kws)
-                              new-hash)]
-     (debugf "[%s] %s; hashes-changed: %s" fun-id cache-storage hashes-changed)
+         hashes-changed (not= old-hash new-hash)]
+     (debugf "[%s] %s; old hash %s; new hash %s; hashes-changed: %s"
+             fun-id cache-storage old-hash new-hash hashes-changed)
      (when hashes-changed
        (swap! cache/cache update-in hash-kws (fn [_] new-hash)))
      hashes-changed)))
@@ -255,9 +260,9 @@
                  (select-keys
                   @cache/cache [:plot :msg :list :threshold]))))
        (debugf "[%s] %s bytes recalculated and cached in %s ms"
-               fun-id
-               (com/measure @cache/cache)
-               ((comp count str) @cache/cache) (- (System/currentTimeMillis) tbeg)))
+               fun-id (com/measure @cache/cache)
+               ((comp count str) @cache/cache)
+               (- (System/currentTimeMillis) tbeg)))
 
      (swap! cache/cache update-in [:v1]   dissoc :json)
      (swap! cache/cache update-in [:owid] dissoc :json))))
@@ -265,10 +270,12 @@
 (defn start
   "Fetch api service data and only then register the telegram commands."
   ([] (start com/env-type))
-  ([env-type] (start "telegram-start" env-type))
+  ([env-type] (start "start" env-type))
   ([fun-id env-type]
    (infof "[%s] Starting version %s in environment %s ..."
           fun-id com/botver env-type)
+   (when-not com/use-webhook?
+     (infof "\n  %s" (cstr/join "\n  " (com/show-env))))
    (reset-cache!)
    (swap! initialized (fn [_]
                         ;; TODO use morse.handler instead of true?
@@ -281,7 +288,7 @@
    (infof "[%s] Starting [..] ... done" fun-id)))
 
 (defn stop
-  ([] (stop "long-poll-stop"))
+  ([] (stop "stop"))
   ([fun-id]
    (infof "[%s] Stopping ..." fun-id)
    (run! (fn [obj-q]
@@ -304,7 +311,7 @@
    (infof "[%s] Stopping ... done" fun-id)))
 
 (defn restart
-  ([] (restart "long-poll-restart"))
+  ([] (restart "restart"))
   ([fun-id]
    (infof "[%s] Restarting ..." fun-id)
    (when @initialized

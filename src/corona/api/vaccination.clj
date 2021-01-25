@@ -11,7 +11,10 @@
            java.util.TimeZone))
 
 (def ^:const url
-  "https://covid.ourworldindata.org/data/owid-covid-data.json")
+  ;; official api service
+  "https://covid.ourworldindata.org/data/owid-covid-data.json"
+  ;; my test service
+  #_"http://localhost:5555/owid-covid-data.json")
 
 (defn json-data []
   (let [ks [:owid :json]]

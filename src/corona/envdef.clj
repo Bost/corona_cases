@@ -53,7 +53,9 @@
    {:level 3
     :bot-name hokuspokus-bot
     ;; :web-server nil ;; intentionally undefined
-    :json-server "localhost:8000"
+    :json-server
+    "localhost:8000"  ;; coronavirus-tracker-api
+    ;; "localhost:5555"    ;; my test service
     :telegram-token token-hokuspokus}})
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.envdef)
