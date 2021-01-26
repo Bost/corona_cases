@@ -118,14 +118,14 @@
     (fn [confirmed deaths] (- confirmed deaths)))
    confirmed deaths))
 
+(defn vaccination-rate
+  [v p]
+  (utn/round-div-precision (* v 100.0) p 1))
+
 (defn calc-rate [case-kw]
   (fn [{:keys [v p c r d a] :as prm}]
     (let [ret (case case-kw
-                :v
-                #_(utn/percentage v p)
-                ;; TODO see create-detailed-info
-                (utn/round-precision (/ (* v 100.0) p) 1)
-
+                :v (vaccination-rate v p)
                 (utn/percentage
                  (case case-kw
                    :a a
@@ -134,7 +134,7 @@
                    :c (+ d r))
                  c))]
       #_(when (utc/in? [:a :v] case-kw)
-        (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
+          (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
       ret)))
 
 (defn per-1e5

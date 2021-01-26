@@ -214,13 +214,12 @@
          {vaccin-last-8-reports :v} (data/last-8-reports pred-hm json)
          [_                      & vaccin-last-7-reports] vaccin-last-8-reports
 
-         vaccin-last-7-reports-with-rate (map (fn [v] (format "%s=%s%s"
-                                                              v
-                                                              #_(utn/percentage v population)
-                                                              ;; TODO see calc-rate
-                                                              (utn/round-precision (/ (* v 100.0) population) 1)
-                                                              msgc/percent))
-                                              vaccin-last-7-reports)
+         vaccin-last-7-reports-with-rate
+         (map (fn [v] (format "%s=%s%s"
+                              v
+                              (com/vaccination-rate v population)
+                              msgc/percent))
+              vaccin-last-7-reports)
          ;; delta-vaccinated (:v delta)
 
          info (format-detailed-info

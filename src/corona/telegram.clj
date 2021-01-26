@@ -293,7 +293,7 @@
    (infof "[%s] Stopping ..." fun-id)
    (run! (fn [obj-q]
            (let [obj (eval obj-q)]
-             (if (= obj-q 'corona.telegram/telegram-port)
+             (when (= obj-q 'corona.telegram/telegram-port)
                (if-let [old-tgram-port (deref obj)]
                  (do
                    (debugf "[%s] Closing old-tgram-port %s ..."
