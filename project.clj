@@ -18,7 +18,7 @@
    [nrepl/drawbridge "0.2.1"]]
 
   :dependencies
-  [[org.clojure/clojure     "1.10.1"]
+  [[org.clojure/clojure     "1.10.2"]
 
    ;; CSV reader/writer to/from Clojure data structures.
    [org.clojure/data.csv    "1.0.0"]
@@ -46,7 +46,7 @@
    [clj-http                "3.11.0"]
 
    ;; Clojure interface for Telegram Bot API
-   [org.clojars.bost/morse  "0.0.0-160-0x1afd"]
+   [org.clojars.bost/morse  "0.0.0-162-0x7c39"]
 
    [org.clojure/data.json   "1.0.0"]
    [clojure.java-time       "0.3.2"]

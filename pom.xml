@@ -15,7 +15,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.10.1</version>
+      <version>1.10.2</version>
     </dependency>
     <dependency>
       <groupId>metosin</groupId>
@@ -58,6 +58,11 @@
       <version>1.0.0</version>
     </dependency>
     <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>42.2.18</version>
+    </dependency>
+    <dependency>
       <groupId>nrepl</groupId>
       <artifactId>drawbridge</artifactId>
       <version>0.2.1</version>
@@ -75,7 +80,7 @@
     <dependency>
       <groupId>org.clojars.bost</groupId>
       <artifactId>morse</artifactId>
-      <version>0.0.0-160-0x1afd</version>
+      <version>0.0.0-162-0x7c39</version>
     </dependency>
     <dependency>
       <groupId>org.clojars.bost</groupId>
@@ -121,6 +126,11 @@
       <groupId>com.taoensso</groupId>
       <artifactId>timbre</artifactId>
       <version>5.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>java.jdbc</artifactId>
+      <version>0.7.11</version>
     </dependency>
     <dependency>
       <groupId>hickory</groupId>
