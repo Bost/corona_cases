@@ -74,6 +74,7 @@
 (def deleteWebhook "deleteWebhook")
 (def setWebhook "setWebhook")
 (def users "users")
+(def promote "promote")
 
 (defn validate-args
   "Validate command line arguments. Either return a map indicating the program
@@ -91,7 +92,7 @@
       ;; custom validation on arguments
       (= 1 (count arguments))
       (cond
-        (#{restart deploy deleteWebhook setWebhook users} (first arguments))
+        (#{restart deploy deleteWebhook setWebhook users promote} (first arguments))
         {:action (first arguments) :options options}
 
         :else
@@ -163,8 +164,27 @@
   {:pre [(in? heroku-apps app)]}
   (apply sh (into ["heroku"] (conj (vec cmds) "--app" app))))
 
-(defn deploy! [options]
-  (let [commit (sh "git" "rev-parse" "--short" "master")
+(defn get-commit! []
+  (sh "git" "rev-parse" "--short" "master"))
+
+(defn set-config! [app commit clojure-cli-version]
+    {:pre [(in? heroku-apps app)]}
+  (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version))
+
+(defn publish-source!
+  "Publish the source code only when deploying to production"
+  [heroku-env commit rest-args]
+  (when (= heroku-env heroku-env-prod)
+    ;; seems like `git push --tags` pushes only tags w/o the code
+    (sh "git" "tag" "--annotate" "--message" "''"
+        (str pom/pom-version "-" commit))
+
+    (doseq [remote ["origin" "gitlab"]]
+      ;; See also `git push --tags $pushFlags $remote`
+      (sh "git" "push" rest-args "--follow-tags" "--verbose" remote))))
+
+(defn deploy-or-promote! [options]
+  (let [commit (get-commit!)
         clojure-cli-version (let [props (java.util.Properties.)
                                   key "CLOJURE_CLI_VERSION"]
                               (.load props (jio/reader ".heroku-local.env"))
@@ -181,20 +201,21 @@
     ;; (printf "clojure-cli-version %s \n" clojure-cli-version)
 
     (sh-heroku app "addons:open" "papertrail")
-    (sh-heroku app "ps:scale" "web=0")
-    (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
-    (sh "git" "push" rest-args remote "master")
-    (sh-heroku app "ps:scale" "web=1")
+    (if (= heroku-env heroku-env-prod)
+      (do
+        (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
+        ;; seems like `git push --tags` pushes only tags w/o the code
+        (sh "git" "tag" "--annotate" "--message" "''"
+            (str pom/pom-version "-" commit))
 
-    ;; publish source code only when deploying to production
-    (when (= heroku-env heroku-env-prod)
-      ;; seems like `git push --tags` pushes only tags w/o the code
-      (sh "git" "tag" "--annotate" "--message" "''"
-          (str pom/pom-version "-" commit))
-
-      (doseq [remote ["origin" "gitlab"]]
-        ;; See also `git push --tags $pushFlags $remote`
-        (sh "git" "push" rest-args "--follow-tags" "--verbose" remote)))))
+        (doseq [remote ["origin" "gitlab"]]
+          ;; See also `git push --tags $pushFlags $remote`
+          (sh "git" "push" rest-args "--follow-tags" "--verbose" remote)))
+      (do
+        (sh-heroku app "ps:scale" "web=0")
+        (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
+        (sh "git" "push" rest-args remote "master")
+        (sh-heroku app "ps:scale" "web=1")))))
 
 ;; Examples:
 ;; ./heroku.clj deploy --app hokuspokus-bot
@@ -211,8 +232,8 @@
         restart
         (sh-heroku heroku-app "ps:restart")
 
-        deploy
-        (deploy! options)
+        (or deploy promote)
+        (deploy-or-promote! options)
 
         deleteWebhook
         (sh "curl" "--form" "'drop_pending_updates=true'" "--request" "POST"
