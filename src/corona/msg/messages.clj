@@ -49,25 +49,6 @@
                  com/absolute-cases))
          com/aggregation-cases)))
 
-(def base-url "https://api.telegram.org/bot")
-
-(defn edit-media
-  "Edits a animation, audio, document, photo, or video messages
-  (https://core.telegram.org/bots/api#editmessagemedia)
-
-  TODO alternatively send file to a dump channel, get file id, edit message
-  media, delete message from channel"
-  ([token chat-id message-id media] (edit-media token chat-id message-id {}
-                                                media))
-  ([token chat-id message-id options media]
-   (let [url   (str base-url token "/editMessageMedia")
-         query (into {:chat_id chat-id :media media :message_id message-id}
-                     options)
-         resp  (http/post url {:content-type :json
-                               :as           :json
-                               :form-params  query})]
-     (-> resp :body))))
-
 (defn worldwide-plots
   ([prm] (worldwide-plots "worldwide-plots" prm))
   ([fun-id {:keys [data message]}]
@@ -82,23 +63,26 @@
          id (cache/aggregation-hash)]
      (let [msg (doall
                 (if com/use-webhook?
-                  (edit-media com/telegram-token chat-id message-id options
-                              {:type "photo"
-                               :media
-                               (let [url (format "%s/%s/%s/%s/%s"
-                                                 com/webapp-server
-                                                 com/graphs-path
-                                                 id
-                                                 (name plot-type)
-                                                 (name case-kw))]
-                                 (debugf "[%s] url %s" fun-id url)
-                                 url)})
-                  (morse/send-photo com/telegram-token chat-id options
-                                    ;; the plot is fetched from the cache, stats and report need
-                                    ;; not to be specified
-                                    (plot/plot-aggregation
-                                     id
-                                     (:type data-hm) (:case-kw data-hm)))))]
+                  ;; TODO alternatively send file to a dump channel, get file
+                  ;; id, edit message media, delete message from channel
+                  (morse/edit-media
+                   com/telegram-token chat-id message-id options
+                   {:type "photo"
+                    :media
+                    (let [url (format "%s/%s/%s/%s/%s"
+                                      com/webapp-server
+                                      com/graphs-path
+                                      id
+                                      (name plot-type)
+                                      (name case-kw))]
+                      (debugf "[%s] url %s" fun-id url)
+                      url)})
+                  (morse/send-photo
+                   com/telegram-token chat-id options
+                   ;; the plot is fetched from the cache, stats and report need
+                   ;; not to be specified
+                   (plot/plot-aggregation
+                    id (:type data-hm) (:case-kw data-hm)))))]
        (debugf "[%s] (count msg) %s" fun-id (count msg))))))
 
 ;; mapvals
