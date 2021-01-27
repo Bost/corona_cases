@@ -17,13 +17,6 @@
 
 ;; (set! *warn-on-reflection* true)
 
-(defn last-index-of
-  "TODO move last-index-of to https://github.com/Bost/utils"
-  [coll elem]
-  ((comp last
-         (partial keep-indexed (fn [i v] (when (= elem v) i))))
-   coll))
-
 (defn format-detailed-info
   [{:keys
     [header-txt
@@ -267,7 +260,7 @@
                                                   delta
                                                   max-active-val
                                                   (nth dates
-                                                       (last-index-of data-active max-active-val))
+                                                       (utc/last-index-of data-active max-active-val))
                                                   ccode
                                                   (count ccc/all-country-codes))}))))]
 
