@@ -1,3 +1,4 @@
 ((clojure-mode . ((cider-preferred-build-tool . clojure-cli)
                   ;; (cider-clojure-cli-parameters . "-J-Djdk.attach.allowAttachSelf")
-                  (cider-clojure-cli-global-options . "-J-Djdk.attach.allowAttachSelf"))))
+                  ;; -Xmx<size> - keep in sync with Procfile
+                  (cider-clojure-cli-global-options . "-J-Xmx350m -J-Djdk.attach.allowAttachSelf"))))

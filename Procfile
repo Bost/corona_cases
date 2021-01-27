@@ -4,4 +4,7 @@
 # Heroku App "corona-cases-bot": boot timeout increased to 180 seconds
 
 # Line continuation '\' doesn't work
-web: java -XX:+HeapDumpOnOutOfMemoryError -Djdk.attach.allowAttachSelf $JVM_OPTS -cp target/corona_cases-standalone.jar clojure.main -m corona.web.core
+
+# -Xmx<size> : increase max heap size from default 300MB
+# Keep in sync with .dir-locals.el
+web: java -Xmx350m -XX:+HeapDumpOnOutOfMemoryError -Djdk.attach.allowAttachSelf $JVM_OPTS -cp target/corona_cases-standalone.jar clojure.main -m corona.web.core
