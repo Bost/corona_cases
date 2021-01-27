@@ -132,10 +132,9 @@
          (map (fn [case-kw]
                 {:name (l/list-sorted-by case-kw)
                  :fun (fn [chat-id]
-                        (let [msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)
-                                                msgl/list-per-100k
-                                                msgl/list-countries)
-                              contents (msg-listing-fun (data/json-data) case-kw)]
+                        (let [contents (if (in? com/listing-cases-per-100k case-kw)
+                                         (msgl/list-per-100k case-kw)
+                                         (msgl/list-countries case-kw))]
                           (doall
                            ;; mapping over results implies the knowledge that
                            ;; the type of `(msg-listing-fun case-kw)` is a

@@ -30,21 +30,17 @@
                               ccc/worldwide)}]
            (doall
             (map-indexed (fn [idx sub-msg]
-                           (fun json case-kw (inc idx) (conj prm {:data sub-msg})))
+                           (fun case-kw json (inc idx) (conj prm {:data sub-msg})))
                          sub-msgs))))
        case-kws))
 
 (defn calc-list-countries
   "Listing commands in the message footer correspond to the columns in the listing.
   See also `footer`, `bot-father-edit-cmds`."
-  ([json case-kw msg-idx prm] (calc-list-countries "calc-list-countries" json case-kw msg-idx prm))
-  ([fun-id json case-kw msg-idx {:keys
-                            #_[cnt-msgs cnt-reports data parse_mode pred-hm]
-                            [cnt-msgs data parse_mode pred-hm]}]
+  ([case-kw json msg-idx prm] (calc-list-countries "calc-list-countries"
+                                                   case-kw json msg-idx prm))
+  ([fun-id case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
    (let [
-         ;; json (data/json-data)
-         ;; data (sub-msgs json case-kw)
-         ;; cnt-msgs (count data)
          cnt-reports (count (data/dates json))
          header-txt (msgc/header parse_mode pred-hm json)
          spacer " "
@@ -88,30 +84,24 @@
              fun-id case-kw msg-idx (com/measure msg))
      msg)))
 
-(defn get-from-cache! [json case-kw ks fun msg-idx prm]
-  (if prm
-    (cache/cache! (fn [] (fun json case-kw msg-idx prm))
-                 (conj ks (keyword (str msg-idx))))
+(defn get-from-cache! [case-kw json msg-idx prm ks fun]
+  (if (and json msg-idx prm)
+    (cache/cache! (fn [] (fun case-kw json msg-idx prm))
+                  (conj ks (keyword (str msg-idx))))
     (vals (get-in @cache/cache ks))))
 
 (defn list-countries
-  [json case-kw & [msg-idx prm]]
-  (get-from-cache! json case-kw [:list :countries case-kw]
-                   calc-list-countries msg-idx prm))
+  [case-kw & [json msg-idx prm]]
+  (get-from-cache! case-kw json msg-idx prm
+                   [:list :countries case-kw] calc-list-countries))
 
 (defn calc-list-per-100k
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit-cmds`."
-  ([json case-kw msg-idx prm] (calc-list-per-100k "calc-list-per-100k"
-                                                  json case-kw msg-idx prm))
-  ([fun-id json case-kw msg-idx {:keys
-                            #_[cnt-msgs cnt-reports data parse_mode pred-hm]
-                            [cnt-msgs data parse_mode pred-hm]}]
-   (let [
-         ;; json (data/json-data)
-         ;; data (sub-msgs json case-kw)
-         ;; cnt-msgs (count data)
-         cnt-reports (count (data/dates json))
+  ([case-kw json msg-idx prm] (calc-list-per-100k "calc-list-per-100k"
+                                                  case-kw json msg-idx prm))
+  ([fun-id case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
+   (let [cnt-reports (count (data/dates json))
          header-txt (msgc/header parse_mode pred-hm json)
          spacer " "
          sort-indicator "▴" ;; " " "▲"
@@ -158,9 +148,9 @@
      msg)))
 
 (defn list-per-100k
-  [json case-kw & [msg-idx prm]]
-  (get-from-cache! json case-kw [:list :100k case-kw]
-                   calc-list-per-100k msg-idx prm))
+  [case-kw & [json msg-idx prm]]
+  (get-from-cache! case-kw json msg-idx prm
+                   [:list :100k case-kw] calc-list-per-100k))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.lists)
 

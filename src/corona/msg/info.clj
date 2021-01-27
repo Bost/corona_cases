@@ -201,11 +201,10 @@
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
   "
-  ([ccode parse_mode pred-hm]
-   (create-detailed-info "create-detailed-info" ccode parse_mode pred-hm))
-  ([fun-id ccode parse_mode pred-hm]
-   (let [json (data/json-data)
-         dates (data/dates json)
+  ([json ccode parse_mode pred-hm]
+   (create-detailed-info "create-detailed-info" json ccode parse_mode pred-hm))
+  ([fun-id json ccode parse_mode pred-hm]
+   (let [dates (data/dates json)
          last-report (data/last-report pred-hm json)
          {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
          delta (data/delta pred-hm json)
@@ -278,10 +277,10 @@
      info)))
 
 (defn detailed-info
-  [ccode & [parse_mode pred-hm]]
+  [ccode & [json parse_mode pred-hm]]
   (let [ks [:msg (keyword ccode)]]
-      (if (and parse_mode pred-hm)
-        (cache/cache! (fn [] (create-detailed-info ccode parse_mode pred-hm))
+      (if (and json parse_mode pred-hm)
+        (cache/cache! (fn [] (create-detailed-info json ccode parse_mode pred-hm))
                       ks)
         (get-in @cache/cache ks))))
 

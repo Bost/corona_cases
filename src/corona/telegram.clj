@@ -173,6 +173,11 @@
    (run! (fn [prms] (apply (partial msgl/calc-listings json) prms))
          [[msgl/list-countries com/listing-cases-absolute]
           [msgl/list-per-100k com/listing-cases-per-100k]])
+   (com/heap-info)
+   (Thread/sleep 100)
+   (debugf "[%s] 2nd garbage collection" fun-id)
+   (System/gc) ;; also (.gc (Runtime/getRuntime))
+   (com/heap-info)
    (let [stats (est/estimate (v1/pic-data))
          cnt-reports (count (data/dates json))]
      ;; TODO do not call calc-functions when the `form` evaluates to true
@@ -181,13 +186,13 @@
               fun-id))
      (doall
       (map-fn (fn [ccode]
-                (msgi/detailed-info ccode com/html
+                (msgi/detailed-info ccode json com/html
                                     (data/create-pred-hm ccode))
                 (plot/plot-country ccode stats cnt-reports))
               ccc/all-country-codes))
      (com/heap-info)
      (Thread/sleep 100)
-     (debugf "[%s] 2nd garbage collection" fun-id)
+     (debugf "[%s] 3rd garbage collection" fun-id)
      (System/gc) ;; also (.gc (Runtime/getRuntime))
      (com/heap-info)
      (doall
