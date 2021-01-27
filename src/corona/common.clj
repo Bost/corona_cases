@@ -55,12 +55,20 @@
 
 (spec/def ::fun clojure.core/fn?)
 
-(def ^:const ^String bot-name        (get-in environment
-                                             [env-type :bot-name]))
-(def ^:const ^String webapp-server   (get-in environment
-                                             [env-type :web-server]))
-(def ^:const ^String json-api-server (get-in environment
-                                             [env-type :json-server]))
+(def ^:const ^String bot-name
+  (get-in environment [env-type :bot-name]))
+(def ^:const ^String webapp-server
+  (get-in environment [env-type :web-server]))
+
+(def ^:const ^String json-server-v1
+  (get-in environment [env-type :json-server :v1]))
+
+(def ^:const ^String json-api-v1
+  (format "http://%s/all" json-server-v1))
+
+(def ^:const ^String json-api-owid
+  (get-in environment [env-type :json-server :owid]))
+
 (def ^:const ^String graphs-path "graphs")
 
 ;; forward declarations
@@ -184,7 +192,9 @@
          'corona.common/webapp-server
          'corona.common/webapp-port
          'corona.common/bot-name
-         'corona.common/botver]))
+         'corona.common/botver
+         'corona.common/json-api-v1
+         'corona.common/json-api-owid]))
 
 ;; TODO (System/exit <val>) if some var is undefined
 
@@ -229,29 +239,27 @@
   (meter/measure obj :bytes true))
 
 (defn get-json [url]
-  (infof "Requesting json-data from %s ..." url)
-  (let [tbeg (System/currentTimeMillis)]
-    (let [result (-> url
-                     (clj-http.client/get {:accept :json})
-                     :body
-                     (json/read-str :key-fn clojure.core/keyword))]
-      ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
-      ;; TODO sanitize against:
-      ;; 1. http status 503 - service not available
-      ;; Requesting json-data from http://covid-tracker-us.herokuapp.com/all ...
-      ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
-      ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
-      ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
-      ;;
-      ;; 2.
-      ;; Requesting json-data from http://coronavirus-tracker-api.herokuapp.com/all ...
-      ;; Execution error (ConnectionClosedException) at org.apache.http.impl.io.ContentLengthInputStream/read (ContentLengthInputStream.java:178).
-      ;; Premature end of Content-Length delimited message body (expected: 840,718; received: 515,312)
-      (infof "Requesting json-data from %s ... %s bytes received in %s ms"
-             url
-             (measure result)
-             (- (System/currentTimeMillis) tbeg))
-      result)))
+  (let [msg (format "Requesting data from %s" url)]
+    (infof "%s ..." msg)
+    (let [tbeg (System/currentTimeMillis)]
+      (let [result (-> url
+                       (clj-http.client/get {:accept :json})
+                       :body
+                       (json/read-str :key-fn clojure.core/keyword))]
+        ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
+        ;; TODO sanitize against:
+        ;; 1. http status 503 - service not available
+        ;; Requesting json-data from http://covid-tracker-us.herokuapp.com/all ...
+        ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
+        ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
+        ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
+        ;;
+        ;; 2.
+        ;; Requesting json-data from http://coronavirus-tracker-api.herokuapp.com/all ...
+        ;; Execution error (ConnectionClosedException) at org.apache.http.impl.io.ContentLengthInputStream/read (ContentLengthInputStream.java:178).
+        ;; Premature end of Content-Length delimited message body (expected: 840,718; received: 515,312)
+        (infof "%s ... %s bytes received in %s ms"
+               msg (measure result) (- (System/currentTimeMillis) tbeg)) result))))
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))
 
@@ -435,11 +443,25 @@
               (partial fmap format-bytes))
              {:size size :max max-size :free free-size}))))
 
-#_(def obj "clojure.core.async.impl.channels.ManyToManyChannel@490f97e1")
-#_(def obj "morse.handlers$handlers$fn__65503@5fbc0011")
+#_(comment
+  (def obj "clojure.core.async.impl.channels.ManyToManyChannel@490f97e1")
+  (def obj "morse.handlers$handlers$fn__65503@5fbc0011")
+  (def obj "corona.telegram$reset_cache_BANG_@754f7409"))
+
+;; #object[corona.api.expdev07$json_data 0x75d505c3 "corona.api.expdev07$json_data@75d505c3"]
+;; #object[corona.api.vaccination$json_data 0x5a8cc329 "corona.api.vaccination$json_data@5a8cc329"]
 
 (defn log-obj [obj]
-  (let [sobj (str obj)]
-    (subs sobj (.indexOf sobj "@"))))
+  (let [so (str obj)
+        separator (cond
+                    (.contains so "ManyToManyChannel") "ManyToManyChannel"
+                    (.contains so "p_endlessly") "p_endlessly"
+                    (.contains so "p_long_polling") "p_long_polling"
+                    (.contains so "reset_cache_BANG_") "reset_cache_BANG_"
+                    ;; (.contains so "handlers$") "handlers$"
+                    ;; (.contains so "@") "@"
+                    :else so)]
+    #_(debugf "so: %s" so)
+    (subs so (.indexOf so separator))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

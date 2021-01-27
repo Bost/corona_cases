@@ -10,7 +10,7 @@
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
             [corona.api.v1 :as v1]
-            [corona.api.vaccination :as vac]
+            [corona.api.owid :as vac]
             [corona.commands :as cmd]
             [corona.common :as com]
             [corona.countries :as ccr]
@@ -22,7 +22,8 @@
             [corona.plot :as plot]
             [morse.handlers :as moh]
             [morse.polling :as mop]
-            [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]])
+            [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]]
+            [utils.core :as utc])
   (:import [java.time Instant LocalDateTime ZoneId]))
 
 ;; (set! *warn-on-reflection* true)
@@ -96,7 +97,7 @@
   ([fun-id]
    (let [callbacks (create-callbacks [msg/worldwide-plots])
          commands (create-cmds cmd/cmds)]
-     (infof "[%s] registering %s chatbot commands and %s callbacks ..."
+     (infof "[%s] Registering %s chatbot commands and %s callbacks ..."
             fun-id (count commands) (count callbacks))
      (into callbacks commands))))
 
@@ -130,36 +131,38 @@
   "TODO see https://github.com/Otann/morse/issues/32"
   ([tgram-token] (long-polling "long-polling" tgram-token))
   ([fun-id tgram-token]
-   (infof "[%s] Starting ..." fun-id)
-   (if-let [polling-handlers (apply moh/handlers (create-handlers))]
-     (do
-       (debugf "[%s] Created polling-handlers %s"
-               fun-id (com/log-obj polling-handlers))
-       (let [port (start-polling tgram-token polling-handlers)]
-         (swap! telegram-port (fn [_] port))
-         (let [retval-async<!! (async/<!! port)]
-           (warnf "[%s] Taking vals on port %s stopped with retval-async<! %s"
-                  fun-id
-                  (com/log-obj port) (if-let [v retval-async<!!] v "nil"))
-           (fatalf "[%s] Further requests may NOT be answered!!!" fun-id)
-           (api-error-handler))))
-     (fatalf "[%s] polling-handlers not created" fun-id))
-   (infof "[%s] Starting ... done" fun-id)))
+   (let [msg (format "[%s] Starting" fun-id)]
+     (infof "%s ..." msg)
+     (if-let [polling-handlers (apply moh/handlers (create-handlers))]
+       (do
+         (debugf "[%s] Created polling-handlers %s"
+                 fun-id (com/log-obj polling-handlers))
+         (let [port (start-polling tgram-token polling-handlers)]
+           (swap! telegram-port (fn [_] port))
+           (let [retval-async<!! (async/<!! port)]
+             (warnf "[%s] Taking vals on port %s stopped with retval-async<! %s"
+                    fun-id
+                    (com/log-obj port) (if-let [v retval-async<!!] v "nil"))
+             (fatalf "[%s] Further requests may NOT be answered!!!" fun-id)
+             (api-error-handler))))
+       (fatalf "[%s] polling-handlers not created" fun-id))
+     (infof "%s ... done" msg))))
 
 (defn endlessly
   "Invoke fun and put the thread to sleep for millis in an endless loop."
   ([fun ttl] (endlessly "endlessly" fun ttl))
   ([fun-id fun ttl]
-   (infof "[%s] Starting ..." fun-id)
-   (while @continue
-     (infof "[%s] Next eval of %s scheduled at %s" fun-id
-            fun
-            (LocalDateTime/ofInstant
-             (Instant/ofEpochMilli (+ (System/currentTimeMillis) ttl))
-             (ZoneId/of ccc/zone-id)))
-     (Thread/sleep ttl)
-     (fun))
-   (warnf "[%s] Starting ... done. Data will NOT be updated!" fun-id)))
+   (let [msg (format "[%s] Starting" fun-id)]
+     (infof "%s ..." msg)
+     (while @continue
+       (infof "[%s] Next eval of %s scheduled at %s" fun-id
+              (com/log-obj fun)
+              (LocalDateTime/ofInstant
+               (Instant/ofEpochMilli (+ (System/currentTimeMillis) ttl))
+               (ZoneId/of ccc/zone-id)))
+       (Thread/sleep ttl)
+       (fun))
+     (warnf "%s ... done. Data will NOT be updated!" msg))))
 
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)
@@ -246,57 +249,61 @@
      (swap! cache/cache update-in [:v1]   dissoc :json)
      (swap! cache/cache update-in [:owid] dissoc :json))))
 
+(defn- p-endlessly [] (endlessly reset-cache! com/ttl))
+(defn- p-long-polling [] (long-polling com/telegram-token))
+
 (defn start
   "Fetch api service data and only then register the telegram commands."
-  ([] (start com/env-type))
-  ([env-type] (start "start" env-type))
-  ([fun-id env-type]
-   (infof "[%s] Starting version %s in environment %s ..."
-          fun-id com/botver env-type)
-   (when-not com/use-webhook?
-     (infof "\n  %s" (cstr/join "\n  " (com/show-env))))
-   (reset-cache!)
-   (swap! initialized (fn [_]
+  ([] (start "start"))
+  ([fun-id]
+   (let [msg (format "[%s] Starting" fun-id)]
+     (if com/use-webhook?
+       (infof "%s ..." msg)
+       (infof "%s ...\n  %s" msg (cstr/join "\n  " (com/show-env))))
+     (reset-cache!)
+     (swap! initialized (fn [_]
                         ;; TODO use morse.handler instead of true?
-                        true))
-   (let [funs (into [(fn p-endlessly [] (endlessly reset-cache! com/ttl))]
-                    (when-not com/use-webhook?
-                      [(fn p-long-polling [] (long-polling com/telegram-token))]))]
-     (debugf "[%s] Parallel run: %s ..." fun-id funs)
-     (pmap (fn [fun] (fun)) funs))
-   (infof "[%s] Starting [..] ... done" fun-id)))
+                          true))
+     (let [funs (into [p-endlessly]
+                      (when-not com/use-webhook?
+                        [p-long-polling]))]
+       (debugf "[%s] Parallel run %s ..." fun-id funs)
+       (pmap (fn [fun] (fun)) funs))
+     (infof "%s [..] ... done" msg))))
 
 (defn stop
   ([] (stop "stop"))
   ([fun-id]
-   (infof "[%s] Stopping ..." fun-id)
-   (run! (fn [obj-q]
-           (let [obj (eval obj-q)]
-             (when (= obj-q 'corona.telegram/telegram-port)
-               (if-let [old-tgram-port (deref obj)]
-                 (do
-                   (debugf "[%s] Closing old-tgram-port %s ..."
-                           fun-id old-tgram-port)
-                   (async/close! old-tgram-port))
-                 (debugf "[%s] No old-tgram-port defined" fun-id)))
-             (swap! obj (fn [_] nil))
-             (debugf "[%s] %s new value: %s"
-                     fun-id
-                     obj-q (if-let [v (deref obj)] v "nil"))))
-         ['corona.telegram/initialized
-          'corona.api.cache/cache
-          'corona.telegram/continue
-          'corona.telegram/telegram-port])
-   (infof "[%s] Stopping ... done" fun-id)))
+   (let [msg (format "[%s] Starting" fun-id)]
+     (infof "%s ..." msg)
+     (run! (fn [obj-q]
+             (let [obj (eval obj-q)]
+               (when (= obj-q 'corona.telegram/telegram-port)
+                 (if-let [old-tgram-port (deref obj)]
+                   (do
+                     (debugf "[%s] Closing old-tgram-port %s ..."
+                             fun-id (com/log-obj old-tgram-port))
+                     (async/close! old-tgram-port))
+                   (debugf "[%s] No old-tgram-port defined" fun-id)))
+               (swap! obj (fn [_] nil))
+               (debugf "[%s] %s new value: %s"
+                       fun-id
+                       obj-q (if-let [v (deref obj)] v "nil"))))
+           ['corona.telegram/initialized
+            'corona.api.cache/cache
+            'corona.telegram/continue
+            'corona.telegram/telegram-port])
+     (infof "%s ... done" msg))))
 
 (defn restart
   ([] (restart "restart"))
   ([fun-id]
-   (infof "[%s] Restarting ..." fun-id)
-   (when @initialized
-     (stop)
-     (Thread/sleep 400))
-   (start)
-   (infof "[%s] Restarting ... done" fun-id)))
+   (let [msg (format "[%s] Restarting" fun-id)]
+     (infof "%s ..." msg)
+     (when @initialized
+       (stop)
+       (Thread/sleep 400))
+     (start)
+     (infof "%s ... done" msg))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.telegram)

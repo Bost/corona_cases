@@ -136,12 +136,13 @@
 ;; For interactive development:
 (defonce server (atom nil))
 
-(defn webapp-start [env-type port]
+(defn webapp-start [port]
   (let [fun-id "webapp-start"
-        msg (format "[%s] starting" fun-id)
-        version (if com/env-devel? com/undef com/botver)]
-    (infof "%s version %s in environment %s on port %s ..."
-           msg version env-type port)
+        msg (format "[%s] Starting" fun-id)]
+    (if com/use-webhook?
+      (infof "%s" msg)
+      (infof "%s\n  %s" msg (cstr/join "\n  " (com/show-env))))
+
     (let [web-server
           (ring.adapter.jetty/run-jetty
            (-> #'app-routes
@@ -156,11 +157,10 @@
       (infof "%s ... done" msg)
       web-server)))
 
-(defn -main [& [env-type port]]
+(defn -main [& [port]]
   (let [fun-id "-main"
-        env-type (or env-type com/env-type)
         port (or port com/webapp-port)
-        msg (format "[%s] starting" fun-id)]
+        msg (format "[%s] Starting" fun-id)]
     (debugf "%s ..." msg)
     (infof "\n  %s" (cstr/join "\n  " (com/show-env)))
     (if (= (str (ctc/default-time-zone))
@@ -182,12 +182,12 @@
     ;; Error R10 (Boot timeout) -> Web process failed to bind to
     ;; $PORT within 60 seconds of launch
     ;; https://devcenter.heroku.com/articles/run-non-web-java-processes-on-heroku
-    (webapp-start env-type port)
+    (webapp-start port)
 
     ;; setup-webhook should be done in the end after everything is initialized
     (setup-webhook)
 
-    (tgram/start env-type)
+    (tgram/start)
     (debugf "%s ... done" msg)))
 
 (defn webapp-stop

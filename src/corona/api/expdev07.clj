@@ -5,7 +5,7 @@
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
-   [corona.api.vaccination :as vac]
+   [corona.api.owid :as vac]
    [utils.core :as utc]
    [clojure.stacktrace]
    [taoensso.timbre :as timbre :refer [debugf infof
@@ -16,8 +16,6 @@
   (:import java.text.SimpleDateFormat))
 
 ;; (set! *warn-on-reflection* true)
-
-(def ^:const url (format "http://%s/all" com/json-api-server))
 
 (defn keyname [key] (str (namespace key) "/" (name key)))
 
@@ -49,7 +47,7 @@
     (when-not (get-in @cache/cache ks)
       (debugf "[%s] cache-miss %s;" "json-data" ks)
       #_(clojure.stacktrace/print-stack-trace (Exception.)))
-    (cache/from-cache! (fn [] (com/get-json url)) ks)))
+    (cache/from-cache! (fn [] (com/get-json com/json-api-v1)) ks)))
 
 (def xform-raw-dates
   (comp

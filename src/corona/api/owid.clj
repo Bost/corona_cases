@@ -1,6 +1,6 @@
-;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.api.vaccination)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.api.owid)
 
-(ns corona.api.vaccination
+(ns corona.api.owid
   (:require clojure.stacktrace
             [corona.api.cache :as cache]
             [corona.common :as com]
@@ -10,18 +10,12 @@
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
-(def ^:const url
-  ;; official api service
-  "https://covid.ourworldindata.org/data/owid-covid-data.json"
-  ;; my test service
-  #_"http://localhost:5555/owid-covid-data.json")
-
 (defn json-data []
   (let [ks [:owid :json]]
     (when-not (get-in @cache/cache ks)
       (debugf "[%s] cache-miss %s;" "json-data" ks)
       #_(clojure.stacktrace/print-stack-trace (Exception.)))
-    (cache/from-cache! (fn [] (com/get-json url)) ks)))
+    (cache/from-cache! (fn [] (com/get-json com/json-api-owid)) ks)))
 
 #_(defn population-cnt [ccode])
 
@@ -101,4 +95,4 @@
                 #_(fn [_] [245 2350 9822 18554 21775 22411 27371 32293 43317 49488 57226 59930 60302 71982 72060]))))))
    ccc/all-country-codes))
 
-;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.vaccination)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.owid)

@@ -24,13 +24,19 @@
    ["covid-tracker-us.herokuapp.com"
     "coronavirus-tracker-api.herokuapp.com"]))
 
+(def owid-prod "https://covid.ourworldindata.org/data/owid-covid-data.json")
+(def owid-localhost "http://localhost:5555/owid-covid-data.json")
+
+(def python-tracker-8000 "localhost:8000")
+(def localhost-5555 "localhost:5555")
+
 (def environment
   "Mapping env-type -> bot-name"
   {(keyword corona-cases)
    {:level 0
     :bot-name corona-cases-bot
     :web-server "https://corona-cases-bot.herokuapp.com"
-    :json-server api-servers
+    :json-server {:v1 api-servers :owid owid-prod}
     :cli {"--prod" "corona-cases"}
     :telegram-token token-corona-cases}
 
@@ -38,7 +44,7 @@
    {:level 1
     :bot-name hokuspokus-bot
     :web-server "https://hokuspokus-bot.herokuapp.com"
-    :json-server api-servers
+    :json-server {:v1 api-servers :owid owid-prod}
     :cli {"--test" "hokuspokus"}
     :telegram-token token-hokuspokus}
 
@@ -46,16 +52,17 @@
    {:level 2
     :bot-name hokuspokus-bot
     ;; :web-server nil ;; intentionally undefined
-    :json-server api-servers
+    :json-server {:v1 api-servers :owid owid-prod}
     :telegram-token token-hokuspokus}
 
    (keyword "devel")
    {:level 3
     :bot-name hokuspokus-bot
     ;; :web-server nil ;; intentionally undefined
-    :json-server
-    "localhost:8000"  ;; coronavirus-tracker-api
-    ;; "localhost:5555"    ;; my test service
+    :json-server {:v1
+                  #_python-tracker-8000
+                  localhost-5555
+                  :owid owid-localhost}
     :telegram-token token-hokuspokus}})
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.envdef)
