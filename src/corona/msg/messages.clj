@@ -1,18 +1,16 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.messages)
 
 (ns corona.msg.messages
-  (:require [clj-http.client :as http]
-            [clojure.data.json :as json]
+  (:require [clojure.data.json :as json]
             [clojure.edn :as edn]
             [clojure.string :as cstr]
-            [corona.api.expdev07 :as data]
             [corona.api.cache :as cache]
             [corona.common :as com]
             [corona.estimate :as est]
             [corona.lang :as lang]
             [corona.msg.common :as msgc]
-            [morse.api :as morse]
             [corona.plot :as plot]
+            [morse.api :as morse]
             [taoensso.timbre :as timbre :refer [debugf]]))
 
 ;; (set! *warn-on-reflection* true)

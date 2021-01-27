@@ -242,10 +242,13 @@
   (let [msg (format "Requesting data from %s" url)]
     (infof "%s ..." msg)
     (let [tbeg (System/currentTimeMillis)]
-      (let [result (-> url
-                       (clj-http.client/get {:accept :json})
-                       :body
-                       (json/read-str :key-fn clojure.core/keyword))]
+      (let [result ((comp
+                     (fn [s] (json/read-str s :key-fn clojure.core/keyword))
+                     :body
+                     (fn [url] (clj-http.client/get url {:accept :json :debug true
+                                                        ;; :debug-body true
+                                                        })))
+                    url)]
         ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
         ;; TODO sanitize against:
         ;; 1. http status 503 - service not available
