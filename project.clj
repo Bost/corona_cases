@@ -46,7 +46,7 @@
    [clj-http                "3.11.0"]
 
    ;; Clojure interface for Telegram Bot API
-   [org.clojars.bost/morse  "0.0.0-162-0x7c39"]
+   [org.clojars.bost/morse  "0.0.0-163-0x00cf"]
 
    [org.clojure/data.json   "1.0.0"]
    [clojure.java-time       "0.3.2"]
