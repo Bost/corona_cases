@@ -22,8 +22,6 @@
 
 (def ^:const options {:parse_mode com/markdown :disable_web_page_preview true})
 
-(defn create-pred-hm [ccode] (data/create-pred-hm ccode))
-
 (defn link [name url parse_mode]
   (if (= parse_mode com/html)
     (format "<a href=\"%s\">%s</a>" url name)

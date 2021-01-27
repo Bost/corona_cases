@@ -146,26 +146,6 @@
      (fatalf "[%s] polling-handlers not created" fun-id))
    (infof "[%s] Starting ... done" fun-id)))
 
-(defn calc-listings [json fun case-kws]
-  (run! (fn [case-kw]
-          (let [coll (sort-by case-kw < (data/stats-countries json))
-               ;; Split the long list of all countries into smaller sub-parts
-               ;; TODO move message partitioning to the corona.msg.lists
-                sub-msgs (partition-all (/ (count coll)
-                                           cmd/cnt-messages-in-listing) coll)
-                options {:parse_mode com/html}
-                prm (conj options {:cnt-msgs (count sub-msgs)
-                                   :cnt-reports (count (data/dates json))
-                                   :pred-hm ((comp
-                                              msg/create-pred-hm
-                                              ccr/get-country-code)
-                                             ccc/worldwide)})]
-            (doall
-             (map-indexed (fn [idx sub-msg]
-                            (fun case-kw (inc idx) (conj prm {:data sub-msg})))
-                          sub-msgs))))
-        case-kws))
-
 (defn endlessly
   "Invoke fun and put the thread to sleep for millis in an endless loop."
   ([fun ttl] (endlessly "endlessly" fun ttl))
@@ -187,10 +167,9 @@
 (defn calc-cache!
   ([aggegation-hash json] (calc-cache! "calc-cache!" aggegation-hash json))
   ([fun-id aggegation-hash json]
-   (doall
-    (run! (fn [prms] (apply (partial calc-listings json) prms))
-          [[msgl/list-countries com/listing-cases-absolute]
-           [msgl/list-per-100k com/listing-cases-per-100k]]))
+   (run! (fn [prms] (apply (partial msgl/calc-listings json) prms))
+         [[msgl/list-countries com/listing-cases-absolute]
+          [msgl/list-per-100k com/listing-cases-per-100k]])
    (let [stats (est/estimate (v1/pic-data))
          cnt-reports (count (data/dates json))]
      ;; TODO do not call calc-functions when the `form` evaluates to true

@@ -13,7 +13,8 @@
             [corona.plot :as p]
             [morse.api :as morse]
             [taoensso.timbre :as timbre :refer [debugf]]
-            [utils.core :as u :refer [in?]]))
+            [utils.core :as u :refer [in?]]
+            [corona.api.expdev07 :as data]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -34,7 +35,7 @@
          ;; override default parse_mode
          (assoc prm-orig
                 :parse_mode com/html
-                :pred-hm (msg/create-pred-hm ccode))]
+                :pred-hm (data/create-pred-hm ccode))]
      (send-text "world"
                 prm
                 (select-keys prm (keys msg/options))
@@ -50,10 +51,6 @@
          (when false ;; do not log it for now
            (debugf "[%s] msg %s" fun-id msg))
          (debugf "[%s] send-photo: %s bytes sent" fun-id (count content)))))))
-
-(def ^:const cnt-messages-in-listing
-  "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
-  7)
 
 (defn explain
   ([prm] (explain "explain" prm))
@@ -138,7 +135,7 @@
                         (let [msg-listing-fun (if (in? com/listing-cases-per-100k case-kw)
                                                 msgl/list-per-100k
                                                 msgl/list-countries)
-                              contents (msg-listing-fun case-kw)]
+                              contents (msg-listing-fun (data/json-data) case-kw)]
                           (doall
                            ;; mapping over results implies the knowledge that
                            ;; the type of `(msg-listing-fun case-kw)` is a
