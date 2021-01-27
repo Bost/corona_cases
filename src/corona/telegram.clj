@@ -250,8 +250,18 @@
        (debugf "[%s] Cache recalculated in %s ms"
                fun-id (- (System/currentTimeMillis) tbeg)))
 
-     (swap! cache/cache update-in [:v1]   dissoc :json)
-     (swap! cache/cache update-in [:owid] dissoc :json)
+     ;; non-atomically dissoc :json from under :v1 and :owid
+     ;; (swap! cache/cache update-in [:v1]   dissoc :json)
+     ;; (swap! cache/cache update-in [:owid] dissoc :json)
+     ;; atomically dissoc :json from under :v1 and :owid
+     ((comp
+       (partial reset! cache/cache)
+       (partial merge @cache/cache)
+       (partial apply merge)
+       (partial map (fn [[k v]] {k (dissoc v :json)}))
+       (partial select-keys @cache/cache))
+      [:v1 :owid])
+
      (debugf "[%s] (keys @cache/cache) %s"
              fun-id (keys @cache/cache))
      (debugf "[%s] Responses %s"
