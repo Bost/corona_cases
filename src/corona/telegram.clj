@@ -187,6 +187,7 @@
               ccc/all-country-codes))
      (com/heap-info)
      (Thread/sleep 100)
+     (debugf "[%s] 2nd garbage collection" fun-id)
      (System/gc) ;; also (.gc (Runtime/getRuntime))
      (com/heap-info)
      (doall
@@ -229,6 +230,11 @@
                             (partial pmap json-changed!))
                            [{:json-fn data/json-data :cache-storage [:v1]}
                             {:json-fn vac/json-data  :cache-storage [:owid]}])]
+     (com/heap-info)
+     (Thread/sleep 100)
+     (System/gc) ;; also (.gc (Runtime/getRuntime))
+     (debugf "[%s] 1st garbage collection" fun-id)
+     (com/heap-info)
      (debugf "[%s] any-json-changed %s" fun-id any-json-changed)
      (when any-json-changed
        (calc-cache! (cache/aggregation-hash) (data/json-data))
@@ -241,13 +247,17 @@
                  {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
                  (select-keys
                   @cache/cache [:plot :msg :list :threshold]))))
-       (debugf "[%s] %s bytes recalculated and cached in %s ms"
-               fun-id (com/measure @cache/cache)
-               ((comp count str) @cache/cache)
-               (- (System/currentTimeMillis) tbeg)))
+       (debugf "[%s] Cache recalculated in %s ms"
+               fun-id (- (System/currentTimeMillis) tbeg)))
 
      (swap! cache/cache update-in [:v1]   dissoc :json)
-     (swap! cache/cache update-in [:owid] dissoc :json))))
+     (swap! cache/cache update-in [:owid] dissoc :json)
+     (debugf "[%s] (keys @cache/cache) %s"
+             fun-id (keys @cache/cache))
+     (debugf "[%s] Responses %s"
+             fun-id (select-keys @cache/cache [:v1 :owid]))
+     (debugf "[%s] Cache size %s B"
+             fun-id (com/measure @cache/cache)))))
 
 (defn- p-endlessly [] (endlessly reset-cache! com/ttl))
 (defn- p-long-polling [] (long-polling com/telegram-token))

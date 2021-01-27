@@ -261,7 +261,7 @@
         ;; Requesting json-data from http://coronavirus-tracker-api.herokuapp.com/all ...
         ;; Execution error (ConnectionClosedException) at org.apache.http.impl.io.ContentLengthInputStream/read (ContentLengthInputStream.java:178).
         ;; Premature end of Content-Length delimited message body (expected: 840,718; received: 515,312)
-        (infof "%s ... %s bytes received in %s ms"
+        (infof "%s ... %s B received in %s ms"
                msg (measure result) (- (System/currentTimeMillis) tbeg)) result))))
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))

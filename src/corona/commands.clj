@@ -50,7 +50,7 @@
                   (morse/send-photo com/telegram-token chat-id options content))]
          (when false ;; do not log it for now
            (debugf "[%s] msg %s" fun-id msg))
-         (debugf "[%s] send-photo: %s bytes sent" fun-id (count content)))))))
+         (debugf "[%s] send-photo: %s B sent" fun-id (count content)))))))
 
 (defn explain
   ([prm] (explain "explain" prm))
