@@ -183,6 +183,13 @@
                                               (data/all-rankings json))))
                                 (last args))))))]])]))
 
+(defn last-index-of
+  "TODO move last-index-of to https://github.com/Bost/utils"
+  [coll elem]
+  ((comp last
+         (partial keep-indexed (fn [i v] (when (= elem v) i))))
+   coll))
+
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread
 ;; they obey a stack discipline:
@@ -260,7 +267,10 @@
                                                   delta
                                                   max-active-val
                                                   (nth dates
-                                                       (utc/last-index-of data-active max-active-val))
+                                                       (
+                                                        last-index-of
+                                                        #_utc/last-index-of
+                                                        data-active max-active-val))
                                                   ccode
                                                   (count ccc/all-country-codes))}))))]
 
