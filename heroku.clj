@@ -173,17 +173,17 @@
 
 (defn publish-source!
   "Publish the source code only when deploying to production"
-  [heroku-env commit rest-args]
-  (when (= heroku-env heroku-env-prod)
-    ;; seems like `git push --tags` pushes only tags w/o the code
-    (sh "git" "tag" "--annotate" "--message" "''"
-        (str pom/pom-version "-" commit))
+  [commit rest-args]
+  ;; seems like `git push --tags` pushes only tags w/o the code
+  (sh "git" "tag" "--annotate" "--message" "''"
+      (str pom/pom-version "-" commit))
 
-    (doseq [remote ["origin" "gitlab"]]
-      ;; See also `git push --tags $pushFlags $remote`
-      (sh "git" "push" rest-args "--follow-tags" "--verbose" remote))))
+  (doseq [remote ["origin" "gitlab"]]
+    ;; See also `git push --tags $pushFlags $remote`
+    (sh "git" "push" rest-args "--follow-tags" "--verbose" remote)))
 
-(defn deploy-or-promote! [options]
+(defn deploy! [prm-app options]
+  {:pre [(in? heroku-apps prm-app)]}
   (let [commit (get-commit!)
         clojure-cli-version (let [props (java.util.Properties.)
                                   key "CLOJURE_CLI_VERSION"]
@@ -193,29 +193,28 @@
         app (str heroku-env "-bot")
         remote (str "heroku-" app)
         rest-args (if (:force options) "--force" "")]
-    ;; (printf "%s: %s\n" 'pom/pom-version pom/pom-version)
-    ;; (printf "app %s \n" app)
-    ;; (printf "remote %s \n" remote)
-    ;; (printf "rest-args %s \n" rest-args)
-    ;; (printf "commit %s \n" commit)
-    ;; (printf "clojure-cli-version %s \n" clojure-cli-version)
 
     (sh-heroku app "addons:open" "papertrail")
-    (if (= heroku-env heroku-env-prod)
-      (do
-        (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
-        ;; seems like `git push --tags` pushes only tags w/o the code
-        (sh "git" "tag" "--annotate" "--message" "''"
-            (str pom/pom-version "-" commit))
+    (sh-heroku app "ps:scale" "web=0")
+    (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
+    (sh "git" "push" rest-args remote "master")
+    (sh-heroku app "ps:scale" "web=1")
+    (when (= heroku-env heroku-env-prod)
+      (publish-source! commit rest-args))))
 
-        (doseq [remote ["origin" "gitlab"]]
-          ;; See also `git push --tags $pushFlags $remote`
-          (sh "git" "push" rest-args "--follow-tags" "--verbose" remote)))
-      (do
-        (sh-heroku app "ps:scale" "web=0")
-        (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
-        (sh "git" "push" rest-args remote "master")
-        (sh-heroku app "ps:scale" "web=1")))))
+(defn promote! [app options]
+  {:pre [(in? heroku-apps app)]}
+  (let [commit (get-commit!)
+        clojure-cli-version (let [props (java.util.Properties.)
+                                  key "CLOJURE_CLI_VERSION"]
+                              (.load props (jio/reader ".heroku-local.env"))
+                              (str key "=" (get props key)))
+        rest-args (if (:force options) "--force" "")]
+
+    (sh-heroku app "addons:open" "papertrail")
+    (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
+    (sh-heroku app "pipelines:promote")
+    (publish-source! commit rest-args)))
 
 ;; Examples:
 ;; ./heroku.clj deploy --app hokuspokus-bot
@@ -227,13 +226,15 @@
           heroku-app (str heroku-env "-bot")
           telegram-token (get-in env/environment
                                  [(keyword heroku-env) :telegram-token])]
-      (printf "action: %s, options: %s\n" action options)
       (condp = action
         restart
         (sh-heroku heroku-app "ps:restart")
 
-        (or deploy promote)
-        (deploy-or-promote! options)
+        deploy
+        (deploy! heroku-app options)
+
+        promote
+        (promote! "hokuspokus-bot" options)
 
         deleteWebhook
         (sh "curl" "--form" "'drop_pending_updates=true'" "--request" "POST"
