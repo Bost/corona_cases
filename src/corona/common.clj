@@ -91,13 +91,7 @@
 
 (define-env-predicates)
 
-(def ^:const ^Boolean env-prod? env-corona-cases?)
-(def ^:const ^Boolean on-heroku? (or env-prod? env-hokuspokus?))
-
-(def use-webhook?
-  "TODO consider having environment variable (env/env :use-webhook)"
-  on-heroku?)
-
+(def ^:const ^Boolean use-webhook? (or env-corona-cases? env-hokuspokus?))
 (def ^:const ^String telegram-token (env/env :telegram-token))
 (def ^:const ^String repl-user      (env/env :repl-user))
 (def ^:const ^String repl-password  (env/env :repl-password))
@@ -185,7 +179,6 @@
                       undef))))
         ['corona.common/env-type
          'corona.common/use-webhook?
-         'corona.common/on-heroku?
          'corona.common/telegram-token
          'corona.common/repl-user
          'corona.common/repl-password

@@ -9,11 +9,10 @@
             [clojure.string :as cstr]
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
-            [corona.api.v1 :as v1]
             [corona.api.owid :as vac]
+            [corona.api.v1 :as v1]
             [corona.commands :as cmd]
             [corona.common :as com]
-            [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.estimate :as est]
             [corona.msg.info :as msgi]
@@ -22,8 +21,7 @@
             [corona.plot :as plot]
             [morse.handlers :as moh]
             [morse.polling :as mop]
-            [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]]
-            [utils.core :as utc])
+            [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]])
   (:import [java.time Instant LocalDateTime ZoneId]))
 
 ;; (set! *warn-on-reflection* true)
@@ -101,7 +99,7 @@
             fun-id (count commands) (count callbacks))
      (into callbacks commands))))
 
-(defn api-error-handler [] (when com/env-prod? (com/system-exit 2)))
+(defn api-error-handler [] (when com/env-corona-cases? (com/system-exit 2)))
 
 (defn start-polling
   "Receiving incoming updates using long polling (getUpdates method)
@@ -198,7 +196,6 @@
      (doall
       (map-aggregation-fn
        (fn [aggregation-kw]
-         ;; TODO delete picture from telegram servers
          (doall
           (map-aggregation-fn
            (fn [case-kw]

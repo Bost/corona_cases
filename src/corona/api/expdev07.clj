@@ -67,7 +67,6 @@
                       str
                       [m d y]))))))
 
-;; TODO raw-dates should have json-data as a param
 (defn raw-dates
   "Size:
   (apply + (map (fn [rd] (count (str rd))) (get-in @cache [:v1 :raw-dates])))
