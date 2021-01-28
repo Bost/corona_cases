@@ -1,7 +1,8 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.envdef)
 
 (ns corona.envdef
-  (:require [clojure.string :as cstr]))
+  (:require [clojure.string :as cstr]
+            [corona.common :as com]))
 
 (def ^:const ^String prod "prod")
 (def ^:const ^String corona-cases "corona-cases")
@@ -25,10 +26,11 @@
     "coronavirus-tracker-api.herokuapp.com"]))
 
 (def owid-prod "https://covid.ourworldindata.org/data/owid-covid-data.json")
-(def owid-localhost "http://localhost:5555/owid-covid-data.json")
+(def owid-mockup (format "http://localhost:%s/owid-covid-data.json" com/mockup-port))
 
-(def python-tracker-8000 "localhost:8000")
-(def localhost-5555 "localhost:5555")
+(def v1-mockup
+  (format "localhost:%s" com/mockup-port)
+  #_"localhost:8000")
 
 (def environment
   "Mapping env-type -> bot-name"
@@ -59,10 +61,7 @@
    {:level 3
     :bot-name hokuspokus-bot
     ;; :web-server nil ;; intentionally undefined
-    :json-server {:v1
-                  #_python-tracker-8000
-                  localhost-5555
-                  :owid owid-localhost}
+    :json-server {:v1 v1-mockup :owid owid-mockup}
     :telegram-token token-hokuspokus}})
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.envdef)

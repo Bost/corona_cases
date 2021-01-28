@@ -28,6 +28,8 @@
                                  ;; keep port-nr in sync with README.md
                                  5050))
 
+(def ^:const ^Long mockup-port (inc webapp-port))
+
 (when-not (spec/valid? ::port webapp-port)
   (throw (Exception.
           (spec/explain-str ::port webapp-port))))

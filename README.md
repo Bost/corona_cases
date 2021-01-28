@@ -23,7 +23,6 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 
 * [Clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
 * [Babashka](https://github.com/babashka/babashka#installer-script)
-* [coronavirus-tracker-api](https://github.com/ExpDev07/coronavirus-tracker-api#installation)
 * postgresql:
 ```bash
 sudo apt install postgresql postgresql-contrib
