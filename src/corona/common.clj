@@ -23,12 +23,8 @@
 
 (spec/def ::port number?)
 
-(def ^:const ^Long webapp-port (if-let [env-port (env/env :port)]
-                                 (read-string env-port)
-                                 ;; keep port-nr in sync with README.md
-                                 5050))
-
-(def ^:const ^Long mockup-port (inc webapp-port))
+(def ^:const ^Long webapp-port envdef/webapp-port)
+(def ^:const ^Long mockup-port envdef/mockup-port)
 
 (when-not (spec/valid? ::port webapp-port)
   (throw (Exception.

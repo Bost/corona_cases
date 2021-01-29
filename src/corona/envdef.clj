@@ -2,7 +2,7 @@
 
 (ns corona.envdef
   (:require [clojure.string :as cstr]
-            [corona.common :as com]))
+            [environ.core :as env]))
 
 (def ^:const ^String prod "prod")
 (def ^:const ^String corona-cases "corona-cases")
@@ -25,11 +25,21 @@
    ["covid-tracker-us.herokuapp.com"
     "coronavirus-tracker-api.herokuapp.com"]))
 
-(def owid-prod "https://covid.ourworldindata.org/data/owid-covid-data.json")
-(def owid-mockup (format "http://localhost:%s/owid-covid-data.json" com/mockup-port))
+(def ^:const ^Long webapp-port (if-let [env-port (env/env :port)]
+                                 (read-string env-port)
+                                 ;; keep port-nr in sync with README.md
+                                 5050))
+
+(def ^:const ^Long mockup-port (inc webapp-port))
+
+(def ^:const ^String owid-prod
+  "https://covid.ourworldindata.org/data/owid-covid-data.json")
+
+(def ^:const ^String owid-mockup
+  (format "http://localhost:%s/owid-covid-data.json" mockup-port))
 
 (def v1-mockup
-  (format "localhost:%s" com/mockup-port)
+  (format "localhost:%s" mockup-port)
   #_"localhost:8000")
 
 (def environment

@@ -10,6 +10,7 @@
             [corona.msg.info :as msgi]
             [corona.msg.messages :as msg]
             [corona.msg.lists :as msgl]
+            [corona.macro :refer [defn-fun-id]]
             [corona.plot :as p]
             [morse.api :as morse]
             [taoensso.timbre :as timbre :refer [debugf]]
@@ -19,57 +20,50 @@
 ;; (set! *warn-on-reflection* true)
 
 (defn- send-text
+  "Can't be defined by defn-fun-id"
   ([fun-id prm content] (send-text fun-id prm msg/options content))
   ([fun-id {:keys [chat-id]} options content]
    (let [msg (doall
               (morse/send-text com/telegram-token chat-id options content))]
      (when false ;; do not log it for now
        (debugf "[%s] msg %s" fun-id msg))
-     (debugf "[%s] send-text: %s chars sent" fun-id (count content))
+     (debugf "[%s] %s chars sent" fun-id (count content))
      #_msg)))
 
-(defn world
-  ([prm] (world "world" prm))
-  ([fun-id {:keys [chat-id ccode] :as prm-orig}]
-   (let [prm
+(defn-fun-id world "" [{:keys [chat-id ccode] :as prm-orig}]
+  (let [prm
          ;; override default parse_mode
-         (assoc prm-orig
-                :parse_mode com/html
-                :pred-hm (data/create-pred-hm ccode))]
-     (send-text "world"
-                prm
-                (select-keys prm (keys msg/options))
-                (msgi/detailed-info ccode))
-     (when-let [;; the plot is fetched from the cache, stats and report need not to be
+        (assoc prm-orig
+               :parse_mode com/html
+               :pred-hm (data/create-pred-hm ccode))]
+    (send-text "world"
+               prm
+               (select-keys prm (keys msg/options))
+               (msgi/detailed-info ccode))
+    (when-let [;; the plot is fetched from the cache, stats and report need not to be
                 ;; specified
-                content (p/plot-country ccode)]
-       (let [options (if (msgc/worldwide? ccode)
-                       (msg/reply-markup-btns (select-keys prm [:chat-id :ccode :message_id]))
-                       {})
-             msg (doall
-                  (morse/send-photo com/telegram-token chat-id options content))]
-         (when false ;; do not log it for now
-           (debugf "[%s] msg %s" fun-id msg))
-         (debugf "[%s] send-photo: %s B sent" fun-id (count content)))))))
+               content (p/plot-country ccode)]
+      (let [options (if (msgc/worldwide? ccode)
+                      (msg/reply-markup-btns (select-keys prm [:chat-id :ccode :message_id]))
+                      {})
+            msg (doall
+                 (morse/send-photo com/telegram-token chat-id options content))]
+        (when false ;; do not log it for now
+          (debugf "[%s] msg %s" fun-id msg))
+        (debugf "[%s] send-photo: %s B sent" fun-id (count content))))))
 
-(defn explain
-  ([prm] (explain "explain" prm))
-  ([fun-id {:keys [parse_mode] :as prm}]
-   (send-text fun-id prm (msg/explain parse_mode))))
+(defn-fun-id explain "" [{:keys [parse_mode] :as prm}]
+  (send-text fun-id prm (msg/explain parse_mode)))
 
-(defn feedback
-  ([prm] (feedback "feedback" prm))
-  ([fun-id prm]
-   (send-text fun-id prm (msg/feedback))))
+(defn-fun-id feedback "" [prm]
+  (send-text fun-id prm (msg/feedback)))
 
 ;; (defn language [{:keys [chat-id parse_mode]}]
 ;;   (doall
 ;;    (morse/send-text com/telegram-token chat-id msg/options (msg/language parse_mode))))
 
-(defn contributors
-  ([prm] (contributors "contributors" prm))
-  ([fun-id {:keys [parse_mode] :as prm}]
-   (send-text fun-id prm (msg/contributors parse_mode))))
+(defn-fun-id contributors "" [{:keys [parse_mode] :as prm}]
+  (send-text fun-id prm (msg/contributors parse_mode)))
 
 (defn- normalize
   "Country name w/o spaces: e.g. \"United States\" => \"UnitedStates\""
@@ -123,27 +117,25 @@
       :fun (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}]))
 
-(defn cmds-listing
-  "Command map for listings."
-  []
-  (let [fun-id "cmds-listing"]
-    (->> com/listing-cases-absolute
-         (into com/listing-cases-per-100k)
-         (map (fn [case-kw]
-                {:name (l/list-sorted-by case-kw)
-                 :fun (fn [chat-id]
-                        (let [contents (if (in? com/listing-cases-per-100k case-kw)
-                                         (msgl/list-per-100k case-kw)
-                                         (msgl/list-countries case-kw))]
-                          (doall
+(defn-fun-id cmds-listing "Command map for listings." []
+  (->> com/listing-cases-absolute
+       (into com/listing-cases-per-100k)
+       (map (fn [case-kw]
+              {:name (l/list-sorted-by case-kw)
+               :fun (fn [chat-id]
+                      (let [;; TODO use defprotocol
+                            contents (if (in? com/listing-cases-per-100k case-kw)
+                                       (msgl/list-per-100k case-kw)
+                                       (msgl/list-countries case-kw))]
+                        (doall
                            ;; mapping over results implies the knowledge that
                            ;; the type of `(msg-listing-fun case-kw)` is a
                            ;; collection.
-                           (map (fn [content]
-                                  (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
-                                  (debugf "[%s] send-text: %s chars sent" fun-id (count content)))
-                                contents))))
-                 :desc (l/list-sorted-by-desc case-kw)})))))
+                         (map (fn [content]
+                                (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
+                                (debugf "[%s] send-text: %s chars sent" fun-id (count content)))
+                              contents))))
+               :desc (l/list-sorted-by-desc case-kw)}))))
 
 (def cmds
   "Create a vector of hash-maps for all available commands."

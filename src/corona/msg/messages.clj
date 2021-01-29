@@ -8,6 +8,7 @@
             [corona.common :as com]
             [corona.estimate :as est]
             [corona.lang :as lang]
+            [corona.macro :refer [defn-fun-id]]
             [corona.msg.common :as msgc]
             [corona.plot :as plot]
             [morse.api :as morse]
@@ -45,41 +46,40 @@
                  com/absolute-cases))
          com/aggregation-cases)))
 
-(defn worldwide-plots
-  ([prm] (worldwide-plots "worldwide-plots" prm))
-  ([fun-id {:keys [data message]}]
-   (let [data-hm (edn/read-string data)
+(defn-fun-id worldwide-plots ""
+  [{:keys [data message]}]
+  (let [data-hm (edn/read-string data)
 
-         {chat-id :chat-id ccode :ccode plot-type :type case-kw :case-kw}
-         data-hm
+        {chat-id :chat-id ccode :ccode plot-type :type case-kw :case-kw}
+        data-hm
 
-         message-id (:message_id message)
-         options (reply-markup-btns {:chat-id chat-id :ccode ccode
-                                     :message_id message-id})
-         id (cache/aggregation-hash)]
-     (let [msg (doall
-                (if com/use-webhook?
+        message-id (:message_id message)
+        options (reply-markup-btns {:chat-id chat-id :ccode ccode
+                                    :message_id message-id})
+        id (cache/aggregation-hash)]
+    (let [msg (doall
+               (if com/use-webhook?
                   ;; TODO alternatively send file to a dump channel, get file
                   ;; id, edit message media, delete message from channel
-                  (morse/edit-media
-                   com/telegram-token chat-id message-id options
-                   {:type "photo"
-                    :media
-                    (let [url (format "%s/%s/%s/%s/%s"
-                                      com/webapp-server
-                                      com/graphs-path
-                                      id
-                                      (name plot-type)
-                                      (name case-kw))]
-                      (debugf "[%s] url %s" fun-id url)
-                      url)})
-                  (morse/send-photo
-                   com/telegram-token chat-id options
+                 (morse/edit-media
+                  com/telegram-token chat-id message-id options
+                  {:type "photo"
+                   :media
+                   (let [url (format "%s/%s/%s/%s/%s"
+                                     com/webapp-server
+                                     com/graphs-path
+                                     id
+                                     (name plot-type)
+                                     (name case-kw))]
+                     (debugf "[%s] url %s" fun-id url)
+                     url)})
+                 (morse/send-photo
+                  com/telegram-token chat-id options
                    ;; the plot is fetched from the cache, stats and report need
                    ;; not to be specified
-                   (plot/plot-aggregation
-                    id (:type data-hm) (:case-kw data-hm)))))]
-       (debugf "[%s] (count msg) %s" fun-id (count msg))))))
+                  (plot/plot-aggregation
+                   id (:type data-hm) (:case-kw data-hm)))))]
+      (debugf "[%s] (count msg) %s" fun-id (count msg)))))
 
 ;; mapvals
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200

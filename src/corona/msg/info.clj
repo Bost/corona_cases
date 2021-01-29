@@ -2,17 +2,17 @@
 
 (ns corona.msg.info
   (:require [clojure.string :as cstr]
-            [corona.api.expdev07 :as data]
             [corona.api.cache :as cache]
+            [corona.api.expdev07 :as data]
             [corona.common :as com]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
+            [corona.macro :refer [defn-fun-id]]
             [corona.msg.common :as msgc]
             [incanter.stats :as istats]
             [taoensso.timbre :as timbre :refer [debugf]]
             [utils.core :as utc]
-            #_[clj-memory-meter.core :as meter]
             [utils.num :as utn]))
 
 ;; (set! *warn-on-reflection* true)
@@ -45,10 +45,9 @@
 
 (defn round-nr [value] (int (utn/round-precision value 0)))
 
-(defn- confirmed-info
+(defn-fun-id confirmed-info ""
   [last-report pred-hm delta max-active-val max-active-date ccode cnt-countries]
-  (let [fun-id "confirmed-info"
-        json (data/json-data)
+  (let [json (data/json-data)
         {deaths          :d
          recove          :r
          active          :a
@@ -194,87 +193,84 @@
 ;; allow per-thread bindings via the macro binding. Within each thread
 ;; they obey a stack discipline:
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
-(defn create-detailed-info
+(defn-fun-id create-detailed-info
   "Shows the table with the absolute and %-wise nr of cases, cases per-100k etc.
   TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
   "
-  ([json ccode parse_mode pred-hm]
-   (create-detailed-info "create-detailed-info" json ccode parse_mode pred-hm))
-  ([fun-id json ccode parse_mode pred-hm]
-   (let [dates (data/dates json)
-         last-report (data/last-report pred-hm json)
-         {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
-         delta (data/delta pred-hm json)
-         delta-confirmed (:c delta)
+  [json ccode parse_mode pred-hm]
+  (let [dates (data/dates json)
+        last-report (data/last-report pred-hm json)
+        {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
+        delta (data/delta pred-hm json)
+        delta-confirmed (:c delta)
 
-         {vaccin-last-8-reports :v} (data/last-8-reports pred-hm json)
-         [_                      & vaccin-last-7-reports] vaccin-last-8-reports
+        {vaccin-last-8-reports :v} (data/last-8-reports pred-hm json)
+        [_                      & vaccin-last-7-reports] vaccin-last-8-reports
 
-         vaccin-last-7-reports-with-rate
-         (map (fn [v] (format "%s=%s%s"
-                              v
-                              (com/vaccination-rate v population)
-                              msgc/percent))
-              vaccin-last-7-reports)
+        vaccin-last-7-reports-with-rate
+        (map (fn [v] (format "%s=%s%s"
+                             v
+                             (com/vaccination-rate v population)
+                             msgc/percent))
+             vaccin-last-7-reports)
          ;; delta-vaccinated (:v delta)
 
-         info (format-detailed-info
-               (conj
-                {:header-txt (msgc/header parse_mode pred-hm json)
-                 :cname-aliased-txt (ccr/country-name-aliased ccode)
-                 :country-commands-txt (apply (fn [ccode c3code]
-                                                (format "     %s    %s" ccode c3code))
-                                              (map (comp com/encode-cmd cstr/lower-case)
-                                                   [ccode (ccc/country-code-3-letter ccode)]))
-                 :cnt-reports-txt (str lang/report " " (count dates))
-                 :population-txt (format "<code>%s %s</code> = %s %s"
-                                         (com/right-pad lang/people " " (- msgc/padding-s 3))
-                                         (com/left-pad population " " (+ msgc/padding-n 2))
-                                         (utn/round-div-precision population 1e6 1)
-                                         lang/millions-rounded)
-                 :vaccinated-txt
-                 (if (zero? vaccinated)
-                   (format "<code>%s %s</code> - %s"
-                           (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
-                           (com/left-pad vaccinated " " (+ msgc/padding-n 2))
-                           lang/missing-vaccin-data)
-                   (format "<code>%s %s %s%s</code>"
-                           (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
-                           (com/left-pad vaccinated " " (+ msgc/padding-n 2))
-                           v-rate
-                           msgc/percent))
-                 :vaccinated-last-7
-                 (format
-                  "<code>%s</code>\n%s"
-                  (let [emoji "💉🗓"
-                        s lang/vaccin-last-7]
-                    (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank s)
-                                   msgc/blank msgc/padding-s))
-                  (utc/sjoin vaccin-last-7-reports-with-rate))
+        info (format-detailed-info
+              (conj
+               {:header-txt (msgc/header parse_mode pred-hm json)
+                :cname-aliased-txt (ccr/country-name-aliased ccode)
+                :country-commands-txt (apply (fn [ccode c3code]
+                                               (format "     %s    %s" ccode c3code))
+                                             (map (comp com/encode-cmd cstr/lower-case)
+                                                  [ccode (ccc/country-code-3-letter ccode)]))
+                :cnt-reports-txt (str lang/report " " (count dates))
+                :population-txt (format "<code>%s %s</code> = %s %s"
+                                        (com/right-pad lang/people " " (- msgc/padding-s 3))
+                                        (com/left-pad population " " (+ msgc/padding-n 2))
+                                        (utn/round-div-precision population 1e6 1)
+                                        lang/millions-rounded)
+                :vaccinated-txt
+                (if (zero? vaccinated)
+                  (format "<code>%s %s</code> - %s"
+                          (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
+                          (com/left-pad vaccinated " " (+ msgc/padding-n 2))
+                          lang/missing-vaccin-data)
+                  (format "<code>%s %s %s%s</code>"
+                          (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
+                          (com/left-pad vaccinated " " (+ msgc/padding-n 2))
+                          v-rate
+                          msgc/percent))
+                :vaccinated-last-7
+                (format
+                 "<code>%s</code>\n%s"
+                 (let [emoji "💉🗓"
+                       s lang/vaccin-last-7]
+                   (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank s)
+                                  msgc/blank msgc/padding-s))
+                 (utc/sjoin vaccin-last-7-reports-with-rate))
 
-                 :confirmed-txt (msgc/fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
-                                                   :diff delta-confirmed})
-                 :footer-txt (msgc/footer parse_mode)}
-                (when (pos? confirmed)
-                  (let [data-active (:a (data/case-counts-report-by-report pred-hm))
-                        max-active-val (apply max data-active)]
-                    {:details-txt (confirmed-info last-report
-                                                  pred-hm
-                                                  delta
-                                                  max-active-val
-                                                  (nth dates
-                                                       (
-                                                        last-index-of
-                                                        #_utc/last-index-of
-                                                        data-active max-active-val))
-                                                  ccode
-                                                  (count ccc/all-country-codes))}))))]
+                :confirmed-txt (msgc/fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
+                                                  :diff delta-confirmed})
+                :footer-txt (msgc/footer parse_mode)}
+               (when (pos? confirmed)
+                 (let [data-active (:a (data/case-counts-report-by-report pred-hm))
+                       max-active-val (apply max data-active)]
+                   {:details-txt (confirmed-info last-report
+                                                 pred-hm
+                                                 delta
+                                                 max-active-val
+                                                 (nth dates
+                                                      (last-index-of
+                                                       #_utc/last-index-of
+                                                       data-active max-active-val))
+                                                 ccode
+                                                 (count ccc/all-country-codes))}))))]
 
-     (debugf "[%s] ccode %s info-size %s" fun-id ccode (com/measure info))
-     info)))
+    (debugf "[%s] ccode %s info-size %s" fun-id ccode (com/measure info))
+    info))
 
 (defn detailed-info
   [ccode & [json parse_mode pred-hm]]
