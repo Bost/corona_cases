@@ -8,9 +8,8 @@
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
-            [corona.macro :refer [defn-fun-id]]
-            [corona.msg.common :as msgc]
-            [taoensso.timbre :as timbre :refer [debugf]]))
+            [corona.macro :refer [defn-fun-id debugf]]
+            [corona.msg.common :as msgc]))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
@@ -78,8 +77,8 @@
                data))
          ""
          (msgc/footer parse_mode))]
-    (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
-            fun-id case-kw msg-idx (com/measure msg))
+    (debugf "case-kw %s msg-idx %s msg-size %s"
+            case-kw msg-idx (com/measure msg))
     msg))
 
 (defn get-from-cache! [case-kw json msg-idx prm ks fun]
@@ -139,8 +138,8 @@
                data))
          ""
          (msgc/footer parse_mode))]
-    (debugf "[%s] case-kw %s msg-idx %s msg-size %s"
-            fun-id case-kw msg-idx (com/measure msg))
+    (debugf "case-kw %s msg-idx %s msg-size %s"
+            case-kw msg-idx (com/measure msg))
     msg))
 
 (defn list-per-100k

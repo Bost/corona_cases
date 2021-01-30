@@ -13,21 +13,22 @@
             [corona.macro :refer [defn-fun-id]]
             [corona.plot :as p]
             [morse.api :as morse]
-            [taoensso.timbre :as timbre :refer [debugf]]
+            [corona.macro :refer [defn-fun-id debugf]]
             [utils.core :as u :refer [in?]]
-            [corona.api.expdev07 :as data]))
+            [corona.api.expdev07 :as data]
+            [taoensso.timbre :as timbre]))
 
 ;; (set! *warn-on-reflection* true)
 
-(defn- send-text
-  "Can't be defined by defn-fun-id"
+(defn send-text
+  "!!! Can't be defined by defn-fun-id !!!"
   ([fun-id prm content] (send-text fun-id prm msg/options content))
   ([fun-id {:keys [chat-id]} options content]
    (let [msg (doall
               (morse/send-text com/telegram-token chat-id options content))]
      (when false ;; do not log it for now
-       (debugf "[%s] msg %s" fun-id msg))
-     (debugf "[%s] %s chars sent" fun-id (count content))
+       (timbre/debugf "[%s] msg %s" fun-id msg))
+     (timbre/debugf "[%s] %s chars sent" fun-id (count content))
      #_msg)))
 
 (defn-fun-id world "" [{:keys [chat-id ccode] :as prm-orig}]
@@ -49,8 +50,8 @@
             msg (doall
                  (morse/send-photo com/telegram-token chat-id options content))]
         (when false ;; do not log it for now
-          (debugf "[%s] msg %s" fun-id msg))
-        (debugf "[%s] send-photo: %s B sent" fun-id (count content))))))
+          (debugf "msg %s" msg))
+        (debugf "send-photo: %s B sent" (count content))))))
 
 (defn-fun-id explain "" [{:keys [parse_mode] :as prm}]
   (send-text fun-id prm (msg/explain parse_mode)))
@@ -117,7 +118,7 @@
       :fun (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}]))
 
-(defn-fun-id cmds-listing "Command map for listings." []
+(defn-fun-id cmds-listing "Command map for listings" []
   (->> com/listing-cases-absolute
        (into com/listing-cases-per-100k)
        (map (fn [case-kw]
@@ -133,7 +134,7 @@
                            ;; collection.
                          (map (fn [content]
                                 (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
-                                (debugf "[%s] send-text: %s chars sent" fun-id (count content)))
+                                (debugf "send-text: %s chars sent" (count content)))
                               contents))))
                :desc (l/list-sorted-by-desc case-kw)}))))
 

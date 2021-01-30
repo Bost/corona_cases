@@ -24,8 +24,8 @@
             ring.middleware.params
             [ring.middleware.session :as session]
             ring.util.http-response
-            [corona.macro :refer [defn-fun-id]]
-            [taoensso.timbre :as timbre :refer [debugf infof]])
+            [corona.macro :refer [defn-fun-id debugf infof]]
+            [taoensso.timbre :as timbre])
   (:import java.time.ZoneId
            java.util.TimeZone))
 
@@ -46,9 +46,9 @@
 (declare tgram-handlers)
 
 (when com/use-webhook?
-  (debugf "Defining tgram-handlers at compile time ...")
+  (timbre/debugf "Defining tgram-handlers at compile time ...")
   (moh/apply-macro moh/defhandler tgram-handlers (tgram/create-handlers))
-  (debugf "Defining tgram-handlers at compile time ... done"))
+  (timbre/debugf "Defining tgram-handlers at compile time ... done"))
 
 (defn-fun-id setup-webhook "" []
   (if com/use-webhook?
@@ -57,11 +57,11 @@
                          :body :result :url))
         (let [res (moa/set-webhook com/telegram-token
                                    (webhook-url com/telegram-token))]
-          (debugf "[%s] (set-webhook ...) %s" fun-id (:body res)))))
+          (debugf "(set-webhook ...) %s" (:body res)))))
     (when-not (empty? (->> com/telegram-token moa/get-info-webhook
                            :body :result :url))
       (let [res (moa/del-webhook com/telegram-token)]
-        (debugf "[%s] (del-webhook ...) %s" fun-id (:body res))))))
+        (debugf "(del-webhook ...) %s" (:body res))))))
 
 (defn- authenticated? [user pass]
   ;; TODO: heroku config:add REPL_USER=[...] REPL_PASSWORD=[...]
@@ -82,7 +82,7 @@
     (format "/%s" com/telegram-token)
     args
     (let [body (get-in args [:body])]
-      (debugf "webhook request body:\n%s" args)
+      (timbre/debugf "webhook request body:\n%s" args)
       (tgram-handlers body)
       (ring.util.http-response/ok)))
 
@@ -136,35 +136,32 @@
 (defonce server (atom nil))
 
 (defn-fun-id webapp-start "" [port]
-  (let [msg (format "[%s] Starting" fun-id)]
-    (if com/use-webhook?
-      (infof "%s" msg)
-      (infof "%s\n  %s" msg (cstr/join "\n  " (com/show-env))))
+  (if com/use-webhook?
+    (infof "Starting ...")
+    (infof "Starting ...\n  %s" (cstr/join "\n  " (com/show-env))))
 
-    (let [web-server
-          (ring.adapter.jetty/run-jetty
-           (-> #'app-routes
-               (wrap-drawbridge)
-               (compojure.handler/site)
+  (let [web-server
+        (ring.adapter.jetty/run-jetty
+         (-> #'app-routes
+             (wrap-drawbridge)
+             (compojure.handler/site)
                ;; wrap-json-body is needed for the destructing the
                ;; (POST "..." {body :body} ...)
-               (ring.middleware.json/wrap-json-body {:keywords? true}))
-           {:port port :join? false})]
-      (debugf "[%s] web-server %s" fun-id web-server)
-      (swap! server (fn [_] web-server))
-      (infof "%s ... done" msg)
-      web-server)))
+             (ring.middleware.json/wrap-json-body {:keywords? true}))
+         {:port port :join? false})]
+    (debugf "web-server %s" web-server)
+    (swap! server (fn [_] web-server))
+    (infof "Starting ... done")
+    web-server))
 
 (defn-fun-id -main "TODO test this by bin/build; heroku local" [& [port]]
-  (let [port (or port com/webapp-port)
-        msg (format "[%s] Starting" fun-id)]
-    (debugf "%s ..." msg)
+  (let [port (or port com/webapp-port)]
+    (debugf "Starting ...")
     (infof "\n  %s" (cstr/join "\n  " (com/show-env)))
     (if (= (str (ctc/default-time-zone))
            (str (ZoneId/systemDefault))
            (.getID (TimeZone/getDefault)))
-      (debugf "[%s] TimeZone: %s; current time: %s (%s in %s)"
-              fun-id
+      (debugf "TimeZone: %s; current time: %s (%s in %s)"
               (str (ctc/default-time-zone))
               (cte/tnow)
               (cte/tnow ccc/zone-id)
@@ -185,20 +182,19 @@
     (setup-webhook)
 
     (tgram/start)
-    (debugf "%s ... done" msg)))
+    (debugf "Staring ... done")))
 
 (defn-fun-id webapp-stop "" []
-  (let [msg (format "[%s] stopping" fun-id)]
-    (debugf "%s ..." msg)
-    (.stop ^org.eclipse.jetty.server.Server @server)
-    (let [objs ['corona.web/server]]
-      (run! (fn [obj-q]
-              (let [obj (eval obj-q)]
-                (swap! obj (fn [_] nil))
-                (debugf "[%s] %s new value: %s" fun-id
-                        obj-q (if-let [v (deref obj)] v "nil"))))
-            objs))
-    (debugf "%s ... done" msg)))
+  (debugf "Stopping ...")
+  (.stop ^org.eclipse.jetty.server.Server @server)
+  (let [objs ['corona.web/server]]
+    (run! (fn [obj-q]
+            (let [obj (eval obj-q)]
+              (swap! obj (fn [_] nil))
+              (debugf "%s new value: %s"
+                      obj-q (if-let [v (deref obj)] v "nil"))))
+          objs))
+  (debugf "Stopping ... done"))
 
 (defn webapp-restart []
   (when @server

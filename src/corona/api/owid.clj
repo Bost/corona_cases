@@ -6,14 +6,14 @@
             [corona.common :as com]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
-            [taoensso.timbre :as timbre :refer [debugf]])
+            [corona.macro :refer [defn-fun-id debugf]])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
-(defn json-data []
+(defn-fun-id json-data "" []
   (let [ks [:owid :json]]
     (when-not (get-in @cache/cache ks)
-      (debugf "[%s] cache-miss %s;" "json-data" ks)
+      (debugf "cache-miss %s" ks)
       #_(clojure.stacktrace/print-stack-trace (Exception.)))
     (cache/from-cache! (fn [] (com/get-json com/json-api-owid)) ks)))
 

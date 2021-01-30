@@ -12,7 +12,7 @@
             [corona.msg.common :as msgc]
             [corona.plot :as plot]
             [morse.api :as morse]
-            [taoensso.timbre :as timbre :refer [debugf]]))
+            [corona.macro :refer [defn-fun-id debugf]]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -71,7 +71,7 @@
                                      id
                                      (name plot-type)
                                      (name case-kw))]
-                     (debugf "[%s] url %s" fun-id url)
+                     (debugf "url %s" url)
                      url)})
                  (morse/send-photo
                   com/telegram-token chat-id options
@@ -79,7 +79,7 @@
                    ;; not to be specified
                   (plot/plot-aggregation
                    id (:type data-hm) (:case-kw data-hm)))))]
-      (debugf "[%s] (count msg) %s" fun-id (count msg)))))
+      (debugf "(count msg) %s" (count msg)))))
 
 ;; mapvals
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200

@@ -6,7 +6,6 @@
             [corona.common :as com]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
-            [taoensso.timbre :as timbre :refer [debugf]]
             [utils.core :as utc]))
 
 ;; (set! *warn-on-reflection* true)

@@ -8,10 +8,7 @@
    [corona.api.owid :as vac]
    [utils.core :as utc]
    [clojure.stacktrace]
-   [taoensso.timbre :as timbre :refer [debugf infof
-                                       warnf
-                                       errorf
-                                       #_fatalf]]
+   [corona.macro :refer [defn-fun-id debugf errorf]]
    [corona.api.cache :as cache])
   (:import java.text.SimpleDateFormat))
 
@@ -42,10 +39,10 @@
           (.add temp-list x)
           xs))))))
 
-(defn json-data []
+(defn-fun-id json-data "" []
   (let [ks [:v1 :json]]
     (when-not (get-in @cache/cache ks)
-      (debugf "[%s] cache-miss %s;" "json-data" ks)
+      (debugf "cache-miss %s;" ks)
       #_(clojure.stacktrace/print-stack-trace (Exception.)))
     (cache/from-cache! (fn [] (com/get-json com/json-api-v1)) ks)))
 
@@ -94,12 +91,12 @@
                  json)))
    [:v1 :raw-dates]))
 
-(defn population-cnt [ccode]
+(defn-fun-id population-cnt "" [ccode]
   (or (get ccr/population ccode)
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]
-        (errorf "population nr unknown; ccode: %s; using %s"
+        (errorf "Population nr unknown; ccode: %s; using %s"
                 ccode
                 default-population)
         default-population)))
@@ -211,11 +208,7 @@
        (map (fn [raw-date]
               (if (and (empty? locations)
                        (= :recovered case-kw))
-                (let [default 0]
-                  #_
-                  (warnf "ccode %s %s %s missing locations; defaults to %s"
-                         ccode case-kw (com/fmt-date-dbg (date raw-date)) default)
-                  default)
+                0
                 (transduce
                  (map (comp
                        ;; https://github.com/ExpDev07/coronavirus-tracker-api/issues/41
@@ -299,9 +292,7 @@
      [get-prev get-last]))
 
 (defn last-report [pred-hm json]
-  (let [ret (eval-fun get-last pred-hm json)]
-    #_(debugf "[%s] ret %s" "last-report" (select-keys ret [:a-rate :v-rate]))
-    ret))
+  (eval-fun get-last pred-hm json))
 
 (defn last-8-reports [pred-hm json] (eval-fun (partial take-last 8) pred-hm json))
 

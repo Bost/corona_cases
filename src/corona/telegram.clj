@@ -15,14 +15,13 @@
             [corona.common :as com]
             [corona.country-codes :as ccc]
             [corona.estimate :as est]
-            [corona.macro :refer [defn-fun-id]]
+            [corona.macro :refer [defn-fun-id debugf infof warnf fatalf]]
             [corona.msg.info :as msgi]
             [corona.msg.lists :as msgl]
             [corona.msg.messages :as msg]
             [corona.plot :as plot]
             [morse.handlers :as moh]
-            [morse.polling :as mop]
-            [taoensso.timbre :as timbre :refer [debugf fatalf infof warnf]])
+            [morse.polling :as mop])
   (:import [java.time Instant LocalDateTime ZoneId]))
 
 ;; (set! *warn-on-reflection* true)
@@ -57,13 +56,13 @@
      (let [{name :name fun :fun} m]
        ((comp
          (partial moh/command-fn name)
-         (partial wrap-in-hooks {:pre (fn [& args]
-                                        (let [chat (:chat (first args))]
-                                          (infof "[%s] :pre /%s chat %s" fun-id name chat)))
-                                 :post (fn [& args]
-                                         (let [[fn-result {:keys [chat]}] args]
-                                           (infof "[%s] :post /%s chat %s" fun-id name chat)
-                                           fn-result))}))
+         (partial wrap-in-hooks
+                  {:pre (fn [& args]
+                          (infof ":pre /%s chat %s" name (:chat (first args))))
+                   :post (fn [& args]
+                           (let [[fn-result {:keys [chat]}] args]
+                             (infof ":post /%s chat %s" name chat)
+                             fn-result))}))
         (fn [m] (fun (:id (:chat m)))))))
    cmds))
 
@@ -71,15 +70,14 @@
   (map
    (fn [fun]
      (->> fun
-          (wrap-in-hooks {:pre (fn [& args]
-                                 (let [{:keys [data message]} (first args)]
-                                   (infof "[%s] :pre data %s chat %s"
-                                          fun-id data (:chat message))))
-                          :post (fn [& args]
-                                  (let [[fn-result {:keys [data message]}] args]
-                                    (infof "[%s] :post data %s chat %s"
-                                           fun-id data (:chat message))
-                                    fn-result))})
+          (wrap-in-hooks
+           {:pre (fn [& args]
+                   (let [{:keys [data message]} (first args)]
+                     (infof ":pre data %s chat %s" data (:chat message))))
+            :post (fn [& args]
+                    (let [[fn-result {:keys [data message]}] args]
+                      (infof ":post data %s chat %s" data (:chat message))
+                      fn-result))})
           (moh/callback-fn)))
    funs))
 
@@ -107,37 +105,34 @@
   [token handler]
   (let [opts {}
         channel (async/chan)]
-    (debugf "[%s] Started channel %s" fun-id (com/log-obj channel))
+    (debugf "Started channel %s" (com/log-obj channel))
     (let [producer (mop/create-producer channel token opts api-error-handler)]
-      (infof "[%s] Created producer %s on channel %s"
-             fun-id (com/log-obj producer) (com/log-obj channel))
-      #_(debugf "[%s] Creating consumer for produced %s with handler %s ..."
-                fun-id producer handler)
+      (infof "Created producer %s on channel %s"
+             (com/log-obj producer) (com/log-obj channel))
+      (debugf "Creating consumer for produced %s with handler %s ..."
+                producer handler)
       (let [consumer (mop/create-consumer producer handler)]
-        (infof "[%s] Created consumer %s for producer %s with handler %s"
-               fun-id (com/log-obj consumer) (com/log-obj producer)
+        (infof "Created consumer %s for producer %s with handler %s"
+               (com/log-obj consumer) (com/log-obj producer)
                (com/log-obj handler))
         channel))))
 
 (defn-fun-id long-polling
   "TODO see https://github.com/Otann/morse/issues/32"
   [tgram-token]
-  (let [msg (format "[%s] Starting" fun-id)]
-    (infof "%s ..." msg)
-    (if-let [polling-handlers (apply moh/handlers (create-handlers))]
-      (do
-        (debugf "[%s] Created polling-handlers %s"
-                fun-id (com/log-obj polling-handlers))
-        (let [port (start-polling tgram-token polling-handlers)]
-          (swap! telegram-port (fn [_] port))
-          (let [retval-async<!! (async/<!! port)]
-            (warnf "[%s] Taking vals on port %s stopped with retval-async<! %s"
-                   fun-id
-                   (com/log-obj port) (if-let [v retval-async<!!] v "nil"))
-            (fatalf "[%s] Further requests may NOT be answered!!!" fun-id)
-            (api-error-handler))))
-      (fatalf "[%s] polling-handlers not created" fun-id))
-    (infof "%s ... done" msg)))
+  (infof "Starting ...")
+  (if-let [polling-handlers (apply moh/handlers (create-handlers))]
+    (do
+      (debugf "Created polling-handlers %s" (com/log-obj polling-handlers))
+      (let [port (start-polling tgram-token polling-handlers)]
+        (swap! telegram-port (fn [_] port))
+        (let [retval-async<!! (async/<!! port)]
+          (warnf "Taking vals on port %s stopped with retval-async<! %s"
+                 (com/log-obj port) (if-let [v retval-async<!!] v "nil"))
+          (fatalf "Further requests may NOT be answered!!!")
+          (api-error-handler))))
+    (fatalf "polling-handlers not created"))
+  (infof "Starting ... done"))
 
 (defn-fun-id endlessly
   "Invoke fun and put the thread to sleep for millis in an endless loop."
@@ -163,15 +158,14 @@
          [msgl/list-per-100k com/listing-cases-per-100k]])
   (com/heap-info)
   (Thread/sleep 100)
-  (debugf "[%s] 2nd garbage collection" fun-id)
+  (debugf "2nd garbage collection")
   (System/gc) ;; also (.gc (Runtime/getRuntime))
   (com/heap-info)
   (let [stats (est/estimate (v1/pic-data))
         cnt-reports (count (data/dates json))]
      ;; TODO do not call calc-functions when the `form` evaluates to true
     (when (< cnt-reports 10)
-      (warnf "[%s] Some stuff may not be calculated: %s" "(< cnt-reports 10)"
-             fun-id))
+      (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
     (doall
      (map-fn (fn [ccode]
                (msgi/detailed-info ccode json com/html
@@ -180,7 +174,7 @@
              ccc/all-country-codes))
     (com/heap-info)
     (Thread/sleep 100)
-    (debugf "[%s] 3rd garbage collection" fun-id)
+    (debugf "3rd garbage collection")
     (System/gc) ;; also (.gc (Runtime/getRuntime))
     (com/heap-info)
     (doall
@@ -195,15 +189,16 @@
       com/aggregation-cases))))
 
 (defn-fun-id json-changed! "" [{:keys [json-fn cache-storage] :as m}]
-  (debugf "[%s] %s" fun-id m)
+  (printf "%s\n" m)
+  (debugf "%s" m)
    ;; TODO spec: cache-storage must be vector; json-fns must be function
   (let [hash-kws (conj cache-storage :json-hash)
          ;; (json-fn) also stores the json-data in the cache
         old-hash (get-in @cache/cache hash-kws)
         new-hash (com/hash-fn (json-fn))
         hashes-changed (not= old-hash new-hash)]
-    (debugf "[%s] %s; old hash %s; new hash %s; hashes-changed: %s"
-            fun-id cache-storage old-hash new-hash hashes-changed)
+    (debugf "%s; old hash %s; new hash %s; hashes-changed: %s"
+            cache-storage old-hash new-hash hashes-changed)
     (when hashes-changed
       (swap! cache/cache update-in hash-kws (fn [_] new-hash)))
     hashes-changed))
@@ -221,9 +216,9 @@
     (com/heap-info)
     (Thread/sleep 100)
     (System/gc) ;; also (.gc (Runtime/getRuntime))
-    (debugf "[%s] 1st garbage collection" fun-id)
+    (debugf "1st garbage collection")
     (com/heap-info)
-    (debugf "[%s] any-json-changed %s" fun-id any-json-changed)
+    (debugf "any-json-changed %s" any-json-changed)
     (when any-json-changed
       (calc-cache! (cache/aggregation-hash) (data/json-data))
        ;; discard the intermediary results, i.e. keep only those items in the
@@ -235,8 +230,8 @@
                 {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
                 (select-keys
                  @cache/cache [:plot :msg :list :threshold]))))
-      (debugf "[%s] Cache recalculated in %s ms"
-              fun-id (- (System/currentTimeMillis) tbeg)))
+      (debugf "Cache recalculated in %s ms"
+              (- (System/currentTimeMillis) tbeg)))
 
      ;; non-atomically dissoc :json from under :v1 and :owid
      ;; (swap! cache/cache update-in [:v1]   dissoc :json)
@@ -250,12 +245,9 @@
       (partial select-keys @cache/cache))
      [:v1 :owid])
 
-    (debugf "[%s] (keys @cache/cache) %s"
-            fun-id (keys @cache/cache))
-    (debugf "[%s] Responses %s"
-            fun-id (select-keys @cache/cache [:v1 :owid]))
-    (debugf "[%s] Cache size %s B"
-            fun-id (com/measure @cache/cache))))
+    (debugf "(keys @cache/cache) %s" (keys @cache/cache))
+    (debugf "Responses %s" (select-keys @cache/cache [:v1 :owid]))
+    (debugf "Cache size %s B" (com/measure @cache/cache))))
 
 (defn- p-endlessly [] (endlessly reset-cache! com/ttl))
 (defn- p-long-polling [] (long-polling com/telegram-token))
@@ -263,50 +255,46 @@
 (defn-fun-id start
   "Fetch api service data and only then register the telegram commands."
   []
-  (let [msg (format "[%s] Starting" fun-id)]
-    (if com/use-webhook?
-      (infof "%s ..." msg)
-      (infof "%s ...\n  %s" msg (cstr/join "\n  " (com/show-env))))
-    (reset-cache!)
-    (swap! initialized (fn [_]
+  (if com/use-webhook?
+    (infof "Starting ...")
+    (infof "Starting ...\n  %s" (cstr/join "\n  " (com/show-env))))
+  (reset-cache!)
+  (swap! initialized (fn [_]
                         ;; TODO use morse.handler instead of true?
-                         true))
-    (let [funs (into [p-endlessly]
-                     (when-not com/use-webhook?
-                       [p-long-polling]))]
-      (debugf "[%s] Parallel run %s ..." fun-id funs)
-      (pmap (fn [fun] (fun)) funs))
-    (infof "%s [..] ... done" msg)))
+                       true))
+  (let [funs (into [p-endlessly]
+                   (when-not com/use-webhook?
+                     [p-long-polling]))]
+    (debugf "Parallel run %s ..." funs)
+    (pmap (fn [fun] (fun)) funs))
+  (infof "Starting [..] ... done"))
 
 (defn-fun-id stop "" []
-  (let [msg (format "[%s] Starting" fun-id)]
-    (infof "%s ..." msg)
-    (run! (fn [obj-q]
-            (let [obj (eval obj-q)]
-              (when (= obj-q 'corona.telegram/telegram-port)
-                (if-let [old-tgram-port (deref obj)]
-                  (do
-                    (debugf "[%s] Closing old-tgram-port %s ..."
-                            fun-id (com/log-obj old-tgram-port))
-                    (async/close! old-tgram-port))
-                  (debugf "[%s] No old-tgram-port defined" fun-id)))
-              (swap! obj (fn [_] nil))
-              (debugf "[%s] %s new value: %s"
-                      fun-id
-                      obj-q (if-let [v (deref obj)] v "nil"))))
-          ['corona.telegram/initialized
-           'corona.api.cache/cache
-           'corona.telegram/continue
-           'corona.telegram/telegram-port])
-    (infof "%s ... done" msg)))
+  (infof "Stopping ...")
+  (run! (fn [obj-q]
+          (let [obj (eval obj-q)]
+            (when (= obj-q 'corona.telegram/telegram-port)
+              (if-let [old-tgram-port (deref obj)]
+                (do
+                  (debugf "Closing old-tgram-port %s ..."
+                          (com/log-obj old-tgram-port))
+                  (async/close! old-tgram-port))
+                (debugf "No old-tgram-port defined")))
+            (swap! obj (fn [_] nil))
+            (debugf "%s new value: %s"
+                    obj-q (if-let [v (deref obj)] v "nil"))))
+        ['corona.telegram/initialized
+         'corona.api.cache/cache
+         'corona.telegram/continue
+         'corona.telegram/telegram-port])
+  (infof "Stopping ... done"))
 
 (defn-fun-id restart "" []
-  (let [msg (format "[%s] Restarting" fun-id)]
-    (infof "%s ..." msg)
-    (when @initialized
-      (stop)
-      (Thread/sleep 400))
-    (start)
-    (infof "%s ... done" msg)))
+  (infof "Restarting ...")
+  (when @initialized
+    (stop)
+    (Thread/sleep 400))
+  (start)
+  (infof "Restarting ... done"))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.telegram)

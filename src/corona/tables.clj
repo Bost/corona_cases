@@ -3,7 +3,6 @@
 ;; (ns corona.tables
 ;;   (:require
 ;;    [corona.countries :as ccr]
-;;    #_[taoensso.timbre :as timbre :refer [debugf info infof warn errorf fatalf]]
 ;;    ))
 
 ;; ;; (set! *warn-on-reflection* true)

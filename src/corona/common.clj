@@ -11,7 +11,7 @@
             [corona.envdef :as envdef]
             [corona.pom-version-get :as pom]
             [environ.core :as env]
-            [taoensso.timbre :as timbre :refer [debugf infof]]
+            [corona.macro :refer [defn-fun-id debugf infof]]
             [utils.core :as utc]
             [clj-memory-meter.core :as meter]
             [utils.num :as utn])
@@ -94,7 +94,7 @@
 (def ^:const ^String repl-user      (env/env :repl-user))
 (def ^:const ^String repl-password  (env/env :repl-password))
 
-(defn system-exit [exit-status]
+(defn-fun-id system-exit "" [exit-status]
   (debugf "Exiting with status %s ..." exit-status)
   (System/exit exit-status))
 
@@ -229,16 +229,18 @@
   [obj]
   (meter/measure obj :bytes true))
 
-(defn get-json [url]
+(defn-fun-id get-json
+  "TODO set the timeouts explicitly https://github.com/dakrone/clj-http/issues/585#issuecomment-770257068"
+  [url]
   (let [msg (format "Requesting data from %s" url)]
-    (infof "%s ..." msg)
+    (infof msg)
     (let [tbeg (System/currentTimeMillis)]
       (let [result ((comp
                      (fn [s] (json/read-str s :key-fn clojure.core/keyword))
                      :body
                      (fn [url] (clj-http.client/get url {:accept :json :debug true
                                                         ;; :debug-body true
-                                                        })))
+                                                         })))
                     url)]
         ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
         ;; TODO sanitize against:
@@ -252,8 +254,9 @@
         ;; Requesting json-data from http://coronavirus-tracker-api.herokuapp.com/all ...
         ;; Execution error (ConnectionClosedException) at org.apache.http.impl.io.ContentLengthInputStream/read (ContentLengthInputStream.java:178).
         ;; Premature end of Content-Length delimited message body (expected: 840,718; received: 515,312)
-        (infof "%s ... %s B received in %s ms"
-               msg (measure result) (- (System/currentTimeMillis) tbeg)) result))))
+        (infof (str msg " ... %s B received in %s ms")
+               (measure result) (- (System/currentTimeMillis) tbeg))
+        result))))
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))
 
@@ -416,10 +419,10 @@
   [f m]
   (into (empty m) (for [[k v] m] [k (f v)])))
 
-(defn heap-info
+(defn-fun-id heap-info
   "See https://github.com/metrics-clojure/metrics-clojure"
   []
-  (debugf "[%s] heap %s" "heap-info"
+  (debugf "%s"
           (let [runtime (Runtime/getRuntime)
                     ;; current size of heap in bytes
                 size (.totalMemory runtime)

@@ -6,8 +6,7 @@
    [corona.country-codes :as ccc]
    [utils.core :refer [in?] :exclude [id]]
    [clojure.string :as cstr]
-   [taoensso.timbre :as timbre :refer [errorf]]
-   )
+   [corona.macro :refer [defn-fun-id errorf]])
   (:import com.neovisionaries.i18n.CountryCode
            com.neovisionaries.i18n.CountryCode$Assignment))
 
@@ -324,7 +323,7 @@
   [hm]
   (into {} (map (fn [[k v]] [(cstr/lower-case k) v]) hm)))
 
-(defn get-country-code
+(defn-fun-id get-country-code
   "Return 2-letter country code (Alpha-2) according to
   https://en.wikipedia.org/wiki/ISO_3166-1
   Defaults to `default-2-country-code`."

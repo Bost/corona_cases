@@ -5,7 +5,6 @@
   (:refer-clojure :exclude [pr])
   (:require [clojure.set :as cset]
             [clojure.string :as cstr]
-            [corona.common :as com]
             taoensso.encore
             [taoensso.timbre :as timbre]))
 
@@ -31,7 +30,7 @@
         name)
        (or (level log-level-map) level))
       " "
-      "[" (or ?ns-str ?file "?") ":" (or ?line "?") "] "
+      "[" (or ?ns-str ?file "?") #_":" #_(or ?line "?") "] "
       (force msg_)
       (when-not no-stacktrace?
         (when-let [err ?err]
@@ -388,7 +387,11 @@
   "TODO all-country-codes should be a set"
   #_["SK"]
   #_["SK" "ZZ"]
-  #_["GB" "SK" "DE" "AT" "CZ" "US" "FR" "PL" "IT" "ES" "SE" "UA" "HU" "ZZ"]
+  #_[
+   "ZZ"
+   "GB" "SK" "DE" "AT" "CZ" "US" "FR"
+   ;; "PL" "IT" "ES" "SE" "UA" "HU"
+   ]
   (clojure.set/difference
    (set (keys country-code-2-to-3-hm))
    #_(set excluded-country-codes)))

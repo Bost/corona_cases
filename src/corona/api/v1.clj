@@ -4,7 +4,6 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require [corona.api.expdev07 :as data]
-            [taoensso.timbre :as timbre :refer [debugf]]
             [corona.common :as com])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
@@ -93,8 +92,7 @@
                           :a (com/calculate-activ confirmed recovered deaths)
                           :r recovered
                           :d deaths
-                          :c confirmed
-                          }]
+                          :c confirmed}]
                  (assoc
                   prm
                   #_(dissoc prm :c)
@@ -102,14 +100,8 @@
                   :a100k  ((com/calculate-cases-per-100k :a) prm)
                   :r100k  ((com/calculate-cases-per-100k :r) prm)
                   :d100k  ((com/calculate-cases-per-100k :d) prm)
-                  :v-rate
-                  (let [ret ((com/calc-rate :v) prm)]
-                    #_(debugf "[%s] :v-rate %s" "pic-data" ret)
-                    ret)
-                  :a-rate
-                  (let [ret ((com/calc-rate :a) prm)]
-                    #_(debugf "[%s] :a-rate %s" "pic-data" ret)
-                    ret)
+                  :v-rate ((com/calc-rate :v) prm)
+                  :a-rate ((com/calc-rate :a) prm)
                   :r-rate ((com/calc-rate :r) prm)
                   :d-rate ((com/calc-rate :d) prm)
                   :c-rate ((com/calc-rate :c) prm)))))

@@ -12,8 +12,7 @@
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
-            [corona.macro :refer [defn-fun-id]]
-            [taoensso.timbre :as timbre :refer [debugf infof]]
+            [corona.macro :refer [defn-fun-id debugf infof]]
             [utils.core :refer [in?]])
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
@@ -285,7 +284,7 @@
   [ccode & [stats report]]
   ((comp
     (fn [arr]
-      (debugf "[%s] ccode %s img-size %s" fun-id ccode (if arr (com/measure arr) 0))
+      (debugf "ccode %s img-size %s" ccode (if arr (com/measure arr) 0))
       arr)
     to-byte-array-auto-closable
     (fn [prms] (apply calc-plot-country-img prms)))

@@ -5,7 +5,7 @@
    [clojure.data.json :as json]
    [clojure.string :as cstr]
    [corona.common :as com]
-   [taoensso.timbre :as timbre :refer [info]]))
+   [corona.macro :refer [defn-fun-id infof]]))
 
 (def ^:const pom-version "See `pom/pom-version`" nil)
 (def ^:const telegram-hook "telegram")
@@ -68,8 +68,8 @@
               "photo=@/tmp/pic.png"
               url-sendPhoto)]))})
 
-(defn web-service [{:keys [type] :as prm}]
-  (info "web-service" prm)
+(defn-fun-id web-service "" [{:keys [type] :as prm}]
+  (infof "%s" prm)
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body

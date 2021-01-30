@@ -8,10 +8,9 @@
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
-            [corona.macro :refer [defn-fun-id]]
+            [corona.macro :refer [defn-fun-id debugf]]
             [corona.msg.common :as msgc]
             [incanter.stats :as istats]
-            [taoensso.timbre :as timbre :refer [debugf]]
             [utils.core :as utc]
             [utils.num :as utn]))
 
@@ -269,7 +268,7 @@
                                                  ccode
                                                  (count ccc/all-country-codes))}))))]
 
-    (debugf "[%s] ccode %s info-size %s" fun-id ccode (com/measure info))
+    (debugf "ccode %s info-size %s" ccode (com/measure info))
     info))
 
 (defn detailed-info
