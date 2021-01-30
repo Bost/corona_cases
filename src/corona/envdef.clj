@@ -1,8 +1,7 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.envdef)
 
 (ns corona.envdef
-  (:require [clojure.string :as cstr]
-            [environ.core :as env]))
+  (:require [clojure.string :as cstr]))
 
 (def ^:const ^String prod "prod")
 (def ^:const ^String corona-cases "corona-cases")
@@ -25,10 +24,11 @@
    ["covid-tracker-us.herokuapp.com"
     "coronavirus-tracker-api.herokuapp.com"]))
 
-(def ^:const ^Long webapp-port (if-let [env-port (env/env :port)]
-                                 (read-string env-port)
-                                 ;; keep port-nr in sync with README.md
-                                 5050))
+(def ^:const ^Long webapp-port
+  (if-let [env-port (System/getenv "PORT")]
+    (read-string env-port)
+    ;; keep port-nr in sync with README.md
+    5050))
 
 (def ^:const ^Long mockup-port (inc webapp-port))
 
