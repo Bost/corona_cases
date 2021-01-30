@@ -3,9 +3,6 @@
 (ns corona.plot
   (:require [cljplot.build :as b]
             [cljplot.common :as plotcom]
-            ;; XXX cljplot.core must be required otherwise an empty plot is
-            ;; shown when released. WTF?
-            [cljplot.core]
             [cljplot.render :as r]
             [clojure.set :as cset]
             [clojure2d.color :as c]
@@ -15,11 +12,13 @@
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
+            [corona.macro :refer [defn-fun-id]]
             [taoensso.timbre :as timbre :refer [debugf infof]]
             [utils.core :refer [in?]])
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
            [java.time LocalDate ZoneId]
+           java.time.format.DateTimeFormatter
            javax.imageio.ImageIO))
 
 ;; (set! *warn-on-reflection* true)
@@ -61,30 +60,18 @@
     :else (throw
            (Exception. (format "Value %d must be < max %d" max-val 1e9)))))
 
-(defn- boiler-plate [{:keys [series y-axis-formatter legend label label-conf]}]
-  (-> series
-      (b/preprocess-series)
-      (b/add-axes :bottom)
-      (b/add-axes :left)
-      (b/update-scale :y :fmt y-axis-formatter)
-      (b/add-legend "" legend)
-      (b/add-label :top label label-conf)
-      (r/render-lattice {:width 800 :height 600})
-      (c2d/get-image))
-  #_(c2d/get-image
-   (r/render-lattice
-    (b/add-label
-     (b/add-legend
-      (b/update-scale
-       (b/add-axes
-        (b/add-axes
-         (b/preprocess-series series)
-         :bottom)
-        :left)
-       :y :fmt y-axis-formatter)
-      "" legend)
-     :top label label-conf)
-    {:width 800 :height 600})))
+(defn- boiler-plate [{:keys [series x-axis-formatter y-axis-formatter legend label label-conf]}]
+  ((comp
+    c2d/get-image
+    (fn [s] (r/render-lattice s {:width 800 :height 600}))
+    (fn [s] (b/add-label s :top label label-conf))
+    (fn [s] (b/add-legend s "" legend))
+    (fn [s] (b/update-scale s :x :fmt x-axis-formatter))
+    (fn [s] (b/update-scale s :y :fmt y-axis-formatter))
+    (fn [s] (b/add-axes s :left))
+    (fn [s] (b/add-axes s :bottom))
+    (fn [s] (b/preprocess-series s)))
+   series))
 
 (defn to-java-time-local-date [^java.util.Date java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date) (ZoneId/systemDefault)))
@@ -122,19 +109,26 @@
        (flatten)))
 
 (defn stats-for-country [ccode stats]
-  (let [mapped-hm (plotcom/map-kv
-                   (fn [entry]
-                     (sort-by first
-                              (map (fn [{:keys [t cnt]}]
-                                     [(to-java-time-local-date t) cnt])
-                                   entry)))
-                   (group-by :case-kw (sum-for-pred ccode stats)))]
+  (let [mapped-hm
+        ((comp
+          #_(partial take-last (/ 365 2)))
+         (plotcom/map-kv
+          (fn [entry]
+            ((comp
+              (partial take-last (/ 365 1 #_2)))
+             (sort-by first
+                      (map (fn [{:keys [t cnt]}]
+                             [(to-java-time-local-date t) cnt])
+                           entry))))
+          (group-by :case-kw (sum-for-pred ccode stats))))]
     ;; sort - keep the "color order" of cases fixed; don't
     ;; recalculate it
     ;; TODO try (map {:a 1 :b 2 :c 3 :d 4} [:a :d]) ;;=> (1 4)
-    (reverse (transduce (map (fn [case-kw] (select-keys mapped-hm [case-kw])))
-                        into []
-                        [:a :r :d :c :p :er :ea]))))
+    ((comp
+      reverse)
+     (transduce (map (fn [case-kw] (select-keys mapped-hm [case-kw])))
+                into []
+                [:a :r :d :c :p :er :ea]))))
 
 (defn fmt-last-date [stats]
   ((comp com/fmt-date :t last) (sort-by :t stats)))
@@ -228,7 +222,10 @@
         (ImageIO/write image fmt-name out)
         (.toByteArray out)))))
 
-(defn calc-plot-country-img
+(defn date-fmt-fn [d]
+  (.format (DateTimeFormatter/ofPattern "dd.MM") d))
+
+(defn-fun-id calc-plot-country-img
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
   [ccode & [stats report]]
@@ -259,6 +256,7 @@
                  [:line (line-data :a base-data) (stroke-active)]
                  [:line (line-data :er base-data) (stroke-estim-recov)]
                  [:line (line-data :ea base-data) (stroke-estim-activ)])
+        :x-axis-formatter date-fmt-fn
         :y-axis-formatter (metrics-prefix-formatter
                                  ;; population numbers have the `max` values, all
                                  ;; other numbers are derived from them
@@ -281,14 +279,13 @@
         :label (plot-label report ccode stats)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
 
-(defn calc-plot-country
+(defn-fun-id calc-plot-country
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
   [ccode & [stats report]]
   ((comp
     (fn [arr]
-      (debugf "[%s] ccode %s img-size %s" "plot-country"
-              ccode (if arr (com/measure arr) 0))
+      (debugf "[%s] ccode %s img-size %s" fun-id ccode (if arr (com/measure arr) 0))
       arr)
     to-byte-array-auto-closable
     (fn [prms] (apply calc-plot-country-img prms)))
@@ -303,7 +300,7 @@
                    ks)
       (get-in @cache/cache ks))))
 
-(defn group-below-threshold
+(defn-fun-id group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
   `ccc/default-2-country-code` so that max 10 countries are displayed in the
   plot"
@@ -322,18 +319,20 @@
         (group-below-threshold (assoc prm :threshold raised-threshold)))
       {:data res :threshold threshold})))
 
-(defn sum-all-by-date-by-case
-  "Group the country stats by report and sum up the active cases"
+(defn-fun-id sum-all-by-date-by-case
+  "Group the country stats by report and sum up the cases"
   [{:keys [case-kw] :as prm-orig}]
   (let [prm (group-below-threshold prm-orig)
         res
-        (->> (:data prm)
-             (group-by :t)
-             (map (fn [[t hms]]
-                    (->> (group-by :ccode hms)
-                         (map (fn [[ccode hms]]
-                                {:ccode ccode :t t case-kw (reduce + (map case-kw hms))})))))
-             (flatten))
+        ((comp
+          flatten
+          (partial map (fn [[t hms]]
+                         (->> (group-by :ccode hms)
+                              (map (fn [[ccode hms]]
+                                     {:ccode ccode :t t case-kw (reduce + (map case-kw hms))})))))
+          (partial group-by :t)
+          :data)
+         prm)
         #_(flatten (map (fn [[t hms]]
                           (map (fn [[ccode hms]]
                                  {:ccode ccode :t t case-kw (reduce + (map case-kw hms))})
@@ -441,6 +440,7 @@
                         :sum reverse)
                       legend)
                 json-data)
+       :x-axis-formatter date-fmt-fn
        :y-axis-formatter (y-axis-formatter json-data)
        :label (label-str report stats case-kw threshold-recalced
                          (condp = aggregation-kw
