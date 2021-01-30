@@ -25,8 +25,12 @@
       (force timestamp_)
       " "
       ;; #?(:clj (force hostname_))  #?(:clj " ")
-      (cstr/upper-case (name (or (level log-level-map)
-                                 level)))  " "
+      ((comp
+        (fn [s] (subs s 0 1))
+        cstr/upper-case
+        name)
+       (or (level log-level-map) level))
+      " "
       "[" (or ?ns-str ?file "?") ":" (or ?line "?") "] "
       (force msg_)
       (when-not no-stacktrace?
@@ -41,7 +45,7 @@
  {:output-fn log-output #_default-output-fn
   :timestamp-opts
   (conj {:timezone (java.util.TimeZone/getTimeZone zone-id)}
-        (when com/env-devel? {:pattern "HH:mm:ss.SSSX"}))})
+        {:pattern "HH:mm:ss.SSSX"})})
 
 (def country-codes
   ["CR" "TG" "TJ" "ZA" "IM" "PE" "LC" "CH" "RU" "MP" "CK" "SI" "AU" "KR" "IT"
