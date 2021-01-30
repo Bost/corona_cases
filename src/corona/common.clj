@@ -12,6 +12,7 @@
             [corona.pom-version-get :as pom]
             [environ.core :as env]
             [corona.macro :refer [defn-fun-id debugf infof]]
+            [taoensso.timbre :as timbre]
             [utils.core :as utc]
             [clj-memory-meter.core :as meter]
             [utils.num :as utn])
@@ -94,8 +95,10 @@
 (def ^:const ^String repl-user      (env/env :repl-user))
 (def ^:const ^String repl-password  (env/env :repl-password))
 
-(defn-fun-id system-exit "" [exit-status]
-  (debugf "Exiting with status %s ..." exit-status)
+(defn system-exit
+  "!!! It looks line it can't be defined by defn-fun-id !!!"
+  [exit-status]
+  (timbre/debugf "[system-exit] Exiting with status %s ..." exit-status)
   (System/exit exit-status))
 
 (def ^:const chat-id
