@@ -12,6 +12,9 @@
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
+            ;; XXX cljplot.core must be required otherwise an empty plot is
+            ;; shown when released. WTF?
+            cljplot.core
             [corona.macro :refer [defn-fun-id debugf infof]]
             [utils.core :refer [in?]])
   (:import java.awt.image.BufferedImage
