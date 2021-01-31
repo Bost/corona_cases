@@ -414,38 +414,35 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn calc-aggregation-img
-  ([aggregation-kw case-kw stats report]
-   (calc-aggregation-img "calc-aggregation-img"
-                         aggregation-kw case-kw stats report))
-  ([_ aggregation-kw case-kw stats report]
-   (let [{json-data :data threshold-recalced :threshold}
-         (stats-all-by-case {:report report
-                             :stats stats
-                             :threshold (min-threshold aggregation-kw case-kw)
-                             :threshold-increase (threshold-increase case-kw)
-                             :case-kw case-kw})]
-     (boiler-plate
-      {:series (condp = aggregation-kw
-                 :abs (->> (mapv (fn [[_ ccode-data] color]
-                                   [:line ccode-data (line-stroke color)])
-                                 json-data
-                                 (cycle (c/palette-presets :category20b)))
-                           (into [[:grid]])
-                           (apply b/series))
-                 :sum (b/series [:grid] [:sarea json-data]))
-       :legend ((comp (condp = aggregation-kw
-                        :abs identity
-                        :sum reverse)
-                      legend)
-                json-data)
-       :x-axis-formatter date-fmt-fn
-       :y-axis-formatter (y-axis-formatter json-data)
-       :label (label-str report stats case-kw threshold-recalced
-                         (condp = aggregation-kw
-                           :abs (str " " lang/absolute)
-                           :sum ""))
-       :label-conf label-conf}))))
+(defn-fun-id calc-aggregation-img ""
+  [aggregation-kw case-kw stats report]
+  (let [{json-data :data threshold-recalced :threshold}
+        (stats-all-by-case {:report report
+                            :stats stats
+                            :threshold (min-threshold aggregation-kw case-kw)
+                            :threshold-increase (threshold-increase case-kw)
+                            :case-kw case-kw})]
+    (boiler-plate
+     {:series (condp = aggregation-kw
+                :abs (->> (mapv (fn [[_ ccode-data] color]
+                                  [:line ccode-data (line-stroke color)])
+                                json-data
+                                (cycle (c/palette-presets :category20b)))
+                          (into [[:grid]])
+                          (apply b/series))
+                :sum (b/series [:grid] [:sarea json-data]))
+      :legend ((comp (condp = aggregation-kw
+                       :abs identity
+                       :sum reverse)
+                     legend)
+               json-data)
+      :x-axis-formatter date-fmt-fn
+      :y-axis-formatter (y-axis-formatter json-data)
+      :label (label-str report stats case-kw threshold-recalced
+                        (condp = aggregation-kw
+                          :abs (str " " lang/absolute)
+                          :sum ""))
+      :label-conf label-conf})))
 
 (defn calc-aggregation
   [aggregation-kw case-kw stats report]

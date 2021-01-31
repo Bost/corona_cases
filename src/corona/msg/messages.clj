@@ -56,7 +56,11 @@
         message-id (:message_id message)
         options (reply-markup-btns {:chat-id chat-id :ccode ccode
                                     :message_id message-id})
-        id (cache/aggregation-hash)]
+        id (cache/aggregation-hash)
+        url (format "%s/%s/%s/%s/%s"
+                    com/webapp-server com/graphs-path
+                    id (name plot-type) (name case-kw))]
+    (debugf "url %s" url)
     (let [msg (doall
                (if com/use-webhook?
                   ;; TODO alternatively send file to a dump channel, get file
@@ -64,15 +68,7 @@
                  (morse/edit-media
                   com/telegram-token chat-id message-id options
                   {:type "photo"
-                   :media
-                   (let [url (format "%s/%s/%s/%s/%s"
-                                     com/webapp-server
-                                     com/graphs-path
-                                     id
-                                     (name plot-type)
-                                     (name case-kw))]
-                     (debugf "url %s" url)
-                     url)})
+                   :media url})
                  (morse/send-photo
                   com/telegram-token chat-id options
                    ;; the plot is fetched from the cache, stats and report need

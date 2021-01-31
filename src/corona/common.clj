@@ -56,6 +56,7 @@
 
 (def ^:const ^String bot-name
   (get-in environment [env-type :bot-name]))
+
 (def ^:const ^String webapp-server
   (get-in environment [env-type :web-server]))
 
