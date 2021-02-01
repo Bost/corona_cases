@@ -147,5 +147,9 @@
   (get-from-cache! case-kw json msg-idx prm
                    [:list :100k case-kw] calc-list-per-100k))
 
+(defmulti  list-cases (fn [listing-cases-per-100k?] listing-cases-per-100k?))
+(defmethod list-cases true  [_] list-per-100k)
+(defmethod list-cases false [_] list-countries)
+
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.lists)
 

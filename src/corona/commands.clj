@@ -124,18 +124,13 @@
        (map (fn [case-kw]
               {:name (l/list-sorted-by case-kw)
                :fun (fn [chat-id]
-                      (let [;; TODO use defprotocol
-                            contents (if (in? com/listing-cases-per-100k case-kw)
-                                       (msgl/list-per-100k case-kw)
-                                       (msgl/list-countries case-kw))]
-                        (doall
-                           ;; mapping over results implies the knowledge that
-                           ;; the type of `(msg-listing-fun case-kw)` is a
-                           ;; collection.
-                         (map (fn [content]
-                                (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
-                                (debugf "send-text: %s chars sent" (count content)))
-                              contents))))
+                      (doall
+                       ;; mapping over results implies the knowledge that the
+                       ;; type of `(msg-listing-fun case-kw)` is a collection.
+                       (map (fn [content]
+                              (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
+                              (debugf "send-text: %s chars sent" (count content)))
+                            ((msgl/list-cases (in? com/listing-cases-per-100k case-kw)) case-kw))))
                :desc (l/list-sorted-by-desc case-kw)}))))
 
 (def cmds
