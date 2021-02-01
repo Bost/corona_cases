@@ -118,20 +118,24 @@
       :fun (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}]))
 
-(defn-fun-id cmds-listing "Command map for listings" []
+(defn-fun-id create-list-cmd "" [case-kw]
+  {:name (l/list-sorted-by case-kw)
+   :fun (fn [chat-id]
+          (doall
+           ;; mapping over results implies the knowledge that the type
+           ;; of `(msg-listing-fun case-kw)` is a collection.
+           (map (fn [content]
+                  (morse/send-text com/telegram-token chat-id
+                                   {:parse_mode com/html} content)
+                  (debugf "send-text: %s chars sent" (count content)))
+                ((msgl/list-cases (in? com/listing-cases-per-100k case-kw))
+                 case-kw))))
+   :desc (l/list-sorted-by-desc case-kw)})
+
+(defn cmds-listing "Command map for listings" []
   (->> com/listing-cases-absolute
        (into com/listing-cases-per-100k)
-       (map (fn [case-kw]
-              {:name (l/list-sorted-by case-kw)
-               :fun (fn [chat-id]
-                      (doall
-                       ;; mapping over results implies the knowledge that the
-                       ;; type of `(msg-listing-fun case-kw)` is a collection.
-                       (map (fn [content]
-                              (morse/send-text com/telegram-token chat-id {:parse_mode com/html} content)
-                              (debugf "send-text: %s chars sent" (count content)))
-                            ((msgl/list-cases (in? com/listing-cases-per-100k case-kw)) case-kw))))
-               :desc (l/list-sorted-by-desc case-kw)}))))
+       (map create-list-cmd)))
 
 (def cmds
   "Create a vector of hash-maps for all available commands."

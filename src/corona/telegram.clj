@@ -152,10 +152,16 @@
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)
 
+(defn list-countries [json]
+  (msgl/calc-listings com/listing-cases-absolute json
+                      'corona.msg.lists/list-countries))
+
+(defn list-per-100k [json]
+  (msgl/calc-listings com/listing-cases-per-100k json
+                      'corona.msg.lists/list-per-100k))
+
 (defn-fun-id calc-cache! "" [aggegation-hash json]
-  (run! (fn [prms] (apply (partial msgl/calc-listings json) prms))
-        [[msgl/list-countries com/listing-cases-absolute]
-         [msgl/list-per-100k com/listing-cases-per-100k]])
+  (run! (fn [fun] (fun json)) [list-countries list-per-100k])
   (com/heap-info)
   (Thread/sleep 100)
   (debugf "2nd garbage collection")

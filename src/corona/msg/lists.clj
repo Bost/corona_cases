@@ -9,34 +9,46 @@
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
             [corona.macro :refer [defn-fun-id debugf]]
-            [corona.msg.common :as msgc]))
+            [corona.msg.common :as msgc]
+            [taoensso.timbre :as timbre]))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn calc-listings
-  [json fun case-kws]
-  (run! (fn [case-kw]
-         (let [coll (sort-by case-kw < (data/stats-countries json))
-                ;; Split the long list of all countries into smaller sub-parts
-               sub-msgs (partition-all (/ (count coll)
-                                          cnt-messages-in-listing) coll)
-               prm {:parse_mode com/html
-                    :cnt-msgs (count sub-msgs)
-                    :pred-hm ((comp
-                               data/create-pred-hm
-                               ccr/get-country-code)
-                              ccc/worldwide)}]
-           (doall
-            (map-indexed (fn [idx sub-msg]
-                           (fun case-kw json (inc idx) (conj prm {:data sub-msg})))
-                         sub-msgs))))
-       case-kws))
+(defn get-from-cache! [case-kw json msg-idx prm quoted-ns-qualif-fun]
+  (let [full-kws [:list (keyword (:name (meta (find-var quoted-ns-qualif-fun))))
+                  case-kw]]
+    (if (and json msg-idx prm)
+      (cache/cache! (fn []
+                      ((eval quoted-ns-qualif-fun) case-kw json msg-idx prm))
+                    (conj full-kws (keyword (str msg-idx))))
+      (vals (get-in @cache/cache full-kws)))))
 
-(defn-fun-id calc-list-countries
-  "Listing commands in the message footer correspond to the columns in the listing.
-  See also `footer`, `bot-father-edit-cmds`."
+(defn calc-listings
+  [case-kws json fun]
+  (run! (fn [case-kw]
+          (let [coll (sort-by case-kw < (data/stats-countries json))
+                ;; Split the long list of all countries into smaller sub-parts
+                sub-msgs (partition-all (/ (count coll)
+                                           cnt-messages-in-listing) coll)
+                prm {:parse_mode com/html
+                     :cnt-msgs (count sub-msgs)
+                     :pred-hm ((comp
+                                data/create-pred-hm
+                                ccr/get-country-code)
+                               ccc/worldwide)}]
+            (doall
+             (map-indexed
+              (fn [idx sub-msg]
+                (get-from-cache!
+                 case-kw json (inc idx) (conj prm {:data sub-msg}) fun))
+              sub-msgs))))
+        case-kws))
+
+(defn-fun-id list-countries
+  "Listing commands in the message footer correspond to the columns in the
+  listing. See also `footer`, `bot-father-edit-cmds`."
   [case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
   (let [cnt-reports (count (data/dates json))
         header-txt (msgc/header parse_mode pred-hm json)
@@ -81,18 +93,7 @@
             case-kw msg-idx (com/measure msg))
     msg))
 
-(defn get-from-cache! [case-kw json msg-idx prm ks fun]
-  (if (and json msg-idx prm)
-    (cache/cache! (fn [] (fun case-kw json msg-idx prm))
-                  (conj ks (keyword (str msg-idx))))
-    (vals (get-in @cache/cache ks))))
-
-(defn list-countries
-  [case-kw & [json msg-idx prm]]
-  (get-from-cache! case-kw json msg-idx prm
-                   [:list :countries case-kw] calc-list-countries))
-
-(defn-fun-id calc-list-per-100k
+(defn-fun-id list-per-100k
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit-cmds`."
   [case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
@@ -100,7 +101,7 @@
         header-txt (msgc/header parse_mode pred-hm json)
         spacer " "
         sort-indicator "▴" ;; " " "▲"
-         ;; omag - order of magnitude i.e. number of digits
+        ;; omag - order of magnitude i.e. number of digits
         omag-active-per-100k 4
         omag-recove-per-100k omag-active-per-100k
         omag-deaths-per-100k (dec omag-active-per-100k)
@@ -142,14 +143,14 @@
             case-kw msg-idx (com/measure msg))
     msg))
 
-(defn list-per-100k
-  [case-kw & [json msg-idx prm]]
-  (get-from-cache! case-kw json msg-idx prm
-                   [:list :100k case-kw] calc-list-per-100k))
-
 (defmulti  list-cases (fn [listing-cases-per-100k?] listing-cases-per-100k?))
-(defmethod list-cases true  [_] list-per-100k)
-(defmethod list-cases false [_] list-countries)
+
+(defmethod list-cases true  [_]
+  (fn [case-kw & [json msg-idx prm]]
+    (get-from-cache! case-kw json msg-idx prm 'corona.msg.lists/list-per-100k)))
+
+(defmethod list-cases false [_]
+  (fn [case-kw & [json msg-idx prm]]
+    (get-from-cache! case-kw json msg-idx prm 'corona.msg.lists/list-countries)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.lists)
-
