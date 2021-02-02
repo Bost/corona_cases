@@ -43,3 +43,6 @@
          (fn errorf [s & exprs] `(taoensso.timbre/errorf (str "[%s] " ~s) fun-id# ~@exprs))
          (fn fatalf [s & exprs] `(taoensso.timbre/fatalf (str "[%s] " ~s) fun-id# ~@exprs))
          ~@exprs))))
+
+;; https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/macro.20for.20transforming.20let.20into.20def/near/215975427
+;; https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/core.20nuggets/near/218333667

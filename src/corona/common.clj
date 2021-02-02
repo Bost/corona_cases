@@ -233,19 +233,89 @@
   [obj]
   (meter/measure obj :bytes true))
 
+;; (def r
+;;   [{:t 7647 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 20588 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 6427 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 16571 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 10711 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 19450 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 5064 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 18016 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 14138 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 26777 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 7600 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 35748 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 6881 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 39256 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 14198 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 57989 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 8668 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 34287 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 16151 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 44699 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 15032 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 26080 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 9374 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 48340 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 31862 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 31943 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 11202 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 19807 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 9635 :url "http://covid-tracker-us.herokuapp.com/all"}
+;;    {:t 44993 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    {:t 27926 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
+;;    ])
+
+;; ((comp
+;;   (partial map (fn [[url ms]]
+;;                  {:url url :cnt (count ms)
+;;                   :avg ((comp
+;;                          (fn [total] (float (/ total (count ms))))
+;;                          (partial transduce (map (fn [m] (:t m))) + 0))
+;;                         ms)
+;;                   :max ((comp
+;;                          (partial transduce (map (fn [m] (:t m))) max 0))
+;;                         ms)})))
+;;  (group-by :url r))
+
 (defn-fun-id get-json
-  "TODO set the timeouts explicitly https://github.com/dakrone/clj-http/issues/585#issuecomment-770257068"
+  "TODO See
+'Reading JSON with jsonista seems faster than reading EDN with read-string'
+https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20as.20a.20file/near/202927428"
   [url]
   (let [msg (format "Requesting data from %s" url)]
     (infof msg)
     (let [tbeg (System/currentTimeMillis)]
-      (let [result ((comp
-                     (fn [s] (json/read-str s :key-fn clojure.core/keyword))
-                     :body
-                     (fn [url] (clj-http.client/get url {:accept :json :debug true
-                                                        ;; :debug-body true
-                                                         })))
-                    url)]
+      (let [timeout
+            #_(int (* 3/2 60 1000)) ;; 1.5 minutes
+            1000 ;; 1 second
+            result
+            ((comp
+              (fn [s] (json/read-str s :key-fn clojure.core/keyword))
+              :body
+              (fn [url]
+                (clj-http.client/get
+                 url
+                 (conj
+                  {;; See
+                   ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
+                   ;; SO_TIMEOUT - timeout for waiting for data or, put
+                   ;; differently, a maximum period inactivity between two
+                   ;; consecutive data packets
+                   :socket-timeout timeout
+
+                   ;; timeout used when requesting a connection from the
+                   ;; connection manager
+                   :connection-timeout timeout
+
+                   ;; timeout until a connection is established
+                   ;; :connect-timeout timeout
+                   }
+
+                  {:accept :json :debug true}
+                  #_{:debug-body true}))))
+             url)]
         ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
         ;; TODO sanitize against:
         ;; 1. http status 503 - service not available
