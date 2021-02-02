@@ -269,30 +269,37 @@
 
 ;; ((comp
 ;;   (partial map (fn [[url ms]]
-;;                  {:url url :cnt (count ms)
-;;                   :avg ((comp
-;;                          (fn [total] (float (/ total (count ms))))
-;;                          (partial transduce (map (fn [m] (:t m))) + 0))
-;;                         ms)
-;;                   :max ((comp
-;;                          (partial transduce (map (fn [m] (:t m))) max 0))
-;;                         ms)})))
+;;                  (let [max-val ((comp
+;;                                  (partial transduce (map (fn [m] (:t m))) max 0))
+;;                                 ms)]
+;;                    {:url url :cnt (count ms)
+;;                     :avg ((comp
+;;                            (fn [total] (Math/round (float (/ total (count ms)))))
+;;                            (partial transduce (map (fn [m] (:t m))) + 0))
+;;                           ms)
+;;                     :min ((comp
+;;                            (partial transduce (map (fn [m] (:t m))) min max-val))
+;;                           ms)
+;;                     :max max-val}))))
 ;;  (group-by :url r))
 
-(defn-fun-id retry "" [max-tries tries f & args]
+(defn-fun-id retry "" [max-tries try-nr f & args]
   (let [res
         (do
-          (infof "(%s %s) - try nr %s of %s" (:name (meta (find-var f)))
+          (infof "(%s %s) - try-nr %s of %s" (:name (meta (find-var f)))
                  (utils.core/sjoin (map (fn [s] (format "\"%s\"" s)) args))
-                 tries
+                 try-nr
                  max-tries)
           (try {:value (apply (eval f) args)}
                (catch Exception e
-                 (if (= max-tries tries)
+                 (if (= max-tries try-nr)
                    (throw e)
                    {:exception e}))))]
     (if (:exception res)
-      (recur max-tries (inc tries) f args)
+      (let [sleep-time (+ 1000 (rand-int 1000))]
+        (debugf "Sleeping for %s ms ..." sleep-time)
+        (Thread/sleep sleep-time)
+        (recur max-tries (inc try-nr) f args))
       (:value res))))
 
 (defn-fun-id get-json-single
@@ -304,8 +311,8 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
     (infof msg)
     (let [tbeg (System/currentTimeMillis)]
       (let [timeout
-            #_(int (* 3/2 60 1000)) ;; 1.5 minutes
-            1000 ;; 1 second
+            (int (* 3/2 60 1000)) ;; 1.5 minutes
+            #_1000 ;; 1 second
             result
             ((comp
               (fn [s] (json/read-str s :key-fn clojure.core/keyword))
@@ -349,7 +356,10 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
         result))))
 
 (defn-fun-id get-json "Retries `get-json-single` 3 times" [url]
-  (retry 3 1 'corona.common/get-json-single url))
+  (try
+    (retry 3 1 'corona.common/get-json-single url)
+    (catch java.net.SocketTimeoutException e
+      (errorf "Caught %s" e))))
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))
 
