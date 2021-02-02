@@ -11,7 +11,7 @@
             [corona.envdef :as envdef]
             [corona.pom-version-get :as pom]
             [environ.core :as env]
-            [corona.macro :refer [defn-fun-id debugf infof]]
+            [corona.macro :refer [defn-fun-id debugf infof errorf]]
             [taoensso.timbre :as timbre]
             [utils.core :as utc]
             [clj-memory-meter.core :as meter]
@@ -279,7 +279,23 @@
 ;;                         ms)})))
 ;;  (group-by :url r))
 
-(defn-fun-id get-json
+(defn-fun-id retry "" [max-tries tries f & args]
+  (let [res
+        (do
+          (infof "(%s %s) - try nr %s of %s" (:name (meta (find-var f)))
+                 (utils.core/sjoin (map (fn [s] (format "\"%s\"" s)) args))
+                 tries
+                 max-tries)
+          (try {:value (apply (eval f) args)}
+               (catch Exception e
+                 (if (= max-tries tries)
+                   (throw e)
+                   {:exception e}))))]
+    (if (:exception res)
+      (recur max-tries (inc tries) f args)
+      (:value res))))
+
+(defn-fun-id get-json-single
   "TODO See
 'Reading JSON with jsonista seems faster than reading EDN with read-string'
 https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20as.20a.20file/near/202927428"
@@ -331,6 +347,9 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
         (infof (str msg " ... %s B received in %s ms")
                (measure result) (- (System/currentTimeMillis) tbeg))
         result))))
+
+(defn-fun-id get-json "Retries `get-json-single` 3 times" [url]
+  (retry 3 1 'corona.common/get-json-single url))
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))
 
