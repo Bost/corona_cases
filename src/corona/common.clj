@@ -283,14 +283,14 @@
 ;;                     :max max-val}))))
 ;;  (group-by :url r))
 
-(defn-fun-id retry "" [max-tries try-nr f & args]
+(defn-fun-id retry "" [max-tries try-nr fun & args]
   (let [res
         (do
-          (infof "(%s %s) - try-nr %s of %s" (:name (meta (find-var f)))
+          (infof "(%s %s) - try-nr %s of %s" (:name (meta (find-var fun)))
                  (utils.core/sjoin (map (fn [s] (format "\"%s\"" s)) args))
                  try-nr
                  max-tries)
-          (try {:value (apply (eval f) args)}
+          (try {:value (apply (eval fun) args)}
                (catch Exception e
                  (if (= max-tries try-nr)
                    (throw e)
@@ -299,7 +299,7 @@
       (let [sleep-time (+ 1000 (rand-int 1000))]
         (debugf "Sleeping for %s ms ..." sleep-time)
         (Thread/sleep sleep-time)
-        (recur max-tries (inc try-nr) f args))
+        (recur max-tries (inc try-nr) fun args))
       (:value res))))
 
 (defn-fun-id get-json-single

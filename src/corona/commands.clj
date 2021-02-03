@@ -88,16 +88,10 @@
    (fn [fun]
      {:name (fun ccode)
       :fun (fn [chat-id] (world {:chat-id chat-id
-                                :ccode ccode}))})
-   [#(cstr/lower-case %)  ;; /de
-    #(cstr/upper-case %)  ;; /DE
-    #(cstr/capitalize %)  ;; /De
-    #(cstr/lower-case (ccc/country-code-3-letter %)) ;; /deu
-    #(cstr/upper-case (ccc/country-code-3-letter %)) ;; /DEU
-    #(cstr/capitalize (ccc/country-code-3-letter %)) ;; /Deu
-    #(cstr/lower-case (normalize %))   ;; /unitedstates
-    ;; #(cstr/upper-case (normalize %))   ;; /UNITEDSTATES
-    #(normalize %)]))
+                                 :ccode ccode}))})
+   [identity                  ;; DE -> DE
+    ccc/country-code-3-letter ;; DE -> DEU
+    normalize]))              ;; United States -> UnitedStates
 
 (defn cmds-general []
   (let [prm (assoc msg/options

@@ -88,8 +88,8 @@
   []
   (let [callbacks (create-callbacks [msg/worldwide-plots])
         commands (create-cmds cmd/cmds)]
-    (infof "[%s] Registering %s chatbot commands and %s callbacks ..."
-           fun-id (count commands) (count callbacks))
+    (infof "Registering %s chatbot commands and %s callbacks ..."
+           (count commands) (count callbacks))
     (into callbacks commands)))
 
 (defn api-error-handler [] (when com/env-corona-cases? (com/system-exit 2)))
@@ -137,17 +137,16 @@
 (defn-fun-id endlessly
   "Invoke fun and put the thread to sleep for millis in an endless loop."
   [fun ttl]
-  (let [msg (format "[%s] Starting" fun-id)]
-    (infof "%s ..." msg)
-    (while @continue
-      (infof "[%s] Next eval of %s scheduled at %s" fun-id
-             (com/log-obj fun)
-             (LocalDateTime/ofInstant
-              (Instant/ofEpochMilli (+ (System/currentTimeMillis) ttl))
-              (ZoneId/of ccc/zone-id)))
-      (Thread/sleep ttl)
-      (fun))
-    (warnf "%s ... done. Data will NOT be updated!" msg)))
+  (infof "Starting ...")
+  (while @continue
+    (infof "Next eval of %s scheduled at %s"
+           (com/log-obj fun)
+           (LocalDateTime/ofInstant
+            (Instant/ofEpochMilli (+ (System/currentTimeMillis) ttl))
+            (ZoneId/of ccc/zone-id)))
+    (Thread/sleep ttl)
+    (fun))
+  (warnf "Starting ... done. Data will NOT be updated!"))
 
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)

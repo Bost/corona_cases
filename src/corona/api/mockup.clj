@@ -46,8 +46,9 @@
                    {:port mockup-port :join? false}))))
 
 (comment
+  (load "corona/api/mockup")
   (corona.api.mockup/run-server)
-  (.start @corona.api.mockup/server)
-  (.stop @corona.api.mockup/server))
+  #_(.start @corona.api.mockup/server)
+  #_(.stop @corona.api.mockup/server))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.mockup)
