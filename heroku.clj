@@ -75,6 +75,7 @@
 (def setWebhook "setWebhook")
 (def users "users")
 (def promote "promote")
+(def getMockData "getMockData")
 
 (defn validate-args
   "Validate command line arguments. Either return a map indicating the program
@@ -92,7 +93,7 @@
       ;; custom validation on arguments
       (= 1 (count arguments))
       (cond
-        (#{restart deploy deleteWebhook setWebhook users promote} (first arguments))
+        (#{restart deploy deleteWebhook setWebhook users promote getMockData} (first arguments))
         {:action (first arguments) :options options}
 
         :else
@@ -235,6 +236,14 @@
 
         promote
         (promote! "hokuspokus-bot" options)
+
+        getMockData
+        (do
+          (sh "wget" "https://coronavirus-tracker-api.herokuapp.com/all"
+              ;; TODO use com/json-api-v1
+              "-O" "resources/mockup/all.json")
+          (sh "wget" env/owid-prod
+              "-O" "resources/mockup/owid-covid-data.json"))
 
         deleteWebhook
         (sh "curl" "--form" "'drop_pending_updates=true'" "--request" "POST"

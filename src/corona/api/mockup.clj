@@ -1,12 +1,8 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.api.mockup)
 
 (ns corona.api.mockup
-  "
-  TODO download the json files when starting instead of serving them statically
-  TODO run in a separate REPL under different JVM
-  wget https://coronavirus-tracker-api.herokuapp.com/all -O resources/mockup/all.json
-  wget https://covid.ourworldindata.org/data/owid-covid-data.json -O resources/mockup/owid-covid-data.json
-  "
+  "TODO download the json files when starting instead of serving them statically
+  TODO run in a separate REPL under different JVM"
   (:require [compojure.core :refer [defroutes GET]]
             [ring.adapter.jetty :refer [run-jetty]]
             [corona.common :refer [mockup-port]]
