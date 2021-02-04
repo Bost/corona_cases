@@ -292,6 +292,7 @@
                  max-tries)
           (try {:value (apply (eval fun) args)}
                (catch Exception e
+                 (errorf "Caught %s" e)
                  (if (= max-tries try-nr)
                    (throw e)
                    {:exception e}))))]
@@ -358,7 +359,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 (defn-fun-id get-json "Retries `get-json-single` 3 times" [url]
   (try
     (retry 3 1 'corona.common/get-json-single url)
-    (catch java.net.SocketTimeoutException e
+    (catch Exception e
       (errorf "Caught %s" e))))
 
 (defn encode-cmd [s] (str (if (empty? s) "" "/") s))
