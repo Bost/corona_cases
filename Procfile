@@ -7,4 +7,4 @@
 
 # -Xmx<size> : increase max heap size from default 300MB
 # Keep in sync with .dir-locals.el
-web: java -Xmx375m -XX:+HeapDumpOnOutOfMemoryError -Djdk.attach.allowAttachSelf $JVM_OPTS -cp target/corona_cases-standalone.jar clojure.main -m corona.web.core
+web: java -Xmx400m -XX:+HeapDumpOnOutOfMemoryError -Djdk.attach.allowAttachSelf $JVM_OPTS -cp target/corona_cases-standalone.jar clojure.main -m corona.web.core
