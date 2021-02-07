@@ -462,7 +462,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
             \"4/26/20\"))"
   (fmt-date-fun
-   "M/dd/yy"
+   "M/d/yy"
    #_"dd MMM yy"))
 
 (def fmt-date

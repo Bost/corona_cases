@@ -40,8 +40,10 @@
     (partial map date))
    raw-dates))
 
-(defn cv
-  "Convert 2021-01-20 -> 20/1/21"
+(defn convert
+  "Convert to month/day/year:
+  (convert \"2021-01-20\") -> :1/20/21
+  (convert \"2021-02-04\") -> :2/4/21"
   [s]
   #_(com/fmt-vaccination-date (.parse date-format s))
   ((comp
@@ -57,7 +59,7 @@
                    ((comp
                      (partial apply hash-map)
                      (juxt :date :total_vaccinations)
-                     (fn [r] (update-in r [:date] cv))
+                     (fn [r] (update-in r [:date] convert))
                      (fn [r] (update-in r [:total_vaccinations] (fn [v] (if v (int v) 0))))
                      (partial select-keys m))
                     [:date :total_vaccinations])))
