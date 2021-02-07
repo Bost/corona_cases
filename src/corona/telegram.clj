@@ -162,9 +162,9 @@
 (defn-fun-id calc-cache! "" [aggegation-hash json]
   (run! (fn [fun] (fun json)) [list-countries list-per-100k])
   (com/heap-info)
-  (Thread/sleep 100)
   (debugf "2nd garbage collection")
   (System/gc) ;; also (.gc (Runtime/getRuntime))
+  (Thread/sleep 100)
   (com/heap-info)
   (let [stats (est/estimate (v1/pic-data))
         cnt-reports (count (data/dates json))]
@@ -178,9 +178,9 @@
                (plot/plot-country ccode stats cnt-reports))
              ccc/all-country-codes))
     (com/heap-info)
-    (Thread/sleep 100)
     (debugf "3rd garbage collection")
     (System/gc) ;; also (.gc (Runtime/getRuntime))
+    (Thread/sleep 100)
     (com/heap-info)
     (doall
      (map-aggregation-fn
@@ -219,9 +219,9 @@
                           [{:json-fn data/json-data :cache-storage [:v1]}
                            {:json-fn vac/json-data  :cache-storage [:owid]}])]
     (com/heap-info)
-    (Thread/sleep 100)
     (System/gc) ;; also (.gc (Runtime/getRuntime))
     (debugf "1st garbage collection")
+    (Thread/sleep 100)
     (com/heap-info)
     (debugf "any-json-changed %s" any-json-changed)
     (when any-json-changed
