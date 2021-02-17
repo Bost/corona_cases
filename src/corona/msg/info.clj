@@ -47,7 +47,8 @@
 (defn-fun-id confirmed-info ""
   [last-report pred-hm delta max-active-val max-active-date ccode cnt-countries]
   (let [json (data/json-data)
-        {deaths          :d
+        {population      :p
+         deaths          :d
          recove          :r
          active          :a
          vaccin          :v
@@ -62,9 +63,22 @@
          c-rate          :c-rate ;; closed-rate
          v-rate          :v-rate} last-report
 
-        {vaccin-last-8-reports :v active-last-8-reports :a} (data/last-8-reports pred-hm json)
-        [_                      & vaccin-last-7-reports] vaccin-last-8-reports
-        [active-last-8th-report & active-last-7-reports] active-last-8-reports
+        last-8 (data/last-8-reports pred-hm json)
+        {vaccin-last-8 :v active-last-8 :a confir-last-8 :c} last-8
+        [_               & vaccin-last-7] vaccin-last-8
+        [active-last-8th & active-last-7] active-last-8
+        [_               & confir-last-7] confir-last-8
+
+        active-last-7-with-rate
+        ((comp
+          utc/sjoin
+          (partial map (fn [a c] (format "%s=%s%s"
+                                        a
+                                        ((com/calc-rate-precision-1 :a)
+                                         {:a a :p population :c c})
+                                        msgc/percent))))
+         active-last-7
+         confir-last-7)
 
         closed (+ deaths recove)
         {delta-deaths :d
@@ -77,7 +91,7 @@
          delta-v100k  :v100k}
         delta
         delta-closed (+ delta-deaths delta-recove)
-        active-last-7-avg (-> active-last-7-reports istats/mean round-nr)
+        active-last-7-avg (-> active-last-7 istats/mean round-nr)
 
         ;; ActC(t0)    = active(t0)    - active(t0-1d)
         ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
@@ -90,10 +104,9 @@
         ;; ActCL7CAvg =
         ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
         ;; = (active(t0) - active(t0-7d)) / 7
-        active-change-last-7-avg (-> (/ (- active active-last-8th-report) 7.0)
+        active-change-last-7-avg (-> (/ (- active active-last-8th) 7.0)
                                      round-nr #_plus-minus)]
-    [
-     #_["%s\n" [(msgc/fmt-to-cols
+    [#_["%s\n" [(msgc/fmt-to-cols
                  {:emoji "💉" :s lang/vaccinated :n vaccin
                   :diff delta-vaccin :rate v-rate})]]
      #_["%s\n" [(msgc/fmt-to-cols
@@ -110,7 +123,7 @@
                   :n max-active-val})
 
               (format
-               (str "<code>%s" "</code>" msgc/vline
+               (str "<code>" "%s" "</code>" msgc/vline
                     "<code>" "%s" "</code>" msgc/vline
                     "(%s)")
                (com/right-pad (str (if nil nil (str msgc/blank msgc/blank)) msgc/blank
@@ -121,7 +134,7 @@
      ;; TODO add effective reproduction number (R)
      #_["%s\n" [(fmt-to-cols
                  {:s lang/active-last-7-med
-                  :n (->> active-last-7-reports (izoo/roll-median 7) (first)
+                  :n (->> active-last-7 (izoo/roll-median 7) (first)
                           (int))})]]
      ["%s\n" [(msgc/fmt-to-cols
                {:s lang/active-last-7-avg
@@ -156,7 +169,7 @@
                      s lang/active-last-7]
                  (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank s)
                                 msgc/blank msgc/padding-s))
-               (utc/sjoin active-last-7-reports))]]
+               active-last-7-with-rate)]]
      ;; no country ranking can be displayed for worldwide statistics
      (if (msgc/worldwide? ccode)
        ["" [""]]
