@@ -126,8 +126,10 @@
                (str "<code>" "%s" "</code>" msgc/vline
                     "<code>" "%s" "</code>" msgc/vline
                     "(%s)")
-               (com/right-pad (str (if nil nil (str msgc/blank msgc/blank)) msgc/blank
-                                   lang/active-max) msgc/blank msgc/padding-s)
+               (com/right-pad (str (if nil nil (str msgc/blank msgc/blank))
+                                   msgc/blank
+                                   lang/active-max)
+                              msgc/blank msgc/padding-s)
                (com/left-pad max-active-val msgc/blank msgc/padding-n)
                (com/fmt-date max-active-date))]]
 
@@ -167,7 +169,8 @@
                "<code>%s</code>\n%s"
                (let [emoji "🤒🗓"
                      s lang/active-last-7]
-                 (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank s)
+                 (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank))
+                                     msgc/blank s)
                                 msgc/blank msgc/padding-s))
                active-last-7-with-rate)]]
      ;; no country ranking can be displayed for worldwide statistics

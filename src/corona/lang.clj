@@ -117,9 +117,12 @@
 
 (def ^:const data-source-text
   (str
-   "Data provided by the "
+   "Data provided by "
+   "[Our World in Data]"
+   "(https://github.com/owid/covid-19-data/tree/master/public/data)"
+   " and "
    "[JHU CSSE](https://github.com/CSSEGISandData/COVID-19)"
-   ", via the "
+   ", via "
    "[ExpDev07/coronavirus-tracker-api]"
    "(https://github.com/ExpDev07/coronavirus-tracker-api) service"))
 
