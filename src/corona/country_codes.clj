@@ -30,7 +30,12 @@
         name)
        (or (level log-level-map) level))
       " "
-      "[" (or ?ns-str ?file "?") #_":" #_(or ?line "?") "] "
+      "[" (or ((comp
+                (fn [n] (subs ?ns-str n))
+                inc
+                (fn [s] (.indexOf s ".")))
+               ?ns-str)
+              ?file "?") #_":" #_(or ?line "?") "] "
       (force msg_)
       (when-not no-stacktrace?
         (when-let [err ?err]
