@@ -12,7 +12,7 @@
 ;; :language     "lang"
 (def ^:const percentage-calc "Percentage calculation")
 (def ^:const cases           "cases")
-(def ^:const randking-desc   "Ranking on the list of all %s countries:\n%s")
+(def ^:const randking-desc   "Ranking among %s countries:\n%s")
 (def ^:const world           "world")
 (def ^:const world-desc      "Start here")
 (def ^:const start           "start")

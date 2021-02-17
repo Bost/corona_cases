@@ -160,14 +160,14 @@
      ;; no country ranking can be displayed for worldwide statistics
      (if (msgc/worldwide? ccode)
        ["" [""]]
-       ["\n%s"
+       ["\n%s\n"
         [(msgc/format-linewise
           [["%s" [lang/people         :p]]
            ["%s" [lang/active-per-1e5 :a100k]]
            ["%s" [lang/recove-per-1e5 :r100k]]
            ["%s" [lang/deaths-per-1e5 :d100k]]
            ["%s" [lang/closed-per-1e5 :c100k]]]
-          :line-fmt (str "<code>%s</code>: %s / " cnt-countries "\n")
+          :line-fmt "%s:<b>%s</b>   "
           :fn-fmts
           (fn [fmts] (format lang/randking-desc
                              cnt-countries (cstr/join "" fmts)))

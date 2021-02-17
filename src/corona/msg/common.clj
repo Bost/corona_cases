@@ -59,10 +59,10 @@
   [{:keys [emoji s n diff rate]}]
   (format
    #_(str "<code>%s" blank "%s" blank "%s" blank "%s</code>")
-   (str "<code>%s" "</code>" vline
+   (str "<code>" "%s" "</code>" vline
         "<code>" "%s" "</code>" vline
         "<code>" "%s" "</code>" vline
-        "<code>" "%s</code>")
+        "<code>" "%s" "</code>")
    (com/right-pad (str (if emoji emoji (str blank blank)) blank s)
                   blank padding-s)
    (com/left-pad n blank padding-n)
