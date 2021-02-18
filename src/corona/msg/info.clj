@@ -201,7 +201,7 @@
 ;; allow per-thread bindings via the macro binding. Within each thread
 ;; they obey a stack discipline:
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
-(defn-fun-id create-detailed-info
+(defn-fun-id detailed-info
   "Shows the table with the absolute and %-wise nr of cases, cases per-100k etc.
   TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
@@ -279,11 +279,11 @@
     (debugf "ccode %s info-size %s" ccode (com/measure info))
     info))
 
-(defn detailed-info
+(defn detailed-info!
   [ccode & [json parse_mode pred-hm]]
   (let [ks [:msg (keyword ccode)]]
       (if (and json parse_mode pred-hm)
-        (cache/cache! (fn [] (create-detailed-info json ccode parse_mode pred-hm))
+        (cache/cache! (fn [] (detailed-info json ccode parse_mode pred-hm))
                       ks)
         (get-in @cache/cache ks))))
 

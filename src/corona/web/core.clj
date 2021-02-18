@@ -100,7 +100,7 @@
            [id aggregation case]
            ;; TODO make sure strings and keywords are not getting confused
            {:status 200 :headers {"Content-Type" "image/png"}
-            :body (plot/plot-aggregation
+            :body (plot/aggregation!
                    id
                    (keyword aggregation)
                    (keyword case))})

@@ -173,9 +173,9 @@
       (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
     (doall
      (map-fn (fn [ccode]
-               (msgi/detailed-info ccode json com/html
+               (msgi/detailed-info! ccode json com/html
                                    (data/create-pred-hm ccode))
-               (plot/plot-country ccode stats cnt-reports))
+               (plot/plot-country! ccode stats cnt-reports))
              ccc/all-country-codes))
     (com/heap-info)
     (debugf "3rd garbage collection")
@@ -188,7 +188,7 @@
         (doall
          (map-aggregation-fn
           (fn [case-kw]
-            (plot/plot-aggregation aggegation-hash aggregation-kw case-kw stats
+            (plot/aggregation! aggegation-hash aggregation-kw case-kw stats
                                    cnt-reports))
           com/absolute-cases)))
       com/aggregation-cases))))

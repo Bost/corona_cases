@@ -73,7 +73,7 @@
                   com/telegram-token chat-id options
                    ;; the plot is fetched from the cache, stats and report need
                    ;; not to be specified
-                  (plot/plot-aggregation
+                  (plot/aggregation!
                    id (:type data-hm) (:case-kw data-hm)))))]
       (debugf "(count msg) %s" (count msg)))))
 

@@ -40,10 +40,10 @@
     (send-text "world"
                prm
                (select-keys prm (keys msg/options))
-               (msgi/detailed-info ccode))
+               (msgi/detailed-info! ccode))
     (when-let [;; the plot is fetched from the cache, stats and report need not to be
                 ;; specified
-               content (p/plot-country ccode)]
+               content (p/plot-country! ccode)]
       (let [options (if (msgc/worldwide? ccode)
                       (msg/reply-markup-btns (select-keys prm [:chat-id :ccode :message_id]))
                       {})

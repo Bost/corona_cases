@@ -227,7 +227,7 @@
 (defn date-fmt-fn [d]
   (.format (DateTimeFormatter/ofPattern "dd.MM") d))
 
-(defn-fun-id calc-plot-country-img
+(defn-fun-id plot-country-img
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
   [ccode & [stats report]]
@@ -281,7 +281,7 @@
         :label (plot-label report ccode stats)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
 
-(defn-fun-id calc-plot-country
+(defn-fun-id plot-country
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
   [ccode & [stats report]]
@@ -290,15 +290,15 @@
       (debugf "ccode %s img-size %s" ccode (if arr (com/measure arr) 0))
       arr)
     to-byte-array-auto-closable
-    (fn [prms] (apply calc-plot-country-img prms)))
+    (fn [prms] (apply plot-country-img prms)))
    [ccode stats report]))
 
-(defn plot-country
+(defn plot-country!
   "The optional params `stats`, `report` are used only for the first calculation"
   [ccode & [stats report]]
   (let [ks [:plot (keyword ccode)]]
     (if (and stats report)
-      (cache/cache! (fn [] (calc-plot-country ccode stats report))
+      (cache/cache! (fn [] (plot-country ccode stats report))
                    ks)
       (get-in @cache/cache ks))))
 
@@ -417,7 +417,7 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn-fun-id calc-aggregation-img ""
+(defn-fun-id aggregation-img ""
   [aggregation-kw case-kw stats report]
   (let [{json-data :data threshold-recalced :threshold}
         (stats-all-by-case {:report report
@@ -447,15 +447,15 @@
                           :sum ""))
       :label-conf label-conf})))
 
-(defn calc-aggregation
+(defn aggregation
   [aggregation-kw case-kw stats report]
   ((comp
     (fn [arr] (com/heap-info) arr)
     to-byte-array-auto-closable
-    (fn [prms] (apply calc-aggregation-img prms)))
+    (fn [prms] (apply aggregation-img prms)))
    [aggregation-kw case-kw stats report]))
 
-(defn plot-aggregation
+(defn aggregation!
   "The optional params `stats`, `report` are used only for the first
   calculation"
   [id aggregation-kw case-kw & [stats report]]
@@ -463,7 +463,7 @@
   (let [ks [:plot (keyword id) aggregation-kw case-kw]]
     (if (and stats report)
       (cache/cache! (fn []
-                     (calc-aggregation aggregation-kw case-kw stats report))
+                     (aggregation aggregation-kw case-kw stats report))
                    ks)
       (get-in @cache/cache ks))))
 
