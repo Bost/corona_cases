@@ -15,12 +15,7 @@
    ["--main" "hf.depstar.uberjar" "target/corona_cases-standalone.jar"
     ;; AOT compilation
     ;; See https://github.com/seancorfield/depstar#aot-compilation
-    #_"--compile"]}
-
-  #_#_:clj-kondo
-    {:extra-deps {clj-kondo/clj-kondo {:mvn/version
-                                       "2020.12.12"}}
-     :main-opts ["-m" "clj-kondo.main"]}}
+    #_"--compile"]}}
 
  :deps
  {org.clojure/clojure     {:mvn/version "1.10.2"}
