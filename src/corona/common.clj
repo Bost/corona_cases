@@ -252,8 +252,8 @@
 
 (defn measure
   "require [corona.common :as com]"
-  [obj]
-  (meter/measure obj :bytes true))
+  [object & prm]
+  (apply (partial meter/measure object) prm))
 
 (defn-fun-id retry "" [max-tries try-nr fun & args]
   (let [res
@@ -318,7 +318,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
         ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
         ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
         ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
-        (infof (str msg " ... %s B received in %s ms")
+        (infof (str msg " ... %s received in %s ms")
                (measure result) (- (System/currentTimeMillis) tbeg))
         result))))
 

@@ -252,7 +252,7 @@
 
     (debugf "(keys @cache/cache) %s" (keys @cache/cache))
     (debugf "Responses %s" (select-keys @cache/cache [:v1 :owid]))
-    (debugf "Cache size %s B" (com/measure @cache/cache))))
+    (debugf "Cache size %s" (com/measure @cache/cache))))
 
 (defn- p-endlessly [] (endlessly reset-cache! com/ttl))
 (defn- p-long-polling [] (long-polling com/telegram-token))
