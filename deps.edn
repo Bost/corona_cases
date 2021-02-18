@@ -8,14 +8,11 @@
 ;; https://github.com/arrdem/lein-git-version
 
 {:aliases
- {:uberjar
-  {:extra-deps {seancorfield/depstar {:mvn/version
-                                      "1.1.136"}}
-   :main-opts
-   ["--main" "hf.depstar.uberjar" "target/corona_cases-standalone.jar"
-    ;; AOT compilation
-    ;; See https://github.com/seancorfield/depstar#aot-compilation
-    #_"--compile"]}}
+ {:depstar
+  {:replace-deps
+   {seancorfield/depstar {:mvn/version "2.0.171"}}
+   :ns-default hf.depstar
+   :exec-args {}}}
 
  :deps
  {org.clojure/clojure     {:mvn/version "1.10.2"}
