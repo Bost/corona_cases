@@ -96,7 +96,7 @@
       ;; world population is the sum
       ;; 7792480951
       (let [default-population 0]
-        (errorf "Population nr unknown; ccode: %s; using %s"
+        (errorf "ccode %s unknown population size. Using %s"
                 ccode
                 default-population)
         default-population)))

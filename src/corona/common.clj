@@ -255,56 +255,6 @@
   [obj]
   (meter/measure obj :bytes true))
 
-;; (def r
-;;   [{:t 7647 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 20588 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 6427 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 16571 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 10711 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 19450 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 5064 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 18016 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 14138 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 26777 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 7600 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 35748 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 6881 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 39256 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 14198 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 57989 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 8668 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 34287 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 16151 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 44699 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 15032 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 26080 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 9374 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 48340 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 31862 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 31943 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 11202 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 19807 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 9635 :url "http://covid-tracker-us.herokuapp.com/all"}
-;;    {:t 44993 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    {:t 27926 :url "https://covid.ourworldindata.org/data/owid-covid-data.json"}
-;;    ])
-
-;; ((comp
-;;   (partial map (fn [[url ms]]
-;;                  (let [max-val ((comp
-;;                                  (partial transduce (map (fn [m] (:t m))) max 0))
-;;                                 ms)]
-;;                    {:url url :cnt (count ms)
-;;                     :avg ((comp
-;;                            (fn [total] (Math/round (float (/ total (count ms)))))
-;;                            (partial transduce (map (fn [m] (:t m))) + 0))
-;;                           ms)
-;;                     :min ((comp
-;;                            (partial transduce (map (fn [m] (:t m))) min max-val))
-;;                           ms)
-;;                     :max max-val}))))
-;;  (group-by :url r))
-
 (defn-fun-id retry "" [max-tries try-nr fun & args]
   (let [res
         (do
@@ -335,7 +285,6 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
     (let [tbeg (System/currentTimeMillis)]
       (let [timeout
             (int (* 3/2 60 1000)) ;; 1.5 minutes
-            #_1000 ;; 1 second
             result
             ((comp
               (fn [s] (json/read-str s :key-fn clojure.core/keyword))
@@ -369,11 +318,6 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
         ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
         ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
         ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
-        ;;
-        ;; 2.
-        ;; Requesting json-data from http://coronavirus-tracker-api.herokuapp.com/all ...
-        ;; Execution error (ConnectionClosedException) at org.apache.http.impl.io.ContentLengthInputStream/read (ContentLengthInputStream.java:178).
-        ;; Premature end of Content-Length delimited message body (expected: 840,718; received: 515,312)
         (infof (str msg " ... %s B received in %s ms")
                (measure result) (- (System/currentTimeMillis) tbeg))
         result))))
@@ -479,10 +423,11 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
     (ctf/unparse (ctf/with-zone (ctf/formatter fmts) (ctime/default-time-zone))
                  (ctc/from-date date))))
 
-;; "Convert 2021-01-15 -> 1/15/20"
 (def fmt-vaccination-date
   "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
-            \"4/26/20\"))"
+            \"4/26/20\"))
+  E.g.:
+  2021-01-15 -> 1/15/20"
   (fmt-date-fun
    "M/d/yy"
    #_"dd MMM yy"))
