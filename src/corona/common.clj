@@ -309,7 +309,7 @@
   (let [res
         (do
           (infof "(%s %s) - try-nr %s of %s" (:name (meta (find-var fun)))
-                 (utils.core/sjoin (map (fn [s] (format "\"%s\"" s)) args))
+                 (utc/sjoin (map (fn [s] (format "\"%s\"" s)) args))
                  try-nr
                  max-tries)
           (try {:value (apply (eval fun) args)}
