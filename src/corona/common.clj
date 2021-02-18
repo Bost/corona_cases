@@ -548,23 +548,19 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 (defn-fun-id heap-info
   "See https://github.com/metrics-clojure/metrics-clojure"
   []
-  (debugf "%s"
-          (let [runtime (Runtime/getRuntime)
-                    ;; current size of heap in bytes
-                size (.totalMemory runtime)
+  ((comp
+    (fn [v] (debugf "%s" v)) ;; debugf is a macro
+    (partial fmap format-bytes))
+   (let [runtime (Runtime/getRuntime)]
+     {:size (.totalMemory runtime) ;; current size of heap in bytes
 
-                    ;; maximum size of heap in bytes. The heap cannot grow
-                    ;; beyond this size. Any attempt will result in an
-                    ;; OutOfMemoryException.
-                max-size (.maxMemory runtime)
+      ;; max size of heap in bytes. The heap cannot grow beyond this size. Any
+      ;; attempt will result in an OutOfMemoryException.
+      :max (.maxMemory runtime)
 
-                    ;; amount of free memory within the heap in bytes. This size
-                    ;; will increase after garbage collection and decrease as
-                    ;; new objects are created.
-                free-size (.freeMemory runtime)]
-            ((comp
-              (partial fmap format-bytes))
-             {:size size :max max-size :free free-size}))))
+      ;; amount of free memory within the heap in bytes. This size will increase
+      ;; after garbage collection and decrease as new objects are created.
+      :free (.freeMemory runtime)})))
 
 #_(comment
   (def obj "clojure.core.async.impl.channels.ManyToManyChannel@490f97e1")
