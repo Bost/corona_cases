@@ -79,7 +79,6 @@
   `env-env-corona-cases?`, `env-hokuspokus?`, `env-local?`, `env-devel?`"
   []
   (run! (fn [v]
-          (def v v)
           (let [symb-v ((comp symbol
                               (partial format "env-%s?")
                               cstr/lower-case

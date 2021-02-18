@@ -52,12 +52,11 @@
 
 (defn-fun-id setup-webhook "" []
   (if com/use-webhook?
-    (do
-      (when (empty? (->> com/telegram-token moa/get-info-webhook
-                         :body :result :url))
-        (let [res (moa/set-webhook com/telegram-token
-                                   (webhook-url com/telegram-token))]
-          (debugf "(set-webhook ...) %s" (:body res)))))
+    (when (empty? (->> com/telegram-token moa/get-info-webhook
+                       :body :result :url))
+      (let [res (moa/set-webhook com/telegram-token
+                                 (webhook-url com/telegram-token))]
+        (debugf "(set-webhook ...) %s" (:body res))))
     (when-not (empty? (->> com/telegram-token moa/get-info-webhook
                            :body :result :url))
       (let [res (moa/del-webhook com/telegram-token)]
