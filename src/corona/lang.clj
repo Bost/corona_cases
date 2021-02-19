@@ -12,7 +12,7 @@
 ;; :language     "lang"
 (def ^:const percentage-calc "Percentage calculation")
 (def ^:const cases           "cases")
-(def ^:const randking-desc   "Ranking among %s countries:\n%s")
+(def ^:const ranking-desc   "Ranking among %s countries:\n%s")
 (def ^:const world           "world")
 (def ^:const world-desc      "Start here")
 (def ^:const start           "start")
@@ -74,7 +74,7 @@
 (def ^:const active-absolute "Active absolute")
 (def ^:const absolute      "absolute")
 (def ^:const people        "People") ;; "Population" is too long see `fmt-to-cols`
-(def ^:const vaccinated    "Vaccin")
+(def ^:const vaccinated    "Vaccinated")
 (def ^:const stats         "Stats")
 (def ^:const list-desc     "List of countries")
 (def ^:const listings      "lists")

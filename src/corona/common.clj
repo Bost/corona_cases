@@ -121,10 +121,6 @@
     (fn [confirmed deaths] (- confirmed deaths)))
    confirmed deaths))
 
-(defn vaccination-rate
-  [v p]
-  (utn/round-div-precision (* v 100.0) p 1))
-
 (defn calc-rate-precision-1 [case-kw]
   (fn [{:keys [v p c r d a] :as prm}]
     ((comp
@@ -132,34 +128,36 @@
           (when (utc/in? [:a :v] case-kw)
             (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
           ret))
-     (case case-kw
-       :v (vaccination-rate v p)
-       (utn/round-div-precision
-        (*
-         (case case-kw
-           :a a
-           :r r
-           :d d
-           :c (+ d r))
-         100.0)
-        c
-        1)))))
+     (utn/round-div-precision
+      (*
+       (case case-kw
+         :a a
+         :v v
+         :r r
+         :d d
+         :c (+ d r))
+       100.0)
+      (case case-kw
+        :v p
+        c)
+      1))))
 
 (defn calc-rate [case-kw]
   (fn [{:keys [v p c r d a] :as prm}]
     ((comp
       #_(fn [ret]
-        (when (utc/in? [:a :v] case-kw)
-          (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
-        ret))
-     (case case-kw
-       :v (vaccination-rate v p)
-       (utn/percentage
-        (case case-kw
-          :a a
-          :r r
-          :d d
-          :c (+ d r))
+          (when (utc/in? [:a :v] case-kw)
+            (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
+          ret))
+     (utn/percentage
+      (case case-kw
+        :a a
+        :v v
+        :r r
+        :d d
+        :c (+ d r))
+      (case case-kw
+        :v p
         c)))))
 
 (defn per-1e5

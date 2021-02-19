@@ -6,29 +6,30 @@
             [corona.common :as com]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
+            [utils.num :as utn]
             [utils.core :as utc]))
 
 ;; (set! *warn-on-reflection* true)
 
 (def ^:const padding-s "Stays constant" (+ 3 9))
-(def ^:const padding-n
-  "Count of digits to display. Increase it when the nr of cases rises. Increases
-  by an order of magnitude" 8)
 
 ;; The worldwide population has 3 commas:
 ;; (count (re-seq #"," (format "%+,2d" 7697236610))) ; => 3
 
-(def ^:const max-diff-order-of-magnitude 7)
+(def ^:const max-diff-order-of-magnitude 8)
 
 (def blank
-  #_" "
+  " "
   #_"\u2004" ;; U+2004 	&#8196 	Three-Per-Em Space
   #_"\u2005" ;; U+2005 	&#8197 	Four-Per-Em Space
-  "\u2006" ;; U+2006 	&#8198 	Six-Per-Em Space
+  #_"\u2006" ;; U+2006 	&#8198 	Six-Per-Em Space
   #_" " ;; U+2009 	&#8201 	Thin Space
   )
 
-(def vline blank)
+(def vline
+  " " ;; U+2009 	&#8201 	Thin Space
+  #_" "
+  #_blank)
 
 (def percent "%") ;; "\uFF05" "\uFE6A"
 
@@ -40,7 +41,7 @@
 
 (defn plus-minus
   "Display \"+0\" when n is zero"
-  [n]
+  [n padding-len]
   (com/left-pad
    (if (zero? n)
      "+0"
@@ -52,24 +53,33 @@
             :else "")
       n
       #_(pos-neg n)))
-   " " max-diff-order-of-magnitude))
+   " " padding-len))
 
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
   [{:keys [emoji s n diff rate]}]
-  (format
-   #_(str "<code>%s" blank "%s" blank "%s" blank "%s</code>")
-   (str "<code>" "%s" "</code>" vline
-        "<code>" "%s" "</code>" vline
-        "<code>" "%s" "</code>" vline
-        "<code>" "%s" "</code>")
-   (com/right-pad (str (if emoji emoji (str blank blank)) blank s)
-                  blank padding-s)
-   (com/left-pad n blank padding-n)
-   (com/left-pad (if rate (str rate percent) blank) blank 3)
-   (if (nil? diff)
-     (com/left-pad "" blank max-diff-order-of-magnitude)
-     (plus-minus diff))))
+  ["%s\n"
+   [
+    (let [padding-len (inc max-diff-order-of-magnitude)
+          s-shift     ""
+          non-s-shift "  "]
+      (format
+       (str
+        "<code>" "%s" "</code>" #_vline
+        "<code>" "%s" vline "%s" #_vline #_"%s" "</code>" vline
+        "%s")
+       (str (if emoji emoji (str blank blank)) vline #_blank)
+       (com/left-pad (if (>= n 1e6)
+                       (str (utn/round-div-precision n 1e6 1) "m")
+                       (str n s-shift))
+                     blank
+                     #_max-diff-order-of-magnitude
+                     (- padding-len (count non-s-shift)))
+       #_(com/left-pad (if rate (str rate percent) blank) blank 3)
+       (if (nil? diff)
+         (com/left-pad "" blank padding-len)
+         (plus-minus diff padding-len))
+       s))]])
 
 (defn format-linewise
   "

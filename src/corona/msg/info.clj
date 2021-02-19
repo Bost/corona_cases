@@ -9,6 +9,7 @@
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
             [corona.macro :refer [defn-fun-id debugf]]
+            [taoensso.timbre :as timbre]
             [corona.msg.common :as msgc]
             [incanter.stats :as istats]
             [utils.core :as utc]
@@ -16,7 +17,7 @@
 
 ;; (set! *warn-on-reflection* true)
 
-(defn format-detailed-info
+(defn fmt-detailed-info
   [{:keys
     [header-txt
      cname-aliased-txt
@@ -24,27 +25,32 @@
      cnt-reports-txt
      population-txt
      vaccinated-txt
-     vaccinated-last-7
      confirmed-txt
      footer-txt
      details-txt]}]
-  (msgc/format-linewise
-   ;; extended header
-   [["%s\n" [(msgc/format-linewise [["%s  " [header-txt]]
-                                    ["%s "  [cname-aliased-txt]]
-                                    ["%s"   [country-commands-txt]]])]]
-    ["%s\n" [cnt-reports-txt]]
-    ["%s\n" [(msgc/format-linewise (apply conj
-                                          [["%s\n" [population-txt]]
-                                           ["%s\n" [vaccinated-txt]]
-                                           ["%s\n\n" [vaccinated-last-7]]
-                                           ["%s\n" [confirmed-txt]]]
-                                          details-txt))]]
-    ["%s\n" [footer-txt]]]))
+  (let [lines
+        (remove nil?
+                (apply conj [
+                             population-txt
+                             vaccinated-txt
+                             confirmed-txt
+                             ]
+                      details-txt))]
+    (let [fmt-lines (msgc/format-linewise lines)]
+      (msgc/format-linewise
+       ;; extended header
+       [["%s\n" [(msgc/format-linewise [["%s  " [header-txt]]
+                                        ["%s "  [cname-aliased-txt]]
+                                        ["%s"   [country-commands-txt]]])]]
+        ["%s\n" [cnt-reports-txt]]
+        ["%s\n" [fmt-lines]]
+        ["%s\n" [footer-txt]]]))))
 
 (defn round-nr [value] (int (utn/round-precision value 0)))
 
-(defn-fun-id confirmed-info ""
+(defn f [prm] (msgc/fmt-to-cols prm))
+
+(defn-fun-id confirmed-info "TODO reintroduce max-active-date"
   [last-report pred-hm delta max-active-val max-active-date ccode cnt-countries]
   (let [json (data/json-data)
         {population      :p
@@ -52,6 +58,7 @@
          recove          :r
          active          :a
          vaccin          :v
+         confirmed       :c
          active-per-100k :a100k
          recove-per-100k :r100k
          deaths-per-100k :d100k
@@ -65,6 +72,7 @@
 
         last-8 (data/last-8-reports pred-hm json)
         {vaccin-last-8 :v active-last-8 :a confir-last-8 :c} last-8
+
         [_               & vaccin-last-7] vaccin-last-8
         [active-last-8th & active-last-7] active-last-8
         [_               & confir-last-7] confir-last-8
@@ -106,96 +114,83 @@
         ;; = (active(t0) - active(t0-7d)) / 7
         active-change-last-7-avg (-> (/ (- active active-last-8th) 7.0)
                                      round-nr #_plus-minus)]
-    [#_["%s\n" [(msgc/fmt-to-cols
-                 {:emoji "💉" :s lang/vaccinated :n vaccin
-                  :diff delta-vaccin :rate v-rate})]]
-     #_["%s\n" [(msgc/fmt-to-cols
-                 {:s lang/vaccin-per-1e5 :n vaccin-per-100k
-                  :diff delta-v100k})]]
-     ["%s\n" [(msgc/fmt-to-cols
-               {:emoji "🤒" :s lang/active :n active
-                :diff delta-active :rate a-rate})]]
-     ["%s\n" [(msgc/fmt-to-cols
-               {:s lang/active-per-1e5 :n active-per-100k
-                :diff delta-a100k})]]
-     ["%s\n" [#_(fmt-to-cols
-                 {:s lang/active-max
-                  :n max-active-val})
 
-              (format
-               (str "<code>" "%s" "</code>" msgc/vline
-                    "<code>" "%s" "</code>" msgc/vline
-                    "(%s)")
-               (com/right-pad (str (if nil nil (str msgc/blank msgc/blank))
-                                   msgc/blank
-                                   lang/active-max)
-                              msgc/blank msgc/padding-s)
-               (com/left-pad max-active-val msgc/blank msgc/padding-n)
-               (com/fmt-date max-active-date))]]
-
-     ;; TODO add effective reproduction number (R)
-     #_["%s\n" [(fmt-to-cols
-                 {:s lang/active-last-7-med
-                  :n (->> active-last-7 (izoo/roll-median 7) (first)
-                          (int))})]]
-     ["%s\n" [(msgc/fmt-to-cols
-               {:s lang/active-last-7-avg
-                :n active-last-7-avg})]]
-     ["%s\n" [(msgc/fmt-to-cols
-               {:s lang/active-change-last-7-avg
-                :n active-change-last-7-avg
-                :show-plus-minus true})]]
-     ["%s\n" [(msgc/fmt-to-cols
-               {:emoji "🎉" :s lang/recovered :n recove
-                :diff delta-recove :rate r-rate})]]
-     ["%s\n" [(msgc/fmt-to-cols
-               {:s lang/recove-per-1e5 :n recove-per-100k
-                :diff delta-r100k})]]
-     ["%s\n" [(msgc/fmt-to-cols
-               {:emoji "⚰️" :s lang/deaths :n deaths
-                :diff delta-deaths :rate d-rate})]]
-     ["%s\n" [(msgc/fmt-to-cols
-               {:s lang/deaths-per-1e5 :n deaths-per-100k
-                :diff delta-d100k})]]
-     ["%s\n" [(msgc/fmt-to-cols
-               {:emoji "🏁" :s lang/closed :n closed
-                :diff delta-closed :rate c-rate})]]
-     ["%s\n\n" [(msgc/fmt-to-cols
-                 {:s lang/closed-per-1e5 :n closed-per-100k
-                  :diff delta-d100k
-                  ;; TODO create command lang/cmd-closed-per-1e5
-                  #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})]]
-     ["%s\n" [(format
-               "<code>%s</code>\n%s"
-               (let [emoji "🤒🗓"
-                     s lang/active-last-7]
-                 (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank))
-                                     msgc/blank s)
-                                msgc/blank msgc/padding-s))
-               active-last-7-with-rate)]]
-     ;; no country ranking can be displayed for worldwide statistics
-     (if (msgc/worldwide? ccode)
-       ["" [""]]
-       ["\n%s\n"
-        [(msgc/format-linewise
-          [["%s" [lang/people         :p]]
-           ["%s" [lang/active-per-1e5 :a100k]]
-           ["%s" [lang/recove-per-1e5 :r100k]]
-           ["%s" [lang/deaths-per-1e5 :d100k]]
-           ["%s" [lang/closed-per-1e5 :c100k]]]
-          :line-fmt "%s:<b>%s</b>   "
-          :fn-fmts
-          (fn [fmts] (format lang/randking-desc
-                             cnt-countries (cstr/join "" fmts)))
-          :fn-args
-          (fn [args] (update args (dec (count args))
-                             (fn [_]
-                               (get
-                                (first
-                                 (map :rank
-                                      (filter (fn [hm] (= (:ccode hm) ccode))
-                                              (data/all-rankings json))))
-                                (last args))))))]])]))
+    ;; TODO add effective reproduction number (R)
+    (remove
+     nil?
+     (apply
+      conj
+      (conj
+       []
+       (when (pos? confirmed)
+         [
+          #_(f {:s lang/vaccinated     :n vaccin          :diff delta-vaccin :rate v-rate :emoji "💉"})
+          #_(f {:s lang/vaccin-per-1e5 :n vaccin-per-100k :diff delta-v100k})
+          (f {:s lang/active         :n active          :diff delta-active :rate a-rate :emoji "🤒"})
+          (f {:s lang/active-per-1e5 :n active-per-100k :diff delta-a100k})
+          (f {:s lang/active-max     :n max-active-val})
+          #_(f {:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))})
+          (f {:s lang/active-last-7-avg        :n active-last-7-avg})
+          (f {:s lang/active-change-last-7-avg :n active-change-last-7-avg                    :show-plus-minus true})
+          (f {:s lang/recovered                :n recove                   :diff delta-recove :rate r-rate :emoji "🎉"})
+          (f {:s lang/recove-per-1e5           :n recove-per-100k          :diff delta-r100k})
+          (f {:s lang/deaths                   :n deaths                   :diff delta-deaths :rate d-rate :emoji "⚰️"})
+          (f {:s lang/deaths-per-1e5           :n deaths-per-100k          :diff delta-d100k})
+          (f {:s lang/closed                   :n closed                   :diff delta-closed :rate c-rate :emoji "🏁"})
+          (f {:s lang/closed-per-1e5           :n closed-per-100k          :diff delta-d100k
+              ;; TODO create command lang/cmd-closed-per-1e5
+              #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})])
+       ;; no country ranking can be displayed for worldwide statistics
+       (when-not (msgc/worldwide? ccode)
+         ["\n%s\n"
+          [(msgc/format-linewise
+            [["%s" [lang/people         :p]]
+             ["%s" [lang/active-per-1e5 :a100k]]
+             ["%s" [lang/recove-per-1e5 :r100k]]
+             ["%s" [lang/deaths-per-1e5 :d100k]]
+             ["%s" [lang/closed-per-1e5 :c100k]]]
+            :line-fmt "%s:<b>%s</b>   "
+            :fn-fmts
+            (fn [fmts] (format lang/ranking-desc
+                              cnt-countries (cstr/join "" fmts)))
+            :fn-args
+            (fn [args] (update args (dec (count args))
+                              (fn [_]
+                                (get
+                                 (first
+                                  (map :rank
+                                       (filter (fn [hm] (= (:ccode hm) ccode))
+                                               (data/all-rankings json))))
+                                 (last args))))))]])
+       (when (some pos? vaccin-last-7)
+         ["\n%s\n"
+          [(let [emoji "💉🗓"
+                 s lang/vaccin-last-7]
+             (format
+              (str
+               "<code>" "%s" "</code> %s\n"
+               "%s")
+              (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank)
+              (str msgc/blank s)
+              ((comp
+                utc/sjoin
+                (partial map (fn [v] (format "%s=%s%s"
+                                            v
+                                            ((com/calc-rate-precision-1 :v)
+                                             {:v v :p population})
+                                            msgc/percent))))
+               vaccin-last-7)))]])
+       (when (pos? confirmed)
+         ["\n%s\n"
+          [(let [emoji "🤒🗓"
+                 s lang/active-last-7]
+             (format
+              (str
+               "<code>" "%s" "</code> %s\n"
+               "%s")
+              (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank)
+              (str msgc/blank s)
+              active-last-7-with-rate))]]))))))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread
@@ -209,75 +204,51 @@
   TODO create an API web service(s) for every field displayed in the messages
   "
   [json ccode parse_mode pred-hm]
-  (let [dates (data/dates json)
-        last-report (data/last-report pred-hm json)
-        {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
-        delta (data/delta pred-hm json)
-        delta-confirmed (:c delta)
+  ((comp
+    (fn [info]
+      (debugf "ccode %s info-size %s" ccode (com/measure info))
+      info)
+    fmt-detailed-info)
+   (let [dates (data/dates json)
+         last-report (data/last-report pred-hm json)
+         {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
+         delta (data/delta pred-hm json)
+         {delta-confir :c
+          delta-vaccin :v} delta
+         {vaccin-last-8 :v} (data/last-8-reports pred-hm json)
+         [_ & vaccin-last-7] vaccin-last-8]
+     (conj
+       {:header-txt (msgc/header parse_mode pred-hm json)
+        :cname-aliased-txt (ccr/country-name-aliased ccode)
+        :country-commands-txt (apply (fn [ccode c3code]
+                                       (format "     %s    %s" ccode c3code))
+                                     (map (comp com/encode-cmd cstr/lower-case)
+                                          [ccode (ccc/country-code-3-letter ccode)]))
+        :cnt-reports-txt (str lang/report " " (count dates))
+        :population-txt
+        (f (conj {:s lang/people :n population :emoji "👥"}))
 
-        {vaccin-last-8-reports :v} (data/last-8-reports pred-hm json)
-        [_                      & vaccin-last-7-reports] vaccin-last-8-reports
+        :vaccinated-txt
+        (f {:s lang/vaccinated :n vaccinated :diff delta-vaccin :rate v-rate :emoji "💉"})
 
-        vaccin-last-7-reports-with-rate
-        (map (fn [v] (format "%s=%s%s"
-                             v
-                             (com/vaccination-rate v population)
-                             msgc/percent))
-             vaccin-last-7-reports)
-         ;; delta-vaccinated (:v delta)
+        :confirmed-txt
+        (f {:emoji "🦠" :s lang/confirmed :n confirmed :diff delta-confir})
 
-        info (format-detailed-info
-              (conj
-               {:header-txt (msgc/header parse_mode pred-hm json)
-                :cname-aliased-txt (ccr/country-name-aliased ccode)
-                :country-commands-txt (apply (fn [ccode c3code]
-                                               (format "     %s    %s" ccode c3code))
-                                             (map (comp com/encode-cmd cstr/lower-case)
-                                                  [ccode (ccc/country-code-3-letter ccode)]))
-                :cnt-reports-txt (str lang/report " " (count dates))
-                :population-txt (format "<code>%s %s</code> = %s %s"
-                                        (com/right-pad lang/people " " (- msgc/padding-s 3))
-                                        (com/left-pad population " " (+ msgc/padding-n 2))
-                                        (utn/round-div-precision population 1e6 1)
-                                        lang/millions-rounded)
-                :vaccinated-txt
-                (if (zero? vaccinated)
-                  (format "<code>%s %s</code> - %s"
-                          (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
-                          (com/left-pad vaccinated " " (+ msgc/padding-n 2))
-                          lang/missing-vaccin-data)
-                  (format "<code>%s %s %s%s</code>"
-                          (com/right-pad (str "💉 " lang/vaccinated) " " (- msgc/padding-s 3))
-                          (com/left-pad vaccinated " " (+ msgc/padding-n 2))
-                          v-rate
-                          msgc/percent))
-                :vaccinated-last-7
-                (format
-                 "<code>%s</code>\n%s"
-                 (let [emoji "💉🗓"
-                       s lang/vaccin-last-7]
-                   (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank s)
-                                  msgc/blank msgc/padding-s))
-                 (utc/sjoin vaccin-last-7-reports-with-rate))
+        :footer-txt (msgc/footer parse_mode)}
 
-                :confirmed-txt (msgc/fmt-to-cols {:emoji "🦠" :s lang/confirmed :n confirmed
-                                                  :diff delta-confirmed})
-                :footer-txt (msgc/footer parse_mode)}
-               (when (pos? confirmed)
-                 (let [data-active (:a (data/case-counts-report-by-report pred-hm))
-                       max-active-val (apply max data-active)]
-                   {:details-txt (confirmed-info last-report
-                                                 pred-hm
-                                                 delta
-                                                 max-active-val
-                                                 (nth dates
-                                                      (utc/last-index-of
-                                                       data-active max-active-val))
-                                                 ccode
-                                                 (count ccc/all-country-codes))}))))]
-
-    (debugf "ccode %s info-size %s" ccode (com/measure info))
-    info))
+       (when (or (pos? confirmed)
+                 (some pos? vaccin-last-7))
+         (let [data-active (:a (data/case-counts-report-by-report pred-hm))
+               max-active-val (apply max data-active)]
+           {:details-txt (confirmed-info last-report
+                                         pred-hm
+                                         delta
+                                         max-active-val
+                                         (nth dates
+                                              (utc/last-index-of
+                                               data-active max-active-val))
+                                         ccode
+                                         (count ccc/all-country-codes))}))))))
 
 (defn detailed-info!
   [ccode & [json parse_mode pred-hm]]
