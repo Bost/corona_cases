@@ -56,6 +56,8 @@
         {population      :p
          deaths          :d
          recove          :r
+         estim-active    :ea
+
          active          :a
          vaccin          :v
          confirmed       :c
@@ -71,13 +73,13 @@
          v-rate          :v-rate} last-report
 
         last-8 (data/last-8-reports pred-hm json)
-        {vaccin-last-8 :v active-last-8 :a confir-last-8 :c} last-8
+        {vaccin-last-8 :v active-last-8 :a estim-active-last-8 :ea confir-last-8 :c} last-8
+        [_                     &       vaccin-last-7]       vaccin-last-8
+        [      active-last-8th &       active-last-7]       active-last-8
+        [estim-active-last-8th & estim-active-last-7] estim-active-last-8
+        [_                     &       confir-last-7]       confir-last-8
 
-        [_               & vaccin-last-7] vaccin-last-8
-        [active-last-8th & active-last-7] active-last-8
-        [_               & confir-last-7] confir-last-8
-
-        active-last-7-with-rate
+        estim-active-last-7-with-rate
         ((comp
           utc/sjoin
           (partial map (fn [a c] (format "%s=%s%s"
@@ -85,7 +87,7 @@
                                         ((com/calc-rate-precision-1 :a)
                                          {:a a :p population :c c})
                                         msgc/percent))))
-         active-last-7
+         active-last-7 #_estim-active-last-7
          confir-last-7)
 
         closed (+ deaths recove)
@@ -139,7 +141,15 @@
           (f {:s lang/closed                   :n closed                   :diff delta-closed :rate c-rate :emoji "🏁"})
           (f {:s lang/closed-per-1e5           :n closed-per-100k          :diff delta-d100k
               ;; TODO create command lang/cmd-closed-per-1e5
-              #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})])
+              #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})
+          ["%s\n" [(format
+                    "<code>%s</code>\n%s"
+                    (let [emoji "🤒🗓"
+                          s lang/estim-active-last-7]
+                      (com/right-pad (str (if emoji emoji (str msgc/blank msgc/blank))
+                                          msgc/blank s)
+                                     msgc/blank msgc/padding-s))
+                    estim-active-last-7-with-rate)]]])
        ;; no country ranking can be displayed for worldwide statistics
        (when-not (msgc/worldwide? ccode)
          ["\n%s\n"

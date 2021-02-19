@@ -89,6 +89,14 @@
   "Active cases in last 7 reports"
   "ActL7")
 
+(def ^:const estim-active-last-7
+  "Active cases in last 7 reports"
+  "ActL7")
+
+#_(def ^:const estim-active-last-7
+  "Estimated active cases in last 7 reports"
+  "EstActL7")
+
 (def ^:const vaccin-last-7
   "Vaccinated in last 7 reports"
   "VacL7")

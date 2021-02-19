@@ -118,8 +118,8 @@
            (:doc (meta #'lang/active-max)))
    (format (str "• %s:\n"
                 "  %s\n")
-           lang/active-last-7
-           (:doc (meta #'lang/active-last-7)))
+           lang/estim-active-last-7
+           (:doc (meta #'lang/estim-active-last-7)))
    (format (str "• %s:\n"
                 "  %s\n")
            lang/vaccin-last-7
