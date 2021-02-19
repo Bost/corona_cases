@@ -1,14 +1,15 @@
 (ns corona.models.migration
-  (:require [clojure.java.jdbc :as sql]
+  (:require [next.jdbc :as jdbc]
             [corona.models.dbase :as dbase]))
 
-(defn migrated? []
+#_(defn migrated? []
   (-> (sql/query dbase/spec
-                 [(str "select count(*) from information_schema.tables "
-                       "where table_name='shouts'")])
+                 [(format (str "select count(*) from information_schema.tables "
+                               "where table_name='%s'")
+                          dbase/dbname)])
       first :count pos?))
 
-(defn migrate []
+#_(defn migrate []
   (when (not (migrated?))
     (print "Creating database structure...") (flush)
     (sql/db-do-commands dbase/spec

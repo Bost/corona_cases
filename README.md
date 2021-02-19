@@ -126,16 +126,33 @@ $ bb heroku.clj deploy --heroku-env <YOUR-HEROKU-APP-NAME>
 ## MySQL -> PostgreSQL script conversion
 
 ```bash
-psql --dbname=postgres -a -f dbase/postgres.sql
-psql --dbname=postgres -q -a -f dbase/postgres.sql | rg "ERROR\|NOTICE|WARN"
-# psql --dbname=postgres -q -a -f dbase/drop-everything.sql
-psql --dbname=postgres
+sudo apt install postgresql postgresql-contrib
+# Switch over to the postgres account:
+sudo su postgres
+createdb postgres # or: dropdb postgres
+
+# psql --dbname=postgres         --echo-all --file=dbase/my.sql | rg "ERROR\|NOTICE|WARN"
+# psql --dbname=postgres --quiet            --file=dbase/drop-everything.sql
+psql --dbname=postgres   --quiet            --file=dbase/my.sql
+
+# get the psql prompt:
+  psql --dbname=postgres
 ```
 
+```bash
+```
+then
 ```postgres
-\dt  -- list tables
-\ds  -- list sequences
-\di  -- list indices
+-- help
+\?
+-- list roles / show users
+\du
+-- list tables
+\dt
+-- list sequences
+\ds
+-- list indices
+\di
 ```
 ## Others
 

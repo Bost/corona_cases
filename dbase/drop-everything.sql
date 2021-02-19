@@ -6,21 +6,11 @@
 -- spacemacs - select Postgres dialect
 -- SPC m h k
 
--- See types - e.g.:
--- https://core.telegram.org/bots/api#chat
+-- Usage: also --echo-all
+-- psql --dbname=postgres --quiet --file=dbase/drop-everything.sql
 
--- Convert MySQL to PostgreSQL:
--- https://github.com/php-telegram-bot/core/blob/master/structure.sql
-
--- 1. evil replacements in the structure.sql
--- %s/\(.*\) COMMENT '\(.*\)',/-- \2\n\1,/gc
--- %s/''s/'s/g
-
--- 2. use http://www.sqlines.com/online
-
--- 3. then use this emacs-macro to restore comments
--- (fset 'restore-comment
---    (kmacro-lambda-form [?y ?y ?\s-q ?V ?P down down ?\s-q down down] 0 "%d"))
+-- Don't display notices. Thanks to https://stackoverflow.com/a/3531274
+SET client_min_messages TO WARNING;
 
 drop table if exists chosen_inline_result cascade;
 drop table if exists poll_answer cascade;
