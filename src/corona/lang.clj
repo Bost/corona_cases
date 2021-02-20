@@ -8,11 +8,13 @@
 
 ;; (set! *warn-on-reflection* true)
 
+(def ^:const tcmd           "tcmd")
+
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
 (def ^:const percentage-calc "Percentage calculation")
 (def ^:const cases           "cases")
-(def ^:const ranking-desc   "Ranking among %s countries:\n%s")
+(def ^:const ranking-desc    "Ranking among %s countries:\n%s")
 (def ^:const world           "world")
 (def ^:const world-desc      "Start here")
 (def ^:const start           "start")

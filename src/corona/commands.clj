@@ -20,16 +20,18 @@
 
 ;; (set! *warn-on-reflection* true)
 
+(def log-morse-send-cmds false)
+
 (defn send-text
   "!!! Can't be defined by defn-fun-id !!!"
   ([fun-id prm content] (send-text fun-id prm msg/options content))
   ([fun-id {:keys [chat-id]} options content]
-   (let [msg (doall
-              (morse/send-text com/telegram-token chat-id options content))]
-     (when false ;; do not log it for now
-       (timbre/debugf "[%s] msg %s" fun-id msg))
-     (timbre/debugf "[%s] %s chars sent" fun-id (count content))
-     #_msg)))
+   (let [resp-body (doall
+                    (morse/send-text com/telegram-token chat-id options content))]
+     (when log-morse-send-cmds
+       (timbre/debugf "[%s] morse/send-text: resp-body %s" fun-id resp-body))
+     (timbre/debugf "[%s] morse/send-text: %s sent" fun-id (com/measure content))
+     resp-body)))
 
 (defn-fun-id world "" [{:keys [chat-id ccode] :as prm-orig}]
   (let [prm
@@ -37,7 +39,7 @@
         (assoc prm-orig
                :parse_mode com/html
                :pred-hm (data/create-pred-hm ccode))]
-    (send-text "world"
+    (send-text fun-id ;; defined by defn-fun-id macro
                prm
                (select-keys prm (keys msg/options))
                (msgi/message! ccode))
@@ -47,11 +49,11 @@
       (let [options (if (msgc/worldwide? ccode)
                       (msg/reply-markup-btns (select-keys prm [:chat-id :ccode :message_id]))
                       {})
-            msg (doall
-                 (morse/send-photo com/telegram-token chat-id options content))]
-        (when false ;; do not log it for now
-          (debugf "msg %s" msg))
-        (debugf "send-photo: %s B sent" (count content))))))
+            resp-body (doall
+                       (morse/send-photo com/telegram-token chat-id options content))]
+        (when log-morse-send-cmds
+          (debugf "morse/send-photo: resp-body %s" resp-body))
+        (debugf "morse/send-photo: %s sent" (com/measure content))))))
 
 (defn-fun-id explain "" [{:keys [parse_mode] :as prm}]
   (send-text fun-id prm (msg/explain parse_mode)))

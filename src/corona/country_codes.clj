@@ -391,7 +391,7 @@
 (def all-country-codes
   "TODO all-country-codes should be a set"
   #_["SK"]
-  #_["SK" "ZZ"]
+  #_["SK" "DE" "ZZ"]
   #_[
    "ZZ"
    "GB" "SK" "DE" "AT" "CZ" "US" "FR"
