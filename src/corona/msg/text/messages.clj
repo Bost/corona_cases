@@ -1,6 +1,6 @@
-;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.messages)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.text.messages)
 
-(ns corona.msg.messages
+(ns corona.msg.text.messages
   (:require [clojure.data.json :as json]
             [clojure.edn :as edn]
             [clojure.string :as cstr]
@@ -9,8 +9,8 @@
             [corona.estimate :as est]
             [corona.lang :as lang]
             [corona.macro :refer [defn-fun-id]]
-            [corona.msg.common :as msgc]
-            [corona.plot :as plot]
+            [corona.msg.text.common :as msgc]
+            [corona.msg.graph.plot :as plot]
             [morse.api :as morse]
             [corona.macro :refer [defn-fun-id debugf]]))
 
@@ -175,4 +175,4 @@
   See https://core.telegram.org/bots/inline"
   [] "Coronavirus Information")
 
-;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.messages)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.messages)

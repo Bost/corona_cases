@@ -1,6 +1,6 @@
-;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.plot)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.graph.plot)
 
-(ns corona.plot
+(ns corona.msg.graph.plot
   (:require [cljplot.build :as b]
             [cljplot.common :as plotcom]
             [cljplot.render :as r]
@@ -227,7 +227,7 @@
 (defn date-fmt-fn [d]
   (.format (DateTimeFormatter/ofPattern "dd.MM") d))
 
-(defn-fun-id plot-country-img
+(defn-fun-id message-img
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
   [ccode & [stats report]]
@@ -281,24 +281,24 @@
         :label (plot-label report ccode stats)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
 
-(defn-fun-id plot-country
+(defn-fun-id message
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
   [ccode & [stats report]]
   ((comp
     (fn [arr]
-      (debugf "ccode %s img-size %s" ccode (if arr (com/measure arr) 0))
+      (debugf "ccode %s size %s" ccode (if arr (com/measure arr) 0))
       arr)
     to-byte-array-auto-closable
-    (fn [prms] (apply plot-country-img prms)))
+    (fn [prms] (apply message-img prms)))
    [ccode stats report]))
 
-(defn plot-country!
+(defn message!
   "The optional params `stats`, `report` are used only for the first calculation"
   [ccode & [stats report]]
   (let [ks [:plot (keyword ccode)]]
     (if (and stats report)
-      (cache/cache! (fn [] (plot-country ccode stats report))
+      (cache/cache! (fn [] (message ccode stats report))
                    ks)
       (get-in @cache/cache ks))))
 
@@ -467,4 +467,4 @@
                    ks)
       (get-in @cache/cache ks))))
 
-;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.plot)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.graph.plot)

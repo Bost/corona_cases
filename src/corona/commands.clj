@@ -6,12 +6,12 @@
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as l]
-            [corona.msg.common :as msgc]
-            [corona.msg.info :as msgi]
-            [corona.msg.messages :as msg]
-            [corona.msg.lists :as msgl]
+            [corona.msg.text.common :as msgc]
+            [corona.msg.text.details :as msgi]
+            [corona.msg.text.messages :as msg]
+            [corona.msg.text.lists :as msgl]
             [corona.macro :refer [defn-fun-id]]
-            [corona.plot :as p]
+            [corona.msg.graph.plot :as p]
             [morse.api :as morse]
             [corona.macro :refer [defn-fun-id debugf]]
             [utils.core :as u :refer [in?]]
@@ -40,10 +40,10 @@
     (send-text "world"
                prm
                (select-keys prm (keys msg/options))
-               (msgi/detailed-info! ccode))
+               (msgi/message! ccode))
     (when-let [;; the plot is fetched from the cache, stats and report need not to be
                 ;; specified
-               content (p/plot-country! ccode)]
+               content (p/message! ccode)]
       (let [options (if (msgc/worldwide? ccode)
                       (msg/reply-markup-btns (select-keys prm [:chat-id :ccode :message_id]))
                       {})
@@ -71,9 +71,9 @@
   [ccode]
   (cstr/replace (ccr/get-country-name ccode) " " ""))
 
-(defn cmds-country-code
+(defn ccode-handlers
   "E.g.
-  (cmds-country-code \"DE\") =>
+  (for-country-code \"DE\") =>
   [{:name \"de\"      :fun #function[...]}
    {:name \"DE\"      :fun #function[...]}
    {:name \"De\"      :fun #function[...]}
@@ -93,7 +93,7 @@
     ccc/country-code-3-letter ;; DE -> DEU
     normalize]))              ;; United States -> UnitedStates
 
-(defn cmds-general []
+(defn inline-handlers []
   (let [prm (assoc msg/options
                    :ccode (ccr/get-country-code ccc/worldwide))]
     [{:name l/contributors
@@ -112,40 +112,41 @@
       :fun (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}]))
 
-(defn-fun-id create-list-cmd "" [case-kw]
-  {:name (l/list-sorted-by case-kw)
-   :fun (fn [chat-id]
-          (doall
-           ;; mapping over results implies the knowledge that the type
-           ;; of `(msg-listing-fun case-kw)` is a collection.
-           (map (fn [content]
-                  (morse/send-text com/telegram-token chat-id
-                                   {:parse_mode com/html} content)
-                  (debugf "send-text: %s chars sent" (count content)))
-                ((msgl/list-cases (in? com/listing-cases-per-100k case-kw))
-                 case-kw))))
-   :desc (l/list-sorted-by-desc case-kw)})
+(defn listing-handlers "Command map for listings" []
+  ((comp
+    (partial
+     map
+     (fn [case-kw]
+       {:name (l/list-sorted-by case-kw)
+        :fun (fn [chat-id]
+               (doall
+                ;; mapping over results implies the knowledge that the type
+                ;; of `(msg-listing-fun case-kw)` is a collection.
+                (map (defn-fun-id listing-handler "" [content]
+                       (morse/send-text com/telegram-token chat-id
+                                        {:parse_mode com/html} content)
+                       (debugf "%s chars sent" (count content)))
+                     ((msgl/list-cases (in? com/listing-cases-per-100k case-kw))
+                      case-kw))))
+        :desc (l/list-sorted-by-desc case-kw)}))
+    (partial into com/listing-cases-per-100k))
+   com/listing-cases-absolute))
 
-(defn cmds-listing "Command map for listings" []
-  (->> com/listing-cases-absolute
-       (into com/listing-cases-per-100k)
-       (map create-list-cmd)))
-
-(def cmds
+(def all-handlers
   "Create a vector of hash-maps for all available commands."
-  (transduce (map cmds-country-code)
-             into (into (cmds-general)
-                        (cmds-listing))
+  (transduce (map ccode-handlers)
+             into (into (inline-handlers)
+                        (listing-handlers))
              ccc/all-country-codes))
 
-(defn bot-father-edit-cmds
+(defn bot-father-edit
   "Evaluate this function and upload the results under:
      @BotFather -> ... -> Edit Bot -> Edit Commands
 
   TODO commands /re, /de collide with /recov, /deaths
   TODO /<char> show a list of countries under starting with this letter."
   []
-  (->> (cmds-general)
+  (->> (inline-handlers)
        (remove (fn [hm]
                  (in? [l/start
                        ;; Need to save space on smartphones. Sorry guys.
@@ -153,7 +154,7 @@
                        l/feedback
                        ] (:name hm))))
        (reverse)
-       (into (cmds-listing))
+       (into (listing-handlers))
        (map (fn [{:keys [name desc]}] (println name "-" desc)))
        (doall)))
 

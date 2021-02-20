@@ -1,6 +1,6 @@
-;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.lists)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.text.lists)
 
-(ns corona.msg.lists
+(ns corona.msg.text.lists
   (:require [clojure.string :as cstr]
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
@@ -9,7 +9,7 @@
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
             [corona.macro :refer [defn-fun-id debugf]]
-            [corona.msg.common :as msgc]
+            [corona.msg.text.common :as msgc]
             [taoensso.timbre :as timbre]))
 
 (def ^:const cnt-messages-in-listing
@@ -46,9 +46,9 @@
               sub-msgs))))
         case-kws))
 
-(defn-fun-id list-countries
+(defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the
-  listing. See also `footer`, `bot-father-edit-cmds`."
+  listing. See also `footer`, `bot-father-edit`."
   [case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
   (let [cnt-reports (count (data/dates json))
         header-txt (msgc/header parse_mode pred-hm json)
@@ -93,9 +93,9 @@
             case-kw msg-idx (com/measure msg))
     msg))
 
-(defn-fun-id list-per-100k
+(defn-fun-id per-100k
   "Listing commands in the message footer correspond to the columns in the
-  listing. See also `footer`, `bot-father-edit-cmds`."
+  listing. See also `footer`, `bot-father-edit`."
   [case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
   (let [cnt-reports (count (data/dates json))
         header-txt (msgc/header parse_mode pred-hm json)
@@ -147,10 +147,10 @@
 
 (defmethod list-cases true  [_]
   (fn [case-kw & [json msg-idx prm]]
-    (get-from-cache! case-kw json msg-idx prm 'corona.msg.lists/list-per-100k)))
+    (get-from-cache! case-kw json msg-idx prm 'corona.msg.text.lists/per-100k)))
 
 (defmethod list-cases false [_]
   (fn [case-kw & [json msg-idx prm]]
-    (get-from-cache! case-kw json msg-idx prm 'corona.msg.lists/list-countries)))
+    (get-from-cache! case-kw json msg-idx prm 'corona.msg.text.lists/absolute-vals)))
 
-;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.lists)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.lists)

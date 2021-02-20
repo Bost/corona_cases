@@ -10,7 +10,7 @@
             compojure.handler
             [corona.common :as com]
             [corona.country-codes :as ccc]
-            [corona.plot :as plot]
+            [corona.msg.graph.plot :as plot]
             [corona.telegram :as tgram]
             [corona.web.response :as webresp]
             drawbridge.core

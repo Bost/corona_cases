@@ -16,10 +16,10 @@
             [corona.country-codes :as ccc]
             [corona.estimate :as est]
             [corona.macro :refer [defn-fun-id debugf infof warnf fatalf]]
-            [corona.msg.info :as msgi]
-            [corona.msg.lists :as msgl]
-            [corona.msg.messages :as msg]
-            [corona.plot :as plot]
+            [corona.msg.text.details :as msgi]
+            [corona.msg.text.lists :as msgl]
+            [corona.msg.text.messages :as msg]
+            [corona.msg.graph.plot :as plot]
             [morse.handlers :as moh]
             [morse.polling :as mop])
   (:import [java.time Instant LocalDateTime ZoneId]))
@@ -87,7 +87,7 @@
   An Array of Update-objects is returned."
   []
   (let [callbacks (create-callbacks [msg/worldwide-plots])
-        commands (create-cmds cmd/cmds)]
+        commands (create-cmds cmd/all-handlers)]
     (infof "Registering %s chatbot commands and %s callbacks ..."
            (count commands) (count callbacks))
     (into callbacks commands)))
@@ -151,16 +151,16 @@
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)
 
-(defn list-countries [json]
+(defn absolute-vals [json]
   (msgl/calc-listings com/listing-cases-absolute json
-                      'corona.msg.lists/list-countries))
+                      'corona.msg.text.lists/absolute-vals))
 
-(defn list-per-100k [json]
+(defn per-100k [json]
   (msgl/calc-listings com/listing-cases-per-100k json
-                      'corona.msg.lists/list-per-100k))
+                      'corona.msg.text.lists/per-100k))
 
 (defn-fun-id calc-cache! "" [aggegation-hash json]
-  (run! (fn [fun] (fun json)) [list-countries list-per-100k])
+  (run! (fn [fun] (fun json)) [absolute-vals per-100k])
   (com/heap-info)
   (debugf "2nd garbage collection")
   (System/gc) ;; also (.gc (Runtime/getRuntime))
@@ -173,9 +173,9 @@
       (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
     (doall
      (map-fn (fn [ccode]
-               (msgi/detailed-info! ccode json com/html
+               (msgi/message! ccode json com/html
                                    (data/create-pred-hm ccode))
-               (plot/plot-country! ccode stats cnt-reports))
+               (plot/message! ccode stats cnt-reports))
              ccc/all-country-codes))
     (com/heap-info)
     (debugf "3rd garbage collection")

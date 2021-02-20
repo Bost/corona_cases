@@ -1,6 +1,6 @@
-;; ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.common)
+;; ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.text.common)
 
-(ns corona.msg.common
+(ns corona.msg.text.common
   (:require [clojure.string :as cstr]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
@@ -133,7 +133,7 @@
 
 (defn footer
   "Listing commands in the message footer correspond to the columns in the listing.
-  See also `list-countries`, `bot-father-edit-cmds`."
+  See also `absolute-vals`, `bot-father-edit`."
   [parse_mode]
   (let [spacer "  "]
     (str
@@ -155,4 +155,4 @@
   (utc/in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
             ccc/worldwide] ccode))
 
-;; ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.common)
+;; ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.common)
