@@ -87,6 +87,9 @@
 ;; https://en.wikipedia.org/wiki/Moving_average#Simple_moving_average
 ;; simple moving average SMA
 
+(def ^:const rate-of-people    (str "% of " people))
+(def ^:const rate-of-confirmed (str "% of " confirmed))
+
 (def ^:const active-last-7
   "Active cases in last 7 reports"
   "ActL7")

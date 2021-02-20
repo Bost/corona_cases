@@ -158,7 +158,7 @@
       (when (some pos? vaccin-last-7)
         ["\n%s\n"
          [(let [emoji "💉🗓"
-                s lang/vaccin-last-7]
+                s (format "%s - %s" lang/vaccin-last-7 lang/rate-of-people)]
             (format
              (str
               "<code>" "%s" "</code> %s\n"
@@ -176,7 +176,7 @@
       (when (pos? confirmed)
         ["\n%s\n"
          [(let [emoji "🤒🗓"
-                s lang/active-last-7]
+                s (format "%s - %s" lang/active-last-7 lang/rate-of-confirmed)]
             (format
              (str
               "<code>" "%s" "</code> %s\n"
