@@ -47,9 +47,22 @@
 
 (def f msgc/fmt-to-cols)
 
+(defn last-7-block [{:keys [condition emoji title vals]}]
+  (when condition
+    ["\n%s\n"
+     [(format
+       (str
+        "<code>" "%s" "</code> %s\n"
+        "%s")
+       (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank)
+       (str msgc/blank title)
+       (utc/sjoin vals))]]))
+
 (defn-fun-id confirmed-info "TODO reintroduce max-active-date"
-  [ccode json last-report pred-hm delta max-active-val max-active-date cnt-countries]
-  (let [{population      :p
+  [ccode json last-report pred-hm delta maxes cnt-countries]
+  (let [
+        {max-active :active max-deaths :deaths} maxes
+        {population      :p
          deaths          :d
          recove          :r
          active          :a
@@ -72,17 +85,6 @@
         [_               & vaccin-last-7] vaccin-last-8
         [active-last-8th & active-last-7] active-last-8
         [_               & confir-last-7] confir-last-8
-
-        active-last-7-with-rate
-        ((comp
-          utc/sjoin
-          (partial map (fn [a c] (format "%s=%s%s"
-                                        a
-                                        ((com/calc-rate-precision-1 :a)
-                                         {:a a :p population :c c})
-                                        msgc/percent))))
-         active-last-7
-         confir-last-7)
 
         closed (+ deaths recove)
         {delta-deaths :d
@@ -121,7 +123,6 @@
          #_(f {:s lang/vaccin-per-1e5 :n vaccin-per-100k :diff delta-v100k})
          (f {:s lang/active         :n active          :diff delta-active :rate a-rate :emoji "🤒"})
          (f {:s lang/active-per-1e5 :n active-per-100k :diff delta-a100k})
-         (f {:s lang/active-max     :n max-active-val})
          #_(f {:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))})
          (f {:s lang/active-last-7-avg        :n active-last-7-avg})
          (f {:s lang/active-change-last-7-avg :n active-change-last-7-avg                    :show-plus-minus true})
@@ -134,6 +135,13 @@
              ;; TODO create command lang/cmd-closed-per-1e5
              #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})])
       ;; no country ranking can be displayed for worldwide statistics
+      ["\n%s\n" [(format (str
+                          "%s\n"
+                          "%s")
+                         (format "%s: %s (%s)" lang/active-max (max-active :val)
+                                 (com/fmt-date (max-active :date)))
+                         (format "%s: %s (%s)" lang/deaths-max (max-deaths :val)
+                                 (com/fmt-date (max-deaths :date))))]]
       (when-not (msgc/worldwide? ccode)
         ["\n%s\n"
          [(msgc/format-linewise
@@ -155,35 +163,26 @@
                                       (filter (fn [hm] (= (:ccode hm) ccode))
                                               (data/all-rankings json))))
                                 (last args))))))]])
-      (when (some pos? vaccin-last-7)
-        ["\n%s\n"
-         [(let [emoji "💉🗓"
-                s (format "%s - %s" lang/vaccin-last-7 lang/rate-of-people)]
-            (format
-             (str
-              "<code>" "%s" "</code> %s\n"
-              "%s")
-             (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank)
-             (str msgc/blank s)
-             ((comp
-               utc/sjoin
-               (partial map (fn [v] (format "%s=%s%s"
-                                           v
-                                           ((com/calc-rate-precision-1 :v)
-                                            {:v v :p population})
-                                           msgc/percent))))
-              vaccin-last-7)))]])
-      (when (pos? confirmed)
-        ["\n%s\n"
-         [(let [emoji "🤒🗓"
-                s (format "%s - %s" lang/active-last-7 lang/rate-of-confirmed)]
-            (format
-             (str
-              "<code>" "%s" "</code> %s\n"
-              "%s")
-             (str (if emoji emoji (str msgc/blank msgc/blank)) msgc/blank)
-             (str msgc/blank s)
-             active-last-7-with-rate))]])])))
+      (last-7-block
+       {:condition (some pos? vaccin-last-7)
+        :emoji "💉🗓"
+        :title (format "%s - %s" lang/vaccin-last-7 lang/rate-of-people)
+        :vals (map (fn [v] (format "%s=%s%s"
+                                  v
+                                  ((com/calc-rate-precision-1 :v)
+                                   {:v v :p population})
+                                  msgc/percent))
+                   vaccin-last-7)})
+      (last-7-block
+       {:condition (pos? confirmed)
+        :emoji "🤒🗓"
+        :title (format "%s - %s" lang/active-last-7 lang/rate-of-confirmed)
+        :vals (map (fn [a c] (format "%s=%s%s"
+                                    a
+                                    ((com/calc-rate-precision-1 :a)
+                                     {:a a :p population :c c})
+                                    msgc/percent))
+                          active-last-7 confir-last-7)})])))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread
@@ -231,18 +230,25 @@
 
        (when (or (pos? confirmed)
                  (some pos? vaccin-last-7))
-         (let [data-active (:a (data/case-counts-report-by-report pred-hm))
-               max-active-val (apply max data-active)]
+         (let [
+               maxes
+               {:deaths
+                (let [data (:d (data/case-counts-report-by-report pred-hm))
+                      max-val (apply max data)]
+                  {:val max-val
+                   :date (nth dates (utc/last-index-of data max-val))})
+                :active
+                (let [data (:a (data/case-counts-report-by-report pred-hm))
+                      max-val (apply max data)]
+                  {:val max-val
+                   :date (nth dates (utc/last-index-of data max-val))})}]
            {:details-txt (confirmed-info
                           ccode
                           json
                           last-report
                           pred-hm
                           delta
-                          max-active-val
-                          (nth dates
-                               (utc/last-index-of
-                                data-active max-active-val))
+                          maxes
                           (count ccc/all-country-codes))}))))))
 
 (defn message!

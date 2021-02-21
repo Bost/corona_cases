@@ -65,7 +65,11 @@
 
 (def ^:const active-max
   "Peak of active cases from all reports"
-  "ActMax")
+  "Max Active")
+
+(def ^:const deaths-max
+  "Peak of deaths from all reports"
+  "Max Deaths")
 
 (def ^:const closed        "Closed")
 (def ^:const closed-cases  "Closed cases")

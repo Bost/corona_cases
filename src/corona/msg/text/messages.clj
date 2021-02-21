@@ -114,10 +114,6 @@
    (format "• %s: <%s> / %s\n" lang/percentage-calc lang/cases lang/confirmed)
    (format (str "• %s:\n"
                 "  %s\n")
-           lang/active-max
-           (:doc (meta #'lang/active-max)))
-   (format (str "• %s:\n"
-                "  %s\n")
            lang/active-last-7
            (:doc (meta #'lang/active-last-7)))
    (format (str "• %s:\n"
