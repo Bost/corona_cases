@@ -57,7 +57,7 @@
 
 (defn fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
-  [{:keys [emoji s n diff rate]}]
+  [{:keys [emoji s n diff]}]
   ["%s\n"
    [
     (let [padding-len (inc max-diff-order-of-magnitude)

@@ -121,18 +121,18 @@
       (partial apply conj))
      [(when (pos? confirmed)
         [
-         #_(f {:s lang/vaccinated     :n vaccin          :diff delta-vaccin :rate v-rate :emoji "💉"})
+         #_(f {:s lang/vaccinated     :n vaccin          :diff delta-vaccin :emoji "💉"})
          #_(f {:s lang/vaccin-per-1e5 :n vaccin-per-100k :diff delta-v100k})
-         (f {:s lang/active         :n active          :diff delta-active :rate a-rate :emoji "🤒"})
+         (f {:s lang/active         :n active          :diff delta-active :emoji "🤒"})
          (f {:s lang/active-per-1e5 :n active-per-100k :diff delta-a100k})
          #_(f {:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))})
          (f {:s lang/active-last-7-avg        :n active-last-7-avg})
          (f {:s lang/active-change-last-7-avg :n active-change-last-7-avg                    :show-plus-minus true})
-         (f {:s lang/recovered                :n recove                   :diff delta-recove :rate r-rate :emoji "🎉"})
+         (f {:s lang/recovered                :n recove                   :diff delta-recove :emoji "🎉"})
          (f {:s lang/recove-per-1e5           :n recove-per-100k          :diff delta-r100k})
-         (f {:s lang/deaths                   :n deaths                   :diff delta-deaths :rate d-rate :emoji "⚰️"})
+         (f {:s lang/deaths                   :n deaths                   :diff delta-deaths :emoji "⚰️"})
          (f {:s lang/deaths-per-1e5           :n deaths-per-100k          :diff delta-d100k})
-         (f {:s lang/closed                   :n closed                   :diff delta-closed :rate c-rate :emoji "🏁"})
+         (f {:s lang/closed                   :n closed                   :diff delta-closed :emoji "🏁"})
          (f {:s lang/closed-per-1e5           :n closed-per-100k          :diff delta-d100k
              ;; TODO create command lang/cmd-closed-per-1e5
              #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})])
