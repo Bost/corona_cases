@@ -136,6 +136,11 @@
              #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})])
       ;; no country ranking can be displayed for worldwide statistics
       ["\n%s\n" [(format (str
+                          "%s")
+                         (format "%s: %s (%s)" lang/active-max (max-active :val)
+                                 (com/fmt-date (max-active :date))))
+                 ;; max-deaths makes no sense - it's always the last report
+                 #_(format (str
                           "%s\n"
                           "%s")
                          (format "%s: %s (%s)" lang/active-max (max-active :val)
