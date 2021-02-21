@@ -69,16 +69,21 @@
         "<code>" "%s" vline "%s" #_vline #_"%s" "</code>" vline
         "%s")
        (str (if emoji emoji (str blank blank)) vline #_blank)
-       (com/left-pad (if (>= n 1e6)
+       (com/left-pad (if (and (not= n com/unknown) (>= n 1e6))
                        (str (utn/round-div-precision n 1e6 1) "m")
                        (str n s-shift))
                      blank
                      #_max-diff-order-of-magnitude
                      (- padding-len (count non-s-shift)))
        #_(com/left-pad (if rate (str rate percent) blank) blank 3)
-       (if (nil? diff)
+       (cond
+         (= diff com/unknown)
+         (com/left-pad diff blank padding-len)
+
+         (nil? diff)
          (com/left-pad "" blank padding-len)
-         (plus-minus diff padding-len))
+
+         :else (plus-minus diff padding-len))
        s))]])
 
 (defn format-linewise

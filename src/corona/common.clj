@@ -20,6 +20,8 @@
 
 ;; (set! *warn-on-reflection* true)
 
+(def ^:const ^String unknown "?")
+
 (def ^:const ^String undef "<UNDEF>")
 
 (spec/def ::port number?)

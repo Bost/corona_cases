@@ -27,6 +27,7 @@
      vaccinated-txt
      confirmed-txt
      footer-txt
+     notes-txt
      details-txt]}]
   (msgc/format-linewise
    ;; extended header
@@ -39,6 +40,7 @@
                (partial remove nil?)
                (partial apply conj [population-txt
                                     vaccinated-txt
+                                    notes-txt
                                     confirmed-txt]))
               details-txt)]]
     ["%s\n" [footer-txt]]]))
@@ -226,12 +228,18 @@
         (f (conj {:s lang/people :n population :emoji "👥"}))
 
         :vaccinated-txt
-        (f {:s lang/vaccinated :n vaccinated :diff delta-vaccin :rate v-rate :emoji "💉"})
+        (f {:s lang/vaccinated
+            :n    (if (zero? vaccinated) com/unknown vaccinated)
+            :diff (if (zero? vaccinated) com/unknown delta-vaccin)
+            :emoji "💉"})
 
         :confirmed-txt
         (f {:emoji "🦠" :s lang/confirmed :n confirmed :diff delta-confir})
 
         :footer-txt (msgc/footer parse_mode)}
+
+       (when (zero? vaccinated)
+         {:notes-txt (when (zero? vaccinated) ["%s\n" [lang/vaccin-data-not-published]])})
 
        (when (or (pos? confirmed)
                  (some pos? vaccin-last-7))
