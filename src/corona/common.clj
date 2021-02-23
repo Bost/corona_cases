@@ -254,24 +254,36 @@
   [object & prm]
   (apply (partial meter/measure object) prm))
 
-(defn-fun-id retry "" [max-tries try-nr fun & args]
+(defn my-find-var
+  "find-var throws exception "
+  [sym]
+  (try (find-var sym)
+       (catch Exception e
+         nil)))
+
+(defn-fun-id retry
+  "args and params of fun must correspondent with each other.
+   fun must be quoted and namespace-qualified"
+  [{:keys [max-attempts curr-attempt-nr fun args]
+                        :or {curr-attempt-nr 1} :as prm}]
   (let [res
         (do
-          (infof "(%s %s) - try-nr %s of %s" (:name (meta (find-var fun)))
+          (infof "(%s %s) - curr-attempt-nr %s of %s"
+                 (some-> fun my-find-var meta :name)
                  (utc/sjoin (map (fn [s] (format "\"%s\"" s)) args))
-                 try-nr
-                 max-tries)
+                 curr-attempt-nr
+                 max-attempts)
           (try {:value (apply (eval fun) args)}
                (catch Exception e
                  (errorf "Caught %s" e)
-                 (if (= max-tries try-nr)
+                 (if (= max-attempts curr-attempt-nr)
                    (throw e)
                    {:exception e}))))]
     (if (:exception res)
       (let [sleep-time (+ 1000 (rand-int 1000))]
         (debugf "Sleeping for %s ms ..." sleep-time)
         (Thread/sleep sleep-time)
-        (recur max-tries (inc try-nr) fun args))
+        (recur (assoc-in prm [:curr-attempt-nr] (inc curr-attempt-nr))))
       (:value res))))
 
 (defn-fun-id get-json-single
@@ -323,7 +335,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 
 (defn-fun-id get-json "Retries `get-json-single` 3 times" [url]
   (try
-    (retry 3 1 'corona.common/get-json-single url)
+    (retry {:max-attempts 3 :fun 'corona.common/get-json-single :args url})
     (catch Exception e
       (errorf "Caught %s" e))))
 
