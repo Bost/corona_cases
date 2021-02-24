@@ -20,8 +20,8 @@
 
 (def api-servers
   "List of API servers to iterate if status 503 - service not available, etc."
-  ["covid-tracker-us.herokuapp.com"
-   "coronavirus-tracker-api.herokuapp.com"])
+  ["coronavirus-tracker-api.herokuapp.com"
+   "covid-tracker-us.herokuapp.com"])
 
 (def ^:const ^Long webapp-port
   (if-let [env-port (System/getenv "PORT")]
