@@ -62,11 +62,14 @@
 (def ^:const ^String webapp-server
   (get-in environment [env-type :web-server]))
 
-(def ^:const ^String json-server-v1
+(def ^:const ^String json-servers-v1
   (get-in environment [env-type :json-server :v1]))
 
-(def ^:const ^String json-api-v1
-  (format "http://%s/all" json-server-v1))
+(def ^:const ^String json-apis-v1
+  ((comp
+    #_doall
+    (partial mapv (fn [s] (format "http://%s/all" s))))
+   json-servers-v1))
 
 (def ^:const ^String json-api-owid
   (get-in environment [env-type :json-server :owid]))
@@ -197,7 +200,8 @@
                     (if (or env-var (false? env-var))
                       (if (utc/in? ['corona.common/telegram-token
                                     'corona.common/repl-password] env-var-q)
-                        "<PRESENT>" env-var)
+                        "<PRESENT>"
+                        (pr-str env-var))
                       ;; if-let ... else
                       undef))))
         ['corona.common/env-type
@@ -209,7 +213,7 @@
          'corona.common/webapp-port
          'corona.common/bot-name
          'corona.common/botver
-         'corona.common/json-api-v1
+         'corona.common/json-apis-v1
          'corona.common/json-api-owid]))
 
 ;; TODO (System/exit <val>) if some var is undefined
@@ -270,7 +274,7 @@
         (do
           (infof "(%s %s) - curr-attempt-nr %s of %s"
                  (some-> fun my-find-var meta :name)
-                 (utc/sjoin (map (fn [s] (format "\"%s\"" s)) args))
+                 (pr-str args)
                  curr-attempt-nr
                  max-attempts)
           (try {:value (apply (eval fun) [args])}

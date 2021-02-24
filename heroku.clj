@@ -240,7 +240,7 @@
         getMockData
         (do
           (sh "wget" "https://coronavirus-tracker-api.herokuapp.com/all"
-              ;; TODO use com/json-api-v1
+              ;; TODO use com/json-apis-v1
               "-O" "resources/mockup/all.json")
           (sh "wget" env/owid-prod
               "-O" "resources/mockup/owid-covid-data.json"))

@@ -19,10 +19,9 @@
 (def ^:const ^String corona-cases-bot (fmt-bot-name-fn corona-cases))
 
 (def api-servers
-  "TODO iterate over the list in case of status 503 - service not available"
-  (first
-   ["covid-tracker-us.herokuapp.com"
-    "coronavirus-tracker-api.herokuapp.com"]))
+  "List of API servers to iterate if status 503 - service not available, etc."
+  ["covid-tracker-us.herokuapp.com"
+   "coronavirus-tracker-api.herokuapp.com"])
 
 (def ^:const ^Long webapp-port
   (if-let [env-port (System/getenv "PORT")]
@@ -38,8 +37,8 @@
 (def ^:const ^String owid-mockup
   (format "http://localhost:%s/owid-covid-data.json" mockup-port))
 
-(def v1-mockup
-  (format "localhost:%s" mockup-port)
+(def v1-mockups
+  [(format "localhost:%s" mockup-port)]
   #_"localhost:8000")
 
 (def environment
@@ -71,7 +70,7 @@
    {:level 3
     :bot-name hokuspokus-bot
     ;; :web-server nil ;; intentionally undefined
-    :json-server {:v1 v1-mockup :owid owid-mockup}
+    :json-server {:v1 v1-mockups :owid owid-mockup}
     :telegram-token token-hokuspokus}})
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.envdef)

@@ -39,12 +39,17 @@
           (.add temp-list x)
           xs))))))
 
-(defn-fun-id json-data "" []
+(defn-fun-id json-data "Iterate over the list of com/json-apis-v1" []
   (let [ks [:v1 :json]]
     (when-not (get-in @cache/cache ks)
       (debugf "cache-miss %s;" ks)
       #_(clojure.stacktrace/print-stack-trace (Exception.)))
-    (cache/from-cache! (fn [] (com/get-json com/json-api-v1)) ks)))
+    (cache/from-cache! (fn []
+                         (loop [[url & urls] com/json-apis-v1]
+                           (when url
+                             (if-let [res (com/get-json url)]
+                               res
+                               (recur urls))))) ks)))
 
 (def xform-raw-dates
   (comp
