@@ -5,7 +5,7 @@
             [corona.common :as com]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
-            [corona.lang :as l]
+            [corona.lang :as lang]
             [corona.msg.text.common :as msgc]
             [corona.msg.text.details :as msgi]
             [corona.msg.text.messages :as msg]
@@ -98,19 +98,19 @@
 (defn inline-handlers []
   (let [prm (assoc msg/options
                    :ccode (ccr/get-country-code ccc/worldwide))]
-    [{:name l/contributors
+    [{:name lang/contributors
       :fun (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}
-     {:name l/world
+     {:name lang/world
       :fun (fn [chat-id] (world (assoc prm :chat-id chat-id)))
-      :desc l/world-desc}
-     {:name l/start
+      :desc lang/world-desc}
+     {:name lang/start
       :fun (fn [chat-id] (world (assoc prm :chat-id chat-id)))
-      :desc l/world-desc}
-     {:name l/explain
+      :desc lang/world-desc}
+     {:name lang/explain
       :fun (fn [chat-id] (explain (assoc prm :chat-id chat-id)))
       :desc "Explain abbreviations & some additional info"}
-     {:name l/feedback
+     {:name lang/feedback
       :fun (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
       :desc "Talk to the bot-creator"}]))
 
@@ -119,7 +119,7 @@
     (partial
      map
      (fn [case-kw]
-       {:name (l/list-sorted-by case-kw)
+       {:name (lang/list-sorted-by case-kw)
         :fun (fn [chat-id]
                (doall
                 ;; mapping over results implies the knowledge that the type
@@ -130,7 +130,7 @@
                        (debugf "%s chars sent" (count content)))
                      ((msgl/list-cases (in? com/listing-cases-per-100k case-kw))
                       case-kw))))
-        :desc (l/list-sorted-by-desc case-kw)}))
+        :desc (lang/list-sorted-by-desc case-kw)}))
     (partial into com/listing-cases-per-100k))
    com/listing-cases-absolute))
 
@@ -150,10 +150,10 @@
   []
   (->> (inline-handlers)
        (remove (fn [hm]
-                 (in? [l/start
+                 (in? [lang/start
                        ;; Need to save space on smartphones. Sorry guys.
-                       l/contributors
-                       l/feedback
+                       lang/contributors
+                       lang/feedback
                        ] (:name hm))))
        (reverse)
        (into (listing-handlers))
