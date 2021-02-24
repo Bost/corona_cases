@@ -273,7 +273,7 @@
                  (utc/sjoin (map (fn [s] (format "\"%s\"" s)) args))
                  curr-attempt-nr
                  max-attempts)
-          (try {:value (apply (eval fun) args)}
+          (try {:value (apply (eval fun) [args])}
                (catch Exception e
                  (errorf "Caught %s" e)
                  (if (= max-attempts curr-attempt-nr)
