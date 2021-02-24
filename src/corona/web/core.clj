@@ -1,7 +1,7 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web.core)
 
 (ns corona.web.core
-  (:require [clj-time-ext.core :as cte]
+  (:require [clj-time.bost :as cte]
             [clj-time.core :as ctc]
             [clojure.data.json :as json]
             [clojure.string :as cstr]

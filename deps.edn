@@ -46,9 +46,13 @@
   org.clojars.bost/morse  {:mvn/version "0.0.0-164-0xe94b"}
 
   org.clojure/data.json   {:mvn/version "1.0.0"}
+
+  ;; wrapper for Java 8 Date-Time API.
   clojure.java-time/clojure.java-time {:mvn/version "0.3.2"}
-  org.clojars.bost/clj-time-ext {:mvn/version "0.0.0-39-0x3d91"}
-  org.clojars.bost/utils {:mvn/version "0.0.0-47-0x6bcc"}
+
+  org.clojars.bost/clj-time {:mvn/version "0.6.0-288-0xce29"}
+
+  org.clojars.bost/utils {:mvn/version "0.0.0-48-0x07fd"}
 
   ;; https://github.com/generateme/cljplot
   org.clojars.bost/cljplot {:mvn/version "0.0.2"}

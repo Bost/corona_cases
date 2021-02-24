@@ -49,10 +49,9 @@
    [org.clojars.bost/morse  "0.0.0-163-0x00cf"]
 
    [org.clojure/data.json   "1.0.0"]
-   [clojure.java-time       "0.3.2"]
    [net.cgrand/xforms       "0.19.2"]
-   [org.clojars.bost/clj-time-ext "0.0.0-39-0x3d91"]
-   [org.clojars.bost/utils "0.0.0-45-0x5a42"]
+   [org.clojars.bost/clj-time "0.6.0-288-0xce29"]
+   [org.clojars.bost/utils "0.0.0-48-0x07fd"]
 
    ;; https://github.com/generateme/cljplot
    [org.clojars.bost/cljplot "0.0.2"]

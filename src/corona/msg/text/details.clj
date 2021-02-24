@@ -13,6 +13,7 @@
             [corona.msg.text.common :as msgc]
             [incanter.stats :as istats]
             [utils.core :as utc]
+            [clj-time.bost :as ctb]
             [utils.num :as utn]))
 
 ;; (set! *warn-on-reflection* true)
@@ -139,8 +140,17 @@
       ;; no country ranking can be displayed for worldwide statistics
       ["\n%s\n" [(format (str
                           "%s")
-                         (format "%s: %s (%s)" lang/active-max (max-active :val)
-                                 (com/fmt-date (max-active :date))))
+                         (let [date (max-active :date)]
+                           (format "%s: %s (%s)"
+                                   lang/active-max (max-active :val)
+                                   (com/fmt-date date)
+                                   ;; TODO ctb/ago-diff: show only two segments:
+                                   ;; 1 month 4 weeks ago; must be rounded
+                                   #_
+                                   (format "%s - %s"
+                                           (com/fmt-date date)
+                                           (ctb/ago-diff date
+                                                         {:verbose true})))))
                  ;; max-deaths makes no sense - it's always the last report
                  #_(format (str
                           "%s\n"
@@ -219,10 +229,11 @@
      (conj
        {:header-txt (msgc/header parse_mode pred-hm json)
         :cname-aliased-txt (ccr/country-name-aliased ccode)
-        :country-commands-txt (apply (fn [ccode c3code]
-                                       (format "     %s    %s" ccode c3code))
-                                     (map (comp com/encode-cmd cstr/lower-case)
-                                          [ccode (ccc/country-code-3-letter ccode)]))
+        :country-commands-txt
+        (apply (fn [ccode c3code]
+                 (format "     %s    %s" ccode c3code))
+               (map (comp com/encode-cmd cstr/lower-case)
+                    [ccode (ccc/country-code-3-letter ccode)]))
         :cnt-reports-txt (str lang/report " " (count dates))
         :population-txt
         (f (conj {:s lang/people :n population :emoji "👥"}))
@@ -239,7 +250,8 @@
         :footer-txt (msgc/footer parse_mode)}
 
        (when (zero? vaccinated)
-         {:notes-txt (when (zero? vaccinated) ["%s\n" [lang/vaccin-data-not-published]])})
+         {:notes-txt (when (zero? vaccinated)
+                       ["%s\n" [lang/vaccin-data-not-published]])})
 
        (when (or (pos? confirmed)
                  (some pos? vaccin-last-7))
