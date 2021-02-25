@@ -24,7 +24,8 @@
             [morse.polling :as mop]
             ;; needed for the 'ok?' macro
             corona.models.migration
-            )
+            [corona.models.dbase :as dbase]
+            [corona.lang :as lang])
   (:import [java.time Instant LocalDateTime ZoneId]))
 
 ;; (set! *warn-on-reflection* true)
@@ -61,7 +62,12 @@
          (partial moh/command-fn name)
          (partial wrap-in-hooks
                   {:pre (fn [& args]
-                          (infof ":pre /%s chat %s" name (:chat (first args))))
+                            (let [chat-prm (:chat (first args))]
+                              (infof ":pre /%s chat %s" name chat-prm)
+                              (cond
+                                (= name lang/start)
+                                (when-not (dbase/chat-exists? chat-prm)
+                                  (dbase/insert-chat! chat-prm)))))
                    :post (fn [& args]
                            (let [[fn-result {:keys [chat]}] args]
                              (infof ":post /%s chat %s" name chat)

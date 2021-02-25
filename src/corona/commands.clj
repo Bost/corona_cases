@@ -106,11 +106,7 @@
       :fun (fn [chat-id] (world (assoc prm :chat-id chat-id)))
       :desc lang/world-desc}
      {:name lang/start
-      :fun  (fn [chat-id]
-              #_(debugf "(dbase/chat-exists? %s): %s"
-                      chat-id
-                      (dbase/chat-exists? {:chat-id chat-id}))
-              (world (assoc prm :chat-id chat-id)))
+      :fun  (fn [chat-id] (world (assoc prm :chat-id chat-id)))
       :desc lang/world-desc}
      {:name lang/explain
       :fun (fn [chat-id] (explain (assoc prm :chat-id chat-id)))

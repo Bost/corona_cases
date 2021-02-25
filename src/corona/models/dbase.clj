@@ -8,63 +8,41 @@
             [corona.models.common :as mcom]
             [utils.core :as utc]))
 
-(defn-fun-id ok?
-  "TODO Check dbase connection and dbase consistency"
-  []
-  (with-open [connection
-              (jdbc/get-connection mcom/datasource)]
-    (debugf "connection %s" connection)
-    (def table1 "chat")
-    #_(def table2 "messages")
-    ((comp
-      (fn [rows] (-> rows first :exists))
-      (fn [cmd] (jdbc/execute! connection [cmd table1]))
-      #_(reduce my-fn init-value (jdbc/plan connection [...]))
-      (fn [cmd] (debugf "\n%s" cmd)
-        cmd))
-     (format "
-select exists(
-  select 1 from information_schema.tables where table_name in (?)
-)"))))
-
-(defn-fun-id chat-exists? "" [{:keys [chat-id]}]
+(defn-fun-id chat-exists? "" [{:keys [id]}]
   (let [table "chat"
         exists-kw :exists]
-    (with-open [connection
-                ((comp
-                  (fn [cmd] (debugf "\n%s" cmd) cmd)
-                  jdbc/get-connection
-                  (fn [cmd] (debugf "\n%s" cmd) cmd))
-                 mcom/datasource)]
+    (with-open [connection (jdbc/get-connection mcom/datasource)]
       ((comp
         (fn [rows] (-> rows first exists-kw))
-        (fn [cmd] (jdbc/execute! connection [cmd chat-id]))
+        (fn [cmd] (jdbc/execute! connection [cmd id]))
         #_(reduce my-fn init-value (jdbc/plan connection [...]))
         (fn [cmd] (debugf "\n%s" cmd) cmd))
        (format "select %s(select 1 from %s where id = ?)" (name exists-kw) (pr-str table))))))
 
-(comment
+(defn-fun-id insert-chat! "" [{:keys [id first_name username type] :as prm}]
   (with-open [connection (jdbc/get-connection mcom/datasource)]
     (def table "chat")
-    (def cs [:id :first_name :username :type])
-    (defn vs [] [(rand-nth [1111111111 2222222222 3333333333]) "Jim" "Beam" "private"])
+    (let [cols [:id :first_name :username :type]
+          row-vals
+          #_[(rand-nth [1111111111 2222222222 3333333333]) "Jim" "Beam" "private"]
+          [id first_name username type]]
+      ((comp
+        (fn [cmd] (jdbc/execute-one! connection [cmd]))
+        #_(reduce my-fn init-value (jdbc/plan connection [...]))
+        (fn [cmd] (timbre/debugf "\n%s" cmd)
+          cmd))
+       (format "insert into %s (%s) values (%s)"
+               (pr-str table)
+               ((comp
+                 (fn [col] (utc/sjoin col ", "))
+                 (partial map name))
+                cols)
+               ((comp
+                 (fn [col-vals] (utc/sjoin col-vals ", "))
+                 (partial map (fn [v] (if (string? v) (format "'%s'" v) v))))
+                row-vals))))))
 
-    ((comp
-      (fn [cmd] (jdbc/execute-one! connection [cmd]))
-      #_(reduce my-fn init-value (jdbc/plan connection [...]))
-      (fn [cmd] (timbre/debugf "\n%s" cmd)
-        cmd))
-     (format "insert into %s (%s) values (%s)"
-             (pr-str table)
-             ((comp
-               (fn [col] (utc/sjoin col ", "))
-               (partial map name))
-              cs)
-             ((comp
-               (fn [col] (utc/sjoin col ", "))
-               (partial map (fn [v] (if (string? v) (format "'%s'" v) v))))
-              (vs)))))
-
+(comment
   (with-open [connection (jdbc/get-connection mcom/datasource)]
     (def table "chat")
     ((comp
