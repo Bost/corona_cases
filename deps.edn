@@ -98,10 +98,9 @@
   com.clojure-goes-fast/jvm-alloc-rate-meter {:mvn/version "0.1.4"}
 
   ;; seancorfield/next.jdbc is a replacement for org.clojure/java.jdbc
-  ;; org.clojure/java.jdbc {:mvn/version "0.7.11"}
+  ;; replacement for org.clojure/java.jdbc
   seancorfield/next.jdbc {:mvn/version "1.1.613"}
-
-  org.postgresql/postgresql {:mvn/version "42.2.18"}
+  org.postgresql/postgresql {:mvn/version "42.2.19"}
 
   ;; A collection of arrow macros. Better threading macros `->` and `->>`
   ;; swiss-arrows/swiss-arrows {:mvn/version "1.0.0"}

@@ -23,6 +23,23 @@
 (defmacro errorf [s & exprs] `(taoensso.timbre/errorf (str "[%s] " ~s) ~'fun-id ~@exprs))
 (defmacro fatalf [s & exprs] `(taoensso.timbre/fatalf (str "[%s] " ~s) ~'fun-id ~@exprs))
 
+(defmacro ok? []
+  `((comp
+     (fn [~'v] (taoensso.timbre/infof "[%s] ok? %s" ~'fun-id ~'v)
+       ~'v))
+    (if corona.common/use-webhook?
+      (do
+        (taoensso.timbre/infof "[%s] Starting ..." ~'fun-id)
+        true)
+      (let [~'dbase-ok? (corona.models.dbase-next/ok?)]
+        (taoensso.timbre/infof "[%s] Starting ...\n  %s"
+                                 ~'fun-id
+                                 (clojure.string/join
+                                  "\n  "
+                                  (corona.common/show-env)))
+        (taoensso.timbre/infof "[%s] dbase-ok? %s" ~'fun-id ~'dbase-ok?)
+        ~'dbase-ok?))))
+
 ;; (defn-fun-id foo "docstr" []
 ;;   (debugf "some %s text %s" 'a 1)
 ;;   (debugf "%s" {:a 1 :b 2})

@@ -1,24 +1,48 @@
-(ns corona.models.dbase
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.models.dbase-next)
+
+;; (ns corona.models.dbase-next)
+
+(ns corona.models.dbase-next
   (:require [next.jdbc :as jdbc]
             [environ.core :refer [env]]
             [taoensso.timbre :as timbre]
+            [corona.macro :refer [defn-fun-id debugf]]
+            [corona.common :as com]
             [utils.core :as utc]))
 
-(def dbname "postgres")
+(def dbase-datasource (jdbc/get-datasource com/dbase))
 
-(def spec (or (System/getenv "DATABASE_URL")
-              (format "postgresql://%s:%s@localhost:5432/%s"
-                      "postgres"
-                      #_(env :user)
-                      "foo" ;; can be changed by \password
-                      #_(env :password)
-                      dbname)))
+(defn-fun-id ok?
+  "TODO Check dbase connection and dbase consistency"
+  []
+  (with-open [connection
+              (jdbc/get-connection dbase-datasource)]
+    (debugf "connection %s" connection)
+    (def table1 "chat")
+    #_(def table2 "messages")
+    ((comp
+      (fn [rows] (-> rows first :exists))
+      (fn [cmd] (jdbc/execute! connection [cmd table1]))
+      #_(reduce my-fn init-value (jdbc/plan connection [...]))
+      (fn [cmd] (debugf "\n%s" cmd)
+        cmd))
+     (format "select exists(select 1 from information_schema.tables where table_name in (?))"))))
 
-(def dbase-datasource
-  (jdbc/get-datasource {:dbtype "postgresql"
-                        :dbname dbname
-                        :user "postgres"
-                        :password "foo"}))
+(defn-fun-id chat-exists? "" [{:keys [chat-id]}]
+  (let [table "chat"
+        exists-kw :exists]
+    (with-open [connection
+                ((comp
+                  (fn [cmd] (debugf "\n%s" cmd) cmd)
+                  jdbc/get-connection
+                  (fn [cmd] (debugf "\n%s" cmd) cmd))
+                 dbase-datasource)]
+      ((comp
+        (fn [rows] (-> rows first exists-kw))
+        (fn [cmd] (jdbc/execute! connection [cmd chat-id]))
+        #_(reduce my-fn init-value (jdbc/plan connection [...]))
+        (fn [cmd] (debugf "\n%s" cmd) cmd))
+       (format "select %s(select 1 from %s where id = ?)" (name exists-kw) (pr-str table))))))
 
 (comment
   (with-open [connection (jdbc/get-connection dbase-datasource)]
@@ -85,4 +109,4 @@
         cmd))
      (format "select * from %s" (pr-str table)))))
 
-
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.models.dbase-next)

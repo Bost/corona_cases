@@ -24,7 +24,7 @@
             ring.middleware.params
             [ring.middleware.session :as session]
             ring.util.http-response
-            [corona.macro :refer [defn-fun-id debugf infof]]
+            [corona.macro :as macro :refer [defn-fun-id debugf infof]]
             [taoensso.timbre :as timbre])
   (:import java.time.ZoneId
            java.util.TimeZone))
@@ -51,16 +51,28 @@
   (timbre/debugf "Defining tgram-handlers at compile time ... done"))
 
 (defn-fun-id setup-webhook "" []
-  (if com/use-webhook?
-    (when (empty? (->> com/telegram-token moa/get-info-webhook
-                       :body :result :url))
-      (let [res (moa/set-webhook com/telegram-token
-                                 (webhook-url com/telegram-token))]
-        (debugf "(set-webhook ...) %s" (:body res))))
-    (when-not (empty? (->> com/telegram-token moa/get-info-webhook
-                           :body :result :url))
-      (let [res (moa/del-webhook com/telegram-token)]
-        (debugf "(del-webhook ...) %s" (:body res))))))
+  (let [webhook-not-set? ((comp
+                           empty?
+                           :url
+                           :result
+                           :body
+                           moa/get-info-webhook)
+                          com/telegram-token)]
+    (if com/use-webhook?
+      (when webhook-not-set?
+        ((comp
+          (fn [v] (debugf "(set-webhook ...) %s" v))
+          :body
+          (partial moa/set-webhook com/telegram-token)
+          webhook-url)
+         com/telegram-token))
+      (when-not webhook-not-set?
+        (let [res ()]
+          ((comp
+            (fn [v] (debugf "(del-webhook ...) %s" v) v)
+            :body
+            moa/del-webhook)
+            com/telegram-token))))))
 
 (defn- authenticated? [user pass]
   ;; TODO: heroku config:add REPL_USER=[...] REPL_PASSWORD=[...]
@@ -134,11 +146,8 @@
 ;; For interactive development:
 (defonce server (atom nil))
 
-(defn-fun-id webapp-start "" [port]
-  (if com/use-webhook?
-    (infof "Starting ...")
-    (infof "Starting ...\n  %s" (cstr/join "\n  " (com/show-env))))
-
+(defn-fun-id webapp-start "" []
+  (macro/ok?)
   (let [web-server
         (ring.adapter.jetty/run-jetty
          (-> #'app-routes
@@ -147,41 +156,43 @@
                ;; wrap-json-body is needed for the destructing the
                ;; (POST "..." {body :body} ...)
              (ring.middleware.json/wrap-json-body {:keywords? true}))
-         {:port port :join? false})]
+         {:port com/webapp-port :join? false})]
     (debugf "web-server %s" web-server)
     (swap! server (fn [_] web-server))
     (infof "Starting ... done")
     web-server))
 
-(defn-fun-id -main "TODO test this by bin/build; heroku local" [& [port]]
-  (let [port (or port com/webapp-port)]
-    (debugf "Starting ...")
-    (infof "\n  %s" (cstr/join "\n  " (com/show-env)))
-    (if (= (str (ctc/default-time-zone))
-           (str (ZoneId/systemDefault))
-           (.getID (TimeZone/getDefault)))
-      (debugf "TimeZone: %s; current time: %s (%s in %s)"
-              (str (ctc/default-time-zone))
-              (cte/tnow)
-              (cte/tnow ccc/zone-id)
-              ccc/zone-id)
-      (debugf (str "ctc/default-time-zone %s; "
-                   "ZoneId/systemDefault: %s; "
-                   "TimeZone/getDefault: %s\n")
-              (ctc/default-time-zone)
-              (ZoneId/systemDefault)
-              (.getID (TimeZone/getDefault))))
-    ;; The webapp must be always started, this error occurs otherwise:
-    ;; Error R10 (Boot timeout) -> Web process failed to bind to
-    ;; $PORT within 60 seconds of launch
-    ;; https://devcenter.heroku.com/articles/run-non-web-java-processes-on-heroku
-    (webapp-start port)
+(defn-fun-id -main
+  "TODO test it by: bin/build; and heroku local --env=.heroku-local.env
+Note: command line params accepted - is that OK?"
+  []
+  (macro/ok?)
+  (if (= (str (ctc/default-time-zone))
+         (str (ZoneId/systemDefault))
+         (.getID (TimeZone/getDefault)))
+    (debugf "TimeZone: %s; current time: %s (%s in %s)"
+            (str (ctc/default-time-zone))
+            (cte/tnow)
+            (cte/tnow ccc/zone-id)
+            ccc/zone-id)
+    (debugf (str "ctc/default-time-zone %s; "
+                 "ZoneId/systemDefault: %s; "
+                 "TimeZone/getDefault: %s\n")
+            (ctc/default-time-zone)
+            (ZoneId/systemDefault)
+            (.getID (TimeZone/getDefault))))
 
-    ;; setup-webhook should be done in the end after everything is initialized
-    (setup-webhook)
+  ;; The webapp must be always started, this error occurs otherwise:
+  ;; Error R10 (Boot timeout) -> Web process failed to bind to
+  ;; $PORT within 60 seconds of launch
+  ;; https://devcenter.heroku.com/articles/run-non-web-java-processes-on-heroku
+  (webapp-start)
 
-    (tgram/start)
-    (debugf "Staring ... done")))
+  ;; setup-webhook should be done in the end after everything is initialized
+  (setup-webhook)
+
+  (tgram/start)
+  (debugf "Staring ... done"))
 
 (defn-fun-id webapp-stop "" []
   (debugf "Stopping ...")
@@ -199,12 +210,12 @@
   (when @server
     (webapp-stop)
     (Thread/sleep 400))
-  (webapp-start com/env-type com/webapp-port))
+  (webapp-start))
 
 (defrecord WebServer [http-server app-component]
   component/Lifecycle
   (start [this] (assoc this :http-server
-                       (webapp-start com/env-type com/webapp-port)))
+                       (webapp-start)))
   (stop [this] (webapp-stop) this))
 
 (defn web-server

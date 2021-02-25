@@ -15,7 +15,7 @@
             [corona.common :as com]
             [corona.country-codes :as ccc]
             [corona.estimate :as est]
-            [corona.macro :refer [defn-fun-id debugf infof warnf fatalf]]
+            [corona.macro :as macro :refer [defn-fun-id debugf infof warnf fatalf]]
             [corona.msg.text.details :as msgi]
             [corona.msg.text.lists :as msgl]
             [corona.msg.text.messages :as msg]
@@ -194,9 +194,7 @@
       com/aggregation-cases))))
 
 (defn-fun-id json-changed! "" [{:keys [json-fn cache-storage] :as m}]
-  (printf "%s\n" m)
-  (debugf "%s" m)
-   ;; TODO spec: cache-storage must be vector; json-fns must be function
+  ;; TODO spec: cache-storage must be vector; json-fns must be function
   (let [hash-kws (conj cache-storage :json-hash)
          ;; (json-fn) also stores the json-data in the cache
         old-hash (get-in @cache/cache hash-kws)
@@ -260,12 +258,10 @@
 (defn-fun-id start
   "Fetch api service data and only then register the telegram commands."
   []
-  (if com/use-webhook?
-    (infof "Starting ...")
-    (infof "Starting ...\n  %s" (cstr/join "\n  " (com/show-env))))
+  (macro/ok?)
   (reset-cache!)
   (swap! initialized (fn [_]
-                        ;; TODO use morse.handler instead of true?
+                       ;; TODO use morse.handler instead of true?
                        true))
   (let [funs (into [p-endlessly]
                    (when-not com/use-webhook?

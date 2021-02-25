@@ -1,6 +1,10 @@
-(ns corona.models.migration
-  (:require [next.jdbc :as jdbc]
-            [corona.models.dbase :as dbase]))
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.models.migration)
+
+(ns corona.models.migration)
+
+;; (ns corona.models.migration
+;;   (:require [clojure.java.jdbc :as jdbc]
+;;             [corona.models.dbase :as dbase]))
 
 #_(defn migrated? []
   (-> (sql/query dbase/spec
@@ -20,3 +24,5 @@
                           [:created_at :timestamp
                            "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"]]))
     (println " done")))
+
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.models.migration)

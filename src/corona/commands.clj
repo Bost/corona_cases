@@ -16,7 +16,8 @@
             [corona.macro :refer [defn-fun-id debugf]]
             [utils.core :as u :refer [in?]]
             [corona.api.expdev07 :as data]
-            [taoensso.timbre :as timbre]))
+            [taoensso.timbre :as timbre]
+            [corona.models.dbase-next :as dbase]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -95,7 +96,7 @@
     ccc/country-code-3-letter ;; DE -> DEU
     normalize]))              ;; United States -> UnitedStates
 
-(defn inline-handlers []
+(defn-fun-id inline-handlers "" []
   (let [prm (assoc msg/options
                    :ccode (ccr/get-country-code ccc/worldwide))]
     [{:name lang/contributors
@@ -105,14 +106,22 @@
       :fun (fn [chat-id] (world (assoc prm :chat-id chat-id)))
       :desc lang/world-desc}
      {:name lang/start
-      :fun (fn [chat-id] (world (assoc prm :chat-id chat-id)))
+      :fun  (fn [chat-id]
+              #_(debugf "(dbase/chat-exists? %s): %s"
+                      chat-id
+                      (dbase/chat-exists? {:chat-id chat-id}))
+              (world (assoc prm :chat-id chat-id)))
       :desc lang/world-desc}
      {:name lang/explain
       :fun (fn [chat-id] (explain (assoc prm :chat-id chat-id)))
       :desc "Explain abbreviations & some additional info"}
      {:name lang/feedback
       :fun (fn [chat-id] (feedback (assoc prm :chat-id chat-id)))
-      :desc "Talk to the bot-creator"}]))
+
+      :desc "Talk to the bot-creator"}
+     #_{:name lang/settings
+      :fun (fn [chat-id] (setting (assoc prm :chat-id chat-id)))
+      :desc "Display user settings - stored in the dbase"}]))
 
 (defn listing-handlers "Command map for listings" []
   ((comp

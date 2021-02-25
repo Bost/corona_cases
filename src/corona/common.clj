@@ -16,13 +16,15 @@
             [utils.core :as utc]
             [clj-memory-meter.core :as meter]
             [utils.num :as utn])
-  (:import java.security.MessageDigest))
+  (:import java.security.MessageDigest
+           java.net.URI))
 
 ;; (set! *warn-on-reflection* true)
 
 (def ^:const ^String unknown "?")
 
-(def ^:const ^String undef "<UNDEF>")
+(def ^:const undef '<UNDEF>)
+(def ^:const present '<PRESENT>)
 
 (spec/def ::port number?)
 
@@ -61,6 +63,20 @@
 
 (def ^:const ^String webapp-server
   (get-in environment [env-type :web-server]))
+
+(def db-uri (java.net.URI. (System/getenv "DATABASE_URL")))
+
+(def user-and-password
+  (if (nil? (.getUserInfo db-uri))
+    nil (clojure.string/split (.getUserInfo db-uri) #":")))
+
+(def ^:const ^String dbase
+  {:dbtype "postgresql"
+   :user (get user-and-password 0)
+   :password (get user-and-password 1)
+   :host (.getHost db-uri)
+   :port (.getPort db-uri)
+   :dbname (subs (.getPath db-uri) 1)})
 
 (def ^:const ^String json-servers-v1
   (get-in environment [env-type :json-server :v1]))
@@ -190,32 +206,48 @@
     ;; if-let ... else
     undef))
 
+(defn pr-env [env-var-q]
+  ((comp
+    (partial format "%s: %s" env-var-q)
+    (fn [env-var]
+      (cond
+        (or env-var (false? env-var))
+        (cond
+          (utc/in? ['corona.common/telegram-token
+                    'corona.common/repl-password] env-var-q)
+          present
+
+          (utc/in? ['corona.common/dbase] env-var-q)
+          (pr-str (assoc env-var :password present))
+
+          (= env-var undef)
+          undef
+
+          :else
+          (pr-str env-var))
+
+        :else
+        undef))
+    eval)
+   env-var-q))
+
 (defn show-env
   "TODO should the spec checking be done here?"
   []
-  (mapv (fn [env-var-q]
-          (format "%s: %s"
-                  env-var-q
-                  (let [env-var (eval env-var-q)]
-                    (if (or env-var (false? env-var))
-                      (if (utc/in? ['corona.common/telegram-token
-                                    'corona.common/repl-password] env-var-q)
-                        "<PRESENT>"
-                        (pr-str env-var))
-                      ;; if-let ... else
-                      undef))))
-        ['corona.common/env-type
-         'corona.common/use-webhook?
-         'corona.common/telegram-token
-         'corona.common/repl-user
-         'corona.common/repl-password
-         'corona.common/webapp-server
-         'corona.common/webapp-port
-         'corona.common/bot-name
-         'corona.common/botver
-         'corona.common/json-apis-v1
-         'corona.common/json-api-owid]))
-
+  ((comp
+    (partial mapv pr-env))
+   ['corona.common/env-type
+    'corona.common/use-webhook?
+    'corona.common/telegram-token
+    'corona.common/repl-user
+    'corona.common/repl-password
+    'corona.common/webapp-server
+    'corona.common/webapp-port
+    'corona.common/bot-name
+    'corona.common/botver
+    'corona.common/dbase
+    'corona.common/json-apis-v1
+    'corona.common/json-api-owid]))
 ;; TODO (System/exit <val>) if some var is undefined
 
 (defn fix-octal-val
