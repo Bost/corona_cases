@@ -17,7 +17,7 @@
             [utils.core :as u :refer [in?]]
             [corona.api.expdev07 :as data]
             [taoensso.timbre :as timbre]
-            [corona.models.dbase-next :as dbase]))
+            [corona.models.dbase :as dbase]))
 
 ;; (set! *warn-on-reflection* true)
 

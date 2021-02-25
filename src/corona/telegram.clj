@@ -21,7 +21,10 @@
             [corona.msg.text.messages :as msg]
             [corona.msg.graph.plot :as plot]
             [morse.handlers :as moh]
-            [morse.polling :as mop])
+            [morse.polling :as mop]
+            ;; needed for the 'ok?' macro
+            corona.models.migration
+            )
   (:import [java.time Instant LocalDateTime ZoneId]))
 
 ;; (set! *warn-on-reflection* true)
@@ -258,7 +261,8 @@
 (defn-fun-id start
   "Fetch api service data and only then register the telegram commands."
   []
-  (macro/ok?)
+  (infof "Starting ...")
+  (macro/system-ok?)
   (reset-cache!)
   (swap! initialized (fn [_]
                        ;; TODO use morse.handler instead of true?
@@ -268,7 +272,7 @@
                      [p-long-polling]))]
     (debugf "Parallel run %s ..." funs)
     (pmap (fn [fun] (fun)) funs))
-  (infof "Starting [..] ... done"))
+  (infof "Starting ... done"))
 
 (defn-fun-id stop "" []
   (infof "Stopping ...")

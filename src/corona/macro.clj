@@ -23,22 +23,37 @@
 (defmacro errorf [s & exprs] `(taoensso.timbre/errorf (str "[%s] " ~s) ~'fun-id ~@exprs))
 (defmacro fatalf [s & exprs] `(taoensso.timbre/fatalf (str "[%s] " ~s) ~'fun-id ~@exprs))
 
-(defmacro ok? []
+(defmacro system-ok? []
   `((comp
-     (fn [~'v] (taoensso.timbre/infof "[%s] ok? %s" ~'fun-id ~'v)
+     (fn [~'v] (taoensso.timbre/infof "[%s] system-ok? %s" ~'fun-id ~'v)
        ~'v))
-    (if corona.common/use-webhook?
+    (if (or (= ~'fun-id "-main")
+            (= corona.common/env-type :devel))
       (do
-        (taoensso.timbre/infof "[%s] Starting ..." ~'fun-id)
-        true)
-      (let [~'dbase-ok? (corona.models.dbase-next/ok?)]
-        (taoensso.timbre/infof "[%s] Starting ...\n  %s"
+        #_(taoensso.timbre/infof
+         (str "[%s] do-check"
+              " (= ~'fun-id \"-main\"): %s;"
+              " (= corona.common/env-type :devel): %s")
+         ~'fun-id
+         (= ~'fun-id "-main")
+         (= corona.common/env-type :devel))
+        (let [~'dbase-ok? (corona.models.migration/migrated?)]
+          (taoensso.timbre/infof "[%s]\n  %s"
                                  ~'fun-id
                                  (clojure.string/join
                                   "\n  "
                                   (corona.common/show-env)))
-        (taoensso.timbre/infof "[%s] dbase-ok? %s" ~'fun-id ~'dbase-ok?)
-        ~'dbase-ok?))))
+          (taoensso.timbre/infof "[%s] dbase-ok? %s" ~'fun-id ~'dbase-ok?)
+          ~'dbase-ok?))
+      (do
+        #_(taoensso.timbre/infof
+         (str "[%s] no-check"
+              " (= ~'fun-id \"-main\"): %s;"
+              " (= corona.common/env-type :devel): %s")
+         ~'fun-id
+         (= ~'fun-id "-main")
+         (= corona.common/env-type :devel))
+        true))))
 
 ;; (defn-fun-id foo "docstr" []
 ;;   (debugf "some %s text %s" 'a 1)

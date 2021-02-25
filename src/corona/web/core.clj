@@ -25,7 +25,11 @@
             [ring.middleware.session :as session]
             ring.util.http-response
             [corona.macro :as macro :refer [defn-fun-id debugf infof]]
-            [taoensso.timbre :as timbre])
+            [taoensso.timbre :as timbre]
+            [corona.models.migration :as schema]
+            ;; needed for the 'ok?' macro
+            corona.models.migration
+            )
   (:import java.time.ZoneId
            java.util.TimeZone))
 
@@ -147,7 +151,8 @@
 (defonce server (atom nil))
 
 (defn-fun-id webapp-start "" []
-  (macro/ok?)
+  (infof "Starting ...")
+  (macro/system-ok?)
   (let [web-server
         (ring.adapter.jetty/run-jetty
          (-> #'app-routes
@@ -166,7 +171,9 @@
   "TODO test it by: bin/build; and heroku local --env=.heroku-local.env
 Note: command line params accepted - is that OK?"
   []
-  (macro/ok?)
+  (infof "Starting ...")
+  (schema/migrate)
+  (macro/system-ok?)
   (if (= (str (ctc/default-time-zone))
          (str (ZoneId/systemDefault))
          (.getID (TimeZone/getDefault)))
@@ -192,7 +199,7 @@ Note: command line params accepted - is that OK?"
   (setup-webhook)
 
   (tgram/start)
-  (debugf "Staring ... done"))
+  (infof "Starting ... done"))
 
 (defn-fun-id webapp-stop "" []
   (debugf "Stopping ...")
@@ -206,11 +213,13 @@ Note: command line params accepted - is that OK?"
           objs))
   (debugf "Stopping ... done"))
 
-(defn webapp-restart []
+(defn-fun-id webapp-restart "" []
+  (infof "Restarting ...")
   (when @server
     (webapp-stop)
     (Thread/sleep 400))
-  (webapp-start))
+  (webapp-start)
+  (infof "Restarting ... done"))
 
 (defrecord WebServer [http-server app-component]
   component/Lifecycle
