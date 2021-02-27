@@ -45,6 +45,7 @@
   (load "corona/api/mockup")
   (corona.api.mockup/run-server)
   #_(.start @corona.api.mockup/server)
-  #_(.stop @corona.api.mockup/server))
+  #_(.stop @corona.api.mockup/server)
+  ,)
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.mockup)

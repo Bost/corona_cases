@@ -6,17 +6,19 @@
 (def ^:const ^String prod "prod")
 (def ^:const ^String corona-cases "corona-cases")
 (def ^:const ^String hokuspokus "hokuspokus")
+(def ^:const ^String wicki "wicki")
 
 (def token-corona-cases (System/getenv "TELEGRAM_TOKEN_CORONA_CASES"))
 (def token-hokuspokus   (System/getenv "TELEGRAM_TOKEN_HOKUSPOKUS"))
+(def token-wicki        (System/getenv "TELEGRAM_TOKEN_WICKI"))
 
 (def fmt-bot-name-fn (comp
                       (fn [s] (cstr/replace s #"-" "\\_"))
                       (partial format "%s_bot")))
 
-(def ^:const ^String hokuspokus-bot (fmt-bot-name-fn hokuspokus))
-
 (def ^:const ^String corona-cases-bot (fmt-bot-name-fn corona-cases))
+(def ^:const ^String hokuspokus-bot (fmt-bot-name-fn hokuspokus))
+(def ^:const ^String wicki-bot (fmt-bot-name-fn wicki))
 
 (def api-servers
   "List of API servers to iterate if status 503 - service not available, etc."
@@ -68,9 +70,9 @@
 
    (keyword "devel")
    {:level 3
-    :bot-name hokuspokus-bot
+    :bot-name wicki-bot
     ;; :web-server nil ;; intentionally undefined
     :json-server {:v1 v1-mockups :owid owid-mockup}
-    :telegram-token token-hokuspokus}})
+    :telegram-token token-wicki}})
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.envdef)
