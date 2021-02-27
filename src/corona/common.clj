@@ -327,47 +327,39 @@
 'Reading JSON with jsonista seems faster than reading EDN with read-string'
 https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20as.20a.20file/near/202927428"
   [url]
-  (let [msg (format "Requesting data from %s" url)]
-    (infof msg)
-    (let [tbeg (System/currentTimeMillis)]
-      (let [timeout
-            (int (* 3/2 60 1000)) ;; 1.5 minutes
-            result
-            ((comp
-              (fn [s] (json/read-str s :key-fn clojure.core/keyword))
-              :body
-              (fn [url]
-                (clj-http.client/get
-                 url
-                 (conj
-                  {;; See
-                   ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
-                   ;; SO_TIMEOUT - timeout for waiting for data or, put
-                   ;; differently, a maximum period inactivity between two
-                   ;; consecutive data packets
-                   :socket-timeout timeout
+  (let [msg (format "Requesting data from %s" url)
+        tbeg (System/currentTimeMillis)]
+    ((comp
+      (fn [result] (infof (str msg " ... %s received in %s ms")
+                         (measure result) (- (System/currentTimeMillis) tbeg))
+        result)
+      (fn [s] (json/read-str s :key-fn clojure.core/keyword))
+      :body
+      (fn [url]
+        (clj-http.client/get
+         url
+         (conj
+          (let [;; 1.5 minutes
+                timeout (int (* 3/2 60 1000))]
+            {;; See
+             ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
+             ;; SO_TIMEOUT - timeout for waiting for data or, put
+             ;; differently, a maximum period inactivity between two
+             ;; consecutive data packets
+             :socket-timeout timeout
 
-                   ;; timeout used when requesting a connection from the
-                   ;; connection manager
-                   :connection-timeout timeout
+             ;; timeout used when requesting a connection from the
+             ;; connection manager
+             :connection-timeout timeout
 
-                   ;; timeout until a connection is established
-                   ;; :connect-timeout timeout
-                   }
-
-                  {:accept :json :debug true}
-                  #_{:debug-body true}))))
-             url)]
-        ;; heroku cycling https://devcenter.heroku.com/articles/dynos#restarting
-        ;; TODO sanitize against:
-        ;; 1. http status 503 - service not available
-        ;; Requesting json-data from http://covid-tracker-us.herokuapp.com/all ...
-        ;; Nov 17 18:04:52 corona-cases-bot heroku/web.1 Process running mem=615M(120.2%)
-        ;; Nov 17 18:04:57 corona-cases-bot app/web.1 Execution error (ExceptionInfo) at slingshot.support/stack-trace (support.clj:201).
-        ;; Nov 17 18:04:57 corona-cases-bot app/web.1 clj-http: status 503
-        (infof (str msg " ... %s received in %s ms")
-               (measure result) (- (System/currentTimeMillis) tbeg))
-        result))))
+             ;; timeout until a connection is established
+             ;; :connect-timeout timeout
+             })
+          {:accept :json}
+          #_{:debug true}
+          #_{:debug-body true})))
+      (fn [url] (infof msg) url))
+     url)))
 
 (defn-fun-id get-json "Retries `get-json-single` 3 times" [url]
   (try
