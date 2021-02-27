@@ -223,7 +223,7 @@
                  + 0
                  locations)))
             (raw-dates (json-data)))))
-   [:sums case-kw ccode]))
+   [:sums case-kw (keyword ccode)]))
 
 (defn calc-case-counts-report-by-report [pred-hm]
   (let [vpcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
