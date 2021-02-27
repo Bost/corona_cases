@@ -2,6 +2,7 @@
 
 (ns corona.api.cache
   (:require [clojure.spec.alpha :as spec]
+            [clojure.spec.test.alpha :as spect]
             [clojure.string :as cstr]
             [corona.macro :refer [defn-fun-id]]))
 
@@ -9,28 +10,34 @@
 
 (spec/def ::fun clojure.core/fn?)
 (spec/def ::pred-fn (spec/or :nil nil? :fn clojure.core/fn?))
+(spec/def ::ks (spec/coll-of keyword?))
 
-(defonce cnt (atom 0))
-
-(defn-fun-id cache!
+(spec/fdef cache! :args (spec/cat :fun ::fun :ks ::ks))
+(defn cache!
   "Also return the cached value for further consumption.
   First param must be a function in order to have lazy evaluation."
   [fun ks]
-  {:pre [(spec/valid? ::fun fun)]}
-  #_(debugf "[%s] %s Computing %s ..." fun-id @cnt fun)
-  #_(swap! cnt inc)
+  ;; {:pre [(spec/valid? ::fun fun)
+  ;;        (spec/valid? ::ks ks)]}
   (let [data (fun)]
-      ;; (debugf "[%s] %s Computing ... done." fun-id fun)
     (swap! cache update-in ks (fn [_] data))
     data))
+;; (spect/instrument `cache!) ;; (spect/unstrument `cache!)
 
+(spec/fdef from-cache! :args (spec/cat :fun ::fun :ks ::ks))
 (defn from-cache!
   [fun ks]
-  {:pre [(spec/valid? ::fun fun)]}
-  ;; (debugf "[from-cache!] accessing %s" ks)
+  ;; {:pre [(spec/valid? ::fun fun)
+  ;;        (spec/valid? ::ks ks)]}
   (if-let [v (get-in @cache ks)]
     v
     (cache! fun ks)))
+;; Instrumentation is likely to be useful at both development time and during
+;; testing to discover errors in calling code. It is not recommended to use
+;; instrumentation in production due to the overhead involved with checking args
+;; specs.
+;; Multiple functions can be instrumented without modifying their code
+;; (spect/instrument `from-cache!) ;; (spect/unstrument `from-cache!)
 
 (defn aggregation-hash
   "TODO aggregation-hash should not be here"
