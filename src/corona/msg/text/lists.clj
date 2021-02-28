@@ -16,8 +16,8 @@
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn get-from-cache! [case-kw json msg-idx prm quoted-ns-qualif-fun]
-  (let [full-kws [:list (keyword (:name (meta (find-var quoted-ns-qualif-fun))))
+(defn get-from-cache! [case-kw msg-idx {:keys [json] :as prm} quoted-ns-qualif-fun]
+  (let [full-kws [:list ((comp keyword :name meta find-var) quoted-ns-qualif-fun)
                   case-kw]]
     (if (and json msg-idx prm)
       (cache/cache! (fn []
@@ -42,7 +42,9 @@
              (map-indexed
               (fn [idx sub-msg]
                 (get-from-cache!
-                 case-kw json (inc idx) (conj prm {:data sub-msg}) fun))
+                 case-kw (inc idx) (assoc prm
+                                          :json json
+                                          :data sub-msg) fun))
               sub-msgs))))
         case-kws))
 
@@ -149,10 +151,10 @@
 
 (defmethod list-cases true  [_]
   (fn [case-kw & [json msg-idx prm]]
-    (get-from-cache! case-kw json msg-idx prm 'corona.msg.text.lists/per-100k)))
+    (get-from-cache! case-kw msg-idx (assoc prm :json json) 'corona.msg.text.lists/per-100k)))
 
 (defmethod list-cases false [_]
   (fn [case-kw & [json msg-idx prm]]
-    (get-from-cache! case-kw json msg-idx prm 'corona.msg.text.lists/absolute-vals)))
+    (get-from-cache! case-kw msg-idx (assoc prm :json json) 'corona.msg.text.lists/absolute-vals)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.lists)
