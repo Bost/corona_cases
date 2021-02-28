@@ -16,12 +16,12 @@
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn get-from-cache! [case-kw msg-idx {:keys [json] :as prm} quoted-ns-qualif-fun]
+(defn get-from-cache! [case-kw msg-idx prm quoted-ns-qualif-fun]
   (let [full-kws [:list ((comp keyword :name meta find-var) quoted-ns-qualif-fun)
                   case-kw]]
-    (if (and json msg-idx prm)
+    (if (and msg-idx prm)
       (cache/cache! (fn []
-                      ((eval quoted-ns-qualif-fun) case-kw json msg-idx prm))
+                      ((eval quoted-ns-qualif-fun) case-kw msg-idx prm))
                     (conj full-kws (keyword (str msg-idx))))
       (vals (get-in @cache/cache full-kws)))))
 
@@ -34,6 +34,7 @@
                                            cnt-messages-in-listing) coll)
                 prm {:parse_mode com/html
                      :cnt-msgs (count sub-msgs)
+                     :json json
                      :pred-hm ((comp
                                 data/create-pred-hm
                                 ccr/get-country-code)
@@ -42,16 +43,14 @@
              (map-indexed
               (fn [idx sub-msg]
                 (get-from-cache!
-                 case-kw (inc idx) (assoc prm
-                                          :json json
-                                          :data sub-msg) fun))
+                 case-kw (inc idx) (assoc prm :data sub-msg) fun))
               sub-msgs))))
         case-kws))
 
 (defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
+  [case-kw msg-idx {:keys [cnt-msgs data parse_mode pred-hm json]}]
   (let [pred-json-hm (assoc pred-hm :json json)
         cnt-reports (count (data/dates json))
         header-txt (msgc/header parse_mode pred-json-hm)
@@ -99,7 +98,7 @@
 (defn-fun-id per-100k
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
+  [case-kw msg-idx {:keys [cnt-msgs data parse_mode pred-hm json]}]
   (let [pred-json-hm (assoc pred-hm :json json)
         cnt-reports (count (data/dates json))
         header-txt (msgc/header parse_mode pred-json-hm)
