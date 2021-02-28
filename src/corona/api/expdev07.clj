@@ -190,10 +190,9 @@
                                  :json-owid (vac/json-data)})
           (population-data raw-dates))))
 
-(defn data-with-pop
-  "Data with population numbers."
-  []
-  (cache/from-cache! (fn [] (calc-data-with-pop (json-data)))
+(defn data-with-pop "Data with population numbers." [json]
+  (cache/from-cache! (fn [] (calc-data-with-pop json))
+                     #_(comp calc-data-with-pop json-data)
                      [:data-with-pop]))
 
 (defn get-last [coll] (first (take-last 1 coll)))
@@ -203,12 +202,12 @@
 ;; TODO reload only the latest N reports. e.g. try one week
 (defn sums-for-case
   "Return sums for a given `case-kw` calculated for every single report."
-  [case-kw {:keys [ccode pred-fun]}]
+  [case-kw {:keys [ccode json pred-fun]}]
   ;; ignore predicate for the moment
   (cache/from-cache!
    (fn []
      (let [locations (filter pred-fun
-                             ((comp :locations case-kw) (data-with-pop)))]
+                             ((comp :locations case-kw data-with-pop) json))]
        ;; (debugf "locations %s" (cstr/join " " locations))
        (map (fn [raw-date]
               (if (and (empty? locations)
@@ -275,16 +274,16 @@
                      [:cnts (keyword ccode)]))
 
 (defn eval-fun
-  [fun pred-hm json]
+  [fun {:keys [json] :as pred-json-hm}]
   (into {:t (fun (dates json))}
         (map (fn [[k v]] {k (fun v)})
-             (case-counts-report-by-report pred-hm))))
+             (case-counts-report-by-report pred-json-hm))))
 
 (defn delta
   [pred-hm json]
   (->> [get-prev get-last]
        (map (fn [fun]
-              (eval-fun fun pred-hm json)))
+              (eval-fun fun (assoc pred-hm :json json))))
        (apply (fn [prv lst]
                 (map (fn [k]
                        {k (- (k lst) (k prv))})
@@ -297,9 +296,9 @@
      [get-prev get-last]))
 
 (defn last-report [pred-hm json]
-  (eval-fun get-last pred-hm json))
+  (eval-fun get-last (assoc pred-hm :json json)))
 
-(defn last-8-reports [pred-hm json] (eval-fun (partial take-last 8) pred-hm json))
+(defn last-8-reports [pred-json-hm] (eval-fun (partial take-last 8) pred-json-hm))
 
 (defn create-pred-hm [ccode]
   {:ccode ccode

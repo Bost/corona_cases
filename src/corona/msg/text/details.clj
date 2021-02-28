@@ -62,7 +62,7 @@
        (utc/sjoin vals))]]))
 
 (defn-fun-id confirmed-info "TODO reintroduce max-active-date"
-  [ccode json last-report pred-hm delta maxes cnt-countries]
+  [ccode last-report {:keys [json] :as pred-json-hm} delta maxes cnt-countries]
   (let [
         {max-active :active max-deaths :deaths} maxes
         {population      :p
@@ -82,7 +82,7 @@
          c-rate          :c-rate ;; closed-rate
          v-rate          :v-rate} last-report
 
-        last-8 (data/last-8-reports pred-hm json)
+        last-8 (data/last-8-reports pred-json-hm)
         {vaccin-last-8 :v active-last-8 :a confir-last-8 :c} last-8
 
         [_               & vaccin-last-7] vaccin-last-8
@@ -218,13 +218,14 @@
       (debugf "ccode %s size %s" ccode (com/measure info))
       info)
     fmt)
-   (let [dates (data/dates json)
+   (let [pred-json-hm (assoc pred-hm :json json)
+         dates (data/dates json)
          last-report (data/last-report pred-hm json)
          {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
          delta (data/delta pred-hm json)
          {delta-confir :c
           delta-vaccin :v} delta
-         {vaccin-last-8 :v} (data/last-8-reports pred-hm json)
+         {vaccin-last-8 :v} (data/last-8-reports pred-json-hm)
          [_ & vaccin-last-7] vaccin-last-8]
      (conj
        {:header-txt (msgc/header parse_mode pred-hm json)
@@ -255,23 +256,23 @@
 
        (when (or (pos? confirmed)
                  (some pos? vaccin-last-7))
-         (let [
+         (let [pred-json-hm (assoc pred-hm :json json)
+               case-counts-rbr (data/case-counts-report-by-report pred-json-hm)
                maxes
                {:deaths
-                (let [data (:d (data/case-counts-report-by-report pred-hm))
+                (let [data (:d case-counts-rbr)
                       max-val (apply max data)]
                   {:val max-val
                    :date (nth dates (utc/last-index-of data max-val))})
                 :active
-                (let [data (:a (data/case-counts-report-by-report pred-hm))
+                (let [data (:a case-counts-rbr)
                       max-val (apply max data)]
                   {:val max-val
                    :date (nth dates (utc/last-index-of data max-val))})}]
            {:details-txt (confirmed-info
                           ccode
-                          json
                           last-report
-                          pred-hm
+                          pred-json-hm #_(dissoc pred-json-hm :json) ;; TODO the dissoc is not needed
                           delta
                           maxes
                           (count ccc/all-country-codes))}))))))

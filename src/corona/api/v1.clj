@@ -27,7 +27,7 @@
   {:ccode \"US\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :deaths 8407}
   {:ccode \"US\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :deaths 3873})
   "
-  [case-kw]
+  [case-kw json]
   ((comp
     (partial sort-by :ccode)
     flatten
@@ -67,7 +67,7 @@
                   "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ" "IN" "ES" "CO"
                   "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"]
                   (:country_code loc))))
-    (partial get-in (data/data-with-pop)))
+    (partial get-in (data/data-with-pop json)))
    [case-kw :locations]))
 
 (defn pic-data
@@ -78,7 +78,7 @@
   {:ccode \"US\" :t #inst \"...\" :c 308853 :r 14652 :d 8407 :p 331002651 :a 285794}
   {:ccode \"US\" :t #inst \"...\" :c 188172 :r 7024  :d 3873 :p 331002651 :a 177275}
 )"
-  []
+  [json]
   ((comp
     (partial apply map
              (fn [{:keys [vaccinated]}
@@ -105,7 +105,7 @@
                   :r-rate ((com/calc-rate :r) prm)
                   :d-rate ((com/calc-rate :d) prm)
                   :c-rate ((com/calc-rate :c) prm)))))
-    (partial map xf-for-case))
+    (partial map (fn [case-kw] (xf-for-case case-kw json))))
    [:vaccinated :population :confirmed :recovered :deaths]))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.v1)

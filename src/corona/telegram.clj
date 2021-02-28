@@ -175,7 +175,7 @@
   (System/gc) ;; also (.gc (Runtime/getRuntime))
   (Thread/sleep 100)
   (com/heap-info)
-  (let [stats (est/estimate (v1/pic-data))
+  (let [stats (est/estimate (v1/pic-data json))
         cnt-reports (count (data/dates json))]
      ;; TODO do not call calc-functions when the `form` evaluates to true
     (when (< cnt-reports 10)
