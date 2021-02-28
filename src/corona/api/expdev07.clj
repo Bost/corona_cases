@@ -279,11 +279,10 @@
         (map (fn [[k v]] {k (fun v)})
              (case-counts-report-by-report pred-json-hm))))
 
-(defn delta
-  [pred-hm json]
+(defn delta [pred-json-hm]
   (->> [get-prev get-last]
        (map (fn [fun]
-              (eval-fun fun (assoc pred-hm :json json))))
+              (eval-fun fun pred-json-hm)))
        (apply (fn [prv lst]
                 (map (fn [k]
                        {k (- (k lst) (k prv))})
@@ -292,11 +291,11 @@
   #_((comp
       (partial reduce into {})
       (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))}) com/all-cases)))
-      (partial map (fn [fun] (eval-fun fun pred-hm))))
+      (partial map (fn [fun] (eval-fun fun pred-json-hm))))
      [get-prev get-last]))
 
-(defn last-report [pred-hm json]
-  (eval-fun get-last (assoc pred-hm :json json)))
+(defn last-report [pred-json-hm]
+  (eval-fun get-last pred-json-hm))
 
 (defn last-8-reports [pred-json-hm] (eval-fun (partial take-last 8) pred-json-hm))
 
@@ -315,7 +314,8 @@
 
 (defn calc-stats-countries [json]
   (map (fn [ccode] (conj {:ccode ccode}
-                        (last-report (create-pred-hm ccode) json)))
+                        (last-report (assoc (create-pred-hm ccode)
+                                            :json json))))
        ccc/all-country-codes))
 
 (defn stats-countries [json] (cache/from-cache! (fn [] (calc-stats-countries json)) [:stats]))

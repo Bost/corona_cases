@@ -182,8 +182,9 @@
       (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
     (doall
      (map-fn (fn [ccode]
-               (msgi/message! ccode json com/html
-                                   (data/create-pred-hm ccode))
+               (msgi/message! ccode com/html
+                              (assoc (data/create-pred-hm ccode)
+                                     :json json))
                (plot/message! ccode stats cnt-reports))
              ccc/all-country-codes))
     (com/heap-info)

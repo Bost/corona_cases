@@ -212,23 +212,22 @@
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
   "
-  [ccode json parse_mode pred-hm]
+  [ccode parse_mode {:keys [json] :as pred-json-hm}]
   ((comp
     (fn [info]
       (debugf "ccode %s size %s" ccode (com/measure info))
       info)
     fmt)
-   (let [pred-json-hm (assoc pred-hm :json json)
-         dates (data/dates json)
-         last-report (data/last-report pred-hm json)
+   (let [dates (data/dates json)
+         last-report (data/last-report pred-json-hm)
          {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
-         delta (data/delta pred-hm json)
+         delta (data/delta pred-json-hm)
          {delta-confir :c
           delta-vaccin :v} delta
          {vaccin-last-8 :v} (data/last-8-reports pred-json-hm)
          [_ & vaccin-last-7] vaccin-last-8]
      (conj
-       {:header-txt (msgc/header parse_mode pred-hm json)
+       {:header-txt (msgc/header parse_mode pred-json-hm)
         :cname-aliased-txt (ccr/country-name-aliased ccode)
         :country-commands-txt
         (apply (fn [ccode c3code]
@@ -256,8 +255,7 @@
 
        (when (or (pos? confirmed)
                  (some pos? vaccin-last-7))
-         (let [pred-json-hm (assoc pred-hm :json json)
-               case-counts-rbr (data/case-counts-report-by-report pred-json-hm)
+         (let [case-counts-rbr (data/case-counts-report-by-report pred-json-hm)
                maxes
                {:deaths
                 (let [data (:d case-counts-rbr)
@@ -278,10 +276,10 @@
                           (count ccc/all-country-codes))}))))))
 
 (defn message!
-  [ccode & [json parse_mode pred-hm]]
+  [ccode & [parse_mode pred-json-hm]]
   (let [ks [:msg (keyword ccode)]]
-      (if (and json parse_mode pred-hm)
-        (cache/cache! (fn [] (message ccode json parse_mode pred-hm))
+      (if (and parse_mode pred-json-hm)
+        (cache/cache! (fn [] (message ccode parse_mode pred-json-hm))
                       ks)
         (get-in @cache/cache ks))))
 

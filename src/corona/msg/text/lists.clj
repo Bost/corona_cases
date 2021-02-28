@@ -50,8 +50,9 @@
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
   [case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
-  (let [cnt-reports (count (data/dates json))
-        header-txt (msgc/header parse_mode pred-hm json)
+  (let [pred-json-hm (assoc pred-hm :json json)
+        cnt-reports (count (data/dates json))
+        header-txt (msgc/header parse_mode pred-json-hm)
         spacer " "
         sort-indicator "▴" ;; " " "▲"
         omag-active 7 ;; order of magnitude i.e. number of digits
@@ -97,8 +98,9 @@
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
   [case-kw json msg-idx {:keys [cnt-msgs data parse_mode pred-hm]}]
-  (let [cnt-reports (count (data/dates json))
-        header-txt (msgc/header parse_mode pred-hm json)
+  (let [pred-json-hm (assoc pred-hm :json json)
+        cnt-reports (count (data/dates json))
+        header-txt (msgc/header parse_mode pred-json-hm)
         spacer " "
         sort-indicator "▴" ;; " " "▲"
         ;; omag - order of magnitude i.e. number of digits
