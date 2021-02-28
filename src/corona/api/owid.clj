@@ -13,8 +13,7 @@
 (defn-fun-id json-data "" []
   (let [ks [:owid :json]]
     (when-not (get-in @cache/cache ks)
-      (debugf "cache-miss %s" ks)
-      #_(clojure.stacktrace/print-stack-trace (Exception.)))
+      (debugf "cache-miss %s" ks))
     (cache/from-cache! (fn [] (com/get-json com/json-api-owid)) ks)))
 
 #_(defn population-cnt [ccode])
