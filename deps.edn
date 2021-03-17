@@ -10,7 +10,7 @@
 {:aliases
  {:depstar
   {:replace-deps
-   {seancorfield/depstar {:mvn/version "2.0.171"}}
+   {seancorfield/depstar {:mvn/version "2.0.193"}}
    :ns-default hf.depstar
    :exec-args {}}}
 
