@@ -104,9 +104,12 @@ user> (corona.telegram/start)
 ```
 
 4. Start the web server:
+```bash
+rlwrap /usr/local/bin/clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} com.billpiel/sayid {:mvn/version "0.1.0"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.1"} cider/cider-nrepl {:mvn/version "0.25.9"}} :aliases {:cider/nrepl {:main-opts ["-m" "nrepl.cmdline" "--middleware" "[com.billpiel.sayid.nrepl-middleware/wrap-sayid,refactor-nrepl.middleware/wrap-refactor,cider.nrepl/cider-middleware]"]}}}'
+```
 ```clojure
-user> (require '[corona.web])
-user> (alter-var-root #'system component/start)
+user=> (load "corona/api/mockup")
+user=> (corona.api.mockup/run-server)
 ```
 and check the [http://localhost:5050/](http://localhost:5050/) if it's running.
 
