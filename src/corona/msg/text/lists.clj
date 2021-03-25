@@ -16,44 +16,76 @@
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn get-from-cache! [case-kw msg-idx prm quoted-ns-qualif-fun]
-  (let [full-kws [:list ((comp keyword :name meta find-var) quoted-ns-qualif-fun)
-                  case-kw]]
-    (if (and msg-idx prm)
-      (cache/cache! (fn []
-                      ((eval quoted-ns-qualif-fun) case-kw msg-idx prm))
-                    (conj full-kws (keyword (str msg-idx))))
-      (vals (get-in @cache/cache full-kws)))))
+(defn get-from-cache! "" [case-kw {:keys [msg-idx json fun] :as prm}]
+  ((comp
+    #_(fn [r]
+      (timbre/debugf "3. [get-from-cache!] (count r) %s" (count r))
+      r)
+    (fn [prm]
+      (let [full-kws [:list ((comp keyword :name meta find-var) fun) case-kw]]
+        (cond
+          msg-idx
+          ((comp
+            (partial cache/from-cache! (fn [] ((eval fun) case-kw prm)))
+            (partial conj full-kws)
+            keyword
+            str
+            #_(fn [msg-idx] (timbre/debugf "1. [get-from-cache!] msg-idx %s" msg-idx) msg-idx))
+           msg-idx)
 
-(defn calc-listings
+          prm
+          ((comp
+            #_(partial reduce str)
+            #_(fn [v] (timbre/debugf "2. vals result: %s" v) v)
+            vals
+            #_(fn [p] (timbre/debugf "2. [get-from-cache!] result: %s" p) p)
+            (partial cache/from-cache! (fn [] ((eval fun) case-kw prm)))
+            #_(fn [p] (timbre/debugf "1. [get-from-cache!] full-kws %s" full-kws) p)
+            #_(fn [p] (timbre/debugf "0. [get-from-cache!] fun %s" fun) p))
+           full-kws)
+
+          :else
+          ((comp
+            vals
+            (partial get-in @cache/cache))
+           full-kws)))))
+   prm))
+
+(defn-fun-id calc-listings ""
   [case-kws json fun]
-  (run! (fn [case-kw]
-          (let [coll (sort-by case-kw < (data/stats-countries json))
-                ;; Split the long list of all countries into smaller sub-parts
-                sub-msgs (partition-all (/ (count coll)
-                                           cnt-messages-in-listing) coll)
-                prm {:parse_mode com/html
-                     :cnt-msgs (count sub-msgs)
-                     :json json
-                     :pred-hm ((comp
-                                data/create-pred-hm
-                                ccr/get-country-code)
-                               ccc/worldwide)}]
-            (doall
-             (map-indexed
-              (fn [idx sub-msg]
-                (get-from-cache!
-                 case-kw (inc idx) (assoc prm :data sub-msg) fun))
-              sub-msgs))))
-        case-kws))
+  ((comp
+    (partial
+     run!
+     (fn [case-kw]
+       (let [coll (sort-by case-kw < (data/stats-countries json))
+             ;; Split the long list of all countries into smaller sub-parts
+             sub-msgs (partition-all (/ (count coll)
+                                        cnt-messages-in-listing) coll)
+             prm {:parse_mode com/html
+                  :cnt-msgs (count sub-msgs)
+                  :json json
+                  :pred-hm ((comp
+                             data/create-pred-hm
+                             ccr/get-country-code)
+                            ccc/worldwide)}]
+         ((comp
+           doall
+           (partial map-indexed
+                    (fn [idx sub-msg] (get-from-cache!
+                                      case-kw (assoc prm
+                                                     :msg-idx (inc idx)
+                                                     :data sub-msg
+                                                     :fun fun)))))
+          sub-msgs)))))
+   case-kws))
 
 (defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw msg-idx {:keys [cnt-msgs data parse_mode pred-hm json]}]
-  (let [pred-json-hm (assoc pred-hm :json json)
-        cnt-reports (count (data/dates json))
-        header-txt (msgc/header parse_mode pred-json-hm)
+  [case-kw {:keys [msg-idx cnt-msgs data parse_mode pred-hm json]}]
+  #_(debugf "case-kw %s" case-kw)
+  (let [cnt-reports (count (data/dates json))
+        header-txt (msgc/header parse_mode (assoc pred-hm :json json))
         spacer " "
         sort-indicator "▴" ;; " " "▲"
         omag-active 7 ;; order of magnitude i.e. number of digits
@@ -76,19 +108,19 @@
                        "\n\n"
                        "%s"   ; footer
                        )]]])
-         (cstr/join
-          "\n"
-          (map (fn [{:keys [a r d ccode]}]
-                 (let [cname (ccr/country-name-aliased ccode)]
-                   (format "<code>%s%s%s%s%s %s</code>  %s"
-                           (com/left-pad a " " omag-active)
-                           spacer
-                           (com/left-pad r " " omag-recov)
-                           spacer
-                           (com/left-pad d " " omag-deaths)
-                           (com/right-pad cname 17)
-                           (cstr/lower-case (com/encode-cmd ccode)))))
-               data))
+         ((comp
+           (partial cstr/join "\n")
+           (partial map (fn [{:keys [a r d ccode]}]
+                          (let [cname (ccr/country-name-aliased ccode)]
+                            (format "<code>%s%s%s%s%s %s</code>  %s"
+                                    (com/left-pad a " " omag-active)
+                                    spacer
+                                    (com/left-pad r " " omag-recov)
+                                    spacer
+                                    (com/left-pad d " " omag-deaths)
+                                    (com/right-pad cname 17)
+                                    (cstr/lower-case (com/encode-cmd ccode)))))))
+          data)
          ""
          (msgc/footer parse_mode))]
     (debugf "case-kw %s msg-idx %s msg-size %s"
@@ -98,10 +130,10 @@
 (defn-fun-id per-100k
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw msg-idx {:keys [cnt-msgs data parse_mode pred-hm json]}]
-  (let [pred-json-hm (assoc pred-hm :json json)
-        cnt-reports (count (data/dates json))
-        header-txt (msgc/header parse_mode pred-json-hm)
+  [case-kw {:keys [msg-idx cnt-msgs data parse_mode pred-hm json]}]
+  #_(debugf "case-kw %s" case-kw)
+  (let [cnt-reports (count (data/dates json))
+        header-txt (msgc/header parse_mode (assoc pred-hm :json json))
         spacer " "
         sort-indicator "▴" ;; " " "▲"
         ;; omag - order of magnitude i.e. number of digits
@@ -127,19 +159,20 @@
                      "%s"     ; sorted-by description; has its own new-line
                      "\n\n%s" ; footer
                      )]]])
-         (cstr/join
-          "\n"
-          (map (fn [{:keys [a100k r100k d100k ccode]}]
-                 (let [cname (ccr/country-name-aliased ccode)]
-                   (format "<code>   %s%s   %s%s    %s %s</code>  %s"
-                           (com/left-pad a100k " " omag-active-per-100k)
-                           spacer
-                           (com/left-pad r100k " " omag-recove-per-100k)
-                           spacer
-                           (com/left-pad d100k " " omag-deaths-per-100k)
-                           (com/right-pad cname 17)
-                           (cstr/lower-case (com/encode-cmd ccode)))))
-               data))
+         ((comp
+           (partial cstr/join "\n")
+           (partial map (fn [{:keys [a100k r100k d100k ccode]}]
+                          (let [cname (ccr/country-name-aliased ccode)]
+                            #_(debugf "case-kw %s, cname %s" case-kw cname)
+                            (format "<code>   %s%s   %s%s    %s %s</code>  %s"
+                                    (com/left-pad a100k " " omag-active-per-100k)
+                                    spacer
+                                    (com/left-pad r100k " " omag-recove-per-100k)
+                                    spacer
+                                    (com/left-pad d100k " " omag-deaths-per-100k)
+                                    (com/right-pad cname 17)
+                                    (cstr/lower-case (com/encode-cmd ccode)))))))
+          data)
          ""
          (msgc/footer parse_mode))]
     (debugf "case-kw %s msg-idx %s msg-size %s"
@@ -148,12 +181,24 @@
 
 (defmulti  list-cases (fn [listing-cases-per-100k?] listing-cases-per-100k?))
 
-(defmethod list-cases true  [_]
-  (fn [case-kw & [json msg-idx prm]]
-    (get-from-cache! case-kw msg-idx (assoc prm :json json) 'corona.msg.text.lists/per-100k)))
+(defmethod list-cases true [_]
+  (fn [case-kw & [json
+                 msg-idx prm]]
+    ((comp
+      #_(fn [r] (timbre/debugf "[list-cases true] r %s" r) r)
+      (partial get-from-cache! case-kw))
+     (assoc prm
+            :msg-idx msg-idx
+            :json json
+            :fun 'corona.msg.text.lists/per-100k))))
 
 (defmethod list-cases false [_]
-  (fn [case-kw & [json msg-idx prm]]
-    (get-from-cache! case-kw msg-idx (assoc prm :json json) 'corona.msg.text.lists/absolute-vals)))
+  (fn [case-kw & [json
+                 msg-idx prm]]
+    #_(timbre/debugf "[list-cases false] msg-idx %s" msg-idx)
+    (get-from-cache! case-kw (assoc prm
+                                    :msg-idx msg-idx
+                                    :json json
+                                    :fun 'corona.msg.text.lists/absolute-vals))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.lists)

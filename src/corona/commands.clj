@@ -126,15 +126,19 @@
      (fn [case-kw]
        {:name (lang/list-sorted-by case-kw)
         :fun (fn [chat-id]
-               (doall
-                ;; mapping over results implies the knowledge that the type
-                ;; of `(msg-listing-fun case-kw)` is a collection.
-                (map (defn-fun-id listing-handler "" [content]
-                       (morse/send-text com/telegram-token chat-id
-                                        {:parse_mode com/html} content)
-                       (debugf "%s chars sent" (count content)))
-                     ((msgl/list-cases (in? com/listing-cases-per-100k case-kw))
-                      case-kw))))
+               ((comp
+                 ;; mapping over results implies the knowledge that the type
+                 ;; of `(msg-listing-fun case-kw)` is a collection.
+                 doall
+                 (partial map (defn listing-handler "" [content]
+                                #_(timbre/debugf "content %s" content)
+                                (morse/send-text com/telegram-token chat-id
+                                                 {:parse_mode com/html} content)
+                                (timbre/debugf "%s chars sent" (count content))))
+                 #_(fn [coll] (timbre/debugf "[listing-handlers] (count coll) %s" (count coll)) coll)
+                 (partial (msgl/list-cases (in? com/listing-cases-per-100k case-kw)))
+                 #_(fn [ckw] (timbre/debugf "[listing-handlers] ckw %s" ckw) ckw))
+                case-kw))
         :desc (lang/list-sorted-by-desc case-kw)}))
     (partial into com/listing-cases-per-100k))
    com/listing-cases-absolute))

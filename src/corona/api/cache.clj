@@ -4,7 +4,8 @@
   (:require [clojure.spec.alpha :as spec]
             [clojure.spec.test.alpha :as spect]
             [clojure.string :as cstr]
-            [corona.macro :refer [defn-fun-id]]))
+            [corona.macro :refer [defn-fun-id debugf]]
+            [taoensso.timbre :as timbre]))
 
 (defonce cache (atom {}))
 
@@ -13,12 +14,14 @@
 (spec/def ::ks (spec/coll-of keyword?))
 
 (spec/fdef cache! :args (spec/cat :fun ::fun :ks ::ks))
-(defn cache!
-  "Also return the cached value for further consumption.
-  First param must be a function in order to have lazy evaluation."
+(defn-fun-id cache!
+  "Return the value of `(fun)` and store it in the cache-atom as a side-effect.
+  First param must be a function in order to have lazy evaluation.
+  TODO the atom should be a parameter"
   [fun ks]
-  ;; {:pre [(spec/valid? ::fun fun)
-  ;;        (spec/valid? ::ks ks)]}
+  #_{:pre [(spec/valid? ::fun fun)
+           (spec/valid? ::ks ks)]}
+  #_(timbre/debugf "[cache!] ks %s; (count ks) %s" ks (count ks))
   (let [data (fun)]
     (swap! cache update-in ks (fn [_] data))
     data))
@@ -27,8 +30,9 @@
 (spec/fdef from-cache! :args (spec/cat :fun ::fun :ks ::ks))
 (defn from-cache!
   [fun ks]
-  ;; {:pre [(spec/valid? ::fun fun)
-  ;;        (spec/valid? ::ks ks)]}
+  #_{:pre [(spec/valid? ::fun fun)
+           (spec/valid? ::ks ks)]}
+  #_(timbre/debugf "[from-cache!] ks %s; (count ks) %s" ks (count ks))
   (if-let [v (get-in @cache ks)]
     v
     (cache! fun ks)))

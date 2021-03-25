@@ -30,12 +30,16 @@
         name)
        (or (level log-level-map) level))
       " "
-      "[" (or ((comp
-                (fn [n] (subs ?ns-str n))
-                inc
-                (fn [s] (.indexOf s ".")))
-               ?ns-str)
-              ?file "?") #_":" #_(or ?line "?") "] "
+      "["
+      (or ((comp
+            (fn [n] (subs ?ns-str n))
+            inc
+            (fn [s] (.indexOf s ".")))
+           ?ns-str)
+          ?file "?")
+      ;; line number indication doesn't work from the defn-fun-id macro
+      ;; ":" (or ?line "?")
+      "] "
       (force msg_)
       (when-not no-stacktrace?
         (when-let [err ?err]
@@ -44,9 +48,11 @@
 
 (def ^:const zone-id "Europe/Berlin")
 
-;; (set-config! default-config)
+#_(timbre/set-config! timbre/default-config)
 (timbre/merge-config!
- {:output-fn log-output #_default-output-fn
+ {:output-fn
+  log-output
+  #_timbre/default-output-fn
   :timestamp-opts
   (conj {:timezone (java.util.TimeZone/getTimeZone zone-id)}
         {:pattern "HH:mm:ss.SSSX"})})
