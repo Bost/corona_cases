@@ -169,6 +169,13 @@
                       'corona.msg.text.lists/per-100k))
 
 (defn-fun-id calc-cache! "" [aggegation-hash json]
+
+  (com/heap-info)
+  (System/gc) ;; also (.gc (Runtime/getRuntime))
+  (debugf "1st garbage collection")
+  (Thread/sleep 100)
+  (com/heap-info)
+
   (run! (fn [fun] (fun json)) [absolute-vals per-100k])
   (com/heap-info)
   (debugf "2nd garbage collection")
@@ -201,7 +208,17 @@
             (plot/aggregation! aggegation-hash aggregation-kw case-kw stats
                                    cnt-reports))
           com/absolute-cases)))
-      com/aggregation-cases))))
+      com/aggregation-cases)))
+
+  ;; discard the intermediary results, i.e. keep only those items in the
+  ;; cache which contain the final results.
+  (swap! cache/cache
+         (fn [_]
+           (conj
+            {:v1   {:json-hash (get-in @cache/cache [:v1   :json-hash])}}
+            {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
+            (select-keys
+             @cache/cache [:plot :msg :list :threshold])))))
 
 (defn-fun-id json-changed! "" [{:keys [json-fn cache-storage] :as m}]
   ;; TODO spec: cache-storage must be vector; json-fns must be function
@@ -216,51 +233,40 @@
       (swap! cache/cache update-in hash-kws (fn [_] new-hash)))
     hashes-changed))
 
+(defn-fun-id clear-cache! "" []
+  ;; non-atomically dissoc :json from under :v1 and :owid
+  ;; (swap! cache/cache update-in [:v1]   dissoc :json)
+  ;; (swap! cache/cache update-in [:owid] dissoc :json)
+  ;; atomically dissoc :json from under :v1 and :owid
+  ((comp
+    (partial reset! cache/cache)
+    (partial merge @cache/cache)
+    (partial apply merge)
+    (partial map (fn [[k v]] {k (dissoc v :json)}))
+    (partial select-keys @cache/cache))
+   [:v1 :owid]))
+
 (defn-fun-id reset-cache! "" []
   ;; full cache cleanup is not really necessary
   #_(swap! cache/cache (fn [_] {}))
-  (let [tbeg (System/currentTimeMillis)
-        any-json-changed ((comp
-                           boolean
-                           (partial some true?)
-                           (partial pmap json-changed!))
-                          [{:json-fn data/json-data :cache-storage [:v1]}
-                           {:json-fn vac/json-data  :cache-storage [:owid]}])]
-    (com/heap-info)
-    (System/gc) ;; also (.gc (Runtime/getRuntime))
-    (debugf "1st garbage collection")
-    (Thread/sleep 100)
-    (com/heap-info)
-    (debugf "any-json-changed %s" any-json-changed)
-    (when any-json-changed
-      (calc-cache! (cache/aggregation-hash) (data/json-data))
-       ;; discard the intermediary results, i.e. keep only those items in the
-       ;; cache which contain the final results.
-      (swap! cache/cache
-             (fn [_]
-               (conj
-                {:v1   {:json-hash (get-in @cache/cache [:v1   :json-hash])}}
-                {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
-                (select-keys
-                 @cache/cache [:plot :msg :list :threshold]))))
-      (debugf "Cache recalculated in %s ms"
-              (- (System/currentTimeMillis) tbeg)))
-
-     ;; non-atomically dissoc :json from under :v1 and :owid
-     ;; (swap! cache/cache update-in [:v1]   dissoc :json)
-     ;; (swap! cache/cache update-in [:owid] dissoc :json)
-     ;; atomically dissoc :json from under :v1 and :owid
+  (let [tbeg (System/currentTimeMillis)]
     ((comp
-      (partial reset! cache/cache)
-      (partial merge @cache/cache)
-      (partial apply merge)
-      (partial map (fn [[k v]] {k (dissoc v :json)}))
-      (partial select-keys @cache/cache))
-     [:v1 :owid])
+      (fn [any-json-changed]
+        (debugf "any-json-changed %s" any-json-changed)
+        (when any-json-changed
+          (calc-cache! (cache/aggregation-hash) (data/json-data))
+          (debugf "Cache recalculated in %s ms"
+                  (- (System/currentTimeMillis) tbeg))))
+      boolean
+      (partial some true?)
+      (partial pmap json-changed!))
+     [{:json-fn data/json-data :cache-storage [:v1]}
+      {:json-fn vac/json-data  :cache-storage [:owid]}]))
 
-    (debugf "(keys @cache/cache) %s" (keys @cache/cache))
-    (debugf "Responses %s" (select-keys @cache/cache [:v1 :owid]))
-    (debugf "Cache size %s" (com/measure @cache/cache))))
+  (clear-cache!)
+  (debugf "(keys @cache/cache) %s" (keys @cache/cache))
+  (debugf "Responses %s" (select-keys @cache/cache [:v1 :owid]))
+  (debugf "Cache size %s" (com/measure @cache/cache)))
 
 (defn- p-endlessly [] (endlessly reset-cache! com/ttl))
 (defn- p-long-polling [] (long-polling com/telegram-token))
