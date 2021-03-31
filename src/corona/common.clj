@@ -384,7 +384,9 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 
 (defmacro tore
   "->>-or-eduction. In fact both have the same performance.
-  See also https://github.com/rplevy/swiss-arrows"
+  See also:
+  - my explanations at https://clojuredocs.org/clojure.core/eduction
+  - https://github.com/rplevy/swiss-arrows"
   [coll & fns]
   `(->> ~coll ~@fns)
   #_`(sequence (eduction ~@fns ~coll)))

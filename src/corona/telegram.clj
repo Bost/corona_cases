@@ -168,8 +168,10 @@
   (msgl/calc-listings com/listing-cases-per-100k json
                       'corona.msg.text.lists/per-100k))
 
-(defn-fun-id calc-cache! "" [aggegation-hash json]
-
+(defn-fun-id calc-cache!
+  "TODO regarding garbage collection - see object finalization:
+https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
+  [aggegation-hash json]
   (com/heap-info)
   (System/gc) ;; also (.gc (Runtime/getRuntime))
   (debugf "1st garbage collection")
