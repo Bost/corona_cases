@@ -15,7 +15,16 @@
             [taoensso.timbre :as timbre]
             [utils.core :as utc]
             [clj-memory-meter.core :as meter]
-            [utils.num :as utn])
+            [utils.num :as utn]
+            [clojure.algo.monads
+             :refer
+             [
+              monad
+              domonad with-monad
+              identity-m ;; sequence-m maybe-m writer-m m-lift
+              state-m
+              ]]
+            )
   (:import java.security.MessageDigest
            java.net.URI))
 
@@ -327,37 +336,37 @@
 'Reading JSON with jsonista seems faster than reading EDN with read-string'
 https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20as.20a.20file/near/202927428"
   [url]
-  (let [msg (format "Requesting data from %s" url)
-        tbeg (System/currentTimeMillis)]
+  (let [msg (format "Requesting data from %s" url)]
     ((comp
-      (fn [result] (infof (str msg " ... %s received in %s ms")
-                         (measure result) (- (System/currentTimeMillis) tbeg))
-        result)
       (fn [s] (json/read-str s :key-fn clojure.core/keyword))
       :body
       (fn [url]
-        (clj-http.client/get
-         url
-         (conj
-          (let [;; 1.5 minutes
-                timeout (int (* 3/2 60 1000))]
-            {;; See
-             ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
-             ;; SO_TIMEOUT - timeout for waiting for data or, put
-             ;; differently, a maximum period inactivity between two
-             ;; consecutive data packets
-             :socket-timeout timeout
+        (with-monad identity-m
+          (domonad
+           ;; start the time measurement
+           [_ (m-result nil)]
+           (clj-http.client/get
+            url
+            (conj
+             (let [;; 1.5 minutes
+                   timeout (int (* 3/2 60 1000))]
+               {;; See
+                ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
+                ;; SO_TIMEOUT - timeout for waiting for data or, put
+                ;; differently, a maximum period inactivity between two
+                ;; consecutive data packets
+                :socket-timeout timeout
 
-             ;; timeout used when requesting a connection from the
-             ;; connection manager
-             :connection-timeout timeout
+                ;; timeout used when requesting a connection from the
+                ;; connection manager
+                :connection-timeout timeout
 
-             ;; timeout until a connection is established
-             ;; :connect-timeout timeout
-             })
-          {:accept :json}
-          #_{:debug true}
-          #_{:debug-body true})))
+                ;; timeout until a connection is established
+                ;; :connect-timeout timeout
+                })
+             {:accept :json}
+             #_{:debug true}
+             #_{:debug-body true})))))
       (fn [url] (infof msg) url))
      url)))
 
@@ -568,5 +577,19 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
                     :else so)]
     #_(debugf "so: %s" so)
     (subs so (.indexOf so separator))))
+
+(defn system-time [] (System/currentTimeMillis))
+
+(defn add-calc-time
+  "Returns a state-monad function that assumes the state to be a map"
+  [fun-id mv]
+  (fn [state]
+    (let [accumulator (get state :acc)
+          time-begin (get state :tbeg)
+          calc-time (- (system-time) (+ (apply + accumulator) time-begin))]
+      (timbre/debugf "[%s] %s obtained in %s ms" fun-id (measure mv) calc-time)
+      [mv
+       (update-in state [:acc]
+                  (fn [_] (vec (concat accumulator (vector calc-time)))))])))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

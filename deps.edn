@@ -110,4 +110,8 @@
   ;; https://github.com/clojure-goes-fast/
   ;; https://github.com/clojure-goes-fast/clj-async-profiler
   ;; com.clojure-goes-fast/clj-async-profiler {:mvn/version "0.4.1"}
+
+  ;; net.cgrand/xforms {:mvn/version "0.19.2"}
+  org.clojure/algo.monads {:mvn/version "0.1.6"}
+  ;; org.clojure/algo.generic {:mvn/version "0.1.3"}
   }}

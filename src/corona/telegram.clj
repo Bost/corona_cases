@@ -16,6 +16,7 @@
             [corona.country-codes :as ccc]
             [corona.estimate :as est]
             [corona.macro :as macro :refer [defn-fun-id debugf infof warnf fatalf]]
+            [taoensso.timbre :as timbre]
             [corona.msg.text.details :as msgi]
             [corona.msg.text.lists :as msgl]
             [corona.msg.text.messages :as msg]
@@ -25,6 +26,17 @@
             ;; needed for the 'ok?' macro
             corona.models.migration
             [corona.models.dbase :as dbase]
+            [clojure.algo.monads
+             :refer
+             [
+              monad domonad with-monad defmonadfn
+              m-reduce m-lift
+              identity-m ;; sequence-m maybe-m writer-m m-lift
+              state-m
+              m-result
+              fetch-val fetch-state
+              set-val set-state
+              ]]
             [corona.lang :as lang])
   (:import [java.time Instant LocalDateTime ZoneId]))
 
@@ -189,13 +201,27 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
      ;; TODO do not call calc-functions when the `form` evaluates to true
     (when (< cnt-reports 10)
       (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
-    (doall
-     (map-fn (fn [ccode]
-               (msgi/message! ccode com/html
-                              (assoc (data/create-pred-hm ccode)
-                                     :json json))
-               (plot/message! ccode stats cnt-reports))
-             ccc/all-country-codes))
+    (let [;; tbeg must be captured before the function composition
+          init-state {:tbeg (com/system-time) :acc []}]
+      ((comp
+        first
+        (domonad state-m
+                 [
+                  calc-result
+                  (m-result
+                   (doall
+                    (map-fn (fn [ccode]
+                              (msgi/message! ccode com/html
+                                             (assoc (data/create-pred-hm ccode)
+                                                    :json json))
+                              (plot/message! ccode stats cnt-reports))
+                            ccc/all-country-codes)))
+                  _ (com/add-calc-time "doall" calc-result)
+                  ;; i (m-result (do (Thread/sleep 30) (inc 1)))
+                  ;; _ (com/add-calc-time "sleep30" i)
+                  ]
+                 calc-result))
+       init-state))
     (com/heap-info)
     (debugf "3rd garbage collection")
     (System/gc) ;; also (.gc (Runtime/getRuntime))
@@ -251,19 +277,29 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 (defn-fun-id reset-cache! "" []
   ;; full cache cleanup is not really necessary
   #_(swap! cache/cache (fn [_] {}))
-  (let [tbeg (System/currentTimeMillis)]
-    ((comp
-      (fn [any-json-changed]
-        (debugf "any-json-changed %s" any-json-changed)
-        (when any-json-changed
-          (calc-cache! (cache/aggregation-hash) (data/json-data))
-          (debugf "Cache recalculated in %s ms"
-                  (- (System/currentTimeMillis) tbeg))))
-      boolean
-      (partial some true?)
-      (partial pmap json-changed!))
-     [{:json-fn data/json-data :cache-storage [:v1]}
-      {:json-fn vac/json-data  :cache-storage [:owid]}]))
+  ((comp
+    (fn [any-json-changed]
+      (debugf "any-json-changed %s" any-json-changed)
+      (when any-json-changed
+        (let [;; tbeg must be captured before the function composition
+              init-state {:tbeg (com/system-time) :acc []}]
+          ((comp
+            first
+            (domonad state-m
+                     [calc-result (m-result
+                                   (calc-cache! (cache/aggregation-hash)
+                                                (data/json-data)))
+                      _ (com/add-calc-time "calc-cache!" calc-result)
+                      ;; j (m-result (do (Thread/sleep 30) (inc i)))
+                      ;; _ (com/add-calc-time "sleep30" i)
+                      ]
+                     calc-result))
+           init-state))))
+    boolean
+    (partial some true?)
+    (partial pmap json-changed!))
+   [{:json-fn data/json-data :cache-storage [:v1]}
+    {:json-fn vac/json-data  :cache-storage [:owid]}])
 
   (clear-cache!)
   (debugf "(keys @cache/cache) %s" (keys @cache/cache))
