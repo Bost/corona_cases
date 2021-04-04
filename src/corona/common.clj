@@ -582,14 +582,19 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 
 (defn add-calc-time
   "Returns a state-monad function that assumes the state to be a map"
-  [fun-id mv]
+  [fun-id plain-val]
   (fn [state]
+    (def fun-id fun-id)
+    (def plain-val plain-val)
     (let [accumulator (get state :acc)
           time-begin (get state :tbeg)
           calc-time (- (system-time) (+ (apply + accumulator) time-begin))]
-      (timbre/debugf "[%s] %s obtained in %s ms" fun-id (measure mv) calc-time)
-      [mv
+      (timbre/debugf "[%s] %s obtained in %s ms" fun-id (if (nil? plain-val)
+                                                          "nil-value"
+                                                          (measure plain-val))
+                     calc-time)
+      ((domonad state-m [mvv (m-result plain-val)] mvv)
        (update-in state [:acc]
-                  (fn [_] (vec (concat accumulator (vector calc-time)))))])))
+                  (fn [_] (vec (concat accumulator (vector calc-time)))))))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

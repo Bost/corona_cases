@@ -184,69 +184,85 @@
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   [aggegation-hash json]
-  (com/heap-info)
-  (System/gc) ;; also (.gc (Runtime/getRuntime))
-  (debugf "1st garbage collection")
-  (Thread/sleep 100)
-  (com/heap-info)
+  (let [;; tbeg must be captured before the function composition
+        init-state {:tbeg (com/system-time) :acc []}]
+    ((comp
+      first
+      (domonad
+       state-m
+       [
+        _ (m-result
+           (do
+             (com/heap-info)
+             (System/gc) ;; also (.gc (Runtime/getRuntime))
+             (debugf "1st garbage collection")
+             (Thread/sleep 100)
+             (com/heap-info)
 
-  (run! (fn [fun] (fun json)) [absolute-vals per-100k])
-  (com/heap-info)
-  (debugf "2nd garbage collection")
-  (System/gc) ;; also (.gc (Runtime/getRuntime))
-  (Thread/sleep 100)
-  (com/heap-info)
-  (let [stats (est/estimate (v1/pic-data json))
-        cnt-reports (count (data/dates json))]
-     ;; TODO do not call calc-functions when the `form` evaluates to true
-    (when (< cnt-reports 10)
-      (warnf "Some stuff may not be calculated: %s" "(< cnt-reports 10)"))
-    (let [;; tbeg must be captured before the function composition
-          init-state {:tbeg (com/system-time) :acc []}]
-      ((comp
-        first
-        (domonad state-m
-                 [
-                  calc-result
-                  (m-result
-                   (doall
-                    (map-fn (fn [ccode]
-                              (msgi/message! ccode com/html
-                                             (assoc (data/create-pred-hm ccode)
-                                                    :json json))
-                              (plot/message! ccode stats cnt-reports))
-                            ccc/all-country-codes)))
-                  _ (com/add-calc-time "doall" calc-result)
-                  ;; i (m-result (do (Thread/sleep 30) (inc 1)))
-                  ;; _ (com/add-calc-time "sleep30" i)
-                  ]
-                 calc-result))
-       init-state))
-    (com/heap-info)
-    (debugf "3rd garbage collection")
-    (System/gc) ;; also (.gc (Runtime/getRuntime))
-    (Thread/sleep 100)
-    (com/heap-info)
-    (doall
-     (map-aggregation-fn
-      (fn [aggregation-kw]
-        (doall
-         (map-aggregation-fn
-          (fn [case-kw]
-            (plot/aggregation! aggegation-hash aggregation-kw case-kw stats
-                                   cnt-reports))
-          com/absolute-cases)))
-      com/aggregation-cases)))
+             (run! (fn [fun] (fun json)) [absolute-vals per-100k])
+             (com/heap-info)
+             (debugf "2nd garbage collection")
+             (System/gc) ;; also (.gc (Runtime/getRuntime))
+             (Thread/sleep 100)
+             (com/heap-info)))
+        cnt-reports (m-result (count (data/dates json)))
+        _ (m-result
+           ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
+           (when (< cnt-reports 10)
+             (warnf "Some stuff may not be calculated: %s"
+                    "(< cnt-reports 10)")))
 
-  ;; discard the intermediary results, i.e. keep only those items in the
-  ;; cache which contain the final results.
-  (swap! cache/cache
-         (fn [_]
-           (conj
-            {:v1   {:json-hash (get-in @cache/cache [:v1   :json-hash])}}
-            {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
-            (select-keys
-             @cache/cache [:plot :msg :list :threshold])))))
+        stats (m-result (est/estimate (v1/pic-data json)))
+        _ (com/add-calc-time "estimate" stats)
+
+        all-ccode-messages
+        (m-result
+         (doall
+          (map-fn (fn [ccode]
+                    (msgi/message! ccode com/html
+                                   (assoc (data/create-pred-hm ccode)
+                                          :json json))
+                    (plot/message! ccode stats cnt-reports))
+                  ccc/all-country-codes)))
+        _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
+        ;; i (m-result (do (Thread/sleep 30) (inc 1)))
+        ;; _ (com/add-calc-time "sleep30" i)
+
+        cleanups
+        (m-result
+         (do
+           (com/heap-info)
+           (debugf "3rd garbage collection")
+           (System/gc) ;; also (.gc (Runtime/getRuntime))
+           (Thread/sleep 100)
+           (com/heap-info)))
+        _ (com/add-calc-time "cleanups" cleanups)
+        all-aggregations
+        (m-result (doall
+                   (map-aggregation-fn
+                    (fn [aggregation-kw]
+                      (doall
+                       (map-aggregation-fn
+                        (fn [case-kw]
+                          (plot/aggregation! aggegation-hash aggregation-kw case-kw stats
+                                             cnt-reports))
+                        com/absolute-cases)))
+                    com/aggregation-cases)))
+        _ (com/add-calc-time "all-aggregations" all-aggregations)
+
+        ;; discard the intermediary results, i.e. keep only those items in the
+        ;; cache which contain the final results.
+        calc-result
+        (m-result
+         (swap! cache/cache
+                (fn [_]
+                  (conj
+                   {:v1   {:json-hash (get-in @cache/cache [:v1   :json-hash])}}
+                   {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
+                   (select-keys
+                    @cache/cache [:plot :msg :list :threshold])))))]
+       calc-result))
+     init-state)))
 
 (defn-fun-id json-changed! "" [{:keys [json-fn cache-storage] :as m}]
   ;; TODO spec: cache-storage must be vector; json-fns must be function
