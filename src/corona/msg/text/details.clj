@@ -20,31 +20,20 @@
 
 (defn fmt
   [{:keys
-    [header-txt
-     cname-aliased-txt
-     country-commands-txt
-     cnt-reports-txt
-     population-txt
-     vaccinated-txt
-     confirmed-txt
-     footer-txt
-     notes-txt
-     details-txt]}]
+    [header cname-aliased country-commands cnt-reports population vaccinated
+    confirmed footer notes details]}]
   (msgc/format-linewise
    ;; extended header
-   [["%s\n" [(msgc/format-linewise [["%s  " [header-txt]]
-                                    ["%s "  [cname-aliased-txt]]
-                                    ["%s"   [country-commands-txt]]])]]
-    ["%s\n" [cnt-reports-txt]]
+   [["%s\n" [(msgc/format-linewise [["%s  " [header]]
+                                    ["%s "  [cname-aliased]]
+                                    ["%s"   [country-commands]]])]]
+    ["%s\n" [cnt-reports]]
     ["%s\n" [((comp
                msgc/format-linewise
                (partial remove nil?)
-               (partial apply conj [population-txt
-                                    vaccinated-txt
-                                    notes-txt
-                                    confirmed-txt]))
-              details-txt)]]
-    ["%s\n" [footer-txt]]]))
+               (partial apply conj [population vaccinated notes confirmed]))
+              details)]]
+    ["%s\n" [footer]]]))
 
 (defn round-nr [value] (int (utn/round-precision value 0)))
 
@@ -227,30 +216,30 @@
          {vaccin-last-8 :v} (data/last-8-reports pred-json-hm)
          [_ & vaccin-last-7] vaccin-last-8]
      (conj
-       {:header-txt (msgc/header parse_mode pred-json-hm)
-        :cname-aliased-txt (ccr/country-name-aliased ccode)
-        :country-commands-txt
+       {:header (msgc/header parse_mode pred-json-hm)
+        :cname-aliased (ccr/country-name-aliased ccode)
+        :country-commands
         (apply (fn [ccode c3code]
                  (format "     %s    %s" ccode c3code))
                (map (comp com/encode-cmd cstr/lower-case)
                     [ccode (ccc/country-code-3-letter ccode)]))
-        :cnt-reports-txt (str lang/report " " (count dates))
-        :population-txt
+        :cnt-reports (str lang/report " " (count dates))
+        :population
         (f (conj {:s lang/people :n population :emoji "👥"}))
 
-        :vaccinated-txt
+        :vaccinated
         (f {:s lang/vaccinated
             :n    (if (zero? vaccinated) com/unknown vaccinated)
             :diff (if (zero? vaccinated) com/unknown delta-vaccin)
             :emoji "💉"})
 
-        :confirmed-txt
+        :confirmed
         (f {:emoji "🦠" :s lang/confirmed :n confirmed :diff delta-confir})
 
-        :footer-txt (msgc/footer parse_mode)}
+        :footer (msgc/footer parse_mode)}
 
        (when (zero? vaccinated)
-         {:notes-txt (when (zero? vaccinated)
+         {:notes (when (zero? vaccinated)
                        ["%s\n" [lang/vaccin-data-not-published]])})
 
        (when (or (pos? confirmed)
@@ -267,7 +256,7 @@
                       max-val (apply max data)]
                   {:val max-val
                    :date (nth dates (utc/last-index-of data max-val))})}]
-           {:details-txt (confirmed-info
+           {:details (confirmed-info
                           ccode
                           last-report
                           pred-json-hm #_(dissoc pred-json-hm :json) ;; TODO the dissoc is not needed
