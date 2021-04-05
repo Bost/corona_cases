@@ -20,13 +20,13 @@
 
 (defn fmt
   [{:keys
-    [header cname-aliased country-commands cnt-reports population vaccinated
+    [header cname-aliased country-cmds cnt-reports population vaccinated
     confirmed footer notes details]}]
   (msgc/format-linewise
    ;; extended header
    [["%s\n" [(msgc/format-linewise [["%s  " [header]]
                                     ["%s "  [cname-aliased]]
-                                    ["%s"   [country-commands]]])]]
+                                    ["%s"   [country-cmds]]])]]
     ["%s\n" [cnt-reports]]
     ["%s\n" [((comp
                msgc/format-linewise
@@ -110,22 +110,24 @@
       (partial remove nil?)
       (partial apply conj))
      [(when (pos? confirmed)
-        [
-         #_(f {:s lang/vaccinated     :n vaccin          :diff delta-vaccin :emoji "💉"})
-         #_(f {:s lang/vaccin-per-1e5 :n vaccin-per-100k :diff delta-v100k})
-         (f {:s lang/active         :n active          :diff delta-active :emoji "🤒"})
-         (f {:s lang/active-per-1e5 :n active-per-100k :diff delta-a100k})
-         #_(f {:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))})
-         (f {:s lang/active-last-7-avg        :n active-last-7-avg})
-         (f {:s lang/active-change-last-7-avg :n active-change-last-7-avg                    :show-plus-minus true})
-         (f {:s lang/recovered                :n recove                   :diff delta-recove :emoji "🎉"})
-         (f {:s lang/recove-per-1e5           :n recove-per-100k          :diff delta-r100k})
-         (f {:s lang/deaths                   :n deaths                   :diff delta-deaths :emoji "⚰️"})
-         (f {:s lang/deaths-per-1e5           :n deaths-per-100k          :diff delta-d100k})
-         (f {:s lang/closed                   :n closed                   :diff delta-closed :emoji "🏁"})
-         (f {:s lang/closed-per-1e5           :n closed-per-100k          :diff delta-d100k
-             ;; TODO create command lang/cmd-closed-per-1e5
-             #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})])
+        ((comp
+          (partial mapv f))
+         [
+          #_{:s lang/vaccinated     :n vaccin          :diff delta-vaccin :emoji "💉"}
+          #_{:s lang/vaccin-per-1e5 :n vaccin-per-100k :diff delta-v100k}
+          {:s lang/active         :n active          :diff delta-active :emoji "🤒"}
+          {:s lang/active-per-1e5 :n active-per-100k :diff delta-a100k}
+          #_{:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))}
+          {:s lang/active-last-7-avg        :n active-last-7-avg}
+          {:s lang/active-change-last-7-avg :n active-change-last-7-avg                    :show-plus-minus true}
+          {:s lang/recovered                :n recove                   :diff delta-recove :emoji "🎉"}
+          {:s lang/recove-per-1e5           :n recove-per-100k          :diff delta-r100k}
+          {:s lang/deaths                   :n deaths                   :diff delta-deaths :emoji "⚰️"}
+          {:s lang/deaths-per-1e5           :n deaths-per-100k          :diff delta-d100k}
+          {:s lang/closed                   :n closed                   :diff delta-closed :emoji "🏁"}
+          {:s lang/closed-per-1e5           :n closed-per-100k          :diff delta-d100k
+               ;; TODO create command lang/cmd-closed-per-1e5
+               #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}]))
       ;; no country ranking can be displayed for worldwide statistics
       ["\n%s\n" [(format (str
                           "%s")
@@ -164,10 +166,12 @@
            (fn [args] (update args (dec (count args))
                              (fn [_]
                                (get
-                                (first
-                                 (map :rank
-                                      (filter (fn [hm] (= (:ccode hm) ccode))
-                                              (data/all-rankings json))))
+                                ((comp
+                                  first
+                                  (partial map :rank)
+                                  (partial filter (fn [hm] (= (:ccode hm) ccode)))
+                                  data/all-rankings)
+                                 json)
                                 (last args))))))]])
       (last-7-block
        {:condition (some pos? vaccin-last-7)
@@ -189,6 +193,11 @@
                                      {:a a :p population :c c})
                                     msgc/percent))
                           active-last-7 confir-last-7)})])))
+
+(defn- max-vals [data dates]
+  (let [max-val (apply max data)]
+    {:val max-val
+     :date (nth dates (utc/last-index-of data max-val))}))
 
 ;; By default Vars are static, but Vars can be marked as dynamic to
 ;; allow per-thread bindings via the macro binding. Within each thread
@@ -218,11 +227,10 @@
      (conj
        {:header (msgc/header parse_mode pred-json-hm)
         :cname-aliased (ccr/country-name-aliased ccode)
-        :country-commands
-        (apply (fn [ccode c3code]
-                 (format "     %s    %s" ccode c3code))
-               (map (comp com/encode-cmd cstr/lower-case)
-                    [ccode (ccc/country-code-3-letter ccode)]))
+        :country-cmds
+        ((comp (partial apply #(format "     %s    %s" %1 %2))
+               (partial map (comp com/encode-cmd cstr/lower-case)))
+         [ccode (ccc/country-code-3-letter ccode)])
         :cnt-reports (str lang/report " " (count dates))
         :population
         (f (conj {:s lang/people :n population :emoji "👥"}))
@@ -246,16 +254,8 @@
                  (some pos? vaccin-last-7))
          (let [case-counts-rbr (data/case-counts-report-by-report pred-json-hm)
                maxes
-               {:deaths
-                (let [data (:d case-counts-rbr)
-                      max-val (apply max data)]
-                  {:val max-val
-                   :date (nth dates (utc/last-index-of data max-val))})
-                :active
-                (let [data (:a case-counts-rbr)
-                      max-val (apply max data)]
-                  {:val max-val
-                   :date (nth dates (utc/last-index-of data max-val))})}]
+               {:deaths (max-vals (:d case-counts-rbr) dates)
+                :active (max-vals (:a case-counts-rbr) dates)}]
            {:details (confirmed-info
                           ccode
                           last-report
