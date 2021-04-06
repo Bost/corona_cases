@@ -173,37 +173,20 @@
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)
 
-(defn listing-absolute [
-                        json
-                        ;; header
-                        footer
-                        ]
+(defn listing-absolute [json]
   (msgl/calc-listings com/listing-cases-absolute json
-                      'corona.msg.text.lists/absolute-vals
-                      ;; header
-                      footer
-                      ))
+                      'corona.msg.text.lists/absolute-vals))
 
-(defn listing-100k [
-                    json
-                    ;; header
-                    footer
-                    ]
+(defn listing-100k [json]
   (msgl/calc-listings com/listing-cases-per-100k json
-                      'corona.msg.text.lists/per-100k
-                      ;; header
-                      footer
-                      ))
+                      'corona.msg.text.lists/per-100k))
 
 (defn-fun-id calc-cache!
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   [aggegation-hash json]
   (let [;; tbeg must be captured before the function composition
-        init-state {:tbeg (com/system-time) :acc []}
-        ;; pred-hm (assoc (data/create-pred-hm nil)
-        ;;                :json json)
-        ]
+        init-state {:tbeg (com/system-time) :acc []}]
     ((comp
       first
       (domonad
@@ -217,15 +200,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
              #_(Thread/sleep 100)
              #_(com/heap-info)
 
-             (let [
-                   ;; header (msgc/header com/html (:t (data/last-report pred-hm)))
-                   footer (msgc/footer com/html)
-                   ]
-               (run! (fn [fun] (fun
-                               json
-                               ;; header
-                               footer
-                               )) [listing-absolute listing-100k]))
+             (run! (fn [fun] (fun json)) [listing-absolute listing-100k])
              #_(com/heap-info)
              #_(debugf "2nd garbage collection")
              #_(System/gc) ;; also (.gc (Runtime/getRuntime))
@@ -244,13 +219,26 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-ccode-messages
         (m-result
-         (doall
-          (map-fn (fn [ccode]
-                    (msgi/message! ccode com/html
-                                   (assoc (data/create-pred-hm ccode)
-                                          :json json))
-                    (plot/message! ccode stats cnt-reports))
-                  ccc/all-country-codes)))
+         (let [prm-json {:json json}
+               prm-json-footer (assoc prm-json
+                                      :footer (msgc/footer com/html))
+               ]
+           (doall
+            (map-fn
+             (fn [ccode]
+               (let [pred-hm (data/create-pred-hm ccode)]
+                 ((comp
+                   (partial msgi/message! ccode)
+                   (partial assoc (conj pred-hm prm-json-footer) :header)
+                   (partial msgc/header com/html)
+                   :t
+                   data/last-report
+                   (partial conj prm-json))
+                  pred-hm))
+
+               (plot/message! ccode stats cnt-reports))
+
+             ccc/all-country-codes))))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
         ;; i (m-result (do (Thread/sleep 30) (inc 1)))
         ;; _ (com/add-calc-time "sleep30" i)

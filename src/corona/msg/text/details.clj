@@ -216,7 +216,7 @@
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
   "
-  [ccode parse_mode {:keys [json] :as pred-json-hm}]
+  [ccode {:keys [json] :as pred-json-hm}]
   ((comp
     (fn [info]
       (debugf "ccode %s size %s" ccode (com/measure info))
@@ -231,51 +231,49 @@
          {vaccin-last-8 :v} (data/last-8-reports pred-json-hm)
          [_ & vaccin-last-7] vaccin-last-8]
      (conj
-       {:header (msgc/header parse_mode pred-json-hm)
-        :cname-aliased (ccr/country-name-aliased ccode)
-        :country-cmds
-        ((comp (partial apply #(format "     %s    %s" %1 %2))
-               (partial map (comp com/encode-cmd cstr/lower-case)))
-         [ccode (ccc/country-code-3-letter ccode)])
-        :cnt-reports (str lang/report " " (count dates))
-        :population
-        (f (conj {:s lang/people :n population :emoji "👥"}))
+      (select-keys pred-json-hm [:header :footer])
+      {:cname-aliased (ccr/country-name-aliased ccode)
+       :country-cmds
+       ((comp (partial apply #(format "     %s    %s" %1 %2))
+              (partial map (comp com/encode-cmd cstr/lower-case)))
+        [ccode (ccc/country-code-3-letter ccode)])
+       :cnt-reports (str lang/report " " (count dates))
+       :population
+       (f (conj {:s lang/people :n population :emoji "👥"}))
 
-        :vaccinated
-        (f {:s lang/vaccinated
-            :n    (if (zero? vaccinated) com/unknown vaccinated)
-            :diff (if (zero? vaccinated) com/unknown delta-vaccin)
-            :emoji "💉"})
+       :vaccinated
+       (f {:s lang/vaccinated
+           :n    (if (zero? vaccinated) com/unknown vaccinated)
+           :diff (if (zero? vaccinated) com/unknown delta-vaccin)
+           :emoji "💉"})
 
-        :confirmed
-        (f {:emoji "🦠" :s lang/confirmed :n confirmed :diff delta-confir})
+       :confirmed
+       (f {:emoji "🦠" :s lang/confirmed :n confirmed :diff delta-confir})}
 
-        :footer (msgc/footer parse_mode)}
+      (when (zero? vaccinated)
+        {:notes (when (zero? vaccinated)
+                  ["%s\n" [lang/vaccin-data-not-published]])})
 
-       (when (zero? vaccinated)
-         {:notes (when (zero? vaccinated)
-                       ["%s\n" [lang/vaccin-data-not-published]])})
-
-       (when (or (pos? confirmed)
-                 (some pos? vaccin-last-7))
-         (let [case-counts-rbr (data/case-counts-report-by-report pred-json-hm)
-               maxes
-               {:deaths (max-vals (:d case-counts-rbr) dates)
-                :active (max-vals (:a case-counts-rbr) dates)}]
-           {:details (confirmed-info
-                          ccode
-                          last-report
-                          pred-json-hm #_(dissoc pred-json-hm :json) ;; TODO the dissoc is not needed
-                          delta
-                          maxes
-                          (count ccc/all-country-codes))}))))))
+      (when (or (pos? confirmed)
+                (some pos? vaccin-last-7))
+        (let [case-counts-rbr (data/case-counts-report-by-report pred-json-hm)
+              maxes
+              {:deaths (max-vals (:d case-counts-rbr) dates)
+               :active (max-vals (:a case-counts-rbr) dates)}]
+          {:details (confirmed-info
+                     ccode
+                     last-report
+                     pred-json-hm #_(dissoc pred-json-hm :json) ;; TODO the dissoc is not needed
+                     delta
+                     maxes
+                     (count ccc/all-country-codes))}))))))
 
 (defn message!
-  [ccode & [parse_mode pred-json-hm]]
+  [ccode & [pred-json-hm]]
   (let [ks [:msg (keyword ccode)]]
-      (if (and parse_mode pred-json-hm)
-        (cache/cache! (fn [] (message ccode parse_mode pred-json-hm))
-                      ks)
-        (get-in @cache/cache ks))))
+    (if pred-json-hm
+      (cache/cache! (fn [] (message ccode pred-json-hm))
+                    ks)
+      (get-in @cache/cache ks))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.message)

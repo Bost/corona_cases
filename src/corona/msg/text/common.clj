@@ -122,10 +122,7 @@
                                (fn-args (second line))))
               lines)))
 
-(defn header [parse_mode
-              ;; date
-              pred-json-hm
-              ]
+(defn headero [parse_mode pred-json-hm]
   (format
    (str
     "🗓 "
@@ -134,9 +131,21 @@
       ;; i.e. com/markdown
       "*%s*")
     " 🦠 @%s")
-   (com/fmt-date
-    ;; date
-    (:t (data/last-report pred-json-hm )))
+   (com/fmt-date (:t (data/last-report pred-json-hm)))
+   (condp = parse_mode
+     com/html com/bot-name
+     com/bot-name-in-markdown)))
+
+(defn header [parse_mode date]
+  (format
+   (str
+    "🗓 "
+    (condp = parse_mode
+      com/html "<b>%s</b>"
+      ;; i.e. com/markdown
+      "*%s*")
+    " 🦠 @%s")
+   (com/fmt-date date)
    (condp = parse_mode
      com/html com/bot-name
      com/bot-name-in-markdown)))
