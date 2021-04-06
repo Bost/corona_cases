@@ -133,9 +133,13 @@
                  (partial map (defn listing-handler "" [content]
                                 (morse/send-text com/telegram-token chat-id
                                                  {:parse_mode com/html} content)
-                                (timbre/debugf "%s chars sent" (count content))))
-                 (partial (msgl/list-cases (in? com/listing-cases-per-100k case-kw))))
-                case-kw))
+                                (timbre/debugf "%s chars sent" (count content)))))
+                (msgl/get-from-cache!
+                 case-kw
+                 ;; can be implemented using defmulti with defmethod(s)
+                 (if (in? com/listing-cases-per-100k case-kw)
+                   'corona.msg.text.lists/per-100k
+                   'corona.msg.text.lists/absolute-vals))))
         :desc (lang/list-sorted-by-desc case-kw)}))
     (partial into com/listing-cases-per-100k))
    com/listing-cases-absolute))

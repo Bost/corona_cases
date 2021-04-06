@@ -139,14 +139,4 @@
             case-kw msg-idx (com/measure msg))
     msg))
 
-(defmulti  list-cases (fn [listing-cases-per-100k?] listing-cases-per-100k?))
-
-(defmethod list-cases true [_]
-  (fn [case-kw]
-    (get-from-cache! case-kw 'corona.msg.text.lists/per-100k)))
-
-(defmethod list-cases false [_]
-  (fn [case-kw]
-    (get-from-cache! case-kw 'corona.msg.text.lists/absolute-vals)))
-
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.lists)
