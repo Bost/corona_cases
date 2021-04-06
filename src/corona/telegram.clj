@@ -16,7 +16,8 @@
             [corona.country-codes :as ccc]
             [corona.countries :as ccr]
             [corona.estimate :as est]
-            [corona.macro :as macro :refer [defn-fun-id debugf infof warnf fatalf]]
+            [corona.macro :as macro :refer
+             [defn-fun-id debugf infof warnf fatalf]]
             [taoensso.timbre :as timbre]
             [corona.msg.text.details :as msgi]
             [corona.msg.text.lists :as msgl]
@@ -28,17 +29,7 @@
             ;; needed for the 'ok?' macro
             corona.models.migration
             [corona.models.dbase :as dbase]
-            [clojure.algo.monads
-             :refer
-             [
-              monad domonad with-monad defmonadfn
-              m-reduce m-lift
-              identity-m ;; sequence-m maybe-m writer-m m-lift
-              state-m
-              m-result
-              fetch-val fetch-state
-              set-val set-state
-              ]]
+            [clojure.algo.monads :refer [domonad state-m m-result]]
             [corona.lang :as lang])
   (:import [java.time Instant LocalDateTime ZoneId]))
 
@@ -199,36 +190,36 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         stats-countries (m-result (data/stats-countries json))
         _ (com/add-calc-time "stats-countries" stats-countries)
 
-        listings (m-result
-                  (do
-                    #_(com/heap-info)
-                    #_(System/gc) ;; also (.gc (Runtime/getRuntime))
-                    #_(debugf "1st garbage collection")
-                    #_(Thread/sleep 100)
-                    #_(com/heap-info)
-                    (let [pred-hm ((comp
-                                    data/create-pred-hm
-                                    ccr/get-country-code)
-                                   ccc/worldwide)
-                          prm-json-hm prm-json-footer-reports
-                          prm
-                          ((comp
-                            (partial assoc (conj pred-hm prm-json-hm) :header)
-                            (partial msgc/header com/html)
-                            :t
-                            data/last-report
-                            (partial conj prm-json))
-                           pred-hm)]
-                      (run!
-                       (partial apply (partial msgl/calc-listings stats-countries prm))
-                       [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
-                        [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
-                    #_(com/heap-info)
-                    #_(debugf "2nd garbage collection")
-                    #_(System/gc) ;; also (.gc (Runtime/getRuntime))
-                    #_(Thread/sleep 100)
-                    #_(com/heap-info))
-                  )
+        listings
+        (m-result
+         (do
+           #_(com/heap-info)
+           #_(System/gc) ;; also (.gc (Runtime/getRuntime))
+           #_(debugf "1st garbage collection")
+           #_(Thread/sleep 100)
+           #_(com/heap-info)
+           (let [pred-hm ((comp
+                           data/create-pred-hm
+                           ccr/get-country-code)
+                          ccc/worldwide)
+                 prm-json-hm prm-json-footer-reports
+                 prm
+                 ((comp
+                   (partial assoc (conj pred-hm prm-json-hm) :header)
+                   (partial msgc/header com/html)
+                   :t
+                   data/last-report
+                   (partial conj prm-json))
+                  pred-hm)]
+             (run!
+              (partial apply (partial msgl/calc-listings stats-countries prm))
+              [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
+               [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
+           #_(com/heap-info)
+           #_(debugf "2nd garbage collection")
+           #_(System/gc) ;; also (.gc (Runtime/getRuntime))
+           #_(Thread/sleep 100)
+           #_(com/heap-info)))
         _ (com/add-calc-time "calc-listings" listings)
 
         _ (m-result
@@ -273,17 +264,21 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
            (Thread/sleep 100)
            (com/heap-info)))
         _ (com/add-calc-time "cleanups" cleanups)
+
         all-aggregations
-        (m-result (doall
-                   (map-aggregation-fn
-                    (fn [aggregation-kw]
-                      (doall
-                       (map-aggregation-fn
-                        (fn [case-kw]
-                          (plot/aggregation! aggegation-hash aggregation-kw case-kw stats
-                                             cnt-reports))
-                        com/absolute-cases)))
-                    com/aggregation-cases)))
+        (m-result
+
+         (doall
+          (map-aggregation-fn
+           (fn [aggregation-kw]
+             ((comp
+               doall
+               (partial
+                map-aggregation-fn
+                (partial plot/aggregation! stats cnt-reports aggegation-hash aggregation-kw)))
+              com/absolute-cases))
+           com/aggregation-cases))
+         )
         _ (com/add-calc-time "all-aggregations" all-aggregations)
 
         ;; discard the intermediary results, i.e. keep only those items in the

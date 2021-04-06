@@ -418,7 +418,7 @@
                            }}))
 
 (defn-fun-id aggregation-img ""
-  [aggregation-kw case-kw stats report]
+  [stats report aggregation-kw case-kw]
   (let [{json-data :data threshold-recalced :threshold}
         (stats-all-by-case {:report report
                             :stats stats
@@ -447,24 +447,19 @@
                           :sum ""))
       :label-conf label-conf})))
 
-(defn aggregation
-  [aggregation-kw case-kw stats report]
-  ((comp
-    (fn [arr] (com/heap-info) arr)
-    to-byte-array-auto-closable
-    (fn [prms] (apply aggregation-img prms)))
-   [aggregation-kw case-kw stats report]))
-
 (defn aggregation!
   "The optional params `stats`, `report` are used only for the first
   calculation"
-  [id aggregation-kw case-kw & [stats report]]
-  {:pre [(string? id)]}
-  (let [ks [:plot (keyword id) aggregation-kw case-kw]]
-    (if (and stats report)
-      (cache/cache! (fn []
-                     (aggregation aggregation-kw case-kw stats report))
-                   ks)
-      (get-in @cache/cache ks))))
+  ([id aggregation-kw case-kw]
+   {:pre [(string? id)]}
+   (get-in @cache/cache [:plot (keyword id) aggregation-kw case-kw]))
+  ([stats report id aggregation-kw case-kw]
+   {:pre [(string? id)]}
+   (cache/cache! (fn []
+                   ((comp
+                     (fn [arr] (com/heap-info) arr)
+                     to-byte-array-auto-closable)
+                    (aggregation-img stats report aggregation-kw case-kw)))
+                 [:plot (keyword id) aggregation-kw case-kw])))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.graph.plot)
