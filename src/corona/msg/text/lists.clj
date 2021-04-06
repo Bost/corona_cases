@@ -16,24 +16,16 @@
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn get-from-cache! "" [case-kw fun {:keys [msg-idx] :as prm}]
+(defn get-from-cache! ""
+  [case-kw fun & [{:keys [msg-idx] :as prm}]]
   (let [full-kws [:list ((comp keyword :name meta find-var) fun) case-kw]]
-    (cond
-      msg-idx
+    (if msg-idx
       ((comp
         (partial cache/from-cache! (fn [] ((eval fun) case-kw prm)))
         (partial conj full-kws)
         keyword
         str)
        msg-idx)
-
-      prm
-      ((comp
-        vals
-        (partial cache/from-cache! (fn [] ((eval fun) case-kw prm))))
-       full-kws)
-
-      :else
       ((comp
         vals
         (partial get-in @cache/cache))
@@ -150,15 +142,11 @@
 (defmulti  list-cases (fn [listing-cases-per-100k?] listing-cases-per-100k?))
 
 (defmethod list-cases true [_]
-  (fn [case-kw & [json msg-idx prm]]
-    (get-from-cache!
-     case-kw 'corona.msg.text.lists/per-100k
-     (assoc prm :msg-idx msg-idx :json json))))
+  (fn [case-kw]
+    (get-from-cache! case-kw 'corona.msg.text.lists/per-100k)))
 
 (defmethod list-cases false [_]
-  (fn [case-kw & [json msg-idx prm]]
-    (get-from-cache!
-     case-kw 'corona.msg.text.lists/absolute-vals
-     (assoc prm :msg-idx msg-idx :json json))))
+  (fn [case-kw]
+    (get-from-cache! case-kw 'corona.msg.text.lists/absolute-vals)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.lists)
