@@ -223,7 +223,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                             (partial conj prm-json))
                            pred-hm)]
                       (run! (fn [[case-kws listing-fun]]
-                              (msgl/calc-listings case-kws stats-countries (assoc prm :fun listing-fun)))
+                              (msgl/calc-listings case-kws stats-countries listing-fun prm))
                             [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
                              [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
                     #_(com/heap-info)

@@ -16,7 +16,7 @@
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn get-from-cache! "" [case-kw {:keys [msg-idx json fun] :as prm}]
+(defn get-from-cache! "" [case-kw fun {:keys [msg-idx] :as prm}]
   (let [full-kws [:list ((comp keyword :name meta find-var) fun) case-kw]]
     (cond
       msg-idx
@@ -39,7 +39,7 @@
         (partial get-in @cache/cache))
        full-kws))))
 
-(defn calc-listings "" [case-kws stats prm]
+(defn calc-listings "" [case-kws stats fun prm]
   (doall
    (map
     (fn [case-kw]
@@ -52,9 +52,9 @@
           doall
           (partial map-indexed
                    (fn [idx sub-msg]
-                     (get-from-cache! case-kw (assoc sub-msgs-prm
-                                                     :msg-idx (inc idx)
-                                                     :data sub-msg)))))
+                     (get-from-cache!
+                      case-kw fun
+                      (assoc sub-msgs-prm :msg-idx (inc idx) :data sub-msg)))))
          sub-msgs)))
     case-kws)))
 
@@ -150,23 +150,15 @@
 (defmulti  list-cases (fn [listing-cases-per-100k?] listing-cases-per-100k?))
 
 (defmethod list-cases true [_]
-  (fn [case-kw & [json
-                 msg-idx prm]]
-    ((comp
-      #_(fn [r] (timbre/debugf "[list-cases true] r %s" r) r)
-      (partial get-from-cache! case-kw))
-     (assoc prm
-            :msg-idx msg-idx
-            :json json
-            :fun 'corona.msg.text.lists/per-100k))))
+  (fn [case-kw & [json msg-idx prm]]
+    (get-from-cache!
+     case-kw 'corona.msg.text.lists/per-100k
+     (assoc prm :msg-idx msg-idx :json json))))
 
 (defmethod list-cases false [_]
-  (fn [case-kw & [json
-                 msg-idx prm]]
-    #_(timbre/debugf "[list-cases false] msg-idx %s" msg-idx)
-    (get-from-cache! case-kw (assoc prm
-                                    :msg-idx msg-idx
-                                    :json json
-                                    :fun 'corona.msg.text.lists/absolute-vals))))
+  (fn [case-kw & [json msg-idx prm]]
+    (get-from-cache!
+     case-kw 'corona.msg.text.lists/absolute-vals
+     (assoc prm :msg-idx msg-idx :json json))))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.lists)
