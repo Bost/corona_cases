@@ -31,7 +31,7 @@
         (partial get-in @cache/cache))
        full-kws))))
 
-(defn calc-listings "" [case-kws stats fun prm]
+(defn calc-listings "" [stats prm case-kws fun]
   (doall
    (map
     (fn [case-kw]
