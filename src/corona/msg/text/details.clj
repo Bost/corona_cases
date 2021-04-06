@@ -57,7 +57,9 @@
         {population      :p
          deaths          :d
          recove          :r
+         recove-estim    :r
          active          :a
+         active-estim    :a
          vaccin          :v
          confirmed       :c
          active-per-100k :a100k
@@ -81,7 +83,9 @@
         closed (+ deaths recove)
         {delta-deaths :d
          delta-recove :r
+         delta-recove-estim :r
          delta-active :a
+         delta-active-estim :a
          delta-vaccin :v
          delta-d100k  :d100k
          delta-r100k  :r100k
@@ -115,17 +119,19 @@
          [
           #_{:s lang/vaccinated     :n vaccin          :diff delta-vaccin :emoji "💉"}
           #_{:s lang/vaccin-per-1e5 :n vaccin-per-100k :diff delta-v100k}
-          {:s lang/active         :n active          :diff delta-active :emoji "🤒"}
+          {:s lang/active         :n active          :diff delta-active       :emoji "🤒"}
+          {:s lang/activ-estim    :n active-estim    :diff delta-active-estim :emoji "🤒"}
           {:s lang/active-per-1e5 :n active-per-100k :diff delta-a100k}
           #_{:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))}
-          {:s lang/active-last-7-avg        :n active-last-7-avg}
-          {:s lang/active-change-last-7-avg :n active-change-last-7-avg                    :show-plus-minus true}
-          {:s lang/recovered                :n recove                   :diff delta-recove :emoji "🎉"}
-          {:s lang/recove-per-1e5           :n recove-per-100k          :diff delta-r100k}
-          {:s lang/deaths                   :n deaths                   :diff delta-deaths :emoji "⚰️"}
-          {:s lang/deaths-per-1e5           :n deaths-per-100k          :diff delta-d100k}
-          {:s lang/closed                   :n closed                   :diff delta-closed :emoji "🏁"}
-          {:s lang/closed-per-1e5           :n closed-per-100k          :diff delta-d100k
+          {:s lang/active-last-7-avg :n active-last-7-avg}
+          {:s lang/active-change-last-7-avg :n active-change-last-7-avg :show-plus-minus true}
+          {:s lang/recovered         :n recove          :diff delta-recove       :emoji "🎉"}
+          {:s lang/recov-estim       :n recove-estim    :diff delta-recove-estim :emoji "🎉"}
+          {:s lang/recove-per-1e5    :n recove-per-100k :diff delta-r100k}
+          {:s lang/deaths            :n deaths          :diff delta-deaths :emoji "⚰️"}
+          {:s lang/deaths-per-1e5    :n deaths-per-100k :diff delta-d100k}
+          {:s lang/closed            :n closed          :diff delta-closed :emoji "🏁"}
+          {:s lang/closed-per-1e5    :n closed-per-100k :diff delta-d100k
                ;; TODO create command lang/cmd-closed-per-1e5
                #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}]))
       ;; no country ranking can be displayed for worldwide statistics

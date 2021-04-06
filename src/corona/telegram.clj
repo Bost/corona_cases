@@ -20,6 +20,7 @@
             [corona.msg.text.details :as msgi]
             [corona.msg.text.lists :as msgl]
             [corona.msg.text.messages :as msg]
+            [corona.msg.text.common :as msgc]
             [corona.msg.graph.plot :as plot]
             [morse.handlers :as moh]
             [morse.polling :as mop]
@@ -172,20 +173,37 @@
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)
 
-(defn absolute-vals [json]
+(defn listing-absolute [
+                        json
+                        ;; header
+                        footer
+                        ]
   (msgl/calc-listings com/listing-cases-absolute json
-                      'corona.msg.text.lists/absolute-vals))
+                      'corona.msg.text.lists/absolute-vals
+                      ;; header
+                      footer
+                      ))
 
-(defn per-100k [json]
+(defn listing-100k [
+                    json
+                    ;; header
+                    footer
+                    ]
   (msgl/calc-listings com/listing-cases-per-100k json
-                      'corona.msg.text.lists/per-100k))
+                      'corona.msg.text.lists/per-100k
+                      ;; header
+                      footer
+                      ))
 
 (defn-fun-id calc-cache!
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   [aggegation-hash json]
   (let [;; tbeg must be captured before the function composition
-        init-state {:tbeg (com/system-time) :acc []}]
+        init-state {:tbeg (com/system-time) :acc []}
+        ;; pred-hm (assoc (data/create-pred-hm nil)
+        ;;                :json json)
+        ]
     ((comp
       first
       (domonad
@@ -193,18 +211,27 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
        [
         _ (m-result
            (do
-             (com/heap-info)
-             (System/gc) ;; also (.gc (Runtime/getRuntime))
-             (debugf "1st garbage collection")
-             (Thread/sleep 100)
-             (com/heap-info)
+             #_(com/heap-info)
+             #_(System/gc) ;; also (.gc (Runtime/getRuntime))
+             #_(debugf "1st garbage collection")
+             #_(Thread/sleep 100)
+             #_(com/heap-info)
 
-             (run! (fn [fun] (fun json)) [absolute-vals per-100k])
-             (com/heap-info)
-             (debugf "2nd garbage collection")
-             (System/gc) ;; also (.gc (Runtime/getRuntime))
-             (Thread/sleep 100)
-             (com/heap-info)))
+             (let [
+                   ;; header (msgc/header com/html (:t (data/last-report pred-hm)))
+                   footer (msgc/footer com/html)
+                   ]
+               (run! (fn [fun] (fun
+                               json
+                               ;; header
+                               footer
+                               )) [listing-absolute listing-100k]))
+             #_(com/heap-info)
+             #_(debugf "2nd garbage collection")
+             #_(System/gc) ;; also (.gc (Runtime/getRuntime))
+             #_(Thread/sleep 100)
+             #_(com/heap-info))
+           )
         cnt-reports (m-result (count (data/dates json)))
         _ (m-result
            ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)

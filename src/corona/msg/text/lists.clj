@@ -18,9 +18,6 @@
 
 (defn get-from-cache! "" [case-kw {:keys [msg-idx json fun] :as prm}]
   ((comp
-    #_(fn [r]
-      (timbre/debugf "3. [get-from-cache!] (count r) %s" (count r))
-      r)
     (fn [prm]
       (let [full-kws [:list ((comp keyword :name meta find-var) fun) case-kw]]
         (cond
@@ -29,19 +26,13 @@
             (partial cache/from-cache! (fn [] ((eval fun) case-kw prm)))
             (partial conj full-kws)
             keyword
-            str
-            #_(fn [msg-idx] (timbre/debugf "1. [get-from-cache!] msg-idx %s" msg-idx) msg-idx))
+            str)
            msg-idx)
 
           prm
           ((comp
-            #_(partial reduce str)
-            #_(fn [v] (timbre/debugf "2. vals result: %s" v) v)
             vals
-            #_(fn [p] (timbre/debugf "2. [get-from-cache!] result: %s" p) p)
-            (partial cache/from-cache! (fn [] ((eval fun) case-kw prm)))
-            #_(fn [p] (timbre/debugf "1. [get-from-cache!] full-kws %s" full-kws) p)
-            #_(fn [p] (timbre/debugf "0. [get-from-cache!] fun %s" fun) p))
+            (partial cache/from-cache! (fn [] ((eval fun) case-kw prm))))
            full-kws)
 
           :else
@@ -51,8 +42,10 @@
            full-kws)))))
    prm))
 
-(defn-fun-id calc-listings ""
-  [case-kws json fun]
+(defn calc-listings "" [case-kws json fun
+                        ;; header
+                        footer
+                        ]
   ((comp
     (partial
      run!
@@ -61,9 +54,12 @@
              ;; Split the long list of all countries into smaller sub-parts
              sub-msgs (partition-all (/ (count coll)
                                         cnt-messages-in-listing) coll)
-             prm {:parse_mode com/html
+             prm {
+                  :parse_mode com/html
                   :cnt-msgs (count sub-msgs)
                   :json json
+                  ;; :header header
+                  :footer footer
                   :pred-hm ((comp
                              data/create-pred-hm
                              ccr/get-country-code)
@@ -82,10 +78,14 @@
 (defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw {:keys [msg-idx cnt-msgs data parse_mode pred-hm json]}]
+  [case-kw {:keys [msg-idx cnt-msgs data pred-hm json
+                   parse_mode
+                   header
+                   footer
+                   ]}]
   #_(debugf "case-kw %s" case-kw)
   (let [cnt-reports (count (data/dates json))
-        header-txt (msgc/header parse_mode (assoc pred-hm :json json))
+        header (msgc/header parse_mode (assoc pred-hm :json json))
         spacer " "
         sort-indicator "▴" ;; " " "▲"
         omag-active 7 ;; order of magnitude i.e. number of digits
@@ -95,7 +95,7 @@
         msg
         (format
          (msgc/format-linewise
-          [["%s\n"   [header-txt]]
+          [["%s\n"   [header]]
            ["%s\n"   [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
            ["    %s " [(str lang/active    (if (= :a case-kw) sort-indicator " "))]]
            ["%s"     [spacer]]
@@ -122,7 +122,7 @@
                                     (cstr/lower-case (com/encode-cmd ccode)))))))
           data)
          ""
-         (msgc/footer parse_mode))]
+         footer)]
     (debugf "case-kw %s msg-idx %s msg-size %s"
             case-kw msg-idx (com/measure msg))
     msg))
@@ -130,10 +130,14 @@
 (defn-fun-id per-100k
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw {:keys [msg-idx cnt-msgs data parse_mode pred-hm json]}]
+  [case-kw {:keys [msg-idx cnt-msgs data pred-hm json
+                   parse_mode
+                   header
+                   footer
+                   ]}]
   #_(debugf "case-kw %s" case-kw)
   (let [cnt-reports (count (data/dates json))
-        header-txt (msgc/header parse_mode (assoc pred-hm :json json))
+        header (msgc/header parse_mode (assoc pred-hm :json json))
         spacer " "
         sort-indicator "▴" ;; " " "▲"
         ;; omag - order of magnitude i.e. number of digits
@@ -143,7 +147,7 @@
         msg
         (format
          (msgc/format-linewise
-          [["%s\n" [header-txt]]
+          [["%s\n" [header]]
            ["%s\n" [(format "%s %s;  %s/%s"
                             lang/report cnt-reports msg-idx cnt-msgs)]]
            ["%s "  [(str lang/active-per-1e5
@@ -174,7 +178,7 @@
                                     (cstr/lower-case (com/encode-cmd ccode)))))))
           data)
          ""
-         (msgc/footer parse_mode))]
+         footer)]
     (debugf "case-kw %s msg-idx %s msg-size %s"
             case-kw msg-idx (com/measure msg))
     msg))
