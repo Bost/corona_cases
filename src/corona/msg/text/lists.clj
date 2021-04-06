@@ -66,16 +66,14 @@
   (let [spacer " "
         sort-indicator "▴" ;; " " "▲"
         omag-active 7 ;; order of magnitude i.e. number of digits
-        omag-recov  (inc omag-active)
+        omag-recove (inc omag-active)
         omag-deaths (dec omag-active)
-
         msg
         (format
          (msgc/format-linewise
           [["%s\n"   [header]]
-           ["%s\n"   [(format "%s %s;  %s/%s"
-                              lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["    %s " [(str lang/active    (if (= :a case-kw) sort-indicator " "))]]
+           ["%s\n"   [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
+           ["    %s " [(str lang/active   (if (= :a case-kw) sort-indicator " "))]]
            ["%s"     [spacer]]
            ["%s "    [(str lang/recovered (if (= :r case-kw) sort-indicator " "))]]
            ["%s"     [spacer]]
@@ -93,7 +91,7 @@
                             (format "<code>%s%s%s%s%s %s</code>  %s"
                                     (com/left-pad a " " omag-active)
                                     spacer
-                                    (com/left-pad r " " omag-recov)
+                                    (com/left-pad r " " omag-recove)
                                     spacer
                                     (com/left-pad d " " omag-deaths)
                                     (com/right-pad cname 17)
@@ -113,23 +111,19 @@
   (let [spacer " "
         sort-indicator "▴" ;; " " "▲"
         ;; omag - order of magnitude i.e. number of digits
-        omag-active-per-100k 4
-        omag-recove-per-100k omag-active-per-100k
-        omag-deaths-per-100k (dec omag-active-per-100k)
+        omag-active 4
+        omag-recove omag-active
+        omag-deaths (dec omag-active)
         msg
         (format
          (msgc/format-linewise
           [["%s\n" [header]]
-           ["%s\n" [(format "%s %s;  %s/%s"
-                            lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["%s "  [(str lang/active-per-1e5
-                         (if (= :a100k case-kw) sort-indicator " "))]]
+           ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
+           ["%s "  [(str lang/active-per-1e5 (if (= :a100k case-kw) sort-indicator " "))]]
            ["%s"   [spacer]]
-           ["%s "  [(str lang/recove-per-1e5
-                         (if (= :r100k case-kw) sort-indicator " "))]]
+           ["%s "  [(str lang/recove-per-1e5 (if (= :r100k case-kw) sort-indicator " "))]]
            ["%s"   [spacer]]
-           ["%s"   [(str lang/deaths-per-1e5
-                         (if (= :d100k case-kw) sort-indicator " "))]]
+           ["%s"   [(str lang/deaths-per-1e5 (if (= :d100k case-kw) sort-indicator " "))]]
            ["\n%s" [(str
                      "%s"     ; listing table
                      "%s"     ; sorted-by description; has its own new-line
@@ -141,11 +135,11 @@
                           (let [cname (ccr/country-name-aliased ccode)]
                             #_(debugf "case-kw %s, cname %s" case-kw cname)
                             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
-                                    (com/left-pad a100k " " omag-active-per-100k)
+                                    (com/left-pad a100k " " omag-active)
                                     spacer
-                                    (com/left-pad r100k " " omag-recove-per-100k)
+                                    (com/left-pad r100k " " omag-recove)
                                     spacer
-                                    (com/left-pad d100k " " omag-deaths-per-100k)
+                                    (com/left-pad d100k " " omag-deaths)
                                     (com/right-pad cname 17)
                                     (cstr/lower-case (com/encode-cmd ccode)))))))
           data)
