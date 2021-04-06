@@ -71,19 +71,18 @@
         msg
         (format
          (msgc/format-linewise
-          [["%s\n"   [header]]
-           ["%s\n"   [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["    %s " [(str lang/active   (if (= :a case-kw) sort-indicator " "))]]
-           ["%s"     [spacer]]
-           ["%s "    [(str lang/recovered (if (= :r case-kw) sort-indicator " "))]]
-           ["%s"     [spacer]]
-           ["%s\n"   [(str lang/deaths    (if (= :d case-kw) sort-indicator " "))]]
-           ["%s"     [(str
-                       "%s"   ; listing table
-                       "%s"   ; sorted-by description; has its own new-line
-                       "\n\n"
-                       "%s"   ; footer
-                       )]]])
+          [["%s\n"    [header]]
+           ["%s\n"    [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
+           ["    %s " [(str lang/active    (if (= :a case-kw) sort-indicator " "))]]
+           ["%s"      [spacer]]
+           ["%s "     [(str lang/recovered (if (= :r case-kw) sort-indicator " "))]]
+           ["%s"      [spacer]]
+           ["%s\n"    [(str lang/deaths    (if (= :d case-kw) sort-indicator " "))]]
+           ["%s"      [(str
+                        "%s"     ; listing table
+                        "%s"     ; sorted-by description; has its own new-line
+                        "\n\n%s" ; footer
+                        )]]])
          ((comp
            (partial cstr/join "\n")
            (partial map (fn [{:keys [a r d ccode]}]
@@ -133,7 +132,6 @@
            (partial cstr/join "\n")
            (partial map (fn [{:keys [a100k r100k d100k ccode]}]
                           (let [cname (ccr/country-name-aliased ccode)]
-                            #_(debugf "case-kw %s, cname %s" case-kw cname)
                             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                                     (com/left-pad a100k " " omag-active)
                                     spacer
