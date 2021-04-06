@@ -213,19 +213,16 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                           prm-json-hm prm-json-footer-reports
                           prm
                           ((comp
-                            #_(partial assoc prm-json-footer-reports
-                                     :stats stats-countries
-                                     :header)
                             (partial assoc (conj pred-hm prm-json-hm) :header)
                             (partial msgc/header com/html)
                             :t
                             data/last-report
                             (partial conj prm-json))
                            pred-hm)]
-                      (run! (fn [[case-kws listing-fun]]
-                              (msgl/calc-listings stats-countries prm case-kws listing-fun))
-                            [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
-                             [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
+                      (run!
+                       (partial apply (partial msgl/calc-listings stats-countries prm))
+                       [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
+                        [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
                     #_(com/heap-info)
                     #_(debugf "2nd garbage collection")
                     #_(System/gc) ;; also (.gc (Runtime/getRuntime))
