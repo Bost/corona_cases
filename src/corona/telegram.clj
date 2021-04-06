@@ -206,20 +206,24 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                     #_(debugf "1st garbage collection")
                     #_(Thread/sleep 100)
                     #_(com/heap-info)
-                    (let [
-                          header ((comp
-                                   (partial msgc/header com/html)
-                                   :t
-                                   data/last-report
-                                   (fn [pred-hm] (assoc pred-hm :json json))
-                                   data/create-pred-hm
-                                   ccr/get-country-code)
-                                  ccc/worldwide)
-                          prm (assoc prm-json-footer-reports
+                    (let [pred-hm ((comp
+                                    data/create-pred-hm
+                                    ccr/get-country-code)
+                                   ccc/worldwide)
+                          prm-json-hm prm-json-footer-reports
+                          prm
+                          ((comp
+                            #_(partial assoc prm-json-footer-reports
                                      :stats stats-countries
-                                     :header header)]
+                                     :header)
+                            (partial assoc (conj pred-hm prm-json-hm) :header)
+                            (partial msgc/header com/html)
+                            :t
+                            data/last-report
+                            (partial conj prm-json))
+                           pred-hm)]
                       (run! (fn [[case-kws listing-fun]]
-                              (msgl/calc-listings case-kws listing-fun prm))
+                              (msgl/calc-listings case-kws stats-countries (assoc prm :fun listing-fun)))
                             [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
                              [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
                     #_(com/heap-info)

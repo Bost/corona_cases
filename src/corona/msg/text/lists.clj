@@ -39,7 +39,7 @@
         (partial get-in @cache/cache))
        full-kws))))
 
-(defn calc-listings "" [case-kws listing-fun {:keys [stats footer header] :as prm}]
+(defn calc-listings "" [case-kws stats prm]
   (doall
    (map
     (fn [case-kw]
@@ -47,16 +47,14 @@
             ;; Split the long list of all countries into smaller sub-parts
             sub-msgs (partition-all (/ (count coll)
                                        cnt-messages-in-listing) coll)
-            sub-msgs-prm (assoc prm
-                                :cnt-msgs (count sub-msgs))]
+            sub-msgs-prm (assoc prm :cnt-msgs (count sub-msgs))]
         ((comp
           doall
           (partial map-indexed
                    (fn [idx sub-msg]
                      (get-from-cache! case-kw (assoc sub-msgs-prm
                                                      :msg-idx (inc idx)
-                                                     :data sub-msg
-                                                     :fun listing-fun)))))
+                                                     :data sub-msg)))))
          sub-msgs)))
     case-kws)))
 
