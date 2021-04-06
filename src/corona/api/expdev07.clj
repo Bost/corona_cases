@@ -221,7 +221,7 @@
                        :history))
                  + 0
                  locations)))
-            (raw-dates (json-data)))))
+            (raw-dates json))))
    [:sums case-kw (keyword ccode)]))
 
 (defn calc-case-counts-report-by-report [pred-hm]
