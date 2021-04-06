@@ -14,6 +14,7 @@
             [corona.commands :as cmd]
             [corona.common :as com]
             [corona.country-codes :as ccc]
+            [corona.countries :as ccr]
             [corona.estimate :as est]
             [corona.macro :as macro :refer [defn-fun-id debugf infof warnf fatalf]]
             [taoensso.timbre :as timbre]
@@ -173,14 +174,6 @@
 (def map-fn #_map pmap)
 (def map-aggregation-fn map #_pmap)
 
-(defn listing-absolute [json]
-  (msgl/calc-listings com/listing-cases-absolute json
-                      'corona.msg.text.lists/absolute-vals))
-
-(defn listing-100k [json]
-  (msgl/calc-listings com/listing-cases-per-100k json
-                      'corona.msg.text.lists/per-100k))
-
 (defn-fun-id calc-cache!
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
@@ -192,22 +185,51 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
       (domonad
        state-m
        [
-        _ (m-result
-           (do
-             #_(com/heap-info)
-             #_(System/gc) ;; also (.gc (Runtime/getRuntime))
-             #_(debugf "1st garbage collection")
-             #_(Thread/sleep 100)
-             #_(com/heap-info)
+        dates       (m-result (data/dates json))
+        cnt-reports (m-result (count dates))
+        prm-json    (m-result {:json json})
 
-             (run! (fn [fun] (fun json)) [listing-absolute listing-100k])
-             #_(com/heap-info)
-             #_(debugf "2nd garbage collection")
-             #_(System/gc) ;; also (.gc (Runtime/getRuntime))
-             #_(Thread/sleep 100)
-             #_(com/heap-info))
-           )
-        cnt-reports (m-result (count (data/dates json)))
+        prm-json-footer-reports
+        (m-result (assoc prm-json
+                         :footer (msgc/footer com/html)
+                         :cnt-reports cnt-reports))
+
+        _ (com/add-calc-time "prm-json-footer-reports" prm-json-footer-reports)
+
+        stats-countries (m-result (data/stats-countries json))
+        _ (com/add-calc-time "stats-countries" stats-countries)
+
+        listings (m-result
+                  (do
+                    #_(com/heap-info)
+                    #_(System/gc) ;; also (.gc (Runtime/getRuntime))
+                    #_(debugf "1st garbage collection")
+                    #_(Thread/sleep 100)
+                    #_(com/heap-info)
+                    (let [
+                          header ((comp
+                                   (partial msgc/header com/html)
+                                   :t
+                                   data/last-report
+                                   (fn [pred-hm] (assoc pred-hm :json json))
+                                   data/create-pred-hm
+                                   ccr/get-country-code)
+                                  ccc/worldwide)
+                          prm (assoc prm-json-footer-reports
+                                     :stats stats-countries
+                                     :header header)]
+                      (run! (fn [[case-kws listing-fun]]
+                              (msgl/calc-listings case-kws listing-fun prm))
+                            [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
+                             [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
+                    #_(com/heap-info)
+                    #_(debugf "2nd garbage collection")
+                    #_(System/gc) ;; also (.gc (Runtime/getRuntime))
+                    #_(Thread/sleep 100)
+                    #_(com/heap-info))
+                  )
+        _ (com/add-calc-time "calc-listings" listings)
+
         _ (m-result
            ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
            (when (< cnt-reports 10)
@@ -220,12 +242,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         all-ccode-messages
         (m-result
          (doall
-          (let [prm-json {:json json}
-                dates (data/dates json)
-                prm-json-hm (assoc prm-json
-                                   :dates dates
-                                   :cnt-reports (count dates)
-                                   :footer (msgc/footer com/html))]
+          (let [prm-json-hm (assoc prm-json-footer-reports
+                                   :dates dates)]
             (map-fn
              (fn [ccode]
                (let [pred-hm (data/create-pred-hm ccode)]

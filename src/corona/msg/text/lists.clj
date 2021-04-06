@@ -17,65 +17,48 @@
   7)
 
 (defn get-from-cache! "" [case-kw {:keys [msg-idx json fun] :as prm}]
-  ((comp
-    (fn [prm]
-      (let [full-kws [:list ((comp keyword :name meta find-var) fun) case-kw]]
-        (cond
-          msg-idx
-          ((comp
-            (partial cache/from-cache! (fn [] ((eval fun) case-kw prm)))
-            (partial conj full-kws)
-            keyword
-            str)
-           msg-idx)
+  (let [full-kws [:list ((comp keyword :name meta find-var) fun) case-kw]]
+    (cond
+      msg-idx
+      ((comp
+        (partial cache/from-cache! (fn [] ((eval fun) case-kw prm)))
+        (partial conj full-kws)
+        keyword
+        str)
+       msg-idx)
 
-          prm
-          ((comp
-            vals
-            (partial cache/from-cache! (fn [] ((eval fun) case-kw prm))))
-           full-kws)
+      prm
+      ((comp
+        vals
+        (partial cache/from-cache! (fn [] ((eval fun) case-kw prm))))
+       full-kws)
 
-          :else
-          ((comp
-            vals
-            (partial get-in @cache/cache))
-           full-kws)))))
-   prm))
+      :else
+      ((comp
+        vals
+        (partial get-in @cache/cache))
+       full-kws))))
 
-(defn-fun-id calc-listings "" [case-kws json fun]
-  (let [
-        stats (data/stats-countries json)
-        footer (msgc/footer com/html)
-        header ((comp
-                 (partial msgc/header com/html)
-                 :t
-                 data/last-report
-                 (fn [pred-hm] (assoc pred-hm :json json))
-                 data/create-pred-hm
-                 ccr/get-country-code)
-                ccc/worldwide)
-        prm {:json json :header header :footer footer
-             :cnt-reports (count (data/dates json))}]
-    ((comp
-    (partial
-     run!
-     (fn [case-kw]
-       (let [coll (sort-by case-kw < stats)
-             ;; Split the long list of all countries into smaller sub-parts
-             sub-msgs (partition-all (/ (count coll)
-                                        cnt-messages-in-listing) coll)
-             sub-msgs-prm (assoc prm
-                                 :cnt-msgs (count sub-msgs))]
-         ((comp
-           doall
-           (partial map-indexed
-                    (fn [idx sub-msg] (get-from-cache!
-                                      case-kw (assoc sub-msgs-prm
+(defn calc-listings "" [case-kws listing-fun {:keys [stats footer header] :as prm}]
+  (doall
+   (map
+    (fn [case-kw]
+      (let [coll (sort-by case-kw < stats)
+            ;; Split the long list of all countries into smaller sub-parts
+            sub-msgs (partition-all (/ (count coll)
+                                       cnt-messages-in-listing) coll)
+            sub-msgs-prm (assoc prm
+                                :cnt-msgs (count sub-msgs))]
+        ((comp
+          doall
+          (partial map-indexed
+                   (fn [idx sub-msg]
+                     (get-from-cache! case-kw (assoc sub-msgs-prm
                                                      :msg-idx (inc idx)
                                                      :data sub-msg
-                                                     :fun fun)))))
-          sub-msgs)))))
-   case-kws)))
+                                                     :fun listing-fun)))))
+         sub-msgs)))
+    case-kws)))
 
 (defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the
