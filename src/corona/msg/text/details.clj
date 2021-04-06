@@ -216,14 +216,13 @@
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
   "
-  [ccode {:keys [json] :as pred-json-hm}]
+  [ccode {:keys [cnt-reports dates json] :as pred-json-hm}]
   ((comp
     (fn [info]
       (debugf "ccode %s size %s" ccode (com/measure info))
       info)
     fmt)
-   (let [dates (data/dates json)
-         last-report (data/last-report pred-json-hm)
+   (let [last-report (data/last-report pred-json-hm)
          {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
          delta (data/delta pred-json-hm)
          {delta-confir :c
@@ -237,7 +236,7 @@
        ((comp (partial apply #(format "     %s    %s" %1 %2))
               (partial map (comp com/encode-cmd cstr/lower-case)))
         [ccode (ccc/country-code-3-letter ccode)])
-       :cnt-reports (str lang/report " " (count dates))
+       :cnt-reports (str lang/report " " cnt-reports)
        :population
        (f (conj {:s lang/people :n population :emoji "👥"}))
 

@@ -219,17 +219,19 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-ccode-messages
         (m-result
-         (let [prm-json {:json json}
-               prm-json-footer (assoc prm-json
-                                      :footer (msgc/footer com/html))
-               ]
-           (doall
+         (doall
+          (let [prm-json {:json json}
+                dates (data/dates json)
+                prm-json-hm (assoc prm-json
+                                   :dates dates
+                                   :cnt-reports (count dates)
+                                   :footer (msgc/footer com/html))]
             (map-fn
              (fn [ccode]
                (let [pred-hm (data/create-pred-hm ccode)]
                  ((comp
                    (partial msgi/message! ccode)
-                   (partial assoc (conj pred-hm prm-json-footer) :header)
+                   (partial assoc (conj pred-hm prm-json-hm) :header)
                    (partial msgc/header com/html)
                    :t
                    data/last-report
