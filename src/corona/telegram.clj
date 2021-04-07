@@ -167,7 +167,7 @@
 (defn-fun-id calc-cache!
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
-  [aggegation-hash json]
+  [aggregation-hash json]
   (let [;; tbeg must be captured before the function composition
         init-state {:tbeg (com/system-time) :acc []}]
     ((comp
@@ -266,24 +266,11 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-aggregations
         (m-result
-         ;; 1. map 3874ms, pmap 8747ms
-         ;; 2. map 3962ms
-         #_(doall
-          (map
-           (fn [aggregation-kw]
-             ((comp
-               doall
-               (partial
-                map
-                (partial plot/aggregation! stats cnt-reports aggegation-hash aggregation-kw)))
-              com/absolute-cases))
-           com/aggregation-cases))
-
          ;; map is faster than pmap!!!
          ;; 1. map 4100ms, pmap 8737ms
          ;; 2. map 3982ms
          ;; 3. map 3779ms
-         (run! (partial apply plot/aggregation! stats cnt-reports aggegation-hash)
+         (run! (partial apply plot/aggregation! stats cnt-reports aggregation-hash)
                (for [a com/aggregation-cases
                      b com/absolute-cases]
                  [a b])))
