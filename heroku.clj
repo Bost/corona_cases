@@ -239,8 +239,13 @@
 
         getMockData
         (do
-          (sh "wget" "https://coronavirus-tracker-api.herokuapp.com/all"
-              ;; TODO use com/json-apis-v1
+          (sh "wget"
+              #_"https://coronavirus-tracker-api.herokuapp.com/all"
+              #_"https://covid-tracker-us.herokuapp.com/all"
+              ((comp
+                (partial format "https://%s/all")
+                second)
+               env/api-servers)
               "-O" "resources/mockup/all.json")
           (sh "wget" env/owid-prod
               "-O" "resources/mockup/owid-covid-data.json"))
