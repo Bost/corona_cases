@@ -462,4 +462,19 @@
                     (aggregation-img stats report aggregation-kw case-kw)))
                  [:plot (keyword id) aggregation-kw case-kw])))
 
+;;;; lazy-evaluation CPS (Continuation Passing Style)
+;; (defonce ch (atom {}))
+
+;; (defn ch! [ks form]
+;;   (let [data (eval form)]
+;;     (swap! ch update-in ks (fn [_] data))
+;;     data))
+
+;; ((comp
+;;   (partial ch! [:ch])
+;;   #_(fn [form] (eval form))
+;;   (fn [form] `~form))
+;;  '((comp str inc)
+;;    (+ 1 2)))
+
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.graph.plot)
