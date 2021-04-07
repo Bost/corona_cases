@@ -32,23 +32,25 @@
        full-kws))))
 
 (defn calc-listings "" [stats prm case-kws fun]
-  (doall
-   (map
-    (fn [case-kw]
-      (let [coll (sort-by case-kw < stats)
-            ;; Split the long list of all countries into smaller sub-parts
-            sub-msgs (partition-all (/ (count coll)
-                                       cnt-messages-in-listing) coll)
-            sub-msgs-prm (assoc prm :cnt-msgs (count sub-msgs))]
-        ((comp
-          doall
-          (partial map-indexed
-                   (fn [idx sub-msg]
-                     (get-from-cache!
-                      case-kw fun
-                      (assoc sub-msgs-prm :msg-idx (inc idx) :data sub-msg)))))
-         sub-msgs)))
-    case-kws)))
+  ((comp
+    doall
+    (partial
+     map
+     (fn [case-kw]
+       (let [coll (sort-by case-kw < stats)
+             ;; Split the long list of all countries into smaller sub-parts
+             sub-msgs (partition-all (/ (count coll)
+                                        cnt-messages-in-listing) coll)
+             sub-msgs-prm (assoc prm :cnt-msgs (count sub-msgs))]
+         ((comp
+           doall
+           (partial map-indexed
+                    (fn [idx sub-msg]
+                      (get-from-cache!
+                       case-kw fun
+                       (assoc sub-msgs-prm :msg-idx (inc idx) :data sub-msg)))))
+          sub-msgs)))))
+   case-kws))
 
 (defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the

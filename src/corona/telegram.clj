@@ -1,6 +1,5 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.telegram)
 
-;; TODO replace `->>` with `comp` https://github.com/practicalli/clojure-content/issues/160
 ;; TODO https://stuartsierra.com/2016/01/09/how-to-name-clojure-functions
 
 (ns corona.telegram
@@ -189,7 +188,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         stats-countries (m-result (data/stats-countries json))
         _ (com/add-calc-time "stats-countries" stats-countries)
 
-        listings
+        calc-listings
         (m-result
          (do
            #_(com/heap-info)
@@ -210,8 +209,10 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                    data/last-report
                    (partial conj prm-json))
                   pred-hm)]
-             (run!
-              (partial apply (partial msgl/calc-listings stats-countries prm))
+             ((comp
+               doall
+               (partial map (partial apply msgl/calc-listings
+                                     stats-countries prm)))
               [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
                [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
            #_(com/heap-info)
@@ -219,7 +220,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
            #_(System/gc) ;; also (.gc (Runtime/getRuntime))
            #_(Thread/sleep 100)
            #_(com/heap-info)))
-        _ (com/add-calc-time "calc-listings" listings)
+        _ (com/add-calc-time "calc-listings" calc-listings)
 
         _ (m-result
            ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
@@ -270,11 +271,13 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
          ;; 1. map 4100ms, pmap 8737ms
          ;; 2. map 3982ms
          ;; 3. map 3779ms
-         (run! (partial apply plot/aggregation! stats cnt-reports aggregation-hash)
-               (for [a com/aggregation-cases
-                     b com/absolute-cases]
-                 [a b])))
-
+         ((comp
+           doall
+           (partial map (partial apply plot/aggregation!
+                                 stats cnt-reports aggregation-hash)))
+          (for [a com/aggregation-cases
+                b com/absolute-cases]
+            [a b])))
         _ (com/add-calc-time "all-aggregations" all-aggregations)
 
         ;; discard the intermediary results, i.e. keep only those items in the

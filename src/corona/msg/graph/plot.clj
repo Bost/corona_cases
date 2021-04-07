@@ -457,7 +457,7 @@
    {:pre [(string? id)]}
    (cache/cache! (fn []
                    ((comp
-                     (fn [arr] (com/heap-info) arr)
+                     #_(fn [arr] (com/heap-info) arr)
                      to-byte-array-auto-closable)
                     (aggregation-img stats report aggregation-kw case-kw)))
                  [:plot (keyword id) aggregation-kw case-kw])))
