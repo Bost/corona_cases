@@ -227,7 +227,6 @@
 (defn calc-case-counts-report-by-report [pred-hm]
   (let [vpcrd (mapv (fn [case-kw] (sums-for-case case-kw pred-hm))
                     [:vaccinated :population :confirmed :recovered :deaths])
-
         ;; pre-calculate active numbers - needed for com/calc-rate-active
         vpcrda
         (apply
@@ -273,31 +272,30 @@
   (cache/from-cache! (fn [] (calc-case-counts-report-by-report pred-hm))
                      [:cnts (keyword ccode)]))
 
-(defn eval-fun
-  [fun {:keys [json] :as pred-json-hm}]
-  (into {:t (fun (dates json))}
-        (map (fn [[k v]] {k (fun v)})
-             (case-counts-report-by-report pred-json-hm))))
+(defn last-date [json] (get-last (dates json)))
+
+(defn eval-fun [{:keys [json] :as pred-json-hm} fun]
+  ((comp
+    (partial into ((comp
+                    (partial hash-map :t)
+                    (fn [f] (f json)))
+                   (if (= fun get-last)
+                     last-date
+                     (comp fun dates))))
+    (partial map (fn [[k v]] {k (fun v)}))
+    case-counts-report-by-report)
+   pred-json-hm))
 
 (defn delta [pred-json-hm]
-  (->> [get-prev get-last]
-       (map (fn [fun]
-              (eval-fun fun pred-json-hm)))
-       (apply (fn [prv lst]
-                (map (fn [k]
-                       {k (- (k lst) (k prv))})
-                     com/all-cases)))
-       (reduce into {}))
-  #_((comp
-      (partial reduce into {})
-      (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))}) com/all-cases)))
-      (partial map (fn [fun] (eval-fun fun pred-json-hm))))
-     [get-prev get-last]))
+  ((comp
+    (partial reduce into {})
+    (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))}) com/all-cases)))
+    (partial map (partial eval-fun pred-json-hm)))
+   [get-prev get-last]))
 
-(defn last-report [pred-json-hm]
-  (eval-fun get-last pred-json-hm))
+(defn last-report [pred-json-hm] (eval-fun pred-json-hm get-last))
 
-(defn last-8-reports [pred-json-hm] (eval-fun (partial take-last 8) pred-json-hm))
+(defn last-8-reports [pred-json-hm] (eval-fun pred-json-hm (partial take-last 8)))
 
 (defn create-pred-hm [ccode]
   {:ccode ccode

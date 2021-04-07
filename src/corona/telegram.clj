@@ -161,8 +161,6 @@
     (fun))
   (warnf "Starting ... done. Data will NOT be updated!"))
 
-(def map-fn #_map pmap)
-
 (defn-fun-id calc-cache!
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
@@ -183,6 +181,11 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                          :footer (msgc/footer com/html)
                          :cnt-reports cnt-reports))
 
+        header (m-result ((comp
+                           (partial msgc/header com/html)
+                           data/last-date)
+                          json))
+
         _ (com/add-calc-time "prm-json-footer-reports" prm-json-footer-reports)
 
         stats-countries (m-result (data/stats-countries json))
@@ -190,36 +193,21 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         calc-listings
         (m-result
-         (do
-           #_(com/heap-info)
-           #_(System/gc) ;; also (.gc (Runtime/getRuntime))
-           #_(debugf "1st garbage collection")
-           #_(Thread/sleep 100)
-           #_(com/heap-info)
-           (let [pred-hm ((comp
-                           data/create-pred-hm
-                           ccr/get-country-code)
-                          ccc/worldwide)
-                 prm-json-hm prm-json-footer-reports
-                 prm
-                 ((comp
-                   (partial assoc (conj pred-hm prm-json-hm) :header)
-                   (partial msgc/header com/html)
-                   :t
-                   data/last-report
-                   (partial conj prm-json))
-                  pred-hm)]
-             ((comp
-               doall
-               (partial map (partial apply msgl/calc-listings
-                                     stats-countries prm)))
-              [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
-               [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
-           #_(com/heap-info)
-           #_(debugf "2nd garbage collection")
-           #_(System/gc) ;; also (.gc (Runtime/getRuntime))
-           #_(Thread/sleep 100)
-           #_(com/heap-info)))
+         (let [prm-json-hm prm-json-footer-reports
+               prm ((comp
+                     (partial assoc (conj ((comp
+                                            data/create-pred-hm
+                                            ccr/get-country-code)
+                                           ccc/worldwide)
+                                          prm-json-hm)
+                              :header))
+                    header)]
+           ((comp
+             doall
+             (partial map (partial apply msgl/calc-listings
+                                   stats-countries prm)))
+            [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
+             [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]])))
         _ (com/add-calc-time "calc-listings" calc-listings)
 
         _ (m-result
@@ -232,34 +220,30 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         _ (com/add-calc-time "estimate" stats)
 
         all-ccode-messages
+        ;; pmap 16499ms, map 35961ms
         (m-result
          (doall
           (let [prm-json-hm (assoc prm-json-footer-reports
                                    :dates dates)]
-            (map-fn
+            (pmap
              (fn [ccode]
-               (let [pred-hm (data/create-pred-hm ccode)]
-                 ((comp
-                   (partial msgi/message! ccode)
-                   (partial assoc (conj pred-hm prm-json-hm) :header)
-                   (partial msgc/header com/html)
-                   :t
-                   data/last-report
-                   (partial conj prm-json))
-                  pred-hm))
+               ((comp
+                 (partial msgi/message! ccode)
+                 (partial assoc (conj (data/create-pred-hm ccode)
+                                      prm-json-hm)
+                          :header))
+                header)
 
                (plot/message! ccode stats cnt-reports))
 
              ccc/all-country-codes))))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
-        ;; i (m-result (do (Thread/sleep 30) (inc 1)))
-        ;; _ (com/add-calc-time "sleep30" i)
 
         cleanups
         (m-result
          (do
            (com/heap-info)
-           (debugf "3rd garbage collection")
+           (debugf "(System/gc)")
            (System/gc) ;; also (.gc (Runtime/getRuntime))
            (Thread/sleep 100)
            (com/heap-info)))
