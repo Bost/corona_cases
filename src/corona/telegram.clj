@@ -283,13 +283,10 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
          ;; 1. map 4100ms, pmap 8737ms
          ;; 2. map 3982ms
          ;; 3. map 3779ms
-         ((comp
-           doall
-           (partial map
-                    (partial apply plot/aggregation! stats cnt-reports aggegation-hash)))
-          (for [a com/aggregation-cases
-                b com/absolute-cases]
-            [a b])))
+         (run! (partial apply plot/aggregation! stats cnt-reports aggegation-hash)
+               (for [a com/aggregation-cases
+                     b com/absolute-cases]
+                 [a b])))
 
         _ (com/add-calc-time "all-aggregations" all-aggregations)
 
