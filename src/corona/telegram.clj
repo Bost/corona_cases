@@ -163,7 +163,6 @@
   (warnf "Starting ... done. Data will NOT be updated!"))
 
 (def map-fn #_map pmap)
-(def map-aggregation-fn map #_pmap)
 
 (defn-fun-id calc-cache!
   "TODO regarding garbage collection - see object finalization:
@@ -267,18 +266,31 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-aggregations
         (m-result
-
-         (doall
-          (map-aggregation-fn
+         ;; 1. map 3874ms, pmap 8747ms
+         ;; 2. map 3962ms
+         #_(doall
+          (map
            (fn [aggregation-kw]
              ((comp
                doall
                (partial
-                map-aggregation-fn
+                map
                 (partial plot/aggregation! stats cnt-reports aggegation-hash aggregation-kw)))
               com/absolute-cases))
            com/aggregation-cases))
-         )
+
+         ;; map is faster than pmap!!!
+         ;; 1. map 4100ms, pmap 8737ms
+         ;; 2. map 3982ms
+         ;; 3. map 3779ms
+         ((comp
+           doall
+           (partial map
+                    (partial apply plot/aggregation! stats cnt-reports aggegation-hash)))
+          (for [a com/aggregation-cases
+                b com/absolute-cases]
+            [a b])))
+
         _ (com/add-calc-time "all-aggregations" all-aggregations)
 
         ;; discard the intermediary results, i.e. keep only those items in the
