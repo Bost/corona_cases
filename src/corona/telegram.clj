@@ -191,7 +191,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         stats-countries (m-result (data/stats-countries json))
         _ (com/add-calc-time "stats-countries" stats-countries)
 
-        calc-listings
+        all-calc-listings
         (m-result
          (let [prm-json-hm prm-json-footer-reports
                prm ((comp
@@ -204,11 +204,11 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                     header)]
            ((comp
              doall
-             (partial map (partial apply msgl/calc-listings
+             (partial map (partial apply msgl/calc-listings!
                                    stats-countries prm)))
             [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
              [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]])))
-        _ (com/add-calc-time "calc-listings" calc-listings)
+        _ (com/add-calc-time "all-calc-listings" all-calc-listings)
 
         _ (m-result
            ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
@@ -291,11 +291,13 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
       (swap! cache/cache update-in hash-kws (fn [_] new-hash)))
     hashes-changed))
 
-(defn-fun-id clear-cache! "" []
-  ;; non-atomically dissoc :json from under :v1 and :owid
-  ;; (swap! cache/cache update-in [:v1]   dissoc :json)
-  ;; (swap! cache/cache update-in [:owid] dissoc :json)
-  ;; atomically dissoc :json from under :v1 and :owid
+(defn-fun-id clear-cache!
+  "Atomic dissoc :json from under :v1 and :owid
+
+  For non-atomic dissoc:
+    (swap! cache/cache update-in [:v1]   dissoc :json)
+    (swap! cache/cache update-in [:owid] dissoc :json)"
+  []
   ((comp
     (partial reset! cache/cache)
     (partial merge @cache/cache)
@@ -319,10 +321,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                      [calc-result (m-result
                                    (calc-cache! (cache/aggregation-hash)
                                                 (data/json-data)))
-                      _ (com/add-calc-time "calc-cache!" calc-result)
-                      ;; j (m-result (do (Thread/sleep 30) (inc i)))
-                      ;; _ (com/add-calc-time "sleep30" i)
-                      ]
+                      _ (com/add-calc-time "calc-cache!" calc-result)]
                      calc-result))
            init-state))))
     boolean
