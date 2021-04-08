@@ -222,24 +222,24 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
         (m-result
-         (doall
-          (let [prm-json-hm (assoc prm-json-footer-reports
-                                   :dates dates)]
-            (pmap
-             (fn [ccode]
-               ((comp
-                 (fn [pred-json-hm]
-                   (cache/cache! (fn [] (msgi/message ccode pred-json-hm))
-                                 (msgi/message-kw ccode)))
-                 (partial assoc (conj (data/create-pred-hm ccode)
-                                      prm-json-hm)
-                          :header))
-                header)
-
-               (cache/cache! (fn [] (plot/message ccode stats cnt-reports))
-                             (plot/message-kw ccode)))
-
-             ccc/all-country-codes))))
+         (let [prm-json-hm (assoc prm-json-footer-reports :dates dates)]
+           ((comp
+             doall
+             (partial pmap
+                      (fn [ccode]
+                        [((comp
+                           (fn [pred-json-hm]
+                             (cache/cache!
+                              (fn [] (msgi/message ccode pred-json-hm))
+                              (msgi/message-kw ccode)))
+                           (partial assoc (conj (data/create-pred-hm ccode)
+                                                prm-json-hm)
+                                    :header))
+                          header)
+                         (cache/cache!
+                          (fn [] (plot/message ccode stats cnt-reports))
+                          (plot/message-kw ccode))])))
+            ccc/all-country-codes)))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
 
         cleanups
