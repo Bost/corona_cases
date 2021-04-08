@@ -16,22 +16,10 @@
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn get-from-cache! ""
-  [case-kw fun & [{:keys [msg-idx] :as prm}]]
-  (let [full-kws [:list ((comp keyword :name meta find-var) fun) case-kw]]
-    (if msg-idx
-      ((comp
-        (partial cache/from-cache! (fn [] ((eval fun) case-kw prm)))
-        (partial conj full-kws)
-        keyword
-        str)
-       msg-idx)
-      ((comp
-        vals
-        (partial get-in @cache/cache))
-       full-kws))))
+(defn list-kw [fun case-kw]
+  [:list ((comp keyword :name meta find-var) fun) case-kw])
 
-(defn calc-listings "" [stats prm case-kws fun]
+(defn calc-listings! "" [stats prm case-kws fun]
   ((comp
     doall
     (partial
@@ -46,9 +34,16 @@
            doall
            (partial map-indexed
                     (fn [idx sub-msg]
-                      (get-from-cache!
-                       case-kw fun
-                       (assoc sub-msgs-prm :msg-idx (inc idx) :data sub-msg)))))
+                      ((comp
+                        (partial cache/cache!
+                                 (fn [] ((eval fun) case-kw
+                                        (assoc sub-msgs-prm
+                                               :msg-idx (inc idx)
+                                               :data sub-msg))))
+                        (partial conj (list-kw fun case-kw))
+                        keyword
+                        str)
+                       idx))))
           sub-msgs)))))
    case-kws))
 

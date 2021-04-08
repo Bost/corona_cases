@@ -3,6 +3,7 @@
 (ns corona.commands
   (:require [clojure.string :as cstr]
             [corona.common :as com]
+            [corona.api.cache :as cache]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -130,15 +131,18 @@
                  ;; mapping over results implies the knowledge that the type
                  ;; of `(msg-listing-fun case-kw)` is a collection.
                  doall
-                 (partial map (defn listing-handler "" [content]
+                 (partial map (fn [content]
                                 (morse/send-text com/telegram-token chat-id
                                                  {:parse_mode com/html} content)
                                 (timbre/debugf "%s chars sent" (count content))))
-                 (partial msgl/get-from-cache! case-kw)
+                 vals
+                 (partial get-in @cache/cache)
+                 (partial apply msgl/list-kw)
                  (fn [case-kw]
-                   (if (in? com/listing-cases-per-100k case-kw)
-                     'corona.msg.text.lists/per-100k
-                     'corona.msg.text.lists/absolute-vals)))
+                   [(if (in? com/listing-cases-per-100k case-kw)
+                      'corona.msg.text.lists/per-100k
+                      'corona.msg.text.lists/absolute-vals)
+                    case-kw]))
                 case-kw))
         :desc (lang/list-sorted-by-desc case-kw)}))
     (partial into com/listing-cases-per-100k))
