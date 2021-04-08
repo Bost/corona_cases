@@ -267,12 +267,6 @@
                      maxes
                      (count ccc/all-country-codes))}))))))
 
-(defn message!
-  [ccode & [pred-json-hm]]
-  (let [ks [:msg (keyword ccode)]]
-    (if pred-json-hm
-      (cache/cache! (fn [] (message ccode pred-json-hm))
-                    ks)
-      (get-in @cache/cache ks))))
+(defn message-kw [ccode] [:msg (keyword ccode)])
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.message)

@@ -37,17 +37,17 @@
 
 (defn-fun-id world "" [{:keys [chat-id ccode] :as prm-orig}]
   (let [prm
-         ;; override default parse_mode
+        ;; override default parse_mode
         (assoc prm-orig
                :parse_mode com/html
                :pred-hm (data/create-pred-hm ccode))]
     (send-text fun-id ;; defined by defn-fun-id macro
                prm
                (select-keys prm (keys msg/options))
-               (msgi/message! ccode))
+               (get-in @cache/cache (msgi/message-kw ccode)))
     (when-let [;; the plot is fetched from the cache, stats and report need not to be
-                ;; specified
-               content (p/message! ccode)]
+               ;; specified
+               content (get-in @cache/cache (p/message-kw ccode))]
       (let [options (if (msgc/worldwide? ccode)
                       (msg/reply-markup-btns (select-keys prm [:chat-id :ccode :message_id]))
                       {})

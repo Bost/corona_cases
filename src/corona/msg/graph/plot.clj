@@ -293,14 +293,7 @@
     (fn [prms] (apply message-img prms)))
    [ccode stats report]))
 
-(defn message!
-  "The optional params `stats`, `report` are used only for the first calculation"
-  [ccode & [stats report]]
-  (let [ks [:plot (keyword ccode)]]
-    (if (and stats report)
-      (cache/cache! (fn [] (message ccode stats report))
-                   ks)
-      (get-in @cache/cache ks))))
+(defn message-kw [ccode] [:plot (keyword ccode)])
 
 (defn-fun-id group-below-threshold
   "Group all countries w/ the number of active cases below the threshold under the
