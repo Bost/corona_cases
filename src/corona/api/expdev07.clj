@@ -150,7 +150,7 @@
                           population-cnt)))))
    ccc/all-country-codes))
 
-(defn corona-data [json]
+(defn corona-data [raw-dates json]
   ((comp
     (partial into {})
     (partial map
@@ -170,7 +170,7 @@
                                         (partial into {})
                                         (partial filter
                                                  (comp
-                                                  (partial utc/in? (raw-dates json))
+                                                  (partial utc/in? raw-dates)
                                                   first))))))
                        ;; here the country_code keyword comes from the json
                        (partial filter
@@ -185,7 +185,7 @@
 
 (defn calc-data-with-pop [json]
   (let [raw-dates (raw-dates json)]
-    (conj (corona-data json)
+    (conj (corona-data raw-dates json)
           (vac/vaccination-data {:raw-dates-v1 raw-dates
                                  :json-owid (vac/json-data)})
           (population-data raw-dates))))
@@ -207,7 +207,8 @@
   (cache/from-cache!
    (fn []
      (let [locations (filter pred-fun
-                             ((comp :locations case-kw data-with-pop) json))]
+                             ((comp :locations case-kw data-with-pop) json))
+           raw-dates (raw-dates json)]
        ;; (debugf "locations %s" (cstr/join " " locations))
        (map (fn [raw-date]
               (if (and (empty? locations)
@@ -221,7 +222,7 @@
                        :history))
                  + 0
                  locations)))
-            (raw-dates json))))
+            raw-dates)))
    [:sums case-kw (keyword ccode)]))
 
 (defn calc-case-counts-report-by-report [pred-hm]
