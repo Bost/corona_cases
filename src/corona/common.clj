@@ -9,6 +9,7 @@
             [clojure.spec.alpha :as spec]
             [clojure.string :as cstr]
             [corona.envdef :as envdef]
+            [corona.country-codes :as ccc]
             [corona.pom-version-get :as pom]
             [environ.core :as env]
             [corona.macro :refer [defn-fun-id debugf infof errorf]]
@@ -599,4 +600,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
        (update-in state [:acc]
                   (fn [_] (vec (concat accumulator (vector calc-time)))))))))
 
+(def relevant-country-codes
+  (clojure.set/difference ccc/all-country-codes
+                          #{ccc/country-code-worldwide}))
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

@@ -120,41 +120,46 @@
     (partial map date))
    (raw-dates json)))
 
-(defn population-data [raw-dates]
+(defn population-data [raw-dates-v1]
   ((comp
     (partial hash-map :population)
     (partial hash-map :locations)
     (partial map
              (comp
               (partial apply merge)
-              (juxt (comp (partial hash-map :country)
-                          ccr/country-name-aliased)
-                    (partial hash-map :country_code)
-                    (comp (partial hash-map :history)
-                          (partial zipmap raw-dates)
-                          repeat
-                          population-cnt)))))
+              (juxt
+               (comp
+                (partial hash-map :country)
+                ccr/country-name-aliased)
+               (partial hash-map :country_code)
+               (comp
+                (partial hash-map :history)
+                (partial zipmap raw-dates-v1)
+                repeat
+                population-cnt)))))
    ccc/all-country-codes))
 
-(defn vaccination-data [raw-dates]
+(defn vaccination-data [raw-dates-v1]
   ((comp
     (partial hash-map :vaccinated)
     (partial hash-map :locations)
     (partial map
              (comp
               (partial apply merge)
-              (juxt (comp (partial hash-map :country)
-                          ccr/country-name-aliased)
-                    (partial hash-map :country_code)
-                    (comp (partial hash-map :history)
-                          (partial zipmap raw-dates)
-                          repeat
-                          #_(fn [n] (int (/ n 2)))
-                          (fn [n] (int (/ n 10)))
-                          population-cnt)))))
+              (juxt
+               (comp (partial hash-map :country)
+                     ccr/country-name-aliased)
+               (partial hash-map :country_code)
+               (comp
+                (partial hash-map :history)
+                (partial zipmap raw-dates-v1)
+                repeat
+                #_(fn [n] (int (/ n 2)))
+                (fn [n] (int (/ n 10)))
+                population-cnt)))))
    ccc/all-country-codes))
 
-(defn corona-data [raw-dates json]
+(defn corona-data [raw-dates-v1 json]
   ((comp
     (partial into {})
     (partial map
@@ -174,7 +179,7 @@
                                         (partial into {})
                                         (partial filter
                                                  (comp
-                                                  (partial utc/in? raw-dates)
+                                                  (partial utc/in? raw-dates-v1)
                                                   first))))))
                        ;; here the country_code keyword comes from the json
                        (partial filter
@@ -188,15 +193,14 @@
    json))
 
 (defn calc-data-with-pop [json]
-  (let [raw-dates (raw-dates json)]
-    (conj (corona-data raw-dates json)
-          (vac/vaccination-data {:raw-dates-v1 raw-dates
+  (let [raw-dates-v1 (raw-dates json)]
+    (conj (corona-data raw-dates-v1 json)
+          (vac/vaccination-data {:raw-dates-v1 raw-dates-v1
                                  :json-owid (vac/json-data)})
-          (population-data raw-dates))))
+          (population-data raw-dates-v1))))
 
 (defn data-with-pop "Data with population numbers." [json]
   (cache/from-cache! (fn [] (calc-data-with-pop json))
-                     #_(comp calc-data-with-pop json-data)
                      [:data-with-pop]))
 
 (defn get-last [coll] (first (take-last 1 coll)))
@@ -212,7 +216,7 @@
    (fn []
      (let [locations (filter pred-fun
                              ((comp :locations case-kw data-with-pop) json))
-           raw-dates (raw-dates json)]
+           raw-dates-v1 (raw-dates json)]
        ;; (debugf "locations %s" (cstr/join " " locations))
        (map (fn [raw-date]
               (if (and (empty? locations)
@@ -226,7 +230,7 @@
                        :history))
                  + 0
                  locations)))
-            raw-dates)))
+            raw-dates-v1)))
    [:sums case-kw (keyword ccode)]))
 
 (defn calc-case-counts-report-by-report [pred-hm]
@@ -329,9 +333,7 @@
      (update-in (select-keys hm [:ccode]) [:rank rank-kw]
                 ;; inc - ranking starts from 1, not from 0
                 (fn [_] (inc idx))))
-   (sort-by rank-kw >
-            ;; TODO sets and set operations should be used clojure.set/difference
-            (remove (fn [hm] (= (:ccode hm) "ZZ")) (stats-countries json)))))
+   (sort-by rank-kw > (stats-countries json))))
 
 (defn calc-all-rankings
   "TODO verify ranking for one and zero countries"
@@ -343,8 +345,7 @@
                                (filter (fn [hm] (= (:ccode hm) ccode)) ranking))
                              (utc/transpose (map (fn [case-kw] (rank-for-case case-kw json))
                                                  com/ranking-cases))))))
-       ;; TODO sets and set operations should be used clojure.set/difference
-       (remove (fn [ccode] (= ccode "ZZ")) ccc/all-country-codes)))
+       com/relevant-country-codes))
 
 (defn all-rankings [json] (cache/from-cache! (fn [] (calc-all-rankings json)) [:rankings]))
 
