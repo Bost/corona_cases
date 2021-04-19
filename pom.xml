@@ -4,23 +4,23 @@
   <packaging>jar</packaging>
   <groupId>corona_cases</groupId>
   <artifactId>corona_cases</artifactId>
-  <version>2.4.9</version>
+  <version>2.5.0</version>
   <name>corona_cases</name>
   <dependencies>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>data.json</artifactId>
-      <version>1.0.0</version>
+      <version>2.2.1</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.10.2</version>
+      <version>1.10.3</version>
     </dependency>
     <dependency>
       <groupId>metosin</groupId>
       <artifactId>ring-http-response</artifactId>
-      <version>0.9.1</version>
+      <version>0.9.2</version>
     </dependency>
     <dependency>
       <groupId>compojure</groupId>
@@ -43,11 +43,6 @@
       <version>1.1.0</version>
     </dependency>
     <dependency>
-      <groupId>org.clojure</groupId>
-      <artifactId>clojurescript</artifactId>
-      <version>1.10.764</version>
-    </dependency>
-    <dependency>
       <groupId>incanter</groupId>
       <artifactId>incanter-core</artifactId>
       <version>1.9.3</version>
@@ -55,12 +50,12 @@
     <dependency>
       <groupId>ring</groupId>
       <artifactId>ring-jetty-adapter</artifactId>
-      <version>1.8.2</version>
+      <version>1.9.2</version>
     </dependency>
     <dependency>
       <groupId>ring</groupId>
       <artifactId>ring-json</artifactId>
-      <version>0.5.0</version>
+      <version>0.5.1</version>
     </dependency>
     <dependency>
       <groupId>com.stuartsierra</groupId>
@@ -80,7 +75,7 @@
     <dependency>
       <groupId>clj-http</groupId>
       <artifactId>clj-http</artifactId>
-      <version>3.11.0</version>
+      <version>3.12.1</version>
     </dependency>
     <dependency>
       <groupId>incanter</groupId>
@@ -95,12 +90,7 @@
     <dependency>
       <groupId>com.neovisionaries</groupId>
       <artifactId>nv-i18n</artifactId>
-      <version>1.27</version>
-    </dependency>
-    <dependency>
-      <groupId>seancorfield</groupId>
-      <artifactId>next.jdbc</artifactId>
-      <version>1.1.613</version>
+      <version>1.28</version>
     </dependency>
     <dependency>
       <groupId>org.clojars.bost</groupId>
@@ -135,7 +125,17 @@
     <dependency>
       <groupId>com.taoensso</groupId>
       <artifactId>timbre</artifactId>
-      <version>5.1.0</version>
+      <version>5.1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.seancorfield</groupId>
+      <artifactId>next.jdbc</artifactId>
+      <version>1.1.646</version>
+    </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>algo.monads</artifactId>
+      <version>0.1.6</version>
     </dependency>
     <dependency>
       <groupId>hickory</groupId>
