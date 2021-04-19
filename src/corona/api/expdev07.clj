@@ -320,10 +320,11 @@
                  (= ccode (:country_code loc))))})
 
 (defn calc-stats-countries [json]
-  (map (fn [ccode] (conj {:ccode ccode}
-                        (last-report (assoc (create-pred-hm ccode)
-                                            :json json))))
-       ccc/all-country-codes))
+  ((comp
+    (partial map (fn [ccode] (conj {:ccode ccode}
+                                   (last-report (assoc (create-pred-hm ccode)
+                                                       :json json))))))
+   com/relevant-country-codes))
 
 (defn stats-countries [json] (cache/from-cache! (fn [] (calc-stats-countries json)) [:stats]))
 
