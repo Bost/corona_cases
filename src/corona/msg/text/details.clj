@@ -176,6 +176,7 @@
                                   first
                                   (partial map :rank)
                                   (partial filter (fn [hm] (= (:ccode hm) ccode)))
+                                  ;; TODO all-rankings only stats-countries are needed
                                   data/all-rankings)
                                  json)
                                 (last args))))))]])
