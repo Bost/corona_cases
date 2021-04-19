@@ -328,16 +328,6 @@
 
 (defn stats-countries [json] (cache/from-cache! (fn [] (calc-stats-countries json)) [:stats]))
 
-(defn rank-for-case [stats-countries rank-kw]
-  ((comp
-    (partial map-indexed
-             (fn [idx hm]
-               (update-in (select-keys hm [:ccode]) [:rank rank-kw]
-                          ;; inc - ranking starts from 1, not from 0
-                          (fn [_] (inc idx)))))
-    (partial sort-by rank-kw >))
-   stats-countries))
-
 (defn calc-all-rankings
   "TODO verify ranking for one and zero countries"
   [json]
@@ -348,10 +338,20 @@
              ((comp
                (partial apply utc/deep-merge)
                (partial reduce into [])
-               (partial map
-                        (partial filter (fn [hm] (= (:ccode hm) ccode))))
+               (partial map (partial filter (fn [hm] (= (:ccode hm) ccode))))
                utc/transpose
-               (partial map (partial rank-for-case stats)))
+               (partial map
+                        (fn rank-for-case [rank-kw]
+                          ((comp
+                            (partial map-indexed
+                                     (fn [idx hm]
+                                       (update-in
+                                        (select-keys hm [:ccode])
+                                        [:rank rank-kw]
+                                        ;; inc - start ranking from 1, not 0
+                                        (fn [_] (inc idx)))))
+                            (partial sort-by rank-kw >))
+                           stats))))
               com/ranking-cases))))
      com/relevant-country-codes)))
 
