@@ -153,6 +153,7 @@
   (transduce (map ccode-handlers)
              into (into (inline-handlers)
                         (listing-handlers))
+             ;; here also "ZZ" worldwide messages
              ccc/all-country-codes))
 
 (defn bot-father-edit

@@ -99,12 +99,14 @@
 (def ^:const worldwide-2-country-code (-> worldwide-country-codes keys first))
 (def ^:const worldwide-3-country-code (-> worldwide-country-codes vals first))
 (def ^:const worldwide              "Worldwide")
-(def ^:const country-code-worldwide {worldwide-2-country-code worldwide})
+(def ^:const country-code-worldwide worldwide-2-country-code)
+(def ^:const country-code-worldwide--worldwide {worldwide-2-country-code worldwide})
 
 (def ^:const default-country-codes   {"QQ" "QQQ"})
 (def ^:const default-2-country-code (-> default-country-codes keys first))
 (def ^:const others                 "Others")
-(def ^:const country-code-others    {default-2-country-code others})
+(def ^:const country-code-others     default-2-country-code)
+(def ^:const country-code-default--others {default-2-country-code others})
 
 (def ^:const country-code-2-to-3-hm
   "Mapping: 2-letter country codes -> 3-letter country codes"
@@ -378,33 +380,35 @@
 
 (def excluded-country-codes
   "No data provided for this countries in the API service (the json)"
-  [
-   "IM" "MP" "CK" "GF" "SX" "TK" "TF" "KP" "NU" "NF" "AX" "CX" "MF" "SJ" "TM"
-   "GU" "VU" "PF" "BM" "VG" "PN" "PR" "QQ" "UM" "GG" "BQ" "MO" "KY" "NR" "AW"
-   "FM" "CC" "WS" "TO" "SH" "WF" "TV" "BL" "MS" "GP" "BV" "AS" "FK" "GS" "MQ"
-   "FO" "AQ" "MH" "VI" "GI" "NC" "YT" "TC" "RE" "GL" "KI" "HK" "IO" "CW" "JE"
-   "HM" "PM" "AI" "PW"
-   "EH" ;; Western Sahara Cases https://github.com/CSSEGISandData/COVID-19/issues/3436
+  #{
+    "IM" "MP" "CK" "GF" "SX" "TK" "TF" "KP" "NU" "NF" "AX" "CX" "MF" "SJ" "TM"
+    "GU" "VU" "PF" "BM" "VG" "PN" "PR" "QQ" "UM" "GG" "BQ" "MO" "KY" "NR" "AW"
+    "FM" "CC" "WS" "TO" "SH" "WF" "TV" "BL" "MS" "GP" "BV" "AS" "FK" "GS" "MQ"
+    "FO" "AQ" "MH" "VI" "GI" "NC" "YT" "TC" "RE" "GL" "KI" "HK" "IO" "CW" "JE"
+    "HM" "PM" "AI" "PW"
+    "EH" ;; Western Sahara Cases https://github.com/CSSEGISandData/COVID-19/issues/3436
 
-   ;; 0 active cases - fighting OutOfMemoryError, saving memory
-   ;; "IM" "MP" "CK" "GF" "SX" "TK" "TF" "KP" "NU" "NF" "AX" "CX" "MF" "SJ" "EH"
-   ;; "TM" "GU" "PF" "BM" "VG" "PN" "PR" "QQ" "UM" "GG" "BQ" "MO" "KY" "NR" "AW"
-   ;; "FM" "CC" "TO" "SH" "WF" "TV" "BL" "MS" "GP" "BV" "AS" "FK" "GS" "MQ" "FO"
-   ;; "AQ" "VI" "GI" "NC" "YT" "TC" "RE" "GL" "KI" "HK" "IO" "CW" "JE" "HM" "PM"
-   ;; "AI" "PW"
-   ])
+    ;; 0 active cases - fighting OutOfMemoryError, saving memory
+    ;; "IM" "MP" "CK" "GF" "SX" "TK" "TF" "KP" "NU" "NF" "AX" "CX" "MF" "SJ" "EH"
+    ;; "TM" "GU" "PF" "BM" "VG" "PN" "PR" "QQ" "UM" "GG" "BQ" "MO" "KY" "NR" "AW"
+    ;; "FM" "CC" "TO" "SH" "WF" "TV" "BL" "MS" "GP" "BV" "AS" "FK" "GS" "MQ" "FO"
+    ;; "AQ" "VI" "GI" "NC" "YT" "TC" "RE" "GL" "KI" "HK" "IO" "CW" "JE" "HM" "PM"
+    ;; "AI" "PW"
+    })
+
+(def no-population-country-codes ["TF" "MF" "SJ" "QQ" "UM" "BQ" "BV" "GS" "AQ" "HM"])
 
 (def all-country-codes
-  "TODO all-country-codes should be a set"
-  #_["SK"]
-  #_["SK" "DE" "ZZ"]
-  #_[
-   "ZZ"
-   "GB" "SK" "DE" "AT" "CZ" "US" "FR"
-   ;; "PL" "IT" "ES" "SE" "UA" "HU"
-   ]
+  #_#{"SK"}
+  #_#{"SK" "DE" "ZZ"}
+  #_#{
+      "ZZ"
+      "GB" "SK" "DE" "AT" "CZ" "US" "FR"
+      ;; "PL" "IT" "ES" "SE" "UA" "HU"
+      }
   (clojure.set/difference
-   (set (keys country-code-2-to-3-hm))
-   #_(set excluded-country-codes)))
+   ((comp set keys)
+    country-code-2-to-3-hm)
+   #_excluded-country-codes))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.country-codes)

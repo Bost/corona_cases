@@ -29,7 +29,7 @@
                           prm))
                    (map (comp
                          (fn [{:keys [vs shift]}] (into (drop-last shift vs)
-                                                        (repeat shift 0)))
+                                                       (repeat shift 0)))
                          (fn [{:keys [kw shift]}] {:vs (map kw stats-country)
                                                   :shift shift}))
                         kw-shift-maps))

@@ -34,17 +34,17 @@
 (def ^:const country-code--country
   (conj
    (country-code--country-nv-i18n)
-    ccc/country-code-worldwide
-    ccc/country-code-others
-    ;; see
-    ;; https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
-    {
-     "XK" "Republic of Kosovo"
-     "XD" "United Nations Neutral Zone"
-     "XE" "Iraq-Saudi Arabia Neutral Zone"
-     "XS" "Spratly Islands"
-     "XX" "Disputed Territory"
-     }))
+   ccc/country-code-worldwide--worldwide
+   ccc/country-code-default--others
+   ;; see
+   ;; https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent_(data_file)
+   {
+    "XK" "Republic of Kosovo"
+    "XD" "United Nations Neutral Zone"
+    "XE" "Iraq-Saudi Arabia Neutral Zone"
+    "XS" "Spratly Islands"
+    "XX" "Disputed Territory"
+    }))
 
 (def ^:const country--country-code
   "Mapping: country-names -> 2-letter country codes.

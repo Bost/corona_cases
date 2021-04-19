@@ -407,7 +407,9 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   :c ~ closed cased
   :r ~ recovered cased
   :d ~ deaths
-  :a ~ active cases i.e. ill"
+  :a ~ active cases i.e. ill
+
+  TODO see https://github.com/clojure/data.priority-map"
   [{:idx  0 :kw :v                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  1 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  2 :kw :c                :threshold {:inc 50000     :val (int 3410e3)}}

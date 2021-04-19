@@ -84,8 +84,9 @@
              (comp
               (partial apply merge)
               (juxt
-               (comp (partial hash-map :country)
-                     ccr/country-name-aliased)
+               (comp
+                (partial hash-map :country)
+                ccr/country-name-aliased)
                (partial hash-map :country_code)
                (comp
                 (partial hash-map :history)
@@ -93,7 +94,8 @@
                 (partial vaccination json-owid)
                 #_(partial zipmap raw-dates-v1)
                 #_cycle
-                #_(fn [_] [245 2350 9822 18554 21775 22411 27371 32293 43317 49488 57226 59930 60302 71982 72060]))))))
+                #_(fn [_] [245 2350 9822 18554 21775 22411 27371 32293 43317
+                          49488 57226 59930 60302 71982 72060]))))))
    ccc/all-country-codes))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.owid)

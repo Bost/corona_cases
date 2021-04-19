@@ -4,7 +4,9 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require [corona.api.expdev07 :as data]
-            [corona.common :as com])
+            [corona.common :as com]
+            [corona.macro :as macro :refer
+             [defn-fun-id debugf infof warnf fatalf]])
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
