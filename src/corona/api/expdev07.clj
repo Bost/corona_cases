@@ -331,28 +331,31 @@
 (defn calc-all-rankings
   "TODO verify ranking for one and zero countries"
   [json]
-  (let [stats (stats-countries json)]
+  (let [rankings
+        (let [stats (stats-countries json)]
+          ((comp
+            utc/transpose
+            (partial map
+                     (fn rank-for-case [rank-kw]
+                       ((comp
+                         (partial map-indexed
+                                  (fn [idx hm]
+                                    (update-in
+                                     (select-keys hm [:ccode])
+                                     [:rank rank-kw]
+                                     ;; inc - start ranking from 1, not 0
+                                     (fn [_] (inc idx)))))
+                         (partial sort-by rank-kw >))
+                        stats))))
+           com/ranking-cases))]
     ((comp
       (partial
        map (fn [ccode]
              ((comp
                (partial apply utc/deep-merge)
                (partial reduce into [])
-               (partial map (partial filter (fn [hm] (= (:ccode hm) ccode))))
-               utc/transpose
-               (partial map
-                        (fn rank-for-case [rank-kw]
-                          ((comp
-                            (partial map-indexed
-                                     (fn [idx hm]
-                                       (update-in
-                                        (select-keys hm [:ccode])
-                                        [:rank rank-kw]
-                                        ;; inc - start ranking from 1, not 0
-                                        (fn [_] (inc idx)))))
-                            (partial sort-by rank-kw >))
-                           stats))))
-              com/ranking-cases))))
+               (partial map (partial filter (fn [hm] (= (:ccode hm) ccode)))))
+              rankings))))
      com/relevant-country-codes)))
 
 (defn all-rankings [json] (cache/from-cache! (fn [] (calc-all-rankings json)) [:rankings]))
