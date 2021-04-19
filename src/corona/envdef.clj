@@ -40,8 +40,9 @@
   (format "http://localhost:%s/owid-covid-data.json" mockup-port))
 
 (def v1-mockups
-  [(format "localhost:%s" mockup-port)]
-  #_"localhost:8000")
+  [
+   (format "localhost:%s" mockup-port)
+   #_"localhost:8000"])
 
 (def environment
   "Mapping env-type -> bot-name"

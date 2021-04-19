@@ -244,6 +244,7 @@
               #_"https://covid-tracker-us.herokuapp.com/all"
               ((comp
                 (partial format "https://%s/all")
+                #_first
                 second)
                env/api-servers)
               "-O" "resources/mockup/all.json")

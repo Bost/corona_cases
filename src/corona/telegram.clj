@@ -213,8 +213,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         _ (m-result
            ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
            (when (< cnt-reports 10)
-             (warnf "Some stuff may not be calculated: %s"
-                    "(< cnt-reports 10)")))
+             (warnf "Some stuff may not be calculated. Too few %s: %s"
+                    'cnt-reports cnt-reports)))
 
         stats (m-result (est/estimate (v1/pic-data json)))
         _ (com/add-calc-time "estimate" stats)

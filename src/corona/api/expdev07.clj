@@ -92,7 +92,11 @@
                 ((comp
                   ;; at least 2 values needed to calc difference
                   #_(partial take-last 4)
-                  keys :history last :locations :confirmed)
+                  #_(fn [v] (debugf "count %s" (count v)) v)
+                  keys :history
+                  #_(fn [v] (debugf "country %s" (:country v)) v)
+                  ;; `first` is probably faster that `last`
+                  first #_last :locations :confirmed)
                  json)))
    [:v1 :raw-dates]))
 
