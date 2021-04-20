@@ -400,12 +400,11 @@
 
 (def all-country-codes
   #_#{"SK"}
+  #_#{"AR"}
+  #_#{"SK" "PE" "KR" "TW" "AR" "TH" "MX"}
   #_#{"SK" "DE" "ZZ"}
-  #_#{
-      "ZZ"
-      "GB" "SK" "DE" "AT" "CZ" "US" "FR"
-      ;; "PL" "IT" "ES" "SE" "UA" "HU"
-      }
+  #_#{"SK" "GG" "QQ" "DE" "ZZ"}
+  #_#{"ZZ" "GB" "SK" "DE" "AT" "CZ" "US" "FR" "PL" "IT" "ES" "SE" "UA" "HU"}
   (clojure.set/difference
    ((comp set keys)
     country-code-2-to-3-hm)

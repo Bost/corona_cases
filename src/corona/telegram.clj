@@ -176,20 +176,52 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         cnt-reports (m-result (count dates))
         prm-json    (m-result {:json json})
 
+        footer      (m-result (msgc/footer com/html))
+
         prm-json-footer-reports
         (m-result (assoc prm-json
-                         :footer (msgc/footer com/html)
+                         :footer footer
                          :cnt-reports cnt-reports))
-
-        header (m-result ((comp
-                           (partial msgc/header com/html)
-                           data/last-date)
-                          json))
 
         _ (com/add-calc-time "prm-json-footer-reports" prm-json-footer-reports)
 
-        stats-countries (m-result (data/stats-countries json))
-        _ (com/add-calc-time "stats-countries" stats-countries)
+        pic-data ((comp
+                   m-result
+                   #_(fn [v] (def pda v) v)
+                   (partial sort-by :t)
+                   #_(fn [v] (def pdb v) v)
+                   v1/pic-data)
+                  json)
+
+        header (m-result ((comp
+                           (partial msgc/header com/html)
+                           (fn [v] (def last-date v) v)
+                           :t
+                           last
+                           (fn [v] (def pic-data v) v)
+                           )
+                          pic-data))
+
+        stats-new ((comp
+                    m-result
+                    (fn [v] (def sn v) v)
+                    flatten
+                    (partial map (fn [[ccode hms]]
+                                   ((comp
+                                     last
+                                     (partial sort-by :t))
+                                    hms)))
+                    #_(fn [v] (def sna v) v)
+                    (partial group-by :ccode)
+                    #_(fn [v] (def snb v) v))
+                   pic-data)
+
+        estim ((comp
+                m-result
+                (fn [v] (def es v) v)
+                est/estimate)
+               pic-data)
+        _ (com/add-calc-time "estim" estim)
 
         all-calc-listings
         (m-result
@@ -204,8 +236,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                     header)]
            ((comp
              doall
-             (partial map (partial apply msgl/calc-listings!
-                                   stats-countries prm)))
+             (partial map (partial apply msgl/calc-listings! stats-new prm)))
             [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
              [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]])))
         _ (com/add-calc-time "all-calc-listings" all-calc-listings)
@@ -216,29 +247,34 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
              (warnf "Some stuff may not be calculated. Too few %s: %s"
                     'cnt-reports cnt-reports)))
 
-        stats (m-result (est/estimate (v1/pic-data json)))
-        _ (com/add-calc-time "estimate" stats)
-
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
         (m-result
          (let [prm-json-hm (assoc prm-json-footer-reports :dates dates)]
            ((comp
              doall
-             (partial pmap
+             (partial pmap ;; use pmap in PROD and map in development
                       (fn [ccode]
                         [((comp
                            (fn [pred-json-hm]
                              (cache/cache!
-                              (fn [] (msgi/message ccode pred-json-hm))
+                              (fn []
+                                (msgi/messagen ccode {:estim estim :cnt-reports cnt-reports :dates dates
+                                                      :stats-countries stats-new
+                                                      :header header
+                                                      :footer footer})
+                                #_(msgi/message ccode pred-json-hm))
                               (msgi/message-kw ccode)))
                            (partial assoc (conj (data/create-pred-hm ccode)
                                                 prm-json-hm)
                                     :header))
                           header)
                          (cache/cache!
-                          (fn [] (plot/message ccode stats cnt-reports))
+                          (fn [] (plot/message ccode estim cnt-reports))
                           (plot/message-kw ccode))])))
+            ;; here also "ZZ" worldwide messages but no "QQ" Rest countries
+            #_com/relevant-with-worldwide-country-codes
+            ;; here also "ZZ" worldwide messages
             ccc/all-country-codes)))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
 
@@ -261,7 +297,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
          ((comp
            doall
            (partial map (partial apply plot/aggregation!
-                                 stats cnt-reports aggregation-hash)))
+                                 estim cnt-reports aggregation-hash)))
           (for [a com/aggregation-cases
                 b com/absolute-cases]
             [a b])))

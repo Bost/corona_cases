@@ -242,7 +242,7 @@
          conj vpcrd
          (mapv (fn [fun] (apply mapv (fn [_ _ c r d] (fun c r d)) vpcrd))
                [com/calculate-activ]))]
-    (zipmap com/all-cases
+    (zipmap com/all-report-cases
             (apply
              conj vpcrda
              (->> [
@@ -298,7 +298,8 @@
 (defn delta [pred-json-hm]
   ((comp
     (partial reduce into {})
-    (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))}) com/all-cases)))
+    (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))})
+                                     com/all-report-cases)))
     (partial map (partial eval-fun pred-json-hm)))
    [get-prev get-last]))
 

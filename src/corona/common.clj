@@ -429,6 +429,8 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
    {:idx 13 :kw :r-rate}
    {:idx 14 :kw :d-rate}
    {:idx 15 :kw :c-rate} ;; closed-rate
+   {:idx 16 :kw :ea} ;; estimate-active
+   {:idx 17 :kw :er} ;; estimate-recovered
    ])
 
 (def aggregation-params
@@ -451,6 +453,11 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 (def basic-cases
   (tore case-params
         (filter (fn [m] (utc/in? [2 3 4 5 #_6 7 8 9 10] (:idx m))))
+        (map :kw)))
+
+(def all-report-cases
+  (tore case-params
+        (filter (fn [m] (utc/in? [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15] (:idx m))))
         (map :kw)))
 
 (def all-cases
@@ -599,6 +606,10 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
       ((domonad state-m [mvv (m-result plain-val)] mvv)
        (update-in state [:acc]
                   (fn [_] (vec (concat accumulator (vector calc-time)))))))))
+
+(def relevant-with-worldwide-country-codes
+  (clojure.set/difference ccc/all-country-codes
+                          #{ccc/country-code-others}))
 
 (def relevant-country-codes
   (clojure.set/difference ccc/all-country-codes
