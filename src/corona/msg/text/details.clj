@@ -120,13 +120,13 @@
           #_{:s lang/vaccinated     :n vaccin          :diff delta-vaccin :emoji "💉"}
           #_{:s lang/vaccin-per-1e5 :n vaccin-per-100k :diff delta-v100k}
           {:s lang/active         :n active          :diff delta-active       :emoji "🤒"}
-          {:s lang/activ-estim    :n active-estim    :diff delta-active-estim :emoji "🤒"}
+          #_{:s lang/activ-estim    :n active-estim    :diff delta-active-estim :emoji "🤒"}
           {:s lang/active-per-1e5 :n active-per-100k :diff delta-a100k}
           #_{:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))}
           {:s lang/active-last-7-avg :n active-last-7-avg}
           {:s lang/active-change-last-7-avg :n active-change-last-7-avg :show-plus-minus true}
           {:s lang/recovered         :n recove          :diff delta-recove       :emoji "🎉"}
-          {:s lang/recov-estim       :n recove-estim    :diff delta-recove-estim :emoji "🎉"}
+          #_{:s lang/recov-estim       :n recove-estim    :diff delta-recove-estim :emoji "🎉"}
           {:s lang/recove-per-1e5    :n recove-per-100k :diff delta-r100k}
           {:s lang/deaths            :n deaths          :diff delta-deaths :emoji "⚰️"}
           {:s lang/deaths-per-1e5    :n deaths-per-100k :diff delta-d100k}
