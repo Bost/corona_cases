@@ -185,61 +185,38 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         _ (com/add-calc-time "prm-json-footer-reports" prm-json-footer-reports)
 
-        pic-data ((comp
-                   m-result
-                   #_(fn [v] (def pda v) v)
-                   #_(partial sort-by :t)
-                   #_(fn [v] (def pdb v) v)
-                   v1/pic-data)
-                  json)
+        pic-data ((comp m-result v1/pic-data) json)
 
-        header (m-result ((comp
-                           (partial msgc/header com/html)
-                           #_(fn [v] (def last-date v) v)
-                           :t
-                           last
-                           #_(fn [v] (def pic-data v) v)
-                           (partial sort-by :t))
-                          pic-data))
+        header
+        ((comp m-result
+               (partial msgc/header com/html) :t last (partial sort-by :t))
+         pic-data)
 
-        stats-new ((comp
-                    m-result
-                    #_(fn [v] (def sn v) v)
-                    flatten
-                    (partial map (fn [[ccode hms]]
-                                   ((comp
-                                     last
-                                     (partial sort-by :t))
-                                    hms)))
-                    #_(fn [v] (def sna v) v)
-                    (partial group-by :ccode)
-                    #_(fn [v] (def snb v) v))
-                   pic-data)
+        stats-countries
+        ((comp
+          m-result
+          flatten
+          (partial map (fn [[_ hms]] ((comp last (partial sort-by :t)) hms)))
+          (partial group-by :ccode))
+         pic-data)
 
-        estim ((comp
-                m-result
-                #_(fn [v] (def es v) v)
-                est/estimate
-                #_(fn [v] (def pd v) v))
-               pic-data)
+        estim ((comp m-result est/estimate) pic-data)
         _ (com/add-calc-time "estim" estim)
 
         all-calc-listings
-        (m-result
-         (let [prm-json-hm prm-json-footer-reports
-               prm ((comp
-                     (partial assoc (conj ((comp
-                                            data/create-pred-hm
-                                            ccr/get-country-code)
-                                           ccc/worldwide)
-                                          prm-json-hm)
-                              :header))
-                    header)]
-           ((comp
-             doall
-             (partial map (partial apply msgl/calc-listings! stats-new prm)))
-            [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
-             [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]])))
+        (let [prm ((comp
+                    (partial assoc (conj ((comp
+                                           data/create-pred-hm
+                                           ccr/get-country-code)
+                                          ccc/worldwide)
+                                         prm-json-footer-reports)
+                             :header))
+                   header)]
+          ((comp
+            m-result doall
+            (partial map (partial apply msgl/calc-listings! stats-countries prm)))
+           [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
+            [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
         _ (com/add-calc-time "all-calc-listings" all-calc-listings)
 
         _ (m-result
@@ -250,11 +227,10 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
-        (m-result
-         (let [prm-json-hm (assoc prm-json-footer-reports :dates dates)]
+        (let [prm-json-hm (assoc prm-json-footer-reports :dates dates)]
            ((comp
-             doall
-             (partial pmap ;; use pmap in PROD and map in development
+             m-result doall
+             (partial map ;; use pmap in PROD and map in development
                       (fn [ccode]
                         [((comp
                            (fn [pred-json-hm]
@@ -263,7 +239,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                                 (msgi/message ccode {:estim estim
                                                      :cnt-reports cnt-reports
                                                      :dates dates
-                                                     :stats-countries stats-new
+                                                     :stats-countries stats-countries
                                                      :header header
                                                      :footer footer}))
                               (msgi/message-kw ccode)))
@@ -274,10 +250,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                          (cache/cache!
                           (fn [] (plot/message ccode estim cnt-reports))
                           (plot/message-kw ccode))])))
-            ;; here also "ZZ" worldwide messages but no "QQ" Rest countries
-            #_com/relevant-with-worldwide-country-codes
             ;; here also "ZZ" worldwide messages
-            ccc/all-country-codes)))
+            ccc/all-country-codes))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
 
         cleanups
@@ -291,18 +265,17 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         _ (com/add-calc-time "cleanups" cleanups)
 
         all-aggregations
-        (m-result
-         ;; map is faster than pmap!!!
-         ;; 1. map 4100ms, pmap 8737ms
-         ;; 2. map 3982ms
-         ;; 3. map 3779ms
-         ((comp
-           doall
-           (partial map (partial apply plot/aggregation!
-                                 estim cnt-reports aggregation-hash)))
-          (for [a com/aggregation-cases
-                b com/absolute-cases]
-            [a b])))
+        ((comp
+          m-result doall
+          ;; map is faster than pmap!!!
+          ;; 1. map 4100ms, pmap 8737ms
+          ;; 2. map 3982ms
+          ;; 3. map 3779ms
+          (partial map (partial apply plot/aggregation!
+                                estim cnt-reports aggregation-hash)))
+         (for [a com/aggregation-cases
+               b com/absolute-cases]
+           [a b]))
         _ (com/add-calc-time "all-aggregations" all-aggregations)
 
         ;; discard the intermediary results, i.e. keep only those items in the

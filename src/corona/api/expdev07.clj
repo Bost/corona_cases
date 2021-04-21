@@ -205,8 +205,6 @@
 
 (defn get-last [coll] (first (take-last 1 coll)))
 
-(defn get-prev [coll] (first (take-last 2 coll)))
-
 ;; TODO reload only the latest N reports. e.g. try one week
 (defn sums-for-case
   "Return sums for a given `case-kw` calculated for every single report."
@@ -294,14 +292,6 @@
     (partial map (fn [[k v]] {k (fun v)}))
     case-counts-report-by-report)
    pred-json-hm))
-
-(defn delta [pred-json-hm]
-  ((comp
-    (partial reduce into {})
-    (partial apply (fn [prv lst] (map (fn [k] {k (- (k lst) (k prv))})
-                                     com/all-report-cases)))
-    (partial map (partial eval-fun pred-json-hm)))
-   [get-prev get-last]))
 
 (defn last-report [pred-json-hm] (eval-fun pred-json-hm get-last))
 
