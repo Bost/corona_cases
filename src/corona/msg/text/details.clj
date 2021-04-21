@@ -49,7 +49,7 @@
      (str msgc/blank title)
      (utc/sjoin vals))]])
 
-(defn rank-for-case [rank-kw stats-countries]
+(defn rank-for-case [stats-countries rank-kw]
   (map-indexed
    (fn [idx hm]
      (update-in (select-keys hm [:ccode]) [:rank rank-kw]
@@ -65,8 +65,10 @@
                 (reduce into []
                         (map (fn [ranking]
                                (filter (fn [hm] (= (:ccode hm) ccode)) ranking))
-                             (utc/transpose (map (fn [case-kw] (rank-for-case case-kw stats-countries))
-                                                 com/ranking-cases))))))
+                             ((comp
+                               utc/transpose
+                               (partial map (partial rank-for-case stats-countries)))
+                              com/ranking-cases)))))
        com/relevant-country-codes))
 
 (defn all-rankings [stats-countries] (cache/from-cache! (fn [] (calc-all-rankings stats-countries)) [:rankings]))
