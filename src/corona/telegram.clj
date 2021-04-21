@@ -260,11 +260,12 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                            (fn [pred-json-hm]
                              (cache/cache!
                               (fn []
-                                (msgi/messagen ccode {:estim estim :cnt-reports cnt-reports :dates dates
-                                                      :stats-countries stats-new
-                                                      :header header
-                                                      :footer footer})
-                                #_(msgi/message ccode pred-json-hm))
+                                (msgi/message ccode {:estim estim
+                                                     :cnt-reports cnt-reports
+                                                     :dates dates
+                                                     :stats-countries stats-new
+                                                     :header header
+                                                     :footer footer}))
                               (msgi/message-kw ccode)))
                            (partial assoc (conj (data/create-pred-hm ccode)
                                                 prm-json-hm)

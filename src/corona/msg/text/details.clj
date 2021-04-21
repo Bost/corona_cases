@@ -50,156 +50,6 @@
        (str msgc/blank title)
        (utc/sjoin vals))]]))
 
-(defn-fun-id confirmed-info "TODO reintroduce max-active-date"
-  [ccode last-report last-8 {:keys [json] :as pred-json-hm} delta maxes cnt-countries]
-  (let [
-        {max-active :active max-deaths :deaths} maxes
-        {population      :p
-         deaths          :d
-         recove          :r
-         recove-estim    :r
-         active          :a
-         active-estim    :a
-         vaccin          :v
-         confirmed       :c
-         active-per-100k :a100k
-         recove-per-100k :r100k
-         deaths-per-100k :d100k
-         closed-per-100k :c100k
-         vaccin-per-100k :v100k
-         a-rate          :a-rate
-         r-rate          :r-rate
-         d-rate          :d-rate
-         c-rate          :c-rate ;; closed-rate
-         v-rate          :v-rate} last-report
-
-        {vaccin-last-8 :v active-last-8 :a confir-last-8 :c} last-8
-
-        [_               & vaccin-last-7] vaccin-last-8
-        [active-last-8th & active-last-7] active-last-8
-        [_               & confir-last-7] confir-last-8
-
-        closed (+ deaths recove)
-        {delta-deaths :d
-         delta-recove :r
-         delta-recove-estim :r
-         delta-active :a
-         delta-active-estim :a
-         delta-vaccin :v
-         delta-d100k  :d100k
-         delta-r100k  :r100k
-         delta-a100k  :a100k
-         delta-v100k  :v100k}
-        delta
-        delta-closed (+ delta-deaths delta-recove)
-        active-last-7-avg (-> active-last-7 istats/mean round-nr)
-
-        ;; ActC(t0)    = active(t0)    - active(t0-1d)
-        ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
-        ;; ActC(t0-2d) = active(t0-2d) - active(t0-3d)
-        ;; ActC(t0-3d) = active(t0-2d) - active(t0-4d)
-        ;; ActC(t0-4d) = active(t0-2d) - active(t0-5d)
-        ;; ActC(t0-5d) = active(t0-2d) - active(t0-6d)
-        ;; ActC(t0-6d) = active(t0-6d) - active(t0-7d)
-
-        ;; ActCL7CAvg =
-        ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
-        ;; = (active(t0) - active(t0-7d)) / 7
-        active-change-last-7-avg (-> (/ (- active active-last-8th) 7.0)
-                                     round-nr #_plus-minus)]
-
-    ;; TODO add effective reproduction number (R)
-    ((comp
-      (partial remove nil?)
-      (partial apply conj))
-     [(when (pos? confirmed)
-        ((comp
-          (partial mapv f))
-         [
-          #_{:s lang/vaccinated     :n vaccin          :diff delta-vaccin :emoji "💉"}
-          #_{:s lang/vaccin-per-1e5 :n vaccin-per-100k :diff delta-v100k}
-          {:s lang/active         :n active          :diff delta-active       :emoji "🤒"}
-          #_{:s lang/activ-estim    :n active-estim    :diff delta-active-estim :emoji "🤒"}
-          {:s lang/active-per-1e5 :n active-per-100k :diff delta-a100k}
-          #_{:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))}
-          {:s lang/active-last-7-avg :n active-last-7-avg}
-          {:s lang/active-change-last-7-avg :n active-change-last-7-avg :show-plus-minus true}
-          {:s lang/recovered         :n recove          :diff delta-recove       :emoji "🎉"}
-          #_{:s lang/recov-estim       :n recove-estim    :diff delta-recove-estim :emoji "🎉"}
-          {:s lang/recove-per-1e5    :n recove-per-100k :diff delta-r100k}
-          {:s lang/deaths            :n deaths          :diff delta-deaths :emoji "⚰️"}
-          {:s lang/deaths-per-1e5    :n deaths-per-100k :diff delta-d100k}
-          {:s lang/closed            :n closed          :diff delta-closed :emoji "🏁"}
-          {:s lang/closed-per-1e5    :n closed-per-100k :diff delta-d100k
-               ;; TODO create command lang/cmd-closed-per-1e5
-               #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}]))
-      ;; no country ranking can be displayed for worldwide statistics
-      ["\n%s\n" [(format (str
-                          "%s")
-                         (let [date (max-active :date)]
-                           (format "%s: %s (%s)"
-                                   lang/active-max (max-active :val)
-                                   (com/fmt-date date)
-                                   ;; TODO ctb/ago-diff: show only two segments:
-                                   ;; 1 month 4 weeks ago; must be rounded
-                                   #_
-                                   (format "%s - %s"
-                                           (com/fmt-date date)
-                                           (ctb/ago-diff date
-                                                         {:verbose true})))))
-                 ;; max-deaths makes no sense - it's always the last report
-                 #_(format (str
-                          "%s\n"
-                          "%s")
-                         (format "%s: %s (%s)" lang/active-max (max-active :val)
-                                 (com/fmt-date (max-active :date)))
-                         (format "%s: %s (%s)" lang/deaths-max (max-deaths :val)
-                                 (com/fmt-date (max-deaths :date))))]]
-      (when-not (msgc/worldwide? ccode)
-        ["\n%s\n"
-         [(msgc/format-linewise
-           [["%s" [lang/people         :p]]
-            ["%s" [lang/active-per-1e5 :a100k]]
-            ["%s" [lang/recove-per-1e5 :r100k]]
-            ["%s" [lang/deaths-per-1e5 :d100k]]
-            ["%s" [lang/closed-per-1e5 :c100k]]]
-           :line-fmt "%s:<b>%s</b>   "
-           :fn-fmts
-           (fn [fmts] (format lang/ranking-desc
-                             cnt-countries (cstr/join "" fmts)))
-           :fn-args
-           (fn [args] (update args (dec (count args))
-                             (fn [_]
-                               (get
-                                ((comp
-                                  first
-                                  (partial map :rank)
-                                  (partial filter (fn [hm] (= (:ccode hm) ccode)))
-                                  ;; TODO all-rankings only stats-countries are needed
-                                  data/all-rankings)
-                                 json)
-                                (last args))))))]])
-      (last-7-block
-       {:condition (some pos? vaccin-last-7)
-        :emoji "💉🗓"
-        :title (format "%s - %s" lang/vaccin-last-7 lang/rate-of-people)
-        :vals (map (fn [v] (format "%s=%s%s"
-                                  v
-                                  ((com/calc-rate-precision-1 :v)
-                                   {:v v :p population})
-                                  msgc/percent))
-                   vaccin-last-7)})
-      (last-7-block
-       {:condition (pos? confirmed)
-        :emoji "🤒🗓"
-        :title (format "%s - %s" lang/active-last-7 lang/rate-of-confirmed)
-        :vals (map (fn [a c] (format "%s=%s%s"
-                                    a
-                                    ((com/calc-rate-precision-1 :a)
-                                     {:a a :p population :c c})
-                                    msgc/percent))
-                   active-last-7 confir-last-7)})])))
-
 (defn rank-for-case [rank-kw stats-countries]
   (map-indexed
    (fn [idx hm]
@@ -222,7 +72,7 @@
 
 (defn all-rankings [stats-countries] (cache/from-cache! (fn [] (calc-all-rankings stats-countries)) [:rankings]))
 
-(defn-fun-id confirmed-infon "TODO reintroduce max-active-date"
+(defn-fun-id confirmed-info "TODO reintroduce max-active-date"
   [ccode last-report last-8 stats-countries delta maxes cnt-countries]
   (debugf "ccode %s" ccode)
   #_(debugf "last-8 %s" last-8)
@@ -234,9 +84,9 @@
         {population      :p
          deaths          :d
          recove          :r
-         recove-estim    :r
+         recove-estim    :er
          active          :a
-         active-estim    :a
+         active-estim    :ea
          vaccin          :v
          confirmed       :c
          active-per-100k :a100k
@@ -265,9 +115,9 @@
           closed (+ deaths recove)
           {delta-deaths :d
            delta-recove :r
-           delta-recove-estim :r
+           delta-recove-estim :er
            delta-active :a
-           delta-active-estim :a
+           delta-active-estim :ea
            delta-vaccin :v
            delta-d100k  :d100k
            delta-r100k  :r100k
@@ -402,69 +252,6 @@
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
   "
-  [ccode {:keys [cnt-reports dates json] :as pred-json-hm}]
-  ((comp
-    (fn [info]
-      (debugf "ccode %s size %s" ccode (com/measure info))
-      info)
-    fmt)
-   (let [last-report (data/last-report pred-json-hm)
-         {v-rate :v-rate vaccinated :v population :p confirmed :c} last-report
-         delta (data/delta pred-json-hm)
-         {delta-confir :c
-          delta-vaccin :v} delta
-         last-8 (data/last-8-reports pred-json-hm)
-         {vaccin-last-8 :v} last-8
-         [_ & vaccin-last-7] vaccin-last-8]
-     #_(def last-8 last-8)
-     #_(def vaccin-last-8 vaccin-last-8)
-     #_(def vaccin-last-7 vaccin-last-7)
-     (conj
-      (select-keys pred-json-hm [:header :footer])
-      {:cname-aliased (ccr/country-name-aliased ccode)
-       :country-cmds
-       ((comp (partial apply #(format "     %s    %s" %1 %2))
-              (partial map (comp com/encode-cmd cstr/lower-case)))
-        [ccode (ccc/country-code-3-letter ccode)])
-       :cnt-reports (str lang/report " " cnt-reports)
-       :population
-       (f (conj {:s lang/people :n population :emoji "👥"}))
-
-       :vaccinated
-       (f {:s lang/vaccinated
-           :n    (if (zero? vaccinated) com/unknown vaccinated)
-           :diff (if (zero? vaccinated) com/unknown delta-vaccin)
-           :emoji "💉"})
-
-       :confirmed
-       (f {:emoji "🦠" :s lang/confirmed :n confirmed :diff delta-confir})}
-
-      (when (zero? vaccinated)
-        {:notes (when (zero? vaccinated)
-                  ["%s\n" [lang/vaccin-data-not-published]])})
-
-      (when (or (pos? confirmed)
-                (some pos? vaccin-last-7))
-        (let [case-counts-rbr (data/case-counts-report-by-report pred-json-hm)
-              maxes
-              {:deaths (max-vals (:d case-counts-rbr) dates)
-               :active (max-vals (:a case-counts-rbr) dates)}]
-          {:details (confirmed-info
-                     ccode
-                     last-report
-                     last-8
-                     pred-json-hm #_(dissoc pred-json-hm :json) ;; TODO the dissoc is not needed
-                     delta
-                     maxes
-                     (count com/relevant-country-codes))}))))))
-
-(defn-fun-id messagen
-  "Shows the table with the absolute and %-wise nr of cases, cases per-100k etc.
-  TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
-  TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
-  (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
-  TODO create an API web service(s) for every field displayed in the messages
-  "
   [ccode {:keys [cnt-reports dates estim stats-countries] :as pred-json-hm}]
   (debugf "ccode %s" ccode)
   #_(def estim estim)
@@ -545,7 +332,7 @@
                       maxes
                       {:deaths (max-vals d-case-counts-rbr dates)
                        :active (max-vals a-case-counts-rbr dates)}]
-                  {:details (confirmed-infon
+                  {:details (confirmed-info
                              ccode
                              last-report
                              last-8
