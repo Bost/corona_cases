@@ -98,65 +98,48 @@
          c-rate          :c-rate ;; closed-rate
          v-rate          :v-rate} last-report
 
-        {vaccin-last-8 :v active-last-8 :a confir-last-8 :c} last-8
-
-        [_               & vaccin-last-7] vaccin-last-8
-        [active-last-8th & active-last-7] active-last-8
-        [_               & confir-last-7] confir-last-8
-        ]
-    #_(def vaccin-last-8 vaccin-last-8)
-    #_(def last-reportn last-report)
-    #_(def population population)
-    #_(def vaccin-last-7 vaccin-last-7)
-    #_(def last-8 last-8)
+        [_               & vaccin-last-7] (:v last-8)
+        [active-last-8th & active-last-7] (:a last-8)
+        [_               & confir-last-7] (:c last-8)]
     ;; TODO add effective reproduction number (R)
     ((comp
       (partial remove nil?)
       (partial apply conj))
      [(when (pos? confirmed)
-        ((comp
-          (partial mapv f))
-         (let [closed (+ deaths recove)
-               {delta-deaths :d
-                delta-recove :r
-                delta-recove-estim :er
-                delta-active :a
-                delta-active-estim :ea
-                delta-d100k  :d100k
-                delta-r100k  :r100k
-                delta-a100k  :a100k} delta]
-           [{:s lang/active         :n active          :diff delta-active       :emoji "🤒"}
-            {:s lang/activ-estim    :n active-estim    :diff delta-active-estim :emoji "🤒"}
-            {:s lang/active-per-1e5 :n active-per-100k :diff delta-a100k}
-            #_{:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))}
-            {:s lang/active-last-7-avg
-             :n ((comp round-nr istats/mean) active-last-7)}
-            {:s lang/active-change-last-7-avg
-             :n
-             ;; ActC(t0)    = active(t0)    - active(t0-1d)
-             ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
-             ;; ActC(t0-2d) = active(t0-2d) - active(t0-3d)
-             ;; ActC(t0-3d) = active(t0-2d) - active(t0-4d)
-             ;; ActC(t0-4d) = active(t0-2d) - active(t0-5d)
-             ;; ActC(t0-5d) = active(t0-2d) - active(t0-6d)
-             ;; ActC(t0-6d) = active(t0-6d) - active(t0-7d)
+        (mapv
+         f
+         [{:s lang/active         :n active          :diff (:a delta) :emoji "🤒"}
+          {:s lang/activ-estim    :n active-estim    :diff (:ea delta) :emoji "🤒"}
+          {:s lang/active-per-1e5 :n active-per-100k :diff (:a100k delta)}
+          #_{:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))}
+          {:s lang/active-last-7-avg
+           :n ((comp round-nr istats/mean) active-last-7)}
+          {:s lang/active-change-last-7-avg
+           :n
+           ;; ActC(t0)    = active(t0)    - active(t0-1d)
+           ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
+           ;; ActC(t0-2d) = active(t0-2d) - active(t0-3d)
+           ;; ActC(t0-3d) = active(t0-2d) - active(t0-4d)
+           ;; ActC(t0-4d) = active(t0-2d) - active(t0-5d)
+           ;; ActC(t0-5d) = active(t0-2d) - active(t0-6d)
+           ;; ActC(t0-6d) = active(t0-6d) - active(t0-7d)
 
-             ;; ActCL7CAvg =
-             ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
-             ;; = (active(t0) - active(t0-7d)) / 7
-             (-> (/ (- active active-last-8th) 7.0)
-                 round-nr #_plus-minus)
+           ;; ActCL7CAvg =
+           ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
+           ;; = (active(t0) - active(t0-7d)) / 7
+           (-> (/ (- active active-last-8th) 7.0)
+               round-nr #_plus-minus)
 
-             :show-plus-minus true}
-            {:s lang/recovered      :n recove          :diff delta-recove       :emoji "🎉"}
-            {:s lang/recov-estim    :n recove-estim    :diff delta-recove-estim :emoji "🎉"}
-            {:s lang/recove-per-1e5 :n recove-per-100k :diff delta-r100k}
-            {:s lang/deaths         :n deaths          :diff delta-deaths       :emoji "⚰️"}
-            {:s lang/deaths-per-1e5 :n deaths-per-100k :diff delta-d100k}
-            {:s lang/closed         :n closed          :diff (+ delta-deaths delta-recove) :emoji "🏁"}
-            {:s lang/closed-per-1e5 :n closed-per-100k :diff delta-d100k
-             ;; TODO create command lang/cmd-closed-per-1e5
-             #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}])))
+           :show-plus-minus true}
+          {:s lang/recovered      :n recove            :diff (:r delta)  :emoji "🎉"}
+          {:s lang/recov-estim    :n recove-estim      :diff (:er delta) :emoji "🎉"}
+          {:s lang/recove-per-1e5 :n recove-per-100k   :diff (:r100k delta)}
+          {:s lang/deaths         :n deaths            :diff (:d delta)  :emoji "⚰️"}
+          {:s lang/deaths-per-1e5 :n deaths-per-100k   :diff (:d100k delta)}
+          {:s lang/closed         :n (+ deaths recove) :diff (reduce + ((juxt :d :r) delta)) :emoji "🏁"}
+          {:s lang/closed-per-1e5 :n closed-per-100k   :diff (:c100k delta)
+           ;; TODO create command lang/cmd-closed-per-1e5
+           #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}]))
       ;; no country ranking can be displayed for worldwide statistics
       ["\n%s\n" [(format (str
                           "%s")
@@ -247,82 +230,63 @@
       (debugf "ccode %s size %s" ccode (com/measure info))
       info)
     fmt)
-   (let [ccode-estim ((comp
-                       (partial filter (fn [ehm] (= ccode (:ccode ehm)))))
-                      estim)]
-     #_(def ccode-estim ccode-estim)
-     (let [last-2-reports ((comp
-                            (partial take-last 2))
-                           ccode-estim)]
-       #_(debugf "last-2-reports %s" last-2-reports)
-       (let [[_ last-report] last-2-reports]
-         #_(def last-2-reports last-2-reports)
-         (let [{v-rate :v-rate vaccinated :v population :p confirmed :c} last-report]
-           #_(def last-report last-report)
-           (let [delta ((comp
-                         (partial reduce into {})
-                         (partial apply (fn [prv lst]
-                                          #_(debugf "prv %s" prv)
-                                          #_(debugf "lst %s" lst)
-                                          ((comp
-                                            #_(partial map apply hash-map)
-                                            #_(partial map (juxt identity (fn [k] (- (k lst) (k prv)))))
-                                            (partial map (fn [k]
-                                                           ;; TODO see also clojure.core/find
-                                                           #_(debugf "k %s" k)
-                                                           {k (- (k lst) (k prv))})))
-                                           com/all-cases))))
-                        last-2-reports)
-                 {delta-confir :c
-                  delta-vaccin :v} delta
-                 last-8 (let [kws ((comp keys first) ccode-estim)]
-                          ((comp
-                            (partial zipmap kws)
-                            (partial map vals)
-                            utc/transpose
-                            (partial map (fn [hm] (select-keys hm kws)))
-                            (partial take-last 8))
-                           ccode-estim))
-                 {vaccin-last-8 :v} last-8
-                 [_ & vaccin-last-7] vaccin-last-8]
-             #_(def last-8 last-8)
-             #_(def vaccin-last-8 vaccin-last-8)
-             #_(def vaccin-last-7 vaccin-last-7)
-             (conj
-              (select-keys pred-json-hm [:header :footer])
-              {:cname-aliased (ccr/country-name-aliased ccode)
-               :country-cmds
-               ((comp (partial apply #(format "     %s    %s" %1 %2))
-                      (partial map (comp com/encode-cmd cstr/lower-case)))
-                [ccode (ccc/country-code-3-letter ccode)])
-               :cnt-reports (str lang/report " " cnt-reports)
-               :population
-               (f (conj {:s lang/people :n population :emoji "👥"}))
+   (let [ccode-estim (filter (fn [ehm] (= ccode (:ccode ehm))) estim)
+         last-2-reports (take-last 2 ccode-estim)
+         last-report (last last-2-reports)
+         {vaccinated :v confirmed :c} last-report
+         delta ((comp
+                 (partial reduce into {})
+                 (partial apply (fn [prv lst]
+                                  ((comp
+                                    (partial map (fn [k]
+                                                   ;; TODO see also clojure.core/find
+                                                   #_(debugf "k %s" k)
+                                                   {k (- (k lst) (k prv))})))
+                                   com/all-cases))))
+                last-2-reports)]
+     (conj
+      (select-keys pred-json-hm [:header :footer])
+      {:cname-aliased (ccr/country-name-aliased ccode)
+       :country-cmds
+       ((comp (partial apply #(format "     %s    %s" %1 %2))
+              (partial map (comp com/encode-cmd cstr/lower-case)))
+        [ccode (ccc/country-code-3-letter ccode)])
+       :cnt-reports (str lang/report " " cnt-reports)
+       :population
+       (f (conj {:s lang/people :n (:p last-report) :emoji "👥"}))
 
-               :vaccinated
-               (f {:s lang/vaccinated
-                   :n    (if (zero? vaccinated) com/unknown vaccinated)
-                   :diff (if (zero? vaccinated) com/unknown delta-vaccin)
-                   :emoji "💉"})
+       :vaccinated
+       (f {:s lang/vaccinated
+           :n    (if (zero? vaccinated) com/unknown vaccinated)
+           :diff (if (zero? vaccinated) com/unknown (:v delta))
+           :emoji "💉"})
 
-               :confirmed
-               (f {:emoji "🦠" :s lang/confirmed :n confirmed :diff delta-confir})}
+       :confirmed
+       (f {:emoji "🦠" :s lang/confirmed :n confirmed :diff (:c delta)})}
 
-              (when (zero? vaccinated)
-                {:notes (when (zero? vaccinated)
-                          ["%s\n" [lang/vaccin-data-not-published]])})
+      (when (zero? vaccinated)
+        {:notes (when (zero? vaccinated)
+                  ["%s\n" [lang/vaccin-data-not-published]])})
 
-              (when (or (pos? confirmed)
-                        (some pos? vaccin-last-7))
-                {:details (confirmed-info
-                           ccode
-                           last-report
-                           last-8
-                           stats-countries
-                           delta
-                           {:deaths (max-vals ((comp (partial map :d)) ccode-estim) dates)
-                            :active (max-vals ((comp (partial map :a)) ccode-estim) dates)}
-                           (count com/relevant-country-codes))})))))))))
+      (let [last-8 (let [kws ((comp keys first) ccode-estim)]
+                     ((comp
+                       (partial zipmap kws)
+                       (partial map vals)
+                       utc/transpose
+                       (partial map (fn [hm] (select-keys hm kws)))
+                       (partial take-last 8))
+                      ccode-estim))]
+        (when (or (pos? confirmed)
+                  ((comp (partial some pos?) rest :v) last-8))
+          {:details (confirmed-info
+                     ccode
+                     last-report
+                     last-8
+                     stats-countries
+                     delta
+                     {:deaths (max-vals ((comp (partial map :d)) ccode-estim) dates)
+                      :active (max-vals ((comp (partial map :a)) ccode-estim) dates)}
+                     (count com/relevant-country-codes))}))))))
 
 (defn message-kw [ccode] [:msg (keyword ccode)])
 
