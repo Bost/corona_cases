@@ -230,11 +230,12 @@
 (defn-fun-id message-img
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
-  [ccode & [stats report]]
+  [ccode & [unsorted-stats report]]
   (when-not (in? ccc/excluded-country-codes ccode)
     #_(def stats stats)
     #_(def report report)
-    (let [base-data (stats-for-country ccode stats)
+    (let [stats (sort-by :t unsorted-stats)
+          base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
                                (in? #_[:c :a :r :d] [:c :p :er :ea] case-kw))
                              base-data)

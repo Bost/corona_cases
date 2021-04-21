@@ -399,7 +399,8 @@
 (def no-population-country-codes ["TF" "MF" "SJ" "QQ" "UM" "BQ" "BV" "GS" "AQ" "HM"])
 
 (def all-country-codes
-  #_#{"SK"}
+  #_#{"CR"}
+  #_#{"GG"}
   #_#{"AR"}
   #_#{"SK" "PE" "KR" "TW" "AR" "TH" "MX"}
   #_#{"SK" "DE" "ZZ"}

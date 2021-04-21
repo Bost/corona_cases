@@ -22,6 +22,7 @@
 (defn estim-for-country-fn [calculate-fun kw-estim kw-shift-maps]
   (fn [[_ stats-country-unsorted]]
     (let [stats-country (sort-by :t stats-country-unsorted)]
+      #_(def stats-country stats-country)
       (mapv (fn [estim stats-hm] (conj stats-hm {kw-estim estim}))
             (apply map (fn [& prm]
                          ((comp
@@ -36,8 +37,9 @@
             stats-country))))
 
 (defn estimate [pic-data]
-  ((comp
-    (partial sort-by :ccode)
+  (
+   (comp
+    (partial sort-by (juxt :ccode :t))
     flatten
     (partial map (estim-for-country-fn com/calculate-activ
                                        :ea [{:kw :c  :shift 0}
@@ -45,10 +47,18 @@
                                             {:kw :d  :shift shift-deaths}]))
     (partial group-by :ccode)
     flatten
+    #_(fn [v] (def m4 v) v)
     (partial map (estim-for-country-fn com/calculate-recov
                                        :er [{:kw :c :shift shift-recovery}
                                             {:kw :d :shift shift-deaths}]))
-    (partial group-by :ccode))
+    #_(fn [v] (def m3 v) v)
+    #_(partial map (fn [[ccode hms-ccode]]
+                   [ccode (sort-by :t hms-ccode)]))
+    #_(fn [v] (def m2 v) v)
+    (partial group-by :ccode)
+    #_(fn [v] (def m1 v) v)
+    #_(partial sort-by (juxt :ccode :t))
+    #_(fn [v] (def m0 v) v))
    pic-data))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.estimate)

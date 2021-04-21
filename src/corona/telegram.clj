@@ -188,23 +188,23 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         pic-data ((comp
                    m-result
                    #_(fn [v] (def pda v) v)
-                   (partial sort-by :t)
+                   #_(partial sort-by :t)
                    #_(fn [v] (def pdb v) v)
                    v1/pic-data)
                   json)
 
         header (m-result ((comp
                            (partial msgc/header com/html)
-                           (fn [v] (def last-date v) v)
+                           #_(fn [v] (def last-date v) v)
                            :t
                            last
-                           (fn [v] (def pic-data v) v)
-                           )
+                           #_(fn [v] (def pic-data v) v)
+                           (partial sort-by :t))
                           pic-data))
 
         stats-new ((comp
                     m-result
-                    (fn [v] (def sn v) v)
+                    #_(fn [v] (def sn v) v)
                     flatten
                     (partial map (fn [[ccode hms]]
                                    ((comp
@@ -218,8 +218,9 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         estim ((comp
                 m-result
-                (fn [v] (def es v) v)
-                est/estimate)
+                #_(fn [v] (def es v) v)
+                est/estimate
+                #_(fn [v] (def pd v) v))
                pic-data)
         _ (com/add-calc-time "estim" estim)
 

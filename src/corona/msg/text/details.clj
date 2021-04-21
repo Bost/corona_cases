@@ -250,21 +250,17 @@
          c-rate          :c-rate ;; closed-rate
          v-rate          :v-rate} last-report
 
-        [vaccin-last-8 active-last-8 confir-last-8] ((comp
-                                                      utc/transpose
-                                                      (partial map (juxt :v :a :c)))
-                                                     last-8)
+        {vaccin-last-8 :v active-last-8 :a confir-last-8 :c} last-8
 
         [_               & vaccin-last-7] vaccin-last-8
         [active-last-8th & active-last-7] active-last-8
         [_               & confir-last-7] confir-last-8
         ]
-    (when (= ccode "SK")
-      (debugf "ccode %s" ccode)
-      #_(def vaccin-last-8 vaccin-last-8)
-      (def population population)
-      (def vaccin-last-7 vaccin-last-7)
-      (def last-8 last-8))
+    #_(def vaccin-last-8 vaccin-last-8)
+    #_(def last-reportn last-report)
+    #_(def population population)
+    #_(def vaccin-last-7 vaccin-last-7)
+    #_(def last-8 last-8)
     (let [
           closed (+ deaths recove)
           {delta-deaths :d
@@ -420,6 +416,9 @@
          last-8 (data/last-8-reports pred-json-hm)
          {vaccin-last-8 :v} last-8
          [_ & vaccin-last-7] vaccin-last-8]
+     #_(def last-8 last-8)
+     #_(def vaccin-last-8 vaccin-last-8)
+     #_(def vaccin-last-7 vaccin-last-7)
      (conj
       (select-keys pred-json-hm [:header :footer])
       {:cname-aliased (ccr/country-name-aliased ccode)
@@ -477,14 +476,15 @@
    (let [ccode-estim ((comp
                        (partial filter (fn [ehm] (= ccode (:ccode ehm)))))
                       estim)]
-     (def ccode-estim ccode-estim)
+     #_(def ccode-estim ccode-estim)
      (let [last-2-reports ((comp
                             (partial take-last 2))
                            ccode-estim)]
-       #_(def last-2-reports last-2-reports)
        #_(debugf "last-2-reports %s" last-2-reports)
        (let [[_ last-report] last-2-reports]
+         #_(def last-2-reports last-2-reports)
          (let [{v-rate :v-rate vaccinated :v population :p confirmed :c} last-report]
+           #_(def last-report last-report)
            (let [delta ((comp
                          (partial reduce into {})
                          (partial apply (fn [prv lst]
@@ -501,17 +501,19 @@
                         last-2-reports)
                  {delta-confir :c
                   delta-vaccin :v} delta
-                 last-8 ((comp
-                          (partial take-last 8))
-                         ccode-estim)
-
-                 [vaccin-last-8] ((comp
-                                   utc/transpose
-                                   (partial map (juxt :v)))
-                                  last-8)
+                 last-8 (let [kws ((comp keys first) ccode-estim)]
+                          ((comp
+                            (partial zipmap kws)
+                            (partial map vals)
+                            utc/transpose
+                            (partial map (fn [hm] (select-keys hm kws)))
+                            (partial take-last 8))
+                           ccode-estim))
+                 {vaccin-last-8 :v} last-8
                  [_ & vaccin-last-7] vaccin-last-8]
-             #_(when (= ccode "QQ")
-               (def vaccin-last-7 vaccin-last-7))
+             #_(def last-8 last-8)
+             #_(def vaccin-last-8 vaccin-last-8)
+             #_(def vaccin-last-7 vaccin-last-7)
              (conj
               (select-keys pred-json-hm [:header :footer])
               {:cname-aliased (ccr/country-name-aliased ccode)

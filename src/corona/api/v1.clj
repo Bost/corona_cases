@@ -33,7 +33,7 @@
   "
   [cnt-raw-dates data-with-pop case-kw]
   ((comp
-    (partial sort-by :ccode)
+    #_(partial sort-by (juxt :ccode :t))
     flatten
     (partial map (fn [[t hms]] ;; process-date
                    ((comp
@@ -106,10 +106,7 @@
         cnt-raw-dates (count (data/raw-dates json))]
     #_(def data-with-pop data-with-pop)
     ((comp
-      #_(fn [v]
-        (debugf "(count pic-data) %s (type pic-data) %s" (count v) (type v))
-        (def xfa v)
-        v)
+      #_(fn [v] (def pd v) v)
       (partial apply
                map
                (fn [{:keys [population]} ;; this hashmap doesn't contain 'ccode' and 't'
@@ -154,7 +151,7 @@
                         hms-confirmed
                         hms-recovered
                         hms-deaths]))
-      (partial map (partial sort-by :ccode))
+      (partial map (partial sort-by (juxt :ccode :t)))
       #_(fn [v] (def xff v) v)
       #_(partial map-indexed (fn [idx hm]
                              (debugf "idx %s (count hm) %s" idx (count hm))
