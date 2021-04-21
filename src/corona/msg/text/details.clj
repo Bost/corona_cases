@@ -71,47 +71,28 @@
 
 (defn all-rankings [stats-countries] (cache/from-cache! (fn [] (calc-all-rankings stats-countries)) [:rankings]))
 
+(defn- last-7 [k last-8] ((comp rest k) last-8))
+
 (defn-fun-id confirmed-info "TODO reintroduce max-active-date"
   [ccode last-report last-8 stats-countries delta maxes cnt-countries]
   (debugf "ccode %s" ccode)
-  #_(debugf "last-8 %s" last-8)
   #_(def last-8 last-8)
-  #_(debugf "delta %s" delta)
-  #_(debugf "last-report %s" last-report)
   (let [{max-active :active max-deaths :deaths} maxes
-        {population      :p
-         deaths          :d
-         recove          :r
-         recove-estim    :er
-         active          :a
-         active-estim    :ea
-         vaccin          :v
-         confirmed       :c
-         active-per-100k :a100k
-         recove-per-100k :r100k
-         deaths-per-100k :d100k
-         closed-per-100k :c100k
-         vaccin-per-100k :v100k
-         a-rate          :a-rate
-         r-rate          :r-rate
-         d-rate          :d-rate
-         c-rate          :c-rate ;; closed-rate
-         v-rate          :v-rate} last-report
-
-        [_               & vaccin-last-7] (:v last-8)
-        [active-last-8th & active-last-7] (:a last-8)
-        [_               & confir-last-7] (:c last-8)]
+        has-confirmed? ((comp pos? :c) last-report)
+        popula-last-7 (last-7 :p last-8)
+        vaccin-last-7 (last-7 :v last-8)
+        active-last-7 (last-7 :a last-8)
+        confir-last-7 (last-7 :c last-8)]
     ;; TODO add effective reproduction number (R)
     ((comp
       (partial remove nil?)
       (partial apply conj))
-     [(when (pos? confirmed)
+     [(when has-confirmed?
         (mapv
          f
-         [{:s lang/active         :n active          :diff (:a delta) :emoji "🤒"}
-          {:s lang/activ-estim    :n active-estim    :diff (:ea delta) :emoji "🤒"}
-          {:s lang/active-per-1e5 :n active-per-100k :diff (:a100k delta)}
-          #_{:s lang/active-last-7-med :n (->> active-last-7 (izoo/roll-median 7) (first) (int))}
+         [{:s lang/active         :n (:a     last-report) :diff (:a     delta) :emoji "🤒"}
+          {:s lang/activ-estim    :n (:ea    last-report) :diff (:ea    delta) :emoji "🤒"}
+          {:s lang/active-per-1e5 :n (:a100k last-report) :diff (:a100k delta)}
           {:s lang/active-last-7-avg
            :n ((comp round-nr istats/mean) active-last-7)}
           {:s lang/active-change-last-7-avg
@@ -127,17 +108,16 @@
            ;; ActCL7CAvg =
            ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
            ;; = (active(t0) - active(t0-7d)) / 7
-           (-> (/ (- active active-last-8th) 7.0)
+           (-> (/ (- (:a last-report) ((comp first :a) last-8)) 7.0)
                round-nr #_plus-minus)
-
            :show-plus-minus true}
-          {:s lang/recovered      :n recove            :diff (:r delta)  :emoji "🎉"}
-          {:s lang/recov-estim    :n recove-estim      :diff (:er delta) :emoji "🎉"}
-          {:s lang/recove-per-1e5 :n recove-per-100k   :diff (:r100k delta)}
-          {:s lang/deaths         :n deaths            :diff (:d delta)  :emoji "⚰️"}
-          {:s lang/deaths-per-1e5 :n deaths-per-100k   :diff (:d100k delta)}
-          {:s lang/closed         :n (+ deaths recove) :diff (reduce + ((juxt :d :r) delta)) :emoji "🏁"}
-          {:s lang/closed-per-1e5 :n closed-per-100k   :diff (:c100k delta)
+          {:s lang/recovered      :n (:r     last-report)                  :diff (:r     delta) :emoji "🎉"}
+          {:s lang/recov-estim    :n (:er    last-report)                  :diff (:er    delta) :emoji "🎉"}
+          {:s lang/recove-per-1e5 :n (:r100k last-report)                  :diff (:r100k delta)}
+          {:s lang/deaths         :n (:d     last-report)                  :diff (:d     delta) :emoji "⚰️"}
+          {:s lang/deaths-per-1e5 :n (:d100k last-report)                  :diff (:d100k delta)}
+          {:s lang/closed         :n (reduce + ((juxt :d :r) last-report)) :diff (reduce + ((juxt :d :r) delta)) :emoji "🏁"}
+          {:s lang/closed-per-1e5 :n (:c100k last-report)                  :diff (:c100k delta)
            ;; TODO create command lang/cmd-closed-per-1e5
            #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}]))
       ;; no country ranking can be displayed for worldwide statistics
@@ -189,22 +169,22 @@
         (last-7-block
          {:emoji "💉🗓"
           :title (format "%s - %s" lang/vaccin-last-7 lang/rate-of-people)
-          :vals (map (fn [v] (format "%s=%s%s"
+          :vals (map (fn [v p] (format "%s=%s%s"
                                     v
                                     ((com/calc-rate-precision-1 :v)
-                                     {:v v :p population})
+                                     {:v v :p p})
                                     msgc/percent))
-                     vaccin-last-7)}))
-      (when (pos? confirmed)
+                     vaccin-last-7 popula-last-7)}))
+      (when has-confirmed?
         (last-7-block
          {:emoji "🤒🗓"
           :title (format "%s - %s" lang/active-last-7 lang/rate-of-confirmed)
-          :vals (map (fn [a c] (format "%s=%s%s"
+          :vals (map (fn [a c p] (format "%s=%s%s"
                                       a
                                       ((com/calc-rate-precision-1 :a)
-                                       {:a a :p population :c c})
+                                       {:a a :c c :p p})
                                       msgc/percent))
-                     active-last-7 confir-last-7)}))])))
+                     active-last-7 confir-last-7 popula-last-7)}))])))
 
 (defn- max-vals [data dates]
   (let [max-val (apply max data)]

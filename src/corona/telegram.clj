@@ -230,7 +230,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         (let [prm-json-hm (assoc prm-json-footer-reports :dates dates)]
            ((comp
              m-result doall
-             (partial map ;; use pmap in PROD and map in development
+             (partial pmap ;; use pmap in PROD and map in development
                       (fn [ccode]
                         [((comp
                            (fn [pred-json-hm]
