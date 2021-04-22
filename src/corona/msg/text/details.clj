@@ -57,7 +57,7 @@
                 (fn [_] (inc idx))))
    (sort-by rank-kw > stats-countries)))
 
-(defn calc-all-rankings
+(defn all-rankings
   "TODO verify ranking for one and zero countries"
   [stats-countries]
   (map (fn [ccode]
@@ -71,12 +71,10 @@
                               com/ranking-cases)))))
        com/relevant-country-codes))
 
-(defn all-rankings [stats-countries] (cache/from-cache! (fn [] (calc-all-rankings stats-countries)) [:rankings]))
-
 (defn- last-7 [k last-8] ((comp rest k) last-8))
 
 (defn-fun-id confirmed-info "TODO reintroduce max-active-date"
-  [ccode last-report last-8 stats-countries delta maxes cnt-countries]
+  [ccode last-report last-8 rankings delta maxes cnt-countries]
   (debugf "ccode %s" ccode)
   #_(def last-8 last-8)
   (let [{max-active :active max-deaths :deaths} maxes
@@ -163,9 +161,8 @@
                                 ((comp
                                   first
                                   (partial map :rank)
-                                  (partial filter (fn [hm] (= (:ccode hm) ccode)))
-                                  all-rankings)
-                                 stats-countries)
+                                  (partial filter (fn [hm] (= (:ccode hm) ccode))))
+                                 rankings)
                                 (last args))))))]])
       (when (some pos? vaccin-last-7)
         (last-7-block
@@ -204,7 +201,7 @@
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
   "
-  [ccode {:keys [cnt-reports dates estim stats-countries] :as pred-json-hm}]
+  [ccode {:keys [cnt-reports dates estim rankings] :as pred-json-hm}]
   (debugf "ccode %s" ccode)
   #_(def estim estim)
   ((comp
@@ -264,7 +261,7 @@
                      ccode
                      last-report
                      last-8
-                     stats-countries
+                     rankings
                      delta
                      {:deaths (max-vals ((comp (partial map :d)) ccode-estim) dates)
                       :active (max-vals ((comp (partial map :a)) ccode-estim) dates)}

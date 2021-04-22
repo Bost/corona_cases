@@ -227,7 +227,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
-        (let [prm-json-hm (assoc prm-json-footer-reports :dates dates)]
+        (let [prm-json-hm (assoc prm-json-footer-reports :dates dates)
+              rankings (msgi/all-rankings stats-countries)]
            ((comp
              m-result doall
              (partial pmap ;; use pmap in PROD and map in development
@@ -239,7 +240,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                                 (msgi/message ccode {:estim estim
                                                      :cnt-reports cnt-reports
                                                      :dates dates
-                                                     :stats-countries stats-countries
+                                                     :rankings rankings
                                                      :header header
                                                      :footer footer}))
                               (msgi/message-kw ccode)))
