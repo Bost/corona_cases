@@ -607,11 +607,4 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
        (update-in state [:acc]
                   (fn [_] (vec (concat accumulator (vector calc-time)))))))))
 
-(def relevant-with-worldwide-country-codes
-  (clojure.set/difference ccc/all-country-codes
-                          #{ccc/country-code-others}))
-
-(def relevant-country-codes
-  (clojure.set/difference ccc/all-country-codes
-                          #{ccc/country-code-worldwide}))
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

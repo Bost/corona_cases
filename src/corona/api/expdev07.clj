@@ -137,7 +137,7 @@
                 (partial zipmap raw-dates-v1)
                 repeat
                 population-cnt)))))
-   ccc/all-country-codes))
+   ccc/relevant-country-codes))
 
 (defn corona-data [raw-dates-v1 json]
   ((comp
@@ -164,7 +164,7 @@
                        ;; here the country_code keyword comes from the json
                        (partial filter
                                 (comp
-                                 (partial utc/in? ccc/all-country-codes)
+                                 (partial utc/in? ccc/relevant-country-codes)
                                  :country_code))))
                      case-m))
                  (partial get json))

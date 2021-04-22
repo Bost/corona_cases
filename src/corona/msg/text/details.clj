@@ -71,7 +71,7 @@
              (partial reduce into [])
              (partial map (partial filter (fn [hm] (= (:ccode hm) ccode)))))
             stats-all-ranking-cases))
-         com/relevant-country-codes)))
+         ccc/relevant-country-codes)))
 
 (defn- last-7 [k last-8] ((comp rest k) last-8))
 
@@ -267,7 +267,7 @@
                      delta
                      {:deaths (max-vals ((comp (partial map :d)) ccode-estim) dates)
                       :active (max-vals ((comp (partial map :a)) ccode-estim) dates)}
-                     (count com/relevant-country-codes))}))))))
+                     (count ccc/relevant-country-codes))}))))))
 
 (defn message-kw [ccode] [:msg (keyword ccode)])
 

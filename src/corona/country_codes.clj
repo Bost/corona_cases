@@ -411,4 +411,8 @@
     country-code-2-to-3-hm)
    #_excluded-country-codes))
 
+(def relevant-country-codes
+  (clojure.set/difference all-country-codes
+                          #{country-code-worldwide}))
+
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.country-codes)

@@ -96,6 +96,6 @@
                 #_cycle
                 #_(fn [_] [245 2350 9822 18554 21775 22411 27371 32293 43317
                           49488 57226 59930 60302 71982 72060]))))))
-   ccc/all-country-codes))
+   ccc/relevant-country-codes))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.owid)
