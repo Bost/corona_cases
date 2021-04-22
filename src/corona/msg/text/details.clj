@@ -60,16 +60,18 @@
 (defn all-rankings
   "TODO verify ranking for one and zero countries"
   [stats-countries]
-  (map (fn [ccode]
-         (apply utc/deep-merge
-                (reduce into []
-                        (map (fn [ranking]
-                               (filter (fn [hm] (= (:ccode hm) ccode)) ranking))
-                             ((comp
-                               utc/transpose
-                               (partial map (partial rank-for-case stats-countries)))
-                              com/ranking-cases)))))
-       com/relevant-country-codes))
+  (let [stats-all-ranking-cases
+        ((comp
+          utc/transpose
+          (partial map (partial rank-for-case stats-countries)))
+         com/ranking-cases)]
+    (map (fn [ccode]
+           ((comp
+             (partial apply utc/deep-merge)
+             (partial reduce into [])
+             (partial map (partial filter (fn [hm] (= (:ccode hm) ccode)))))
+            stats-all-ranking-cases))
+         com/relevant-country-codes)))
 
 (defn- last-7 [k last-8] ((comp rest k) last-8))
 
