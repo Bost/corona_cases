@@ -139,26 +139,6 @@
                 population-cnt)))))
    ccc/all-country-codes))
 
-(defn vaccination-data [raw-dates-v1]
-  ((comp
-    (partial hash-map :vaccinated)
-    (partial hash-map :locations)
-    (partial map
-             (comp
-              (partial apply merge)
-              (juxt
-               (comp (partial hash-map :country)
-                     ccr/country-name-aliased)
-               (partial hash-map :country_code)
-               (comp
-                (partial hash-map :history)
-                (partial zipmap raw-dates-v1)
-                repeat
-                #_(fn [n] (int (/ n 2)))
-                (fn [n] (int (/ n 10)))
-                population-cnt)))))
-   ccc/all-country-codes))
-
 (defn corona-data [raw-dates-v1 json]
   ((comp
     (partial into {})
@@ -192,16 +172,12 @@
     keys)
    json))
 
-(defn calc-data-with-pop [json]
+(defn data-with-pop [json]
   (let [raw-dates-v1 (raw-dates json)]
     (conj (corona-data raw-dates-v1 json)
           (vac/vaccination-data {:raw-dates-v1 raw-dates-v1
                                  :json-owid (vac/json-data)})
           (population-data raw-dates-v1))))
-
-(defn data-with-pop "Data with population numbers." [json]
-  (cache/from-cache! (fn [] (calc-data-with-pop json))
-                     [:data-with-pop]))
 
 (defn create-pred-hm [ccode]
   {:ccode ccode
