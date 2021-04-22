@@ -38,9 +38,7 @@
 (defn-fun-id world "" [{:keys [chat-id ccode] :as prm-orig}]
   (let [prm
         ;; override default parse_mode
-        (assoc prm-orig
-               :parse_mode com/html
-               :pred-hm (data/create-pred-hm ccode))]
+        (assoc prm-orig :parse_mode com/html)]
     (send-text fun-id ;; defined by defn-fun-id macro
                prm
                (select-keys prm (keys msg/options))

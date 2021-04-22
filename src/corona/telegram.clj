@@ -206,7 +206,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         all-calc-listings
         (let [prm ((comp
                     (partial assoc (conj ((comp
-                                           data/create-pred-hm
+                                           (partial hash-map :ccode)
                                            ccr/get-country-code)
                                           ccc/worldwide)
                                          prm-json-footer-reports)
@@ -244,8 +244,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                                                      :header header
                                                      :footer footer}))
                               (msgi/message-kw ccode)))
-                           (partial assoc (conj (data/create-pred-hm ccode)
-                                                prm-json-hm)
+                           (partial assoc prm-json-hm
+                                    :ccode ccode
                                     :header))
                           header)
                          (cache/cache!

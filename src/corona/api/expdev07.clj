@@ -179,17 +179,4 @@
                                  :json-owid (vac/json-data)})
           (population-data raw-dates-v1))))
 
-(defn create-pred-hm [ccode]
-  {:ccode ccode
-   :pred-fun (fn [loc]
-               (condp = ccode
-                 ccc/worldwide-2-country-code
-                 true
-
-                 ccc/default-2-country-code
-                 ;; XX comes from the service
-                 (= "XX" (:country_code loc))
-
-                 (= ccode (:country_code loc))))})
-
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.expdev07)
