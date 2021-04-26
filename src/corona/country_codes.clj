@@ -399,11 +399,12 @@
 (def no-population-country-codes ["TF" "MF" "SJ" "QQ" "UM" "BQ" "BV" "GS" "AQ" "HM"])
 
 (def all-country-codes
+  "All country codes (potentially including worldwide \"ZZ\")"
   #_#{"CR"}
   #_#{"GG"}
   #_#{"AR"}
   #_#{"SK" "PE" "KR" "TW" "AR" "TH" "MX"}
-  #_#{"SK" "DE" "ZZ"}
+  #_#{"US" "DE" "ZZ"}
   #_#{"SK" "GG" "QQ" "DE" "ZZ"}
   #_#{"ZZ" "GB" "SK" "DE" "AT" "CZ" "US" "FR" "PL" "IT" "ES" "SE" "UA" "HU"}
   (clojure.set/difference

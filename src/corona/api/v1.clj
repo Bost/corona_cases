@@ -63,21 +63,22 @@
     #_(partial filter
                (fn [loc]
                  (utils.core/in?
-                  ["CR" "TG" "ZA" "PE" "LC" "CH" "RU" "SI" "AU" "KR" "IT" "FI"
-                  "SC" "TT" "MY" "SY" "MN" "AM" "DZ" "UY" "TD" "DJ" "BI" "MK"
-                  "MU" "LI" "GR" "GY" "CG" "ML" "GM" "SA" "BH" "NE" "BN" "XK"
-                  "CD" "DK" "BJ" "ME" "BO" "JO" "CV" "VE" "CI" "UZ" "TN" "IS"
-                  "GA" "TZ" "AT" "LT" "NP" "BG" "IL" "PK" "PT" "HR" "MR" "GE"
-                  "HU" "TW" "MM" "SR" "VA" "KW" "SE" "GB" "QQ" "VN" "CF" "PA"
-                  "VC" "JP" "IR" "AF" "LY" "MZ" "RO" "QA" "CM" "BY" "SD" "AR"
-                  "BR" "ZW" "NZ" "FJ" "ID" "SV" "CN" "HT" "RW" "BA" "TL" "JM"
-                  "KE" "PY" "CY" "GH" "MA" "SG" "LK" "PH" "SM" "TR" "PS" "BZ"
-                  "CU" "AD" "DM" "LR" "OM" "SO" "DO" "AL" "FR" "GW" "BB" "CA"
-                  "MG" "KH" "LA" "HN" "TH" "DE" "LB" "KZ" "EC" "NO" "AO" "ET"
-                  "MD" "AG" "BE" "MV" "SZ" "CZ" "CL" "BT" "NL" "EG" "SN" "EE"
-                  "KN" "BW" "NI" "PG" "IQ" "KG" "US" "ZM" "MC" "GT" "BF" "LU"
-                  "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ" "IN" "ES" "CO"
-                  "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"]
+                  #{
+                    "CR" "TG" "ZA" "PE" "LC" "CH" "RU" "SI" "AU" "KR" "IT" "FI"
+                    "SC" "TT" "MY" "SY" "MN" "AM" "DZ" "UY" "TD" "DJ" "BI" "MK"
+                    "MU" "LI" "GR" "GY" "CG" "ML" "GM" "SA" "BH" "NE" "BN" "XK"
+                    "CD" "DK" "BJ" "ME" "BO" "JO" "CV" "VE" "CI" "UZ" "TN" "IS"
+                    "GA" "TZ" "AT" "LT" "NP" "BG" "IL" "PK" "PT" "HR" "MR" "GE"
+                    "HU" "TW" "MM" "SR" "VA" "KW" "SE" "GB" "QQ" "VN" "CF" "PA"
+                    "VC" "JP" "IR" "AF" "LY" "MZ" "RO" "QA" "CM" "BY" "SD" "AR"
+                    "BR" "ZW" "NZ" "FJ" "ID" "SV" "CN" "HT" "RW" "BA" "TL" "JM"
+                    "KE" "PY" "CY" "GH" "MA" "SG" "LK" "PH" "SM" "TR" "PS" "BZ"
+                    "CU" "AD" "DM" "LR" "OM" "SO" "DO" "AL" "FR" "GW" "BB" "CA"
+                    "MG" "KH" "LA" "HN" "TH" "DE" "LB" "KZ" "EC" "NO" "AO" "ET"
+                    "MD" "AG" "BE" "MV" "SZ" "CZ" "CL" "BT" "NL" "EG" "SN" "EE"
+                    "KN" "BW" "NI" "PG" "IQ" "KG" "US" "ZM" "MC" "GT" "BF" "LU"
+                    "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ" "IN" "ES" "CO"
+                    "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"}
                   (:country_code loc))))
     (partial get-in data-with-pop))
    [case-kw :locations]))
@@ -138,17 +139,17 @@
                     :c-rate ((com/calc-rate :c) prm)))))
       #_(partial apply (fn [hms-population
                          hms-vaccinated
-                         hms-confirmed
+                         hms-new-confirmed
                          hms-recovered
                          hms-deaths]
                        (def hp hms-population)
                        (def hv hms-vaccinated)
-                       (def hc hms-confirmed)
+                       (def hn hms-new-confirmed)
                        (def hr hms-recovered)
                        (def hd hms-deaths)
                        [hms-population
                         hms-vaccinated
-                        hms-confirmed
+                        hms-new-confirmed
                         hms-recovered
                         hms-deaths]))
       (partial map (partial sort-by (juxt :ccode :t)))
@@ -158,7 +159,7 @@
                              hm))
       (partial apply (fn [hms-population
                          hms-vaccinated
-                         hms-confirmed
+                         hms-new-confirmed
                          hms-recovered
                          hms-deaths]
                        ((comp
@@ -169,7 +170,7 @@
                                            hms-population)]
                           (map (partial normalize default-hms)
                                [:confirmed :recovered :deaths]
-                               [hms-confirmed hms-recovered hms-deaths])))))
+                               [hms-new-confirmed hms-recovered hms-deaths])))))
       #_(fn [v] (def xfb v) v)
       (partial map (partial xf-for-case cnt-raw-dates data-with-pop)))
      [:population :vaccinated :confirmed :recovered :deaths])))

@@ -61,6 +61,7 @@
   #_#_aerial.hanami {:mvn/version "0.12.1"}
 
   ;; internationalization, ISO 3166-1 country codes etc.
+  ;; TODO see United Nations, ur_PK for Urdu in Pakistan, etc.
   com.neovisionaries/nv-i18n {:mvn/version "1.28"}
 
   ;; parse HTML into Clojure data structures - scrapping data from HTML tables

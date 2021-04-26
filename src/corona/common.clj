@@ -405,8 +405,9 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   ":idx - defines an order in appearance
   :v ~ vaccinated
   :p ~ population
-  :c ~ closed cased
-  :r ~ recovered cased
+                      TODO :n ~ new-confirmed cased
+  :c confirmed cased; TODO :c ~ closed cases
+  :r ~ recovered cases
   :d ~ deaths
   :a ~ active cases i.e. ill
 
@@ -422,7 +423,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
    {:idx  7 :kw :a100k}
    {:idx  8 :kw :r100k}
    {:idx  9 :kw :d100k}
-   {:idx 10 :kw :c100k}
+   {:idx 10 :kw :c100k} ;; closed per 100k
 
    {:idx 11 :kw :v-rate}
    {:idx 12 :kw :a-rate}
@@ -467,7 +468,6 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 (def ranking-cases [:p :c100k :r100k :d100k :a100k :v100k])
 
 (def listing-cases-per-100k
-  "No listing of :c100k - Closed cases per 100k"
   (tore case-params
         (filter (fn [m] (utc/in? [7 8 9] (:idx m))))
         (map :kw)))
