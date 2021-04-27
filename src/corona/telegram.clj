@@ -175,18 +175,17 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         dates       (m-result (data/dates json))
         last-date   ((comp m-result last (partial sort-by :t)) dates)
         cnt-reports (m-result (count dates))
-        prm-json    (m-result {:json json})
-
-        footer      (m-result (msgc/footer com/html))
+        footer ((comp m-result msgc/footer) com/html)
 
         prm-json-footer-reports
-        (m-result (assoc prm-json
-                         :footer footer
-                         :cnt-reports cnt-reports))
-
+        (m-result {:footer footer :cnt-reports cnt-reports})
         _ (com/add-calc-time "prm-json-footer-reports" prm-json-footer-reports)
 
-        pic-data ((comp m-result v1/pic-data) json)
+        pic-data ((comp m-result
+                        #_(fn [v] (def pd v) v)
+                        v1/pic-data)
+                  json)
+        _ (com/add-calc-time "pic-data" pic-data)
 
         stats-countries
         ((comp
@@ -196,7 +195,9 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
          pic-data)
         _ (com/add-calc-time "stats-countries" stats-countries)
 
-        estim ((comp m-result est/estimate) pic-data)
+        estim ((comp m-result
+                     #_(fn [v] (def es v) v)
+                     est/estimate) pic-data)
         _ (com/add-calc-time "estim" estim)
 
         header
@@ -227,32 +228,26 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
-        (let [prm-json-hm (assoc prm-json-footer-reports :dates dates)
-              rankings (msgi/all-rankings stats-countries)]
-           ((comp
-             m-result doall
-             (partial pmap ;; use pmap in PROD and map in development
-                      (fn [ccode]
-                        [((comp
-                           (fn [pred-json-hm]
-                             (cache/cache!
-                              (fn []
-                                (msgi/message ccode {:estim estim
-                                                     :cnt-reports cnt-reports
-                                                     :dates dates
-                                                     :rankings rankings
-                                                     :header header
-                                                     :footer footer}))
-                              (msgi/message-kw ccode)))
-                           (partial assoc prm-json-hm
-                                    :ccode ccode
-                                    :header))
-                          header)
-                         (cache/cache!
-                          (fn [] (plot/message ccode estim cnt-reports))
-                          (plot/message-kw ccode))])))
-            ;; here also "ZZ" worldwide messages
-            ccc/all-country-codes))
+        (let [
+              rankings (msgi/all-rankings stats-countries)
+              prm-json-hm (assoc prm-json-footer-reports
+                                 :dates dates
+                                 :rankings rankings
+                                 :header header
+                                 :estim estim)
+              ]
+          ((comp
+            m-result doall
+            (partial pmap ;; use pmap in PROD and map in development
+                     (fn [ccode]
+                       [
+                        (cache/cache! (fn [] (msgi/message ccode prm-json-hm)) (msgi/message-kw ccode))
+                        (debugf "msgi/message ccode %s done" ccode)
+                        (cache/cache! (fn [] (plot/message ccode estim cnt-reports)) (plot/message-kw ccode))
+                        (debugf "plot/message ccode %s done" ccode)
+                        ])))
+           ;; here also "ZZ" worldwide messages
+           ccc/all-country-codes))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
 
         cleanups
