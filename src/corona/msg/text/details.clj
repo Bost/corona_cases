@@ -93,7 +93,7 @@
         (mapv
          f
          [{:s lang/active         :n (:a     last-report) :diff (:a     delta) :emoji "🤒"}
-          {:s lang/activ-estim    :n (:ea    last-report) :diff (:ea    delta) :emoji "🤒"}
+          #_{:s lang/activ-estim    :n (:ea    last-report) :diff (:ea    delta) :emoji "🤒"}
           {:s lang/active-per-1e5 :n (:a100k last-report) :diff (:a100k delta)}
           {:s lang/active-last-7-avg
            :n ((comp round-nr istats/mean) active-last-7)}
@@ -114,7 +114,7 @@
                round-nr #_plus-minus)
            :show-plus-minus true}
           {:s lang/recovered      :n (:r     last-report)                  :diff (:r     delta) :emoji "🎉"}
-          {:s lang/recov-estim    :n (:er    last-report)                  :diff (:er    delta) :emoji "🎉"}
+          #_{:s lang/recov-estim    :n (:er    last-report)                  :diff (:er    delta) :emoji "🎉"}
           {:s lang/recove-per-1e5 :n (:r100k last-report)                  :diff (:r100k delta)}
           {:s lang/deaths         :n (:d     last-report)                  :diff (:d     delta) :emoji "⚰️"}
           {:s lang/deaths-per-1e5 :n (:d100k last-report)                  :diff (:d100k delta)}
