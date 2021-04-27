@@ -21,37 +21,96 @@
                (name exists-kw)
                (pr-str table))))))
 
-(defn prepate-statement [table cols]
-  (format "insert into %s (%s) values (%s)"
-          (pr-str table)
-          ((comp
-            (fn [col] (utc/sjoin col ", "))
-            (partial map name))
-           cols)
-          ((comp
-            (fn [cols] (utc/sjoin cols ", "))
-            (partial map (fn [col]
-                           (cond
-                             (= :type col) "cast(? as chat_type)"
-                             (= :created_at col) "cast(? as timestamp(0))"
-                             :else "?"))))
-           cols)))
+;; TODO test insert into chat table
+(def insert {:type :insert :cmd "insert into %s (%s) values (%s)"})
+(def upsert
+  {:type :upsert :cmd
+   "insert into %s (%s) values (%s)
+    on conflict (%s) do update set
+    %s"
+   })
 
-(defn-fun-id insert-chat! "" [{:keys [id first_name username type] :as prm}]
+(defn col-names [cols]
+  ((comp
+    (fn [col] (utc/sjoin col ", "))
+    (partial map name))
+   cols))
+
+(defn col-vals [cols]
+  ((comp
+    (fn [cols] (utc/sjoin cols ", "))
+    (partial map (fn [col]
+                   (cond
+                     (= :type col) "cast(? as chat_type)"
+                     (utc/in? [:created_at :updated_at] col) "cast(? as timestamp(0))"
+                     :else "?"))))
+   cols))
+
+;; TODO create spec against the :else branch
+(defn-fun-id prepate-statement "" [crud-cmd table cols]
+  (cond
+    (= (:type crud-cmd) :upsert)
+    (format (:cmd crud-cmd)
+            (pr-str table)
+            (col-names cols)
+            (col-vals cols)
+            (:conflict-col crud-cmd)
+            )
+
+    (= (:type crud-cmd) :insert)
+    (format (:cmd crud-cmd)
+            (pr-str table)
+            (col-names cols)
+            (col-vals cols))
+    :else
+    (throw (Exception. (format "Unknown type of %s" crud-cmd)))))
+
+(defn-fun-id insert-chat! "" [{:keys [id first_name username type]}]
   (with-open [connection (jdbc/get-connection mcom/datasource)]
     (let [table "chat"
           cols [:id :first_name :username :type :created_at]
-          prep-stmt (prepate-statement table cols)]
+          prep-stmt (prepate-statement insert table cols)]
       ((comp
-        (fn [res] (debugf "res: %s" res) res)
+        #_(fn [res] (debugf "res: %s" res) res)
         (fn [cmd] (try (jdbc/execute-one! connection cmd)
-                      (catch Exception e
-                        (errorf "Caught %s" e))))
+                       (catch Exception e
+                         (errorf "Caught %s" e))))
         (fn [cmd] (debugf "cmd %s" cmd) cmd)
         (partial into [prep-stmt]))
        #_[(rand-nth [1111111111 2222222222 3333333333])
           "Jim" "Beam" "private" "now()"]
        [id first_name username type "now()"]))))
+
+(defn-fun-id upsert-threshold!
+  "(upsert-threshold! {:kw :v :inc (int 1e6) :val (int 1e7)})"
+  [{:keys [kw inc val]}]
+  (with-open [connection (jdbc/get-connection mcom/datasource)]
+    (let [table "thresholds"
+          cols [:kw :inc :val :updated_at]
+          prep-stmt (prepate-statement
+                     (assoc upsert
+                            :conflict-col (name :kw))
+                     table cols)]
+      ((comp
+        #_(fn [res] (debugf "res: %s" res) res)
+        (fn [cmd] (try (jdbc/execute-one! connection cmd)
+                      (catch Exception e
+                        (errorf "Caught %s" e))))
+        (fn [cmd] (debugf "cmd %s" cmd) cmd)
+        (partial into [prep-stmt])
+        (partial map (fn [v] (if (keyword? v) (name v) v))))
+       #_[:v (int 1e6) (int 1e7) "now()"]
+       [kw inc val "now()"]))))
+
+(comment
+  (with-open [connection (jdbc/get-connection mcom/datasource)]
+    (def table "thresholds")
+    ((comp
+      (fn [cmd] (jdbc/execute! connection [cmd]))
+      #_(reduce my-fn init-value (jdbc/plan connection [...]))
+      (fn [cmd] (timbre/debugf "\n%s" cmd)
+        cmd))
+     (format "select * from %s" (pr-str table)))))
 
 (comment
   (with-open [connection (jdbc/get-connection mcom/datasource)]

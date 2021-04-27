@@ -12,6 +12,7 @@
 -- Don't display notices. Thanks to https://stackoverflow.com/a/3531274
 SET client_min_messages TO WARNING;
 
+drop table if exists thresholds cascade;
 drop table if exists chosen_inline_result cascade;
 drop table if exists poll_answer cascade;
 drop table if exists poll cascade;

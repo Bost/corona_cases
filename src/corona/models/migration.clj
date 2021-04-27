@@ -11,7 +11,8 @@
               (jdbc/get-connection mcom/datasource)]
     ((comp
       ;; not checking the indexes etc.
-      (fn [tables] (= tables ["user" "message" "chat" "callback_query"]))
+      (fn [tables] (= tables ["user" "message" "chat" "callback_query"
+                              "thresholds"]))
       (partial map :tables/table_name)
       (fn [cmd] (jdbc/execute! connection [cmd]))
       #_(reduce my-fn init-value (jdbc/plan connection [...]))
@@ -257,6 +258,14 @@ CREATE TABLE IF NOT EXISTS callback_query (
 CREATE INDEX IF NOT EXISTS callback_query_user_id ON callback_query (user_id);
 CREATE INDEX IF NOT EXISTS chat_id ON callback_query (chat_id);
 CREATE INDEX IF NOT EXISTS message_id ON callback_query (message_id);
+
+-- migration 001
+CREATE TABLE IF NOT EXISTS thresholds (
+  kw VARCHAR(255) NOT NULL DEFAULT '',
+  inc integer,
+  val integer,
+  updated_at timestamp(0) NULL DEFAULT NULL
+);
 
 END
 $$;

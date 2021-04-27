@@ -37,6 +37,13 @@
 -- Don't display notices. Thanks to https://stackoverflow.com/a/3531274
 SET client_min_messages TO WARNING;
 
+CREATE TABLE IF NOT EXISTS thresholds (
+  kw VARCHAR(255) NOT NULL DEFAULT '',
+  inc integer,
+  val integer,
+  updated_at timestamp(0) NULL DEFAULT NULL
+);
+
 CREATE TABLE IF NOT EXISTS "user" (
   -- Unique identifier for this user or bot
   id bigint,

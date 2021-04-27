@@ -28,11 +28,11 @@
 (defn- threshold
   "See also https://github.com/rplevy/swiss-arrows"
   [case-kw]
-(first
-   (com/tore
-    com/case-params
-    (filter (fn [m] (= (:kw m) case-kw)))
-    (map :threshold))))
+  ((comp
+    first
+    (partial map :threshold)
+    (partial filter (fn [m] (= (:kw m) case-kw))))
+   com/case-params))
 
 (defn min-threshold
   "Countries with the number of cases less than the threshold are grouped into
