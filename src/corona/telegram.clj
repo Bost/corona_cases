@@ -173,6 +173,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
        state-m
        [
         dates       (m-result (data/dates json))
+        last-date   ((comp m-result last (partial sort-by :t)) dates)
         cnt-reports (m-result (count dates))
         prm-json    (m-result {:json json})
 
@@ -187,21 +188,20 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         pic-data ((comp m-result v1/pic-data) json)
 
-        header
-        ((comp m-result
-               (partial msgc/header com/html) :t last (partial sort-by :t))
-         pic-data)
-
         stats-countries
         ((comp
           m-result
-          flatten
-          (partial map (fn [[_ hms]] ((comp last (partial sort-by :t)) hms)))
-          (partial group-by :ccode))
+          (partial filter (fn [hm] (= (:t hm) last-date)))
+          (partial sort-by (juxt :ccode :t)))
          pic-data)
+        _ (com/add-calc-time "stats-countries" stats-countries)
 
         estim ((comp m-result est/estimate) pic-data)
         _ (com/add-calc-time "estim" estim)
+
+        header
+        ((comp m-result)
+         (msgc/header com/html last-date))
 
         all-calc-listings
         (let [prm ((comp
