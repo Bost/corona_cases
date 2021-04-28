@@ -403,7 +403,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
    {:idx  1 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  2 :kw :n                :threshold {:inc 50000     :val (int 3510e3)}}
    #_{:idx  2 :kw :n                :threshold {:inc 50000     :val (int 3460e3)}}
-   {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 2547e3)}}
+   {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 2567e3)}}
    {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 83e3)}}
    {:idx  5 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 959e3)}}
    ;; TODO the order matters: it must be the same as in the info-message
