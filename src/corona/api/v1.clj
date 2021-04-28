@@ -115,14 +115,16 @@
                    {:keys [confirmed ccode t]}
                    {:keys [recovered]}
                    {:keys [deaths]}]
-                 (let [prm {:ccode ccode
+                 (let [new-confirmed confirmed
+                       prm {:ccode ccode
                             :t     t
                             :p     population
                             :v     vaccinated
-                            :a     (com/calculate-activ confirmed recovered deaths)
+                            :a     (com/calculate-activ new-confirmed recovered deaths)
                             :r     recovered
                             :d     deaths
-                            :c     confirmed
+                            :n     new-confirmed
+                            :c     (com/calculate-closed deaths recovered)
                             }]
                    (assoc
                     prm

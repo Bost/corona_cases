@@ -172,14 +172,13 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
       (domonad
        state-m
        [
-        dates       (m-result (data/dates json))
+        dates       ((comp m-result data/dates) json)
         last-date   ((comp m-result last (partial sort-by :t)) dates)
-        cnt-reports (m-result (count dates))
-        footer ((comp m-result msgc/footer) com/html)
-
-        prm-json-footer-reports
-        (m-result {:footer footer :cnt-reports cnt-reports})
-        _ (com/add-calc-time "prm-json-footer-reports" prm-json-footer-reports)
+        cnt-reports ((comp m-result count) dates)
+        prm-base    (m-result {:header (msgc/header com/html last-date)
+                               :footer (msgc/footer com/html)
+                               :cnt-reports cnt-reports})
+        _ (com/add-calc-time "prm-base" prm-base)
 
         pic-data ((comp m-result
                         #_(fn [v] (def pd v) v)
@@ -200,19 +199,10 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                      est/estimate) pic-data)
         _ (com/add-calc-time "estim" estim)
 
-        header
-        ((comp m-result)
-         (msgc/header com/html last-date))
-
+        ;; TODO the listings will need estimated vals
         all-calc-listings
-        (let [prm ((comp
-                    (partial assoc (conj ((comp
-                                           (partial hash-map :ccode)
-                                           ccr/get-country-code)
-                                          ccc/worldwide)
-                                         prm-json-footer-reports)
-                             :header))
-                   header)]
+        (let [prm (assoc prm-base
+                         :ccode (ccr/get-country-code ccc/worldwide))]
           ((comp
             m-result doall
             (partial map (partial apply msgl/calc-listings! stats-countries prm)))
@@ -228,20 +218,16 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
-        (let [
-              rankings (msgi/all-rankings stats-countries)
-              prm-json-hm (assoc prm-json-footer-reports
-                                 :dates dates
-                                 :rankings rankings
-                                 :header header
-                                 :estim estim)
-              ]
+        (let [prm (assoc prm-base
+                         :dates dates
+                         :rankings (msgi/all-rankings stats-countries)
+                         :estim estim)]
           ((comp
             m-result doall
             (partial pmap ;; use pmap in PROD and map in development
                      (fn [ccode]
                        [
-                        (cache/cache! (fn [] (msgi/message ccode prm-json-hm)) (msgi/message-kw ccode))
+                        (cache/cache! (fn [] (msgi/message ccode prm)) (msgi/message-kw ccode))
                         (debugf "msgi/message ccode %s done" ccode)
                         (cache/cache! (fn [] (plot/message ccode estim cnt-reports)) (plot/message-kw ccode))
                         (debugf "plot/message ccode %s done" ccode)

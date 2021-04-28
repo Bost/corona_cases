@@ -24,10 +24,7 @@
     (let [stats-country (sort-by :t stats-country-unsorted)]
       #_(def stats-country stats-country)
       (mapv (fn [estim stats-hm] (conj stats-hm {kw-estim estim}))
-            (apply map (fn [& prm]
-                         ((comp
-                           (fn [prm] (apply calculate-fun prm)))
-                          prm))
+            (apply map calculate-fun
                    (map (comp
                          (fn [{:keys [vs shift]}] (into (drop-last shift vs)
                                                        (repeat shift 0)))
@@ -37,19 +34,18 @@
             stats-country))))
 
 (defn estimate [pic-data]
-  (
-   (comp
+  ((comp
     (partial sort-by (juxt :ccode :t))
     flatten
     (partial map (estim-for-country-fn com/calculate-activ
-                                       :ea [{:kw :c  :shift 0}
+                                       :ea [{:kw :n  :shift 0}
                                             {:kw :er :shift 0}
                                             {:kw :d  :shift shift-deaths}]))
     (partial group-by :ccode)
     flatten
     #_(fn [v] (def m4 v) v)
     (partial map (estim-for-country-fn com/calculate-recov
-                                       :er [{:kw :c :shift shift-recovery}
+                                       :er [{:kw :n :shift shift-recovery}
                                             {:kw :d :shift shift-deaths}]))
     #_(fn [v] (def m3 v) v)
     #_(partial map (fn [[ccode hms-ccode]]

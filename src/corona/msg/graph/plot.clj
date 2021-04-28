@@ -89,51 +89,49 @@
          (partial map (juxt first (comp second last second))))
    hm))
 
+(defn cnt-cases [fun kw hms] (reduce + (map (partial fun kw) hms)))
+
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
   is unspecified."
   [ccode stats]
-  (->> stats
-       (filter (fn [hm] (in? [ccc/worldwide-2-country-code (:ccode hm)] ccode)))
-       (group-by :t)
-       (map (fn [[t hms]]
-              [;; confirmed cases is the sum of all others
-               {:ccode ccode :t t :case-kw :p :cnt
-                (bigint (/ (:p (first hms)) 1e3))
-                #_(reduce + (map :p hms))
-                #_(bigint (/ (get population ccode) (bigint 1e3)))}
-               {:ccode ccode :t t :case-kw :er :cnt (reduce + (map :er hms))}
-               {:ccode ccode :t t :case-kw :ea :cnt (reduce + (map :ea hms))}
-               {:ccode ccode :t t :case-kw :c :cnt (reduce + (map :c hms))}
-               {:ccode ccode :t t :case-kw :r :cnt (reduce + (map :r hms))}
-               {:ccode ccode :t t :case-kw :d :cnt (reduce + (map :d hms))}
-               {:ccode ccode :t t :case-kw :a :cnt (reduce + (map :a hms))}]))
-       (flatten)))
+  ((comp
+    flatten
+    (partial
+     map
+     (fn [[t hms]]
+       [
+        {:ccode ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
+        {:ccode ccode :t t :case-kw :er :cnt (cnt-cases com/estim :r hms)}
+        {:ccode ccode :t t :case-kw :ea :cnt (cnt-cases com/estim :a hms)}
+        {:ccode ccode :t t :case-kw :n  :cnt (cnt-cases com/ident :n hms)}
+        {:ccode ccode :t t :case-kw :r  :cnt (cnt-cases com/ident :r hms)}
+        {:ccode ccode :t t :case-kw :d  :cnt (cnt-cases com/ident :d hms)}
+        {:ccode ccode :t t :case-kw :a  :cnt (cnt-cases com/ident :a hms)}]))
+    (partial group-by :t)
+    (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (:ccode hm)] ccode))))
+   stats))
 
 (defn stats-for-country [ccode stats]
   (let [mapped-hm
-        ((comp
-          #_(partial take-last (/ 365 2)))
-         (plotcom/map-kv
-          (fn [entry]
-            ((comp
-              (partial take-last (/ 365 1 #_2)))
-             (sort-by first
-                      (map (fn [{:keys [t cnt]}]
-                             [(to-java-time-local-date t) cnt])
-                           entry))))
-          (group-by :case-kw (sum-for-pred ccode stats))))]
+        (plotcom/map-kv
+         (comp
+          (partial take-last 365)
+          (partial sort-by first)
+          (partial map (fn [{:keys [t cnt]}] [(to-java-time-local-date t) cnt])))
+         (group-by :case-kw (sum-for-pred ccode stats)))]
     ;; sort - keep the "color order" of cases fixed; don't
     ;; recalculate it
     ;; TODO try (map {:a 1 :b 2 :c 3 :d 4} [:a :d]) ;;=> (1 4)
     ((comp
-      reverse)
-     (transduce (map (fn [case-kw] (select-keys mapped-hm [case-kw])))
-                into []
-                [:a :r :d :c :p :er :ea]))))
+      reverse
+      (partial keep (partial find mapped-hm)))
+     [:a :r :d :n :p :er :ea])))
 
-(defn fmt-last-date [stats]
-  ((comp com/fmt-date :t last) (sort-by :t stats)))
+(defn fmt-last-date
+  "TODO pass the last date from corona.telegram"
+  [stats]
+  ((comp com/fmt-date :t last (partial sort-by :t)) stats))
 
 (defn fmt-report [report] (format "%s %s" lang/report report))
 
@@ -154,10 +152,7 @@
 (defn palette-colors
   "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
   [n]
-  (->> (c/palette-presets :gnbu-6)
-       (take-last n)
-       (reverse)
-       (cycle)))
+  ((comp cycle reverse (partial take-last n) c/palette-presets) :gnbu-6))
 
 (def ^:const line-cfg
   "By default line-margins are 5%. Setting them to [0 0] may not make up
@@ -237,7 +232,7 @@
     (let [stats (sort-by :t unsorted-stats)
           base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
-                               (in? #_[:c :a :r :d] [:c :p :er :ea] case-kw))
+                               (in? #_[:n :a :r :d] [:n :p :er :ea] case-kw))
                              base-data)
           curves (keys sarea-data)
           palette (palette-colors (count curves))]
@@ -255,7 +250,7 @@
                  [:grid]
                  [:sarea sarea-data {:palette palette}]
                  #_[:line (line-data :p base-data) stroke-population]
-                 [:line (line-data :c base-data) stroke-confir]
+                 [:line (line-data :n base-data) stroke-confir]
                  [:line (line-data :a base-data) (stroke-active)]
                  [:line (line-data :er base-data) (stroke-estim-recov)]
                  [:line (line-data :ea base-data) (stroke-estim-activ)])
@@ -291,8 +286,8 @@
       (debugf "ccode %s size %s" ccode (if arr (com/measure arr) 0))
       arr)
     to-byte-array-auto-closable
-    (fn [prms] (apply message-img prms)))
-   [ccode stats report]))
+    message-img)
+   ccode stats report))
 
 (defn message-kw [ccode] [:plot (keyword ccode)])
 

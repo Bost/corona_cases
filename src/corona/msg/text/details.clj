@@ -21,7 +21,7 @@
 (defn fmt
   [{:keys
     [header cname-aliased country-cmds cnt-reports population vaccinated
-    confirmed footer notes details]}]
+    new-confirmed footer notes details]}]
   (msgc/format-linewise
    ;; extended header
    [["%s\n" [(msgc/format-linewise [["%s  " [header]]
@@ -31,7 +31,7 @@
     ["%s\n" [((comp
                msgc/format-linewise
                (partial remove nil?)
-               (partial apply conj [population vaccinated notes confirmed]))
+               (partial apply conj [population vaccinated notes new-confirmed]))
               details)]]
     ["%s\n" [footer]]]))
 
@@ -76,25 +76,29 @@
 (defn- last-7 [k last-8] ((comp rest k) last-8))
 
 (defn-fun-id confirmed-info "TODO reintroduce max-active-date"
-  [ccode last-report last-8 rankings delta maxes cnt-countries]
-  (debugf "ccode %s" ccode)
-  #_(def last-8 last-8)
+  [ccode has-n-confi? last-report last-8 rankings delta maxes cnt-countries]
+  #_(debugf "ccode %s" ccode)
   (let [{max-active :active max-deaths :deaths} maxes
-        has-confirmed? ((comp pos? :c) last-report)
+        some-recove? ((comp (partial some pos?)) (last-7 :r last-8))
         popula-last-7 (last-7 :p last-8)
         vaccin-last-7 (last-7 :v last-8)
         active-last-7 (last-7 :a last-8)
-        confir-last-7 (last-7 :c last-8)]
+        n-conf-last-7 (last-7 :n last-8)
+        closed-fun (comp
+                    (partial apply com/calculate-closed)
+                    (juxt (partial com/ident :d)
+                          (partial com/ident :r)))]
+    ;; TODO some countries report too low recov. numbers
     ;; TODO add effective reproduction number (R)
     ((comp
       (partial remove nil?)
       (partial apply conj))
-     [(when has-confirmed?
+     [(when has-n-confi?
         (mapv
          f
-         [{:s lang/active         :n (:a     last-report) :diff (:a     delta) :emoji "🤒"}
-          #_{:s lang/activ-estim    :n (:ea    last-report) :diff (:ea    delta) :emoji "🤒"}
-          {:s lang/active-per-1e5 :n (:a100k last-report) :diff (:a100k delta)}
+         [{:s lang/active         :n (com/ident :a     last-report) :diff (com/ident :a     delta) :emoji "🤒"}
+          #_{:s lang/activ-estim    :n (com/estim :a     last-report) :diff (com/estim :a     delta) :emoji "🤒"}
+          {:s lang/active-per-1e5 :n (com/ident :a100k last-report) :diff (com/ident :a100k delta)}
           {:s lang/active-last-7-avg
            :n ((comp round-nr istats/mean) active-last-7)}
           {:s lang/active-change-last-7-avg
@@ -113,13 +117,13 @@
            (-> (/ (- (:a last-report) ((comp first :a) last-8)) 7.0)
                round-nr #_plus-minus)
            :show-plus-minus true}
-          {:s lang/recovered      :n (:r     last-report)                  :diff (:r     delta) :emoji "🎉"}
-          #_{:s lang/recov-estim    :n (:er    last-report)                  :diff (:er    delta) :emoji "🎉"}
-          {:s lang/recove-per-1e5 :n (:r100k last-report)                  :diff (:r100k delta)}
-          {:s lang/deaths         :n (:d     last-report)                  :diff (:d     delta) :emoji "⚰️"}
-          {:s lang/deaths-per-1e5 :n (:d100k last-report)                  :diff (:d100k delta)}
-          {:s lang/closed         :n (reduce + ((juxt :d :r) last-report)) :diff (reduce + ((juxt :d :r) delta)) :emoji "🏁"}
-          {:s lang/closed-per-1e5 :n (:c100k last-report)                  :diff (:c100k delta)
+          {:s lang/recovered      :n (com/ident :r     last-report) :diff (com/ident :r     delta) :emoji "🎉"}
+          #_{:s lang/recov-estim    :n (com/estim :r     last-report) :diff (com/estim :r     delta) :emoji "🎉"}
+          {:s lang/recove-per-1e5 :n (com/ident :r100k last-report) :diff (com/ident :r100k delta)}
+          {:s lang/deaths         :n (com/ident :d     last-report) :diff (com/ident :d     delta) :emoji "⚰️"}
+          {:s lang/deaths-per-1e5 :n (com/ident :d100k last-report) :diff (com/ident :d100k delta)}
+          {:s lang/closed         :n (closed-fun       last-report) :diff (closed-fun       delta) :emoji "🏁"}
+          {:s lang/closed-per-1e5 :n (com/ident :c100k last-report) :diff (com/ident :c100k delta)
            ;; TODO create command lang/cmd-closed-per-1e5
            #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}]))
       ;; no country ranking can be displayed for worldwide statistics
@@ -171,21 +175,24 @@
          {:emoji "💉🗓"
           :title (format "%s - %s" lang/vaccin-last-7 lang/rate-of-people)
           :vals (map (fn [v p] (format "%s=%s%s"
-                                    v
-                                    ((com/calc-rate-precision-1 :v)
-                                     {:v v :p p})
-                                    msgc/percent))
+                                      v
+                                      ((com/calc-rate-precision-1 :v)
+                                       {:v v :p p})
+                                      msgc/percent))
                      vaccin-last-7 popula-last-7)}))
-      (when has-confirmed?
+      (when has-n-confi?
         (last-7-block
          {:emoji "🤒🗓"
           :title (format "%s - %s" lang/active-last-7 lang/rate-of-confirmed)
-          :vals (map (fn [a c p] (format "%s=%s%s"
-                                      a
-                                      ((com/calc-rate-precision-1 :a)
-                                       {:a a :c c :p p})
-                                      msgc/percent))
-                     active-last-7 confir-last-7 popula-last-7)}))])))
+          :vals (map (fn [a n p] (format "%s=%s%s"
+                                        a
+                                        ((com/calc-rate-precision-1 :a)
+                                         {:a a :n n :p p})
+                                        msgc/percent))
+                     active-last-7 n-conf-last-7 popula-last-7)}))
+      #_(when-not some-recove?
+        ["\n%s\n"
+         ["* Estimated values"]])])))
 
 (defn- max-vals [data dates]
   (let [max-val (apply max data)]
@@ -203,30 +210,28 @@
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
   "
-  [ccode {:keys [cnt-reports dates estim rankings] :as pred-json-hm}]
+  [ccode {:keys [cnt-reports dates estim rankings] :as prm}]
   (debugf "ccode %s" ccode)
-  #_(def estim estim)
   ((comp
-    (fn [info]
+    #_(fn [info]
       (debugf "ccode %s size %s" ccode (com/measure info))
       info)
     fmt)
-   (let [ccode-estim (filter (fn [ehm] (= ccode (:ccode ehm))) estim)
+   (let [
+         ccode-estim (filter (fn [ehm] (= ccode (:ccode ehm))) estim)
          last-2-reports (take-last 2 ccode-estim)
          last-report (last last-2-reports)
-         {vaccinated :v confirmed :c} last-report
+         {vaccinated :v new-confirmed :n} last-report
          delta ((comp
                  (partial reduce into {})
                  (partial apply (fn [prv lst]
                                   ((comp
                                     (partial map (fn [k]
-                                                   ;; TODO see also clojure.core/find
-                                                   #_(debugf "k %s" k)
                                                    {k (- (k lst) (k prv))})))
                                    com/all-cases))))
                 last-2-reports)]
      (conj
-      (select-keys pred-json-hm [:header :footer])
+      (select-keys prm [:header :footer])
       {:cname-aliased (ccr/country-name-aliased ccode)
        :country-cmds
        ((comp (partial apply #(format "     %s    %s" %1 %2))
@@ -242,8 +247,8 @@
            :diff (if (zero? vaccinated) com/unknown (:v delta))
            :emoji "💉"})
 
-       :confirmed
-       (f {:emoji "🦠" :s lang/confirmed :n confirmed :diff (:c delta)})}
+       :new-confirmed
+       (f {:emoji "🦠" :s lang/confirmed :n new-confirmed :diff (:n delta)})}
 
       (when (zero? vaccinated)
         {:notes (when (zero? vaccinated)
@@ -256,11 +261,15 @@
                        utc/transpose
                        (partial map (fn [hm] (select-keys hm kws)))
                        (partial take-last 8))
-                      ccode-estim))]
-        (when (or (pos? confirmed)
-                  ((comp (partial some pos?) rest :v) last-8))
+                      ccode-estim))
+            has-n-confi? ((comp pos? :n) last-report)
+            some-vaccinated? ((comp (partial some pos?)) (last-7 :v last-8))]
+        #_(debugf "ccode %s has-n-confi? %s some-vaccinated? %s: %s"
+                  ccode     has-n-confi?    some-vaccinated? (last-7 :v last-8))
+        (when (or has-n-confi? some-vaccinated?)
           {:details (confirmed-info
                      ccode
+                     has-n-confi?
                      last-report
                      last-8
                      rankings

@@ -136,60 +136,52 @@
   "Telegram chat-id."
   "112885364")
 
-(defn calculate-activ [confirmed recovered deaths]
-  ((comp
-    #_(fn [result]
-      (printf "[calculate-activ] (- %s (+ %s %s): %s\n" confirmed recovered deaths result)
-      result)
-    (fn [confirmed recovered deaths] (- confirmed (+ recovered deaths))))
-   confirmed recovered deaths))
+(defn calculate-closed [recovered deaths]
+  (+ recovered deaths))
 
-(defn calculate-recov [confirmed deaths]
+(defn calculate-activ [new-confirmed recove deaths]
+  ((comp
+    (fn [new-confirmed recove deaths] (- new-confirmed
+                                        (calculate-closed recove deaths))))
+   new-confirmed recove deaths))
+
+(defn calculate-recov [new-confirmed deaths]
   ((comp
     #_(fn [result]
-      (printf "[calculate-recov] (+ %s %s): %s\n" confirmed deaths result)
+      (printf "[calculate-recov] (+ %s %s): %s\n" new-confirmed deaths result)
       result)
     (fn [confirmed deaths] (- confirmed deaths)))
-   confirmed deaths))
+   new-confirmed deaths))
+
+(defn calculate-closed [recovered deaths]
+  (+ recovered deaths))
+
+(defn calculate-closed [recovered deaths]
+  (+ recovered deaths))
 
 (defn calc-rate-precision-1 [case-kw]
-  (fn [{:keys [v p c r d a] :as prm}]
+  (fn [{:keys [p n] :as prm}]
     ((comp
       #_(fn [ret]
           (when (utc/in? [:a :v] case-kw)
             (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
           ret))
-     (utn/round-div-precision
-      (*
-       (case case-kw
-         :a a
-         :v v
-         :r r
-         :d d
-         :c (+ d r))
-       100.0)
-      (case case-kw
-        :v p
-        c)
-      1))))
+     (utn/round-div-precision (* (case-kw prm) 100.0)
+                              (case case-kw
+                                :v p
+                                n)
+                              1))))
 
 (defn calc-rate [case-kw]
-  (fn [{:keys [v p c r d a] :as prm}]
+  (fn [{:keys [p n] :as prm}]
     ((comp
       #_(fn [ret]
           (when (utc/in? [:a :v] case-kw)
             (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
           ret))
-     (utn/percentage
-      (case case-kw
-        :a a
-        :v v
-        :r r
-        :d d
-        :c (+ d r))
-      (case case-kw
-        :v p
-        c)))))
+     (utn/percentage (case-kw prm) (case case-kw
+                                     :v p
+                                     n)))))
 
 (defn per-1e5
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
@@ -198,15 +190,10 @@
    (utn/round mode (/ (* place 1e5) total-count))))
 
 (defn calculate-cases-per-100k [case-kw]
-  (fn [{:keys [v p c r d]}]
+  (fn [{:keys [p] :as prm}]
     (if (zero? p)
       0
-      (per-1e5 (case case-kw
-                 :v v
-                 :a (calculate-activ c r d)
-                 :r r
-                 :d d
-                 :c c)
+      (per-1e5 (case-kw prm)
                p))))
 
 (def botver
@@ -405,8 +392,8 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   ":idx - defines an order in appearance
   :v ~ vaccinated
   :p ~ population
-                      TODO :n ~ new-confirmed cased
-  :c confirmed cased; TODO :c ~ closed cases
+  :n ~ new-confirmed cased
+  :c ~ closed cases
   :r ~ recovered cases
   :d ~ deaths
   :a ~ active cases i.e. ill
@@ -414,7 +401,8 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   TODO see https://github.com/clojure/data.priority-map"
   [{:idx  0 :kw :v                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  1 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
-   {:idx  2 :kw :c                :threshold {:inc 50000     :val (int 3510e3)}}
+   {:idx  2 :kw :n                :threshold {:inc 50000     :val (int 3510e3)}}
+   #_{:idx  2 :kw :n                :threshold {:inc 50000     :val (int 3460e3)}}
    {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 2547e3)}}
    {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 83e3)}}
    {:idx  5 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 959e3)}}
@@ -606,5 +594,21 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
       ((domonad state-m [mvv (m-result plain-val)] mvv)
        (update-in state [:acc]
                   (fn [_] (vec (concat accumulator (vector calc-time)))))))))
+
+(defn estim
+  "TODO have a look at lenses"
+  [kw hm]
+  ((comp
+    (partial get hm)
+    (partial get {:r :er :a :ea :c :ec}))
+   kw))
+
+(defn ident
+  "TODO have a look at lenses"
+  [kw hm]
+  ((comp
+    (partial get hm)
+    #_(partial get {:r :er :a :ea :c :ec}))
+   kw))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)
