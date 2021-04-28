@@ -75,6 +75,23 @@
 
 (defn- last-7 [k last-8] ((comp rest k) last-8))
 
+#_(defn mean
+  "
+  Returns the mean of the data, x.
+
+  Examples:
+    (mean (sample-normal 100))
+
+  References:
+    http://incanter.org/docs/parallelcolt/api/cern/jet/stat/tdouble/DoubleDescriptive.html
+    http://en.wikipedia.org/wiki/Mean
+  "
+  ([x]
+   (let [xx (to-list x)]
+     (DoubleDescriptive/mean (DoubleArrayList. (double-array xx))))))
+
+(def mean istats/mean)
+
 (defn-fun-id confirmed-info "TODO reintroduce max-active-date"
   [ccode has-n-confi? last-report last-8 rankings delta maxes cnt-countries]
   #_(debugf "ccode %s" ccode)
@@ -100,7 +117,7 @@
           #_{:s lang/activ-estim    :n (com/estim :a     last-report) :diff (com/estim :a     delta) :emoji "🤒"}
           {:s lang/active-per-1e5 :n (com/ident :a100k last-report) :diff (com/ident :a100k delta)}
           {:s lang/active-last-7-avg
-           :n ((comp round-nr istats/mean) active-last-7)}
+           :n ((comp round-nr mean) active-last-7)}
           {:s lang/active-change-last-7-avg
            :n
            ;; ActC(t0)    = active(t0)    - active(t0-1d)

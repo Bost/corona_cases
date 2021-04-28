@@ -36,8 +36,6 @@
 
 (defonce continue (atom true))
 
-;; TODO use com.stuartsierra.compoment for start / stop
-;; see https://github.com/miikka/avulias-botti
 ;; For interactive development:
 (defonce initialized (atom nil))
 
@@ -239,7 +237,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
            ccc/all-country-codes))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
 
-        cleanups
+        cleanups0
         (m-result
          (do
            (com/heap-info)
@@ -247,7 +245,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
            (System/gc) ;; also (.gc (Runtime/getRuntime))
            (Thread/sleep 100)
            (com/heap-info)))
-        _ (com/add-calc-time "cleanups" cleanups)
+        _ (com/add-calc-time "cleanups0" cleanups0)
 
         all-aggregations
         ((comp
@@ -273,7 +271,17 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                    {:v1   {:json-hash (get-in @cache/cache [:v1   :json-hash])}}
                    {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
                    (select-keys
-                    @cache/cache [:plot :msg :list :threshold])))))]
+                    @cache/cache [:plot :msg :list :threshold])))))
+        cleanups1
+        (m-result
+         (do
+           (com/heap-info)
+           (debugf "(System/gc)")
+           (System/gc) ;; also (.gc (Runtime/getRuntime))
+           (Thread/sleep 100)
+           (com/heap-info)))
+        _ (com/add-calc-time "cleanups1" cleanups1)]
+
        calc-result))
      init-state)))
 

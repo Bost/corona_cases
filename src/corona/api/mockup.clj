@@ -18,8 +18,7 @@
      :body ((comp
              slurp
              (partial str path "/"))
-            "all.json"
-            #_"all.189950.json")})
+            "all.json")})
   (GET
     "/owid-covid-data.json" []
     {:status 200
@@ -27,8 +26,7 @@
      :body ((comp
              slurp
              (partial str path "/"))
-            "owid-covid-data.json"
-            #_"owid-covid-data-92167.json")}))
+            "owid-covid-data.json")}))
 
 (defonce server (atom nil))
 

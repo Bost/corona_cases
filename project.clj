@@ -18,22 +18,19 @@
    [nrepl/drawbridge "0.2.1"]]
 
   :dependencies
-  [[org.clojure/clojure     "1.10.2"]
-
-   ;; CSV reader/writer to/from Clojure data structures.
-   [org.clojure/data.csv    "1.0.0"]
+  [[org.clojure/clojure     "1.10.3"]
 
    ;; Ring routing lib; dispatching of GET, PUT, etc.
    [compojure               "1.6.2"]
 
    ;; Ring Jetty adapter
-   [ring/ring-jetty-adapter "1.8.2"]
+   [ring/ring-jetty-adapter "1.9.3"]
 
    ;; for the (ring.util.http-response/ok)
-   [metosin/ring-http-response "0.9.1"]
+   [metosin/ring-http-response "0.9.2"]
 
    ;; for [ring.middleware.json :refer [wrap-json-body]]
-   [ring/ring-json "0.5.0"]
+   [ring/ring-json "0.5.1"]
 
    ;; managing environment variables
    [environ                 "1.2.0"]
@@ -43,15 +40,19 @@
 
    ;; for the get-json function. Not having it cheshire as a dependency results
    ;; in: `namespace 'cheshire.factory' not found`
-   [clj-http                "3.11.0"]
+   [clj-http                "3.12.1"]
 
    ;; Clojure interface for Telegram Bot API
-   [org.clojars.bost/morse  "0.0.0-163-0x00cf"]
+   [org.clojars.bost/morse  "0.0.0-164-0xe94b"]
 
-   [org.clojure/data.json   "1.0.0"]
-   [net.cgrand/xforms       "0.19.2"]
-   [org.clojars.bost/clj-time "0.6.0-288-0xce29"]
-   [org.clojars.bost/utils "0.0.0-48-0x07fd"]
+   [org.clojure/data.json   "2.2.2"]
+
+   ;; wrapper for Java 8 Date-Time API.
+   [clojure.java-time "0.3.2"]
+
+   [org.clojars.bost/clj-time "0.6.0-289-0xe68a"]
+
+   [org.clojars.bost/utils "0.0.0-49-0x726c"]
 
    ;; https://github.com/generateme/cljplot
    [org.clojars.bost/cljplot "0.0.2"]
@@ -60,7 +61,7 @@
    #_[aerial.hanami "0.12.1"]
 
    ;; internationalization, ISO 3166-1 country codes etc.
-   [com.neovisionaries/nv-i18n "1.27"]
+   [com.neovisionaries/nv-i18n "1.28"]
 
    ;; parse HTML into Clojure data structures - scrapping data from HTML tables
    [hickory "0.7.1"]
@@ -68,14 +69,11 @@
    ;; TODO debugging - changes prompt according to sexp result
    ;; https://github.com/AppsFlyer/mate-clj
 
-   [incanter/incanter-zoo "1.9.3"]   ;; roll-mean
-   [incanter/incanter-core "1.9.3"]  ;; mean
+   ;; [incanter/incanter-zoo "1.9.3"]   ;; roll-mean
+   ;; [incanter/incanter-core "1.9.3"]  ;; mean
 
    ;; logging
-   [com.taoensso/timbre "5.1.0"]
-
-   ;; read from META-INF/maven/.../.../pom.properties
-   [clojurewerkz/propertied "1.3.0"]
+   [com.taoensso/timbre "5.1.2"]
 
    ;; manage the lifecycle and dependencies of components with runtime state
    ;; TODO Include it only in the development
@@ -93,8 +91,9 @@
    ;; how much memory an object occupies together with all its child fields
    [com.clojure-goes-fast/clj-memory-meter "0.1.3"]
 
-   [org.clojure/java.jdbc "0.7.11"]
-   [org.postgresql/postgresql "42.2.18"]]
+   ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
+   [com.github.seancorfield/next.jdbc "1.1.646"]
+   [org.postgresql/postgresql "42.2.20"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"
