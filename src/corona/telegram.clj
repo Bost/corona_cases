@@ -186,11 +186,14 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                   json)
         _ (com/add-calc-time "pic-data" pic-data)
 
+        ;; WTF! filtering unsorted pic-data leads to:
+        ;; [stats-countries] ~46.4 MiB although it should be just ~184.0 KiB
         stats-countries
         ((comp
           m-result
+          #_(fn [v] (def sc v) v)
           (partial filter (fn [hm] (= (:t hm) last-date)))
-          (partial sort-by (juxt :ccode :t)))
+          #_(partial sort-by (juxt :ccode :t)))
          pic-data)
         _ (com/add-calc-time "stats-countries" stats-countries)
 

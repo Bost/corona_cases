@@ -154,6 +154,8 @@
                         hms-new-confirmed
                         hms-recovered
                         hms-deaths]))
+      ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
+      ;; sorted   [pic-data] 46.4 MiB
       (partial map (partial sort-by (juxt :ccode :t)))
       #_(fn [v] (def xff v) v)
       #_(partial map-indexed (fn [idx hm]

@@ -35,7 +35,9 @@
 
 (defn estimate [pic-data]
   ((comp
-    (partial sort-by (juxt :ccode :t))
+    ;; unsorted [estim] 75.1 MiB
+    ;; sorted   [estim] 144.0 MiB
+    #_(partial sort-by (juxt :ccode :t))
     flatten
     (partial map (estim-for-country-fn com/calculate-activ
                                        :ea [{:kw :n  :shift 0}
