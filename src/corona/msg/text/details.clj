@@ -11,7 +11,6 @@
             [corona.macro :refer [defn-fun-id debugf]]
             [taoensso.timbre :as timbre]
             [corona.msg.text.common :as msgc]
-            [incanter.stats :as istats]
             [utils.core :as utc]
             [clj-time.bost :as ctb]
             [utils.num :as utn]))
@@ -75,22 +74,11 @@
 
 (defn- last-7 [k last-8] ((comp rest k) last-8))
 
-#_(defn mean
-  "
-  Returns the mean of the data, x.
-
-  Examples:
-    (mean (sample-normal 100))
-
-  References:
-    http://incanter.org/docs/parallelcolt/api/cern/jet/stat/tdouble/DoubleDescriptive.html
-    http://en.wikipedia.org/wiki/Mean
-  "
-  ([x]
-   (let [xx (to-list x)]
-     (DoubleDescriptive/mean (DoubleArrayList. (double-array xx))))))
-
-(def mean istats/mean)
+(defn mean
+  [numbers]
+  (if (empty? numbers)
+    0
+    (/ (reduce + numbers) (count numbers))))
 
 (defn-fun-id confirmed-info "TODO reintroduce max-active-date"
   [ccode has-n-confi? last-report last-8 rankings delta maxes cnt-countries]
