@@ -12,34 +12,60 @@
 
 ;; A文 doesn't get displayed blue as a telegram command. Hmm
 ;; :language     "lang"
-(def ^:const percentage-calc "Percentage calculation")
-(def ^:const cases           "cases")
-(def ^:const ranking-desc    "Ranking among %s countries:\n%s")
-(def ^:const world           "world")
-(def ^:const world-desc      "Start here")
-(def ^:const start           "start")
-(def ^:const explain         "explain")
-(def ^:const contributors    "contributors")
-(def ^:const feedback        "feedback")
-(def ^:const vacc            "Vacc")
-(def ^:const conf            "Conf")
-(def ^:const confir          "Confir")
-(def ^:const confirmed       "Confirmed")
-(def ^:const confirmed-cases "Confirmed cases")
-(def ^:const vaccinated-cases "Vaccinated cases")
-(def ^:const deaths          "Deaths")
-(def ^:const death-cases     "Death cases")
-(def ^:const recov           "Recov")
-(def ^:const recove          "Recove")
-(def ^:const recovered       "Recovered")
-(def ^:const recov-estim     "Recov. estimated")
-(def ^:const activ-estim     "Active estimated")
-(def ^:const recovered-cases "Recovered cases")
-(def ^:const active          "Active")
-(def ^:const active-cases    "Active cases")
-(def ^:const estimated       "Estimated")
-(def ^:const estimated-cases "Estimated cases")
-(def ^:const hundred-k       "100k")
+(def ^:const percentage-calc  "Percentage calculation")
+(def ^:const cases            "cases")
+(def ^:const ranking-desc     "Ranking among %s countries:\n%s")
+(def ^:const world            "world")
+(def ^:const world-desc       "Start here")
+(def ^:const start            "start")
+(def ^:const explain          "explain")
+(def ^:const contributors     "contributors")
+(def ^:const feedback         "feedback")
+
+;; :s as in 'String'
+(def ^:const hm-estimated        {:s "" :es "*"})
+
+(def ^:const hm-rec              {:r "Rec"       :er "*Rec"})
+(def ^:const hm-recov            {:r "Recov"     :er "*Recov"})
+(def ^:const hm-recove           {:r "Recove"    :er "*Recove"})
+(def ^:const hm-recovered        {:r "Recovered" :er "*Recovered"})
+(def ^:const hm-act              {:a "Act"       :ea "*Act"})
+(def ^:const hm-active           {:a "Active"    :ea "*Active"})
+(def ^:const hm-clo              {:c "Clo"       :ec "*Clo"})
+(def ^:const hm-closed           {:c "Closed"    :ec "*Closed"})
+
+(def ^:const vac              "Vac")
+(def ^:const vacc             "Vacc")
+(def ^:const vaccinated       "Vaccinated")
+(def ^:const conf             "Conf")
+(def ^:const confir           "Confir")
+(def ^:const confirmed        "Confirmed")
+(def ^:const deaths           "Deaths")
+(def ^:const rec              (com/ident :r hm-rec))
+(def ^:const recov            (com/ident :r hm-recov))
+(def ^:const recove           (com/ident :r hm-recove))
+(def ^:const recovered        (com/ident :r hm-recovered))
+(def ^:const act              (com/ident :a hm-act))
+(def ^:const active           (com/ident :a hm-active))
+(def ^:const clo              (com/ident :c hm-clo))
+(def ^:const closed           (com/ident :c hm-closed))
+
+
+(def ^:const active-cases     (format "%s %s" active cases))
+(def ^:const recovered-cases  (format "%s %s" recovered cases))
+(def ^:const closed-cases     (format "%s %s" closed cases))
+(def ^:const confirmed-cases  (format "%s %s" confirmed cases))
+(def ^:const vaccinated-cases "Vaccinations")
+(def ^:const death-cases      (format "%s %s" "Death" cases))
+
+;; TODO recov-estim & friends are used in the graphs
+(def ^:const recov-estim      "Recov. estimated")
+(def ^:const activ-estim      "Active estimated")
+(def ^:const close-estim      "Closed estimated")
+
+(def ^:const people "The word 'Population' is too long. See `fmt-to-cols`"  "People")
+
+(def ^:const hundred-k        "100k")
 (def ^:const cmd-active-per-1e5 (str "a" hundred-k))
 (def ^:const cmd-recove-per-1e5 (str "r" hundred-k))
 (def ^:const cmd-deaths-per-1e5 (str "d" hundred-k))
@@ -47,45 +73,24 @@
 (def ^:const cmd-vaccin-per-1e5 (str "v" hundred-k))
 (def ^:const cases-per-1e5 "Cases per 100 000 people")
 
-(def ^:const vaccin-per-1e5
-  "Active cases per 100 000"
-  (str "Vac" hundred-k))
-(def ^:const active-per-1e5
-  "Active cases per 100 000"
-  (str "Act" hundred-k))
-(def ^:const recove-per-1e5
-  "Recovered cases per 100 000"
-  (str "Rec" hundred-k))
-(def ^:const deaths-per-1e5
-  "Deaths per 100 000"
-  (str "Dea" hundred-k))
-(def ^:const closed-per-1e5
-  "Closed per 100 000"
-  (str "Clo" hundred-k))
+(def ^:const vaccin-per-1e5 "Vaccinations per 100 000"    (str vac hundred-k))
+(def ^:const active-per-1e5 "Active cases per 100 000"    (str act hundred-k))
+(def ^:const recove-per-1e5 "Recovered cases per 100 000" (str rec hundred-k))
+(def ^:const deaths-per-1e5 "Deaths per 100 000"          (str "Dea" hundred-k))
+(def ^:const closed-per-1e5 "Closed per 100 000"          (str clo hundred-k))
 
-(def ^:const active-max
-  "Peak of active cases from all reports"
-  "Max Active")
-
-(def ^:const deaths-max
-  "Peak of deaths from all reports"
-  "Max Deaths")
-
-(def ^:const closed        "Closed")
-(def ^:const closed-cases  "Closed cases")
+(def ^:const active-max "Peak of active cases from all reports" (format "Max %s" active))
+(def ^:const deaths-max "Peak of deaths from all reports"       (format "Max %s" deaths))
 
 (def ^:const report
   "Coincidentally there is 1 report per day"
   "Day\\Report")
-(def ^:const active-absolute "Active absolute")
-(def ^:const absolute      "absolute")
-(def ^:const people        "People") ;; "Population" is too long see `fmt-to-cols`
-(def ^:const vaccinated    "Vaccinated")
-(def ^:const vaccinated    "Vaccinated")
+(def ^:const absolute        "absolute")
+(def ^:const active-absolute (format "%s %s" active absolute))
 (def ^:const vaccin-data-not-published "Vaccination data not published yet")
-(def ^:const stats         "Stats")
-(def ^:const list-desc     "List of countries")
-(def ^:const listings      "lists")
+(def ^:const stats           "Stats")
+(def ^:const list-desc       "List of countries")
+(def ^:const listings        "lists")
 
 ;; https://en.wikipedia.org/wiki/Moving_average#Moving_median
 ;; simple moving median SMM
@@ -96,13 +101,9 @@
 (def ^:const rate-of-people    (str "% of " people))
 (def ^:const rate-of-confirmed (str "% of " confirmed))
 
-(def ^:const active-last-7
-  "Active cases in last 7 reports"
-  "ActL7")
-
-(def ^:const vaccin-last-7
-  "Vaccinated in last 7 reports"
-  "VacL7")
+(def ^:const L7 "L7")
+(def ^:const active-last-7 "Active cases in last 7 reports" (str act L7))
+(def ^:const vaccin-last-7 "Vaccinations in last 7 reports" (str vac L7))
 
 (def ^:const missing-vaccin-data
   (format "No data for today. See <code>%s</code>:" vaccin-last-7))
@@ -111,17 +112,14 @@
   "Active cases in last 7 reports - simple moving Median rounded"
   (str active-last-7 "Med"))
 
+(def ^:const avg "Avg")
 (def ^:const active-last-7-avg
-  "Active cases in last 7 reports - simple moving Average rounded"
-  (str active-last-7 "Avg"))
+  "Active cases in last 7 reports - simple moving Average rounded" (str active-last-7 avg))
 
-(def ^:const active-last-8th
-  "Active cases of the last 8th report"
-  "ActL8th")
-
-(def ^:const active-change-last-7-avg
-  "Active cases Change - simple moving Average of last 7 values"
-  "ActCL7Avg")
+(def ^:const active-last-8th "Active cases of the last 8th report"
+  (str act "L8th"))
+(def ^:const active-change-last-7-avg "Active cases Change - simple moving Average of last 7 values"
+  (str act "C" L7 avg))
 
 (def ^:const write-a-message-to
   "Just write a message to @RostislavSvoboda thanks.")

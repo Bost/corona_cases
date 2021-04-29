@@ -225,7 +225,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                          :estim estim)]
           ((comp
             m-result doall
-            (partial pmap ;; use pmap in PROD and map in development
+            (partial map ;; use pmap in PROD and map in development
                      (fn [ccode]
                        [
                         (cache/cache! (fn [] (msgi/message ccode prm)) (msgi/message-kw ccode))

@@ -39,6 +39,12 @@
     ;; sorted   [estim] 144.0 MiB
     #_(partial sort-by (juxt :ccode :t))
     flatten
+    #_(partial map (estim-for-country-fn com/calculate-closed
+                                       :ec [{:kw :n  :shift 0}
+                                            {:kw :er :shift 0}
+                                            {:kw :d  :shift shift-deaths}]))
+    #_(partial group-by :ccode)
+    #_flatten
     (partial map (estim-for-country-fn com/calculate-activ
                                        :ea [{:kw :n  :shift 0}
                                             {:kw :er :shift 0}

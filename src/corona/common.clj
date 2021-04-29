@@ -600,8 +600,8 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   [kw hm]
   ((comp
     (partial get hm)
-    (partial get {:r :er :a :ea :c :ec}))
-   kw))
+    (partial get {:r :er :a :ea :s :es}))
+   kw kw)) ;; second kw is for `not-found` parameter of `get`
 
 (defn ident
   "TODO have a look at lenses"
