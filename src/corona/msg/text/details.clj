@@ -111,13 +111,13 @@
            ;; ActC(t0)    = active(t0)    - active(t0-1d)
            ;; ActC(t0-1d) = active(t0-1d) - active(t0-2d)
            ;; ActC(t0-2d) = active(t0-2d) - active(t0-3d)
-           ;; ActC(t0-3d) = active(t0-2d) - active(t0-4d)
-           ;; ActC(t0-4d) = active(t0-2d) - active(t0-5d)
-           ;; ActC(t0-5d) = active(t0-2d) - active(t0-6d)
+           ;; ActC(t0-3d) = active(t0-3d) - active(t0-4d)
+           ;; ActC(t0-4d) = active(t0-4d) - active(t0-5d)
+           ;; ActC(t0-5d) = active(t0-5d) - active(t0-6d)
            ;; ActC(t0-6d) = active(t0-6d) - active(t0-7d)
 
            ;; ActCL7CAvg =
-           ;; = (ActC(t0)+ActC(t0-1d)+ActC+(t0-2d)+...+ActC(t0-6d)) / 7
+           ;; = (ActC(t0)+ActC(t0-1d)+ActC(t0-2d)+...+ActC(t0-6d)) / 7
            ;; = (active(t0) - active(t0-7d)) / 7
            (-> (/ (- (:a last-report) ((comp first :a) last-8)) 7.0)
                round-nr #_plus-minus)
