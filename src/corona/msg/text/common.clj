@@ -91,7 +91,7 @@
   line-fmt e.g.: \"%s: %s\n\"
   The count of parameters for every line must be equal to the count of \"%s\"
   format specifiers in the line-fmt and the count must be at least 1.
-  Note that at the moment only \"%s\" is allowed.
+  Note that at the moment only \"%s\" works.
 
   lines is a matrix of the following shape:
   [[fmt0 [v00 ... v0N]]

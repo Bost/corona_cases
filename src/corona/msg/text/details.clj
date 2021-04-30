@@ -168,25 +168,20 @@
       (when-not (msgc/worldwide? ccode)
         ["\n%s\n"
          [(msgc/format-linewise
-           [["%s" [lang/people         (partial lense-fun :p)]]
-            ["%s" [(str (lense-fun :s lang/hm-estimated) lang/active-per-1e5) (partial lense-fun :a100k)]]
-            ["%s" [(str (lense-fun :s lang/hm-estimated) lang/recove-per-1e5) (partial lense-fun :r100k)]]
-            ["%s" [lang/deaths-per-1e5 (partial lense-fun :d100k)]]
-            ["%s" [(str (lense-fun :s lang/hm-estimated) lang/closed-per-1e5) (partial lense-fun :c100k)]]]
+           (let [hm ((comp
+                      first
+                      (partial map :rank)
+                      (partial filter (fn [hm] (= (:ccode hm) ccode))))
+                     rankings)]
+             [["%s" [lang/people         (lense-fun :p hm)]]
+              ["%s" [(str (lense-fun :s lang/hm-estimated) lang/active-per-1e5) (lense-fun :a100k hm)]]
+              ["%s" [(str (lense-fun :s lang/hm-estimated) lang/recove-per-1e5) (lense-fun :r100k hm)]]
+              ["%s" [lang/deaths-per-1e5 (lense-fun :d100k hm)]]
+              ["%s" [(str (lense-fun :s lang/hm-estimated) lang/closed-per-1e5) (lense-fun :c100k hm)]]])
            :line-fmt "%s:<b>%s</b>   "
            :fn-fmts
            (fn [fmts] (format lang/ranking-desc
-                             cnt-countries (cstr/join "" fmts)))
-           :fn-args
-           (fn [args] (update args (dec (count args))
-                             (fn [_]
-                               (get
-                                ((comp
-                                  first
-                                  (partial map :rank)
-                                  (partial filter (fn [hm] (= (:ccode hm) ccode))))
-                                 rankings)
-                                (last args))))))]])
+                             cnt-countries (cstr/join "" fmts))))]])
       (when (some pos? vaccin-last-7)
         (last-7-block
          {:emoji "💉🗓"
