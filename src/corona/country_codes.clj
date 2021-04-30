@@ -400,7 +400,7 @@
 
 (def all-country-codes
   "All country codes (potentially including worldwide \"ZZ\")"
-  #_#{"CR"}
+  #_#{"RS"}
   #_#{"GG"}
   #_#{"AR"}
   #_#{"SK" "PE" "KR" "TW" "AR" "TH" "MX"}

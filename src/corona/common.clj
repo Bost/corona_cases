@@ -420,6 +420,8 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
    {:idx 15 :kw :c-rate} ;; closed-rate
    {:idx 16 :kw :ea} ;; estimate-active
    {:idx 17 :kw :er} ;; estimate-recovered
+   {:idx 18 :kw :ea100k} ;; estimate-active
+   {:idx 19 :kw :er100k} ;; estimate-recovered
    ])
 
 (def aggregation-params
@@ -600,7 +602,12 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   [kw hm]
   ((comp
     (partial get hm)
-    (partial get {:r :er :a :ea :s :es}))
+    (partial get {
+                  :r :er
+                  :a :ea
+                  :r100k :er100k
+                  :a100k :ea100k
+                  :s :es}))
    kw kw)) ;; second kw is for `not-found` parameter of `get`
 
 (defn ident

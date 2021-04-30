@@ -38,28 +38,49 @@
     ;; unsorted [estim] 75.1 MiB
     ;; sorted   [estim] 144.0 MiB
     #_(partial sort-by (juxt :ccode :t))
-    flatten
+    #_flatten
     #_(partial map (estim-for-country-fn com/calculate-closed
                                        :ec [{:kw :n  :shift 0}
                                             {:kw :er :shift 0}
                                             {:kw :d  :shift shift-deaths}]))
     #_(partial group-by :ccode)
-    #_flatten
+    flatten
+    (partial map
+             (fn [[ccode hms]]
+               (let [population ((comp :p first) hms)]
+                 ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
+                                              com/calculate-activ)
+                                        :ea100k [{:kw :n  :shift 0}
+                                                 {:kw :er :shift 0}
+                                                 {:kw :d  :shift shift-deaths}])
+                  [ccode hms]))))
+    (partial group-by :ccode)
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    flatten
     (partial map (estim-for-country-fn com/calculate-activ
                                        :ea [{:kw :n  :shift 0}
                                             {:kw :er :shift 0}
                                             {:kw :d  :shift shift-deaths}]))
     (partial group-by :ccode)
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
     flatten
-    #_(fn [v] (def m4 v) v)
+    (partial map
+             (fn [[ccode hms]]
+               (let [population ((comp :p first) hms)]
+                 ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
+                                              com/calculate-recov)
+                                        :er100k [{:kw :n :shift shift-recovery}
+                                                 {:kw :d :shift shift-deaths}])
+                  [ccode hms]))))
+    (partial group-by :ccode)
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;
+    flatten
     (partial map (estim-for-country-fn com/calculate-recov
                                        :er [{:kw :n :shift shift-recovery}
                                             {:kw :d :shift shift-deaths}]))
-    #_(fn [v] (def m3 v) v)
-    #_(partial map (fn [[ccode hms-ccode]]
-                   [ccode (sort-by :t hms-ccode)]))
-    #_(fn [v] (def m2 v) v)
     (partial group-by :ccode)
+
     #_(fn [v] (def m1 v) v)
     #_(partial sort-by (juxt :ccode :t))
     #_(fn [v] (def m0 v) v))

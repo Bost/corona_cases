@@ -102,14 +102,21 @@
         omag-active 4
         omag-recove omag-active
         omag-deaths (dec omag-active)
+
+        ;; always use estimated vals since there is at
+        ;; least 1 country not reporting recovered cases
+        lense-fun com/estim
+
         msg
         (format
          (msgc/format-linewise
           [["%s\n" [header]]
            ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["%s "  [(str lang/active-per-1e5 (if (= :a100k case-kw) sort-indicator " "))]]
+           ["%s "  [(str (str (lense-fun :s lang/hm-estimated) lang/active-per-1e5)
+                         (if (= :a100k case-kw) sort-indicator " "))]]
            ["%s"   [spacer]]
-           ["%s "  [(str lang/recove-per-1e5 (if (= :r100k case-kw) sort-indicator " "))]]
+           ["%s "  [(str (str (lense-fun :s lang/hm-estimated) lang/recove-per-1e5)
+                         (if (= :r100k case-kw) sort-indicator " "))]]
            ["%s"   [spacer]]
            ["%s"   [(str lang/deaths-per-1e5 (if (= :d100k case-kw) sort-indicator " "))]]
            ["\n%s" [(str
@@ -119,8 +126,10 @@
                      )]]])
          ((comp
            (partial cstr/join "\n")
-           (partial map (fn [{:keys [a100k r100k d100k ccode]}]
-                          (let [cname (ccr/country-name-aliased ccode)]
+           (partial map (fn [{:keys [d100k ccode] :as hm}]
+                          (let [a100k (lense-fun :a100k hm)
+                                r100k (lense-fun :r100k hm)
+                                cname (ccr/country-name-aliased ccode)]
                             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                                     (com/left-pad a100k " " omag-active)
                                     spacer

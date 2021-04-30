@@ -4,6 +4,7 @@
   (:require [clojure.string :as cstr]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
+            [corona.macro :refer [defn-fun-id debugf]]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
             [utils.num :as utn]
@@ -55,9 +56,10 @@
       #_(pos-neg n)))
    " " padding-len))
 
-(defn fmt-to-cols
+(defn-fun-id fmt-to-cols
   "Info-message numbers of aligned to columns for better readability"
   [{:keys [emoji s n diff]}]
+  #_(debugf "fmt-to-cols %s" s)
   ["%s\n"
    [
     (let [padding-len (inc max-diff-order-of-magnitude)
