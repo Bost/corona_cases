@@ -400,17 +400,18 @@
 
 (def all-country-codes
   "All country codes (potentially including worldwide \"ZZ\")"
-  #_#{"RS"}
-  #_#{"GG"}
-  #_#{"AR"}
-  #_#{"SK" "PE" "KR" "TW" "AR" "TH" "MX"}
-  #_#{"US" "DE" "ZZ"}
-  #_#{"SK" "GG" "QQ" "DE" "ZZ"}
-  #_#{"ZZ" "GB" "SK" "DE" "AT" "CZ" "US" "FR" "PL" "IT" "ES" "SE" "UA" "HU"}
-  (clojure.set/difference
-   ((comp set keys)
-    country-code-2-to-3-hm)
-   #_excluded-country-codes))
+  (or
+   #_#{"BE"}
+   #_#{"GG"}
+   #_#{"AR"}
+   #_#{"SK" "PE" "KR" "TW" "AR" "TH" "MX"}
+   #_#{"US" "DE" "ZZ"}
+   #_#{"SK" "GG" "QQ" "DE" "ZZ"}
+   #_#{"ZZ" "GB" "SK" "DE" "AT" "CZ" "US" "FR" "PL" "IT" "ES" "SE" "UA" "HU"}
+   (clojure.set/difference
+    ((comp set keys)
+     country-code-2-to-3-hm)
+    #_excluded-country-codes)))
 
 (def relevant-country-codes
   (clojure.set/difference all-country-codes

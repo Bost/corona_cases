@@ -297,26 +297,26 @@
 (defn-fun-id retry
   "args and params of fun must correspondent with each other.
    fun must be quoted and namespace-qualified"
-  [{:keys [max-attempts curr-attempt-nr fun args]
-                        :or {curr-attempt-nr 1} :as prm}]
+  [{:keys [max-attempts attempt fun args]
+                        :or {attempt 1} :as prm}]
   (let [res
         (do
-          (infof "(%s %s) - curr-attempt-nr %s of %s"
+          (infof "%s %s - attempt %s of %s"
                  (some-> fun my-find-var meta :name)
                  (pr-str args)
-                 curr-attempt-nr
+                 attempt
                  max-attempts)
           (try {:value (apply (eval fun) [args])}
                (catch Exception e
                  (errorf "Caught %s" e)
-                 (if (= max-attempts curr-attempt-nr)
+                 (if (= max-attempts attempt)
                    (throw e)
                    {:exception e}))))]
     (if (:exception res)
       (let [sleep-time (+ 1000 (rand-int 1000))]
         (debugf "Sleeping for %s ms ..." sleep-time)
         (Thread/sleep sleep-time)
-        (recur (assoc-in prm [:curr-attempt-nr] (inc curr-attempt-nr))))
+        (recur (assoc-in prm [:attempt] (inc attempt))))
       (:value res))))
 
 (defn-fun-id get-json-single
