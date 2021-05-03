@@ -20,12 +20,22 @@
   [:list ((comp keyword :name meta find-var) fun) case-kw])
 
 (defn calc-listings! "" [stats prm case-kws fun]
+  ;; fun is on of: per-100k, absolute-vals - TODO spec it!
   ((comp
     doall
     (partial
      map
      (fn [case-kw]
-       (let [coll (sort-by case-kw < stats)
+       (let [coll (sort-by
+                   ((comp
+                     (fn [kw] (get {:r :er
+                                   :a :ea
+                                   :r100k :er100k
+                                   :a100k :ea100k
+                                   :s :es}
+                                  kw kw)))
+                    case-kw)
+                   < stats)
              ;; Split the long list of all countries into smaller sub-parts
              sub-msgs (partition-all (/ (count coll)
                                         cnt-messages-in-listing) coll)
@@ -47,14 +57,22 @@
           sub-msgs)))))
    case-kws))
 
+(defn column-label
+  "I.e. a header for a column table - see corona.msg.text.details/label-val"
+  [lense-fun text sorted-case-kw case-kw]
+  ;; TODO number of deaths is not estimated
+  (str (lense-fun :s lang/hm-estimated) text
+       (if (= sorted-case-kw case-kw)
+         "▴" #_" " #_"▲"
+         " ")))
+
 (defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw {:keys [msg-idx cnt-msgs data cnt-reports header footer]}]
+  [case-kw {:keys [msg-idx cnt-msgs data cnt-reports lense-fun header footer]}]
   #_(debugf "case-kw %s" case-kw)
   (let [spacer " "
-        sort-indicator "▴" ;; " " "▲"
-        omag-active 7 ;; order of magnitude i.e. number of digits
+        omag-active 7 ;; omag - order of magnitude i.e. number of digits
         omag-recove (inc omag-active)
         omag-deaths (dec omag-active)
         msg
@@ -62,11 +80,11 @@
          (msgc/format-linewise
           [["%s\n"    [header]]
            ["%s\n"    [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["    %s " [(str lang/active    (if (= :a case-kw) sort-indicator " "))]]
+           ["    %s " [(column-label lense-fun lang/active :a case-kw)]]
            ["%s"      [spacer]]
-           ["%s "     [(str lang/recovered (if (= :r case-kw) sort-indicator " "))]]
+           ["%s "     [(column-label lense-fun lang/recovered :r case-kw)]]
            ["%s"      [spacer]]
-           ["%s\n"    [(str lang/deaths    (if (= :d case-kw) sort-indicator " "))]]
+           ["%s\n"    [(column-label lense-fun lang/deaths :d case-kw)]]
            ["%s"      [(str
                         "%s"     ; listing table
                         "%s"     ; sorted-by description; has its own new-line
@@ -94,31 +112,22 @@
 (defn-fun-id per-100k
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw {:keys [msg-idx cnt-msgs data cnt-reports header footer]}]
+  [case-kw {:keys [msg-idx cnt-msgs data cnt-reports lense-fun header footer]}]
   #_(debugf "case-kw %s" case-kw)
   (let [spacer " "
-        sort-indicator "▴" ;; " " "▲"
-        ;; omag - order of magnitude i.e. number of digits
-        omag-active 4
+        omag-active 4 ;; omag - order of magnitude i.e. number of digits
         omag-recove omag-active
         omag-deaths (dec omag-active)
-
-        ;; always use estimated vals since there is at
-        ;; least 1 country not reporting recovered cases
-        lense-fun com/estim
-
         msg
         (format
          (msgc/format-linewise
           [["%s\n" [header]]
            ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["%s "  [(str (str (lense-fun :s lang/hm-estimated) lang/active-per-1e5)
-                         (if (= :a100k case-kw) sort-indicator " "))]]
+           ["%s "  [(column-label lense-fun lang/active-per-1e5 :a100k case-kw)]]
            ["%s"   [spacer]]
-           ["%s "  [(str (str (lense-fun :s lang/hm-estimated) lang/recove-per-1e5)
-                         (if (= :r100k case-kw) sort-indicator " "))]]
+           ["%s "  [(column-label lense-fun lang/recove-per-1e5 :r100k case-kw)]]
            ["%s"   [spacer]]
-           ["%s"   [(str lang/deaths-per-1e5 (if (= :d100k case-kw) sort-indicator " "))]]
+           ["%s"   [(column-label lense-fun lang/deaths-per-1e5 :d100k case-kw)]]
            ["\n%s" [(str
                      "%s"     ; listing table
                      "%s"     ; sorted-by description; has its own new-line

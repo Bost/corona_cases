@@ -184,26 +184,34 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                   json)
         _ (com/add-calc-time "pic-data" pic-data)
 
-        ;; WTF! filtering unsorted pic-data leads to:
-        ;; [stats-countries] ~46.4 MiB although it should be just ~184.0 KiB
-        stats-countries
-        ((comp
-          m-result
-          #_(fn [v] (def sc v) v)
-          (partial filter (fn [hm] (= (:t hm) last-date)))
-          #_(partial sort-by (juxt :ccode :t)))
-         pic-data)
-        _ (com/add-calc-time "stats-countries" stats-countries)
-
         estim ((comp m-result
                      #_(fn [v] (def es v) v)
                      est/estimate) pic-data)
         _ (com/add-calc-time "estim" estim)
 
+        ;; WTF!?! Size of estim and stats-countries is too big. See filtering of
+        ;; sorted / unsorted data
+        ;; [pic-data] 46.9 MiB
+        ;; [estim] 151.7 MiB
+        ;; [stats-countries] 151.7 MiB; should be just ~184.0 KiB
+        stats-countries
+        ((comp
+          m-result
+          (fn [v] (def sc v) v)
+          (partial filter (fn [hm] (= (:t hm) last-date)))
+          #_(partial sort-by (juxt :ccode :t)))
+        estim)
+        _ (com/add-calc-time "stats-countries" stats-countries)
+
+        ;; TODO always use estimated vals since there is at
+        ;; least 1 country not reporting recovered cases
+        lense-fun (m-result com/estim)
+
         ;; TODO the listings will need estimated vals
         all-calc-listings
         (let [prm (assoc prm-base
-                         :ccode (ccr/get-country-code ccc/worldwide))]
+                         :ccode (ccr/get-country-code ccc/worldwide)
+                         :lense-fun lense-fun)]
           ((comp
             m-result doall
             (partial map (partial apply msgl/calc-listings! stats-countries prm)))
