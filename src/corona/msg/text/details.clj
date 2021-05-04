@@ -156,94 +156,76 @@
            :n ((lense-fun :d) last-report)
            :diff ((lense-fun :d) delta)
            :emoji "⚰️"}
-          (do
-            #_(debugf ":d100k")
-            {:s lang/deaths-per-1e5
-             :n ((lense-fun :d100k) last-report)
-             :diff ((lense-fun :d100k) delta)})
-          (let [
-                closed-fun
+          {:s lang/deaths-per-1e5
+           :n ((lense-fun :d100k) last-report)
+           :diff ((lense-fun :d100k) delta)}
+          (let [closed-fun
                 (comp
                  (partial apply com/calculate-closed)
                  (juxt (lense-fun :d)
-                       (lense-fun :r)))
-                ]
+                       (lense-fun :r)))]
             #_(def closed-fun closed-fun)
-            #_(debugf "closed-fun")
             {:s (str ((lense-fun :s) lang/hm-estimated) lang/closed)
              :n (closed-fun last-report)
              :diff (closed-fun delta)
              :emoji "🏁"})
-          (let [
+          (let [c100k-fun
                 ;; alternatively implement (lense-fun :c) - i.e. :ec
-                c100k-fun
                 (comp
                  (partial apply com/calculate-closed)
                  (juxt (lense-fun :d100k)
-                       (lense-fun :r100k)))
-                ]
-            #_(def c100k-fun
-              (comp
-               #_(partial apply com/calculate-closed)
-               (juxt (lense-fun :d100k)
-                     (lense-fun :r100k))))
-            (let [r {:s (str ((lense-fun :s) lang/hm-estimated) lang/closed-per-1e5)
-                     :n (c100k-fun last-report)
-                     :diff (c100k-fun delta)
-                     ;; TODO create command lang/cmd-closed-per-1e5
-                     #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}]
-              #_(debugf "c100k-fun")
-              r))]))
+                       (lense-fun :r100k)))]
+            {:s (str ((lense-fun :s) lang/hm-estimated) lang/closed-per-1e5)
+             :n (c100k-fun last-report)
+             :diff (c100k-fun delta)
+             ;; TODO create command lang/cmd-closed-per-1e5
+             #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)})]))
       ;; no country ranking can be displayed for worldwide statistics
-      (do
-        #_(debugf "max-active")
-        ["\n%s\n" [(format (str
+      ["\n%s\n" [(format (str
+                          "%s")
+                         (let [date (max-active :date)]
+                           #_(debugf "date %s" date)
+                           (format "%s: %s (%s)"
+                                   (str ((lense-fun :s) lang/hm-estimated)
+                                        lang/active-max)
+                                   (max-active :val)
+                                   (com/fmt-date date)
+                                   ;; TODO ctb/ago-diff: show only two segments:
+                                   ;; 1 month 4 weeks ago; must be rounded
+                                   #_
+                                   (format "%s - %s"
+                                           (com/fmt-date date)
+                                           (ctb/ago-diff date
+                                                         {:verbose true})))))
+                 ;; max-deaths makes no sense - it's always the last report
+                 #_(format (str
+                            "%s\n"
                             "%s")
-                           (let [date (max-active :date)]
-                             #_(debugf "date %s" date)
-                             (format "%s: %s (%s)"
-                                     (str ((lense-fun :s) lang/hm-estimated)
-                                          lang/active-max)
-                                     (max-active :val)
-                                     (com/fmt-date date)
-                                     ;; TODO ctb/ago-diff: show only two segments:
-                                     ;; 1 month 4 weeks ago; must be rounded
-                                     #_
-                                     (format "%s - %s"
-                                             (com/fmt-date date)
-                                             (ctb/ago-diff date
-                                                           {:verbose true})))))
-                   ;; max-deaths makes no sense - it's always the last report
-                   #_(format (str
-                              "%s\n"
-                              "%s")
-                             (format "%s: %s (%s)"
-                                     (str (lense-fun :s lang/hm-estimated)
-                                          lang/active-max)
-                                     (max-active :val)
-                                     (com/fmt-date (max-active :date)))
-                             (format "%s: %s (%s)"
-                                     lang/deaths-max (max-deaths :val)
-                                     (com/fmt-date (max-deaths :date))))]])
-      (do
-        #_(debugf "msgc/worldwide?")
-        (when-not (msgc/worldwide? ccode)
-          ["\n%s\n"
-           [(msgc/format-linewise
-             (let [hm ((comp
-                        first
-                        (partial map :rank)
-                        (partial filter (fn [hm] (= (:ccode hm) ccode))))
-                       rankings)]
-               [["%s" (label-val lense-fun lang/people :p hm)]
-                ["%s" (label-val lense-fun lang/active-per-1e5 :a100k hm)]
-                ["%s" (label-val lense-fun lang/recove-per-1e5 :r100k hm)]
-                ["%s" (label-val lense-fun lang/deaths-per-1e5 :d100k hm)]
-                ["%s" (label-val lense-fun lang/closed-per-1e5 :c100k hm)]])
-             :line-fmt "%s:<b>%s</b>   "
-             :fn-fmts
-             (fn [fmts] (format lang/ranking-desc
-                               cnt-countries (cstr/join "" fmts))))]]))
+                           (format "%s: %s (%s)"
+                                   (str (lense-fun :s lang/hm-estimated)
+                                        lang/active-max)
+                                   (max-active :val)
+                                   (com/fmt-date (max-active :date)))
+                           (format "%s: %s (%s)"
+                                   lang/deaths-max (max-deaths :val)
+                                   (com/fmt-date (max-deaths :date))))]]
+      (when-not (msgc/worldwide? ccode)
+        ["\n%s\n"
+         [(msgc/format-linewise
+           (let [hm ((comp
+                      first
+                      (partial map :rank)
+                      (partial filter (fn [hm] (= (:ccode hm) ccode))))
+                     rankings)]
+             [["%s" (label-val lense-fun lang/people :p hm)]
+              ["%s" (label-val lense-fun lang/active-per-1e5 :a100k hm)]
+              ["%s" (label-val lense-fun lang/recove-per-1e5 :r100k hm)]
+              ["%s" (label-val lense-fun lang/deaths-per-1e5 :d100k hm)]
+              ["%s" (label-val lense-fun lang/closed-per-1e5 :c100k hm)]])
+           :line-fmt "%s:<b>%s</b>   "
+           :fn-fmts
+           (fn [fmts] (format lang/ranking-desc
+                             cnt-countries (cstr/join "" fmts))))]])
       (when (some pos? vaccin-last-7)
         (last-7-block
          {:emoji "💉🗓"
@@ -269,11 +251,9 @@
                      active-last-7
                      (last-7 (lense-fun :n) last-8)
                      popula-last-7)}))
-      (do
-        #_(debugf "Estimated")
-        (when-not some-recove?
-          ["\n%s\n"
-           ["* Estimated values"]]))])))
+      (when-not some-recove?
+        ["\n%s\n"
+         ["* Estimated values"]])])))
 
 (defn- max-vals [data dates]
   (let [max-val (apply max data)]
@@ -298,8 +278,7 @@
       (debugf "ccode %s size %s" ccode (com/measure info))
       info)
     fmt)
-   (let [
-         ccode-estim (filter (fn [ehm] (= ccode (:ccode ehm))) estim)
+   (let [ccode-estim (filter (fn [ehm] (= ccode (:ccode ehm))) estim)
          last-8 (let [kws ((comp keys first) ccode-estim)]
                   ((comp
                     (partial zipmap kws)
@@ -307,14 +286,10 @@
                     utc/transpose
                     (partial map (fn [hm] (select-keys hm kws)))
                     (partial take-last 8))
-                   ccode-estim))
-         ]
+                   ccode-estim))]
      #_(def last-8 last-8)
-     (let [
-           some-recove?
-           ((comp
-             (partial some pos?)
-             )
+     (let [some-recove?
+           ((comp (partial some pos?))
             (last-7
              ;; the 'original' value does or does not contain recovered cases
              (com/ident-fun :r)
@@ -326,13 +301,14 @@
            last-2-reports (take-last 2 ccode-estim)
            last-report (last last-2-reports)
            vaccinated (or ((lense-fun :v) last-report) 0)
-           new-confirmed (or ((lense-fun :n) last-report) 0)
-           ]
+           new-confirmed (or ((lense-fun :n) last-report) 0)]
+       (when some-recove?
+         (debugf "ccode %s some-recove? %s - %s"
+                 ccode some-recove? (last-7 (com/ident-fun :r) last-8)))
        #_(def lense-fun lense-fun)
        #_(def last-2-reports last-2-reports)
        #_(def last-report last-report)
-       (let [
-             delta ((comp
+       (let [delta ((comp
                      (partial reduce into {})
                      (partial apply (fn [prev-report last-report]
                                       ((comp
@@ -343,7 +319,6 @@
                     last-2-reports)
              ]
          #_(def delta delta)
-         #_(debugf "0. ccode %s" ccode)
          (conj
           (select-keys prm [:header :footer])
           {:cname-aliased (ccr/country-name-aliased ccode)
@@ -366,27 +341,13 @@
                :s lang/confirmed :n new-confirmed
                :diff (if-let [dn ((lense-fun :n) delta)] dn 0)})}
 
-          (do
-            #_(debugf "1. ccode %s" ccode)
-            (when (zero? vaccinated)
-              {:notes (when (zero? vaccinated)
-                        ["%s\n" [lang/vaccin-data-not-published]])}))
+          (when (zero? vaccinated)
+            {:notes (when (zero? vaccinated)
+                      ["%s\n" [lang/vaccin-data-not-published]])})
 
-          (let [
-                #_#_last-8 (let [kws ((comp keys first) ccode-estim)]
-                             ((comp
-                               (partial zipmap kws)
-                               (partial map vals)
-                               utc/transpose
-                               (partial map (fn [hm] (select-keys hm kws)))
-                               (partial take-last 8))
-                              ccode-estim))
-                has-n-confi? ((comp pos? (lense-fun :n)) last-report)
+          (let [has-n-confi? ((comp pos? (lense-fun :n)) last-report)
                 some-vaccinated? ((comp (partial some pos?))
                                   (last-7 (lense-fun :v) last-8))]
-            #_(debugf "ccode %s has-n-confi? %s some-vaccinated? %s: %s"
-                    ccode     has-n-confi?    some-vaccinated?
-                    (last-7 (lense-fun :v) last-8))
             (when (or has-n-confi? some-vaccinated?)
               {:details (confirmed-info
                          ccode
