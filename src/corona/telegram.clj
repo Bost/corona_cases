@@ -205,7 +205,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         ;; TODO always use estimated vals since there is at
         ;; least 1 country not reporting recovered cases
-        lense-fun (m-result com/estim)
+        lense-fun (m-result com/estim-fun)
 
         ;; TODO the listings will need estimated vals
         all-calc-listings

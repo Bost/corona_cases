@@ -317,11 +317,11 @@
              )
             (last-7
              ;; the 'original' value does or does not contain recovered cases
-             (partial com/ident :r)
+             (com/ident-fun :r)
              last-8))
 
            lense-fun (if (and some-recove? (not (msgc/worldwide? ccode)))
-                       com/ident com/estim)
+                       com/ident-fun com/estim-fun)
 
            last-2-reports (take-last 2 ccode-estim)
            last-report (last last-2-reports)

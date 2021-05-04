@@ -102,12 +102,12 @@
      (fn [[t hms]]
        [
         {:ccode ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
-        {:ccode ccode :t t :case-kw :er :cnt (cnt-cases com/estim :r hms)}
-        {:ccode ccode :t t :case-kw :ea :cnt (cnt-cases com/estim :a hms)}
-        {:ccode ccode :t t :case-kw :n  :cnt (cnt-cases com/ident :n hms)}
-        {:ccode ccode :t t :case-kw :r  :cnt (cnt-cases com/ident :r hms)}
-        {:ccode ccode :t t :case-kw :d  :cnt (cnt-cases com/ident :d hms)}
-        {:ccode ccode :t t :case-kw :a  :cnt (cnt-cases com/ident :a hms)}]))
+        {:ccode ccode :t t :case-kw :er :cnt (cnt-cases (com/estim-fun :r) hms)}
+        {:ccode ccode :t t :case-kw :ea :cnt (cnt-cases (com/estim-fun :a) hms)}
+        {:ccode ccode :t t :case-kw :n  :cnt (cnt-cases (com/ident-fun :n) hms)}
+        {:ccode ccode :t t :case-kw :r  :cnt (cnt-cases (com/ident-fun :r) hms)}
+        {:ccode ccode :t t :case-kw :d  :cnt (cnt-cases (com/ident-fun :d) hms)}
+        {:ccode ccode :t t :case-kw :a  :cnt (cnt-cases (com/ident-fun :a) hms)}]))
     (partial group-by :t)
     (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (:ccode hm)] ccode))))
    stats))

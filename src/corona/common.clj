@@ -403,7 +403,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
    {:idx  1 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  2 :kw :n                :threshold {:inc 50000     :val (int 3560e3)}}
    #_{:idx  2 :kw :n                :threshold {:inc 50000     :val (int 3460e3)}}
-   {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 2677e3)}}
+   {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 2707e3)}}
    {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 84e3)}}
    {:idx  5 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 979e3)}}
    ;; TODO the order matters: it must be the same as in the info-message
@@ -597,11 +597,12 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
        (update-in state [:acc]
                   (fn [_] (vec (concat accumulator (vector calc-time)))))))))
 
-(defn estim
+(defn estim-fun
   "TODO have a look at lenses"
-  [kw hm]
+  [kw
+   #_hm]
   ((comp
-    (partial get hm)
+    #_(partial get hm)
     (partial get {
                   :r :er
                   :a :ea
@@ -610,11 +611,12 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
                   :s :es}))
    kw kw)) ;; second kw is for `not-found` parameter of `get`
 
-(defn ident
+(defn ident-fun
   "TODO have a look at lenses"
-  [kw hm]
+  [kw
+   #_hm]
   ((comp
-    (partial get hm)
+    #_(partial get hm)
     #_(partial get {:r :er :a :ea :c :ec}))
    kw))
 
