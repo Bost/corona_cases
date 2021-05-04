@@ -69,7 +69,7 @@
           (get ccode-map :data)
           (let [default
                 #_{kw-ccode {:data (mapv (fn [rd] {:date rd}) raw-dates)}}
-                (mapv (fn [rd] {:date rd}) (raw-dates json))]
+                (map (fn [rd] {:date rd}) (raw-dates json))]
             #_(errorf "ccode %s not found in json; using %s"
                       ccode
                       default)

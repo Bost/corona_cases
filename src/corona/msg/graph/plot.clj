@@ -263,12 +263,12 @@
         :legend (reverse
                  (conj (map #(vector :rect %2 {:color %1})
                             palette
-                            (map (fn [k] (get {:a lang/active
-                                              :d lang/deaths
-                                              :r lang/recovered
-                                              :er lang/recov-estim
-                                              :ea lang/activ-estim} k))
-                                 curves))
+                            (let [legend-hm {:a lang/active
+                                             :d lang/deaths
+                                             :r lang/recovered
+                                             :er lang/recov-estim
+                                             :ea lang/activ-estim}]
+                              (map (partial get legend-hm) curves)))
                        [:line lang/confirmed       stroke-confir]
                        [:line lang/active-absolute (stroke-active)]
                        [:line lang/recov-estim     (stroke-estim-recov)]
@@ -318,9 +318,13 @@
         ((comp
           flatten
           (partial map (fn [[t hms]]
-                         (->> (group-by :ccode hms)
-                              (map (fn [[ccode hms]]
-                                     {:ccode ccode :t t case-kw (reduce + (map case-kw hms))})))))
+                         ((comp
+                           (partial map (fn [[ccode hms]]
+                                          {:ccode ccode
+                                           :t t
+                                           case-kw (reduce + (map case-kw hms))}))
+                           (partial group-by :ccode))
+                          hms)))
           (partial group-by :t)
           :data)
          prm)
@@ -416,12 +420,11 @@
                             :case-kw case-kw})]
     (boiler-plate
      {:series (condp = aggregation-kw
-                :abs (->> (mapv (fn [[_ ccode-data] color]
-                                  [:line ccode-data (line-stroke color)])
-                                json-data
-                                (cycle (c/palette-presets :category20b)))
-                          (into [[:grid]])
-                          (apply b/series))
+                :abs ((comp
+                       (partial apply b/series)
+                       (partial into [[:grid]])
+                       (partial mapv (fn [[_ ccode-data] color] [:line ccode-data (line-stroke color)])))
+                      json-data (cycle (c/palette-presets :category20b)))
                 :sum (b/series [:grid] [:sarea json-data]))
       :legend ((comp (condp = aggregation-kw
                        :abs identity

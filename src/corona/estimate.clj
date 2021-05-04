@@ -23,15 +23,16 @@
   (fn [[_ stats-country-unsorted]]
     (let [stats-country (sort-by :t stats-country-unsorted)]
       #_(def stats-country stats-country)
-      (mapv (fn [estim stats-hm] (conj stats-hm {kw-estim estim}))
-            (apply map calculate-fun
-                   (map (comp
-                         (fn [{:keys [vs shift]}] (into (drop-last shift vs)
-                                                       (repeat shift 0)))
-                         (fn [{:keys [kw shift]}] {:vs (map kw stats-country)
-                                                  :shift shift}))
-                        kw-shift-maps))
-            stats-country))))
+      (map
+       (fn [estim stats-hm] (conj stats-hm {kw-estim estim}))
+       (apply map calculate-fun
+              (map (comp
+                    (fn [{:keys [vs shift]}] (into (drop-last shift vs)
+                                                  (repeat shift 0)))
+                    (fn [{:keys [kw shift]}] {:vs (map kw stats-country)
+                                             :shift shift}))
+                   kw-shift-maps))
+       stats-country))))
 
 (defn estimate [pic-data]
   ((comp
