@@ -104,7 +104,17 @@
 )"
   [json]
   (let [data-with-pop (data/data-with-pop json)
-        cnt-raw-dates (count (data/raw-dates json))]
+        cnt-raw-dates (count (data/raw-dates json))
+        v100k-fun  (com/calculate-cases-per-100k :v)
+        a100k-fun  (com/calculate-cases-per-100k :a)
+        r100k-fun  (com/calculate-cases-per-100k :r)
+        d100k-fun  (com/calculate-cases-per-100k :d)
+        c100k-fun  (com/calculate-cases-per-100k :c)
+        v-rate-fun (com/calc-rate :v)
+        a-rate-fun (com/calc-rate :a)
+        r-rate-fun (com/calc-rate :r)
+        d-rate-fun (com/calc-rate :d)
+        c-rate-fun (com/calc-rate :c)]
     #_(def data-with-pop data-with-pop)
     ((comp
       #_(fn [v] (def pd v) v)
@@ -124,36 +134,19 @@
                             :r     recovered
                             :d     deaths
                             :n     new-confirmed
-                            :c     (com/calculate-closed deaths recovered)
-                            }]
+                            :c     (com/calculate-closed deaths recovered)}]
                    (assoc
                     prm
-                    #_(dissoc prm :c)
-                    :v100k  ((com/calculate-cases-per-100k :v) prm)
-                    :a100k  ((com/calculate-cases-per-100k :a) prm)
-                    :r100k  ((com/calculate-cases-per-100k :r) prm)
-                    :d100k  ((com/calculate-cases-per-100k :d) prm)
-                    :c100k  ((com/calculate-cases-per-100k :c) prm)
-                    :v-rate ((com/calc-rate :v) prm)
-                    :a-rate ((com/calc-rate :a) prm)
-                    :r-rate ((com/calc-rate :r) prm)
-                    :d-rate ((com/calc-rate :d) prm)
-                    :c-rate ((com/calc-rate :c) prm)))))
-      #_(partial apply (fn [hms-population
-                         hms-vaccinated
-                         hms-new-confirmed
-                         hms-recovered
-                         hms-deaths]
-                       (def hp hms-population)
-                       (def hv hms-vaccinated)
-                       (def hn hms-new-confirmed)
-                       (def hr hms-recovered)
-                       (def hd hms-deaths)
-                       [hms-population
-                        hms-vaccinated
-                        hms-new-confirmed
-                        hms-recovered
-                        hms-deaths]))
+                    :v100k  (v100k-fun prm)
+                    :a100k  (a100k-fun prm)
+                    :r100k  (r100k-fun prm)
+                    :d100k  (d100k-fun prm)
+                    :c100k  (c100k-fun prm)
+                    :v-rate (v-rate-fun prm)
+                    :a-rate (a-rate-fun prm)
+                    :r-rate (r-rate-fun prm)
+                    :d-rate (d-rate-fun prm)
+                    :c-rate (c-rate-fun prm)))))
       ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
       ;; sorted   [pic-data] 46.4 MiB
       (partial map (partial sort-by (juxt :ccode :t)))
@@ -170,7 +163,10 @@
                          (partial into [hms-population hms-vaccinated]))
                         (let [default-hms ((comp
                                             set
-                                            (partial map (fn [hm] (select-keys hm [:ccode :t]))))
+                                            (partial map
+                                                     (fn [hm]
+                                                       (select-keys
+                                                        hm [:ccode :t]))))
                                            hms-population)]
                           (map (partial normalize default-hms)
                                [:confirmed :recovered :deaths]
