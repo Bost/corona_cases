@@ -19,23 +19,15 @@
 (defn list-kw [fun case-kw]
   [:list ((comp keyword :name meta find-var) fun) case-kw])
 
-(defn calc-listings! "" [stats prm case-kws fun]
+(defn calc-listings! "" [stats {:keys [lense-fun] :as prm} case-kws fun]
   ;; fun is on of: per-100k, absolute-vals - TODO spec it!
   ((comp
     doall
     (partial
      map
      (fn [case-kw]
-       (let [coll (sort-by
-                   ((comp
-                     (fn [kw] (get {:r :er
-                                   :a :ea
-                                   :r100k :er100k
-                                   :a100k :ea100k
-                                   :s :es}
-                                  kw kw)))
-                    case-kw)
-                   < stats)
+       (let [lensed-case-kw (lense-fun case-kw)
+             coll (sort-by lensed-case-kw < stats)
              ;; Split the long list of all countries into smaller sub-parts
              sub-msgs (partition-all (/ (count coll)
                                         cnt-messages-in-listing) coll)
@@ -57,14 +49,16 @@
           sub-msgs)))))
    case-kws))
 
+(defn sort-sign [sorted-case-kw case-kw]
+  (if (= sorted-case-kw case-kw)
+    "▴" #_" " #_"▲"
+    " "))
+
 (defn column-label
   "I.e. a header for a column table - see corona.msg.text.details/label-val"
-  [lense-fun text sorted-case-kw case-kw]
-  ;; TODO number of deaths is not estimated
-  (str ((lense-fun :s) lang/hm-estimated) text
-       (if (= sorted-case-kw case-kw)
-         "▴" #_" " #_"▲"
-         " ")))
+  [lense-fun hm-text sorted-case-kw case-kw]
+  (str ((lense-fun sorted-case-kw) hm-text)
+       (sort-sign sorted-case-kw case-kw)))
 
 (defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the
@@ -80,11 +74,11 @@
          (msgc/format-linewise
           [["%s\n"    [header]]
            ["%s\n"    [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["    %s " [(column-label lense-fun lang/active :a case-kw)]]
+           ["    %s " [(column-label lense-fun lang/hm-active :a case-kw)]]
            ["%s"      [spacer]]
-           ["%s "     [(column-label lense-fun lang/recovered :r case-kw)]]
+           ["%s "     [(column-label lense-fun lang/hm-recovered :r case-kw)]]
            ["%s"      [spacer]]
-           ["%s\n"    [(column-label lense-fun lang/deaths :d case-kw)]]
+           ["%s\n"    [(str lang/deaths (sort-sign :d case-kw))]]
            ["%s"      [(str
                         "%s"     ; listing table
                         "%s"     ; sorted-by description; has its own new-line
@@ -92,8 +86,10 @@
                         )]]])
          ((comp
            (partial cstr/join "\n")
-           (partial map (fn [{:keys [a r d ccode]}]
-                          (let [cname (ccr/country-name-aliased ccode)]
+           (partial map (fn [{:keys [d ccode] :as hm}]
+                          (let [a ((lense-fun :a) hm)
+                                r ((lense-fun :r) hm)
+                                cname (ccr/country-name-aliased ccode)]
                             (format "<code>%s%s%s%s%s %s</code>  %s"
                                     (com/left-pad a " " omag-active)
                                     spacer
@@ -123,11 +119,11 @@
          (msgc/format-linewise
           [["%s\n" [header]]
            ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["%s "  [(column-label lense-fun lang/active-per-1e5 :a100k case-kw)]]
+           ["%s "  [(column-label lense-fun lang/hm-active-per-1e5 :a100k case-kw)]]
            ["%s"   [spacer]]
-           ["%s "  [(column-label lense-fun lang/recove-per-1e5 :r100k case-kw)]]
+           ["%s "  [(column-label lense-fun lang/hm-recove-per-1e5 :r100k case-kw)]]
            ["%s"   [spacer]]
-           ["%s"   [(column-label lense-fun lang/deaths-per-1e5 :d100k case-kw)]]
+           ["%s"   [(str lang/deaths-per-1e5 (sort-sign :d100k case-kw))]]
            ["\n%s" [(str
                      "%s"     ; listing table
                      "%s"     ; sorted-by description; has its own new-line

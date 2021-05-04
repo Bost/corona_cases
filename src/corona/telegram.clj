@@ -173,8 +173,18 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         dates       ((comp m-result data/dates) json)
         last-date   ((comp m-result last (partial sort-by :t)) dates)
         cnt-reports ((comp m-result count) dates)
+
+        has-estim-vals? (m-result true)
+        ;; some-recove?
+        ;; ((comp (partial some pos?))
+        ;;  (last-7
+        ;;   ;; the 'original' value does or does not contain recovered cases
+        ;;   (com/ident-fun :r)
+        ;;   last-8))
+        ;; (and some-recove? (not (msgc/worldwide? ccode)))
+
         prm-base    (m-result {:header (msgc/header com/html last-date)
-                               :footer (msgc/footer com/html)
+                               :footer (msgc/footer com/html has-estim-vals?)
                                :cnt-reports cnt-reports})
         _ (com/add-calc-time "prm-base" prm-base)
 
@@ -207,7 +217,6 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         ;; least 1 country not reporting recovered cases
         lense-fun (m-result com/estim-fun)
 
-        ;; TODO the listings will need estimated vals
         all-calc-listings
         (let [prm (assoc prm-base
                          :ccode (ccr/get-country-code ccc/worldwide)
@@ -229,7 +238,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         ;; pmap 16499ms, map 35961ms
         (let [prm (assoc prm-base
                          :dates dates
-                         :rankings (msgi/all-rankings stats-countries)
+                         :rankings (msgi/all-rankings lense-fun stats-countries)
                          :estim estim)]
           ((comp
             m-result doall

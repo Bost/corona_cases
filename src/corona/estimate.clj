@@ -38,12 +38,23 @@
     ;; unsorted [estim] 75.1 MiB
     ;; sorted   [estim] 144.0 MiB
     #_(partial sort-by (juxt :ccode :t))
-    #_flatten
-    #_(partial map (estim-for-country-fn com/calculate-closed
-                                       :ec [{:kw :n  :shift 0}
-                                            {:kw :er :shift 0}
+    flatten
+    (partial map
+             (fn [[ccode hms]]
+               (let [population ((comp :p first) hms)]
+                 ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
+                                              com/calculate-closed)
+                                        :ec100k [{:kw :er :shift 0}
+                                                 {:kw :d :shift shift-deaths}])
+                  [ccode hms]))))
+    (partial group-by :ccode)
+
+    flatten
+    (partial map (estim-for-country-fn com/calculate-closed
+                                       :ec [{:kw :er :shift 0}
                                             {:kw :d  :shift shift-deaths}]))
-    #_(partial group-by :ccode)
+    (partial group-by :ccode)
+
     flatten
     (partial map
              (fn [[ccode hms]]

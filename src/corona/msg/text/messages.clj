@@ -158,7 +158,7 @@
            (com/encode-cmd lang/contributors)
            (com/encode-cmd lang/feedback))
    "\n"
-   (msgc/footer parse_mode)))
+   (msgc/footer parse_mode false)))
 
 (def ^:const bot-description
   "Keep it in sync with README.md"

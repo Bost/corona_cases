@@ -602,8 +602,10 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   [kw]
   (get {:r :er
         :a :ea
+        :c :ec
         :r100k :er100k
         :a100k :ea100k
+        :c100k :ec100k
         :s :es}
        ;; second kw is for `not-found` parameter of `get`
        kw kw))

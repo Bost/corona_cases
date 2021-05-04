@@ -22,6 +22,7 @@
 (def ^:const contributors     "contributors")
 (def ^:const feedback         "feedback")
 
+(def ^:const estimated-values "* Estimated values")
 ;; :s as in 'String'
 (def ^:const hm-estimated        {:s "" :es "*"})
 
@@ -79,7 +80,13 @@
 (def ^:const deaths-per-1e5 "Deaths per 100 000"          (str "Dea" hundred-k))
 (def ^:const closed-per-1e5 "Closed per 100 000"          (str clo hundred-k))
 
+(def hm-active-per-1e5 {:a100k active-per-1e5 :ea100k (str "*" active-per-1e5)})
+(def hm-recove-per-1e5 {:r100k recove-per-1e5 :er100k (str "*" recove-per-1e5)})
+(def hm-closed-per-1e5 {:c100k closed-per-1e5 :ec100k (str "*" closed-per-1e5)})
+
 (def ^:const active-max "Peak of active cases from all reports" (format "Max %s" active))
+(def hm-active-max {:a active-max :ea (str "*" active-max)})
+
 (def ^:const deaths-max "Peak of deaths from all reports"       (format "Max %s" deaths))
 
 (def ^:const report
@@ -103,6 +110,8 @@
 
 (def ^:const L7 "L7")
 (def ^:const active-last-7 "Active cases in last 7 reports" (str act L7))
+(def hm-active-last-7 {:a active-last-7 :ea (str "*" active-last-7)})
+
 (def ^:const vaccin-last-7 "Vaccinations in last 7 reports" (str vac L7))
 
 (def ^:const missing-vaccin-data
@@ -116,10 +125,14 @@
 (def ^:const active-last-7-avg
   "Active cases in last 7 reports - simple moving Average rounded" (str active-last-7 avg))
 
+(def hm-active-last-7-avg {:a active-last-7-avg :ea (str "*" active-last-7-avg)})
+
 (def ^:const active-last-8th "Active cases of the last 8th report"
   (str act "L8th"))
 (def ^:const active-change-last-7-avg "Active cases Change - simple moving Average of last 7 values"
   (str act "C" L7 avg))
+
+(def hm-active-change-last-7-avg {:a active-change-last-7-avg :ea (str "*" active-change-last-7-avg)})
 
 (def ^:const write-a-message-to
   "Just write a message to @RostislavSvoboda thanks.")

@@ -139,24 +139,28 @@
      com/bot-name-in-markdown)))
 
 (defn footer
-  "Listing commands in the message footer correspond to the columns in the listing.
-  See also `absolute-vals`, `bot-father-edit`."
-  [parse_mode]
+  "Listing commands in the message footer correspond to the columns in the
+  listing. See also `absolute-vals`, `bot-father-edit`."
+  [parse_mode has-estim-vals?]
   (let [spacer "  "]
     (str
      ;; "Try" spacer
-     (->> [lang/world lang/explain]
-          (map com/encode-cmd)
-          (map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
-          (cstr/join spacer))
+     ((comp
+       (partial cstr/join spacer)
+       (fn [v] (if has-estim-vals?
+                (concat v [(str spacer spacer lang/estimated-values)])
+                v))
+       (partial map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
+       (partial map com/encode-cmd))
+      [lang/world lang/explain])
      spacer
      "\n"
      ;; lang/listings ":  "
-     (->> (concat com/listing-cases-per-100k
-                  com/listing-cases-absolute)
-          (mapv lang/list-sorted-by)
-          (map com/encode-cmd)
-          (cstr/join spacer)))))
+     ((comp
+       (partial cstr/join spacer)
+       (partial map com/encode-cmd)
+       (partial mapv lang/list-sorted-by))
+      (concat com/listing-cases-per-100k com/listing-cases-absolute)))))
 
 (defn worldwide? [ccode]
   (utc/in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
