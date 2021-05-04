@@ -89,7 +89,7 @@
          (partial map (juxt first (comp second last second))))
    hm))
 
-(defn cnt-cases [fun kw hms] (reduce + (map (partial fun kw) hms)))
+(defn cnt-cases [fun hms] (reduce + (map fun hms)))
 
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code

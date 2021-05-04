@@ -61,7 +61,7 @@
   "I.e. a header for a column table - see corona.msg.text.details/label-val"
   [lense-fun text sorted-case-kw case-kw]
   ;; TODO number of deaths is not estimated
-  (str (lense-fun :s lang/hm-estimated) text
+  (str ((lense-fun :s) lang/hm-estimated) text
        (if (= sorted-case-kw case-kw)
          "▴" #_" " #_"▲"
          " ")))
@@ -136,8 +136,8 @@
          ((comp
            (partial cstr/join "\n")
            (partial map (fn [{:keys [d100k ccode] :as hm}]
-                          (let [a100k (lense-fun :a100k hm)
-                                r100k (lense-fun :r100k hm)
+                          (let [a100k ((lense-fun :a100k) hm)
+                                r100k ((lense-fun :r100k) hm)
                                 cname (ccr/country-name-aliased ccode)]
                             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                                     (com/left-pad a100k " " omag-active)

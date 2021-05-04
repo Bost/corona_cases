@@ -599,25 +599,15 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 
 (defn estim-fun
   "TODO have a look at lenses"
-  [kw
-   #_hm]
-  ((comp
-    #_(partial get hm)
-    (partial get {
-                  :r :er
-                  :a :ea
-                  :r100k :er100k
-                  :a100k :ea100k
-                  :s :es}))
-   kw kw)) ;; second kw is for `not-found` parameter of `get`
+  [kw]
+  (get {:r :er
+        :a :ea
+        :r100k :er100k
+        :a100k :ea100k
+        :s :es}
+       ;; second kw is for `not-found` parameter of `get`
+       kw kw))
 
-(defn ident-fun
-  "TODO have a look at lenses"
-  [kw
-   #_hm]
-  ((comp
-    #_(partial get hm)
-    #_(partial get {:r :er :a :ea :c :ec}))
-   kw))
+(defn ident-fun "TODO have a look at lenses" [kw] kw)
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)
