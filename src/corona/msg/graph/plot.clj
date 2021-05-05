@@ -313,23 +313,6 @@
         (group-below-threshold (assoc prm :threshold raised-threshold)))
       {:data res :threshold threshold})))
 
-(defn-fun-id sum-all-by-date-by-case
-  "Group the country stats by report and sum up the cases"
-  [{:keys [case-kw] :as prm}]
-  (update
-   (group-below-threshold prm)
-   :data
-   (comp
-    flatten
-    (partial map (fn [[t hms0]]
-                   ((comp
-                     (partial map (fn [[ccode hms1]]
-                                    {:ccode ccode :t t
-                                     case-kw (sum case-kw hms1)}))
-                     (partial group-by :ccode))
-                    hms0)))
-    (partial group-by :t))))
-
 (defn stats-all-by-case [{:keys [case-kw] :as prm}]
   #_((comp
     ;; TODO this will not be necessary, but I can build here a
@@ -338,7 +321,7 @@
     (fn [d] (debugf "(count d) %s" (count d)) d))
    all-data)
   (update
-   (sum-all-by-date-by-case prm)
+   (group-below-threshold prm)
    :data
    (fn [data]
      (let [countries-threshold ((comp set (partial map :ccode)) data)]
@@ -365,6 +348,15 @@
                       keys
                       (partial group-by :ccode))
                      hms)))
+         (partial group-by :t)
+         flatten
+         (partial map (fn [[t hms0]]
+                        ((comp
+                          (partial map (fn [[ccode hms1]]
+                                         {:ccode ccode :t t
+                                          case-kw (sum case-kw hms1)}))
+                          (partial group-by :ccode))
+                         hms0)))
          (partial group-by :t))
         data)))))
 
