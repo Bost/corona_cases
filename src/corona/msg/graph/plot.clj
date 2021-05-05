@@ -352,9 +352,12 @@
          flatten
          (partial map (fn [[t hms0]]
                         ((comp
-                          (partial map (fn [[ccode hms1]]
-                                         {:ccode ccode :t t
-                                          case-kw (sum case-kw hms1)}))
+                          (partial map
+                                   (fn [[ccode hms1]]
+                                     ((comp
+                                       (partial hash-map :ccode ccode :t t case-kw)
+                                       (partial sum case-kw))
+                                      hms1)))
                           (partial group-by :ccode))
                          hms0)))
          (partial group-by :t))
