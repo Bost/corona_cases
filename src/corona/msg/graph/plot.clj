@@ -89,7 +89,11 @@
          (partial map (juxt first (comp second last second))))
    hm))
 
-(defn cnt-cases [fun hms] (reduce + (map fun hms)))
+(defn sum [fun hms]
+  ((comp
+    (partial reduce +)
+    (partial map fun))
+   hms))
 
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
@@ -102,12 +106,12 @@
      (fn [[t hms]]
        [
         {:ccode ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
-        {:ccode ccode :t t :case-kw :er :cnt (cnt-cases (com/estim-fun :r) hms)}
-        {:ccode ccode :t t :case-kw :ea :cnt (cnt-cases (com/estim-fun :a) hms)}
-        {:ccode ccode :t t :case-kw :n  :cnt (cnt-cases (com/ident-fun :n) hms)}
-        {:ccode ccode :t t :case-kw :r  :cnt (cnt-cases (com/ident-fun :r) hms)}
-        {:ccode ccode :t t :case-kw :d  :cnt (cnt-cases (com/ident-fun :d) hms)}
-        {:ccode ccode :t t :case-kw :a  :cnt (cnt-cases (com/ident-fun :a) hms)}]))
+        {:ccode ccode :t t :case-kw :er :cnt (sum (com/estim-fun :r) hms)}
+        {:ccode ccode :t t :case-kw :ea :cnt (sum (com/estim-fun :a) hms)}
+        {:ccode ccode :t t :case-kw :n  :cnt (sum (com/ident-fun :n) hms)}
+        {:ccode ccode :t t :case-kw :r  :cnt (sum (com/ident-fun :r) hms)}
+        {:ccode ccode :t t :case-kw :d  :cnt (sum (com/ident-fun :d) hms)}
+        {:ccode ccode :t t :case-kw :a  :cnt (sum (com/ident-fun :a) hms)}]))
     (partial group-by :t)
     (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (:ccode hm)] ccode))))
    stats))
@@ -292,19 +296,18 @@
 (defn message-kw [ccode] [:plot (keyword ccode)])
 
 (defn-fun-id group-below-threshold
-  "Group all countries w/ the number of active cases below the threshold under the
-  `ccc/default-2-country-code` so that max 10 countries are displayed in the
-  plot"
+  "Group all countries with the nr of active cases below the threshold under the
+  `ccc/default-2-country-code` so that max 10 countries are plotted"
   [{:keys [case-kw threshold threshold-increase stats] :as prm}]
   (let [max-plot-lines 10
-        res (map (fn [hm] (if (< (get hm case-kw) threshold)
+        res (map (fn [hm] (if (< (case-kw hm) threshold)
                            (assoc hm :ccode ccc/default-2-country-code)
                            hm))
                  stats)]
     ;; TODO implement recalculation for decreasing case-kw numbers (e.g. active cases)
     (if (> (count (group-by :ccode res)) max-plot-lines)
       (let [raised-threshold (+ threshold-increase threshold)]
-        (infof "Case %s; %s countries above threshold. Raise to %s"
+        (infof "%s; %s countries above threshold. Raise to %s"
                case-kw (count (group-by :ccode res)) raised-threshold)
         (swap! cache/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
         (group-below-threshold (assoc prm :threshold raised-threshold)))
@@ -312,66 +315,62 @@
 
 (defn-fun-id sum-all-by-date-by-case
   "Group the country stats by report and sum up the cases"
-  [{:keys [case-kw] :as prm-orig}]
-  (let [prm (group-below-threshold prm-orig)
-        res
-        ((comp
-          flatten
-          (partial map (fn [[t hms]]
-                         ((comp
-                           (partial map (fn [[ccode hms]]
-                                          {:ccode ccode
-                                           :t t
-                                           case-kw (reduce + (map case-kw hms))}))
-                           (partial group-by :ccode))
-                          hms)))
-          (partial group-by :t)
-          :data)
-         prm)
-        #_(flatten (map (fn [[t hms]]
-                          (map (fn [[ccode hms]]
-                                 {:ccode ccode :t t case-kw (reduce + (map case-kw hms))})
-                               (group-by :ccode hms)))
-                        (group-by :t (:data prm))))]
-    (update prm :data (fn [_] res))))
+  [{:keys [case-kw] :as prm}]
+  (update
+   (group-below-threshold prm)
+   :data
+   (comp
+    flatten
+    (partial map (fn [[t hms0]]
+                   ((comp
+                     (partial map (fn [[ccode hms1]]
+                                    {:ccode ccode :t t
+                                     case-kw (sum case-kw hms1)}))
+                     (partial group-by :ccode))
+                    hms0)))
+    (partial group-by :t))))
 
-(defn fill-rest [{:keys [case-kw] :as prm}]
-  (let [date-sums (sum-all-by-date-by-case prm)
-        {sum-all-by-date-by-case-threshold :data} date-sums
-        countries-threshold (set (map :ccode sum-all-by-date-by-case-threshold))
-        res (reduce into []
-                    (map (fn [[t hms]]
-                           (cset/union
-                            hms
-                            (set
-                             (map (fn [ccode] {:ccode ccode :t t case-kw 0})
-                                  (cset/difference countries-threshold
-                                                   (set (keys (group-by :ccode hms)))))))
-                           #_(->> (group-by :ccode hms)
-                                  (keys)
-                                  (set)
-                                  (cset/difference countries-threshold)
-                                  (map (fn [ccode] {:ccode ccode :t t :a 0}))
-                                  (set)
-                                  (cset/union hms)))
-                         (group-by :t sum-all-by-date-by-case-threshold)))]
-    (update date-sums :data (fn [_] res))))
+(defn fill-rest "" [{:keys [case-kw] :as prm}]
+  #_((comp
+    ;; TODO this will not be necessary, but I can build here a
+    ;; consistency check
+    (partial take-last 365)
+    (fn [d] (debugf "(count d) %s" (count d)) d))
+     all-data)
+  (update
+   (sum-all-by-date-by-case prm)
+   :data
+   (fn [data]
+     (let [countries-threshold ((comp set (partial map :ccode)) data)]
+       ((comp
+         (partial reduce into [])
+         (partial map
+                  (fn [[t hms]]
+                    ((comp
+                      (partial cset/union hms)
+                      set
+                      (partial map (partial hash-map :t t case-kw 0 :ccode))
+                      (partial cset/difference countries-threshold)
+                      set
+                      keys
+                      (partial group-by :ccode))
+                     hms)))
+         (partial group-by :t))
+        data)))))
 
 (defn stats-all-by-case [{:keys [case-kw] :as prm}]
-  (let [fill-rest-stats (fill-rest prm)
-        data (:data fill-rest-stats)
-        mapped-hm (plotcom/map-kv
-                   (fn [entry]
-                     (sort-by first
-                              (map (fn [fill-rest-stats]
-                                     [(to-java-time-local-date
-                                       (:t fill-rest-stats))
-                                      (get fill-rest-stats case-kw)])
-                                   entry)))
-                   (group-by :ccode data))]
-    #_(sort-by-country-name mapped-hm)
-    (update fill-rest-stats :data (fn [_] (sort-by-last-val mapped-hm)))))
-
+  (update
+   (fill-rest prm)
+   :data
+   (comp
+    sort-by-last-val
+    (partial plotcom/map-kv
+             (comp
+              (partial sort-by first)
+              (partial map (fn [hm]
+                             [((comp to-java-time-local-date :t) hm)
+                              (case-kw hm)]))))
+    (partial group-by :ccode))))
 
 (defn legend [json-data]
   (map (fn [c r] (vector :rect r {:color c}))
@@ -411,9 +410,9 @@
                            }}))
 
 (defn-fun-id aggregation-img ""
-  [stats report aggregation-kw case-kw]
-  (let [{json-data :data threshold-recalced :threshold}
-        (stats-all-by-case {:report report
+  [stats cnt-reports aggregation-kw case-kw]
+  (let [{data :data threshold-recalced :threshold}
+        (stats-all-by-case {:report cnt-reports
                             :stats stats
                             :threshold (min-threshold aggregation-kw case-kw)
                             :threshold-increase (threshold-increase case-kw)
@@ -423,35 +422,34 @@
                 :abs ((comp
                        (partial apply b/series)
                        (partial into [[:grid]])
-                       (partial mapv (fn [[_ ccode-data] color] [:line ccode-data (line-stroke color)])))
-                      json-data (cycle (c/palette-presets :category20b)))
-                :sum (b/series [:grid] [:sarea json-data]))
+                       (partial mapv (fn [[_ ccode-data] color]
+                                       [:line ccode-data (line-stroke color)])))
+                      data (cycle (c/palette-presets :category20b)))
+                :sum (b/series [:grid] [:sarea data]))
       :legend ((comp (condp = aggregation-kw
                        :abs identity
                        :sum reverse)
                      legend)
-               json-data)
+               data)
       :x-axis-formatter date-fmt-fn
-      :y-axis-formatter (y-axis-formatter json-data)
-      :label (label-str report stats case-kw threshold-recalced
+      :y-axis-formatter (y-axis-formatter data)
+      :label (label-str cnt-reports stats case-kw threshold-recalced
                         (condp = aggregation-kw
                           :abs (str " " lang/absolute)
                           :sum ""))
       :label-conf label-conf})))
 
 (defn aggregation!
-  "The optional params `stats`, `report` are used only for the first
-  calculation"
   ([id aggregation-kw case-kw]
    {:pre [(string? id)]}
    (get-in @cache/cache [:plot (keyword id) aggregation-kw case-kw]))
-  ([stats report id aggregation-kw case-kw]
+  ([stats cnt-reports id aggregation-kw case-kw]
    {:pre [(string? id)]}
    (cache/cache! (fn []
                    ((comp
                      #_(fn [arr] (com/heap-info) arr)
                      to-byte-array-auto-closable)
-                    (aggregation-img stats report aggregation-kw case-kw)))
+                    (aggregation-img stats cnt-reports aggregation-kw case-kw)))
                  [:plot (keyword id) aggregation-kw case-kw])))
 
 ;;;; lazy-evaluation CPS (Continuation Passing Style)
