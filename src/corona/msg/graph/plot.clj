@@ -305,15 +305,16 @@
                            hm))
                  stats)]
     ;; TODO implement recalculation for decreasing case-kw numbers (e.g. active cases)
-    (if (> (count (group-by :ccode res)) max-plot-lines)
-      (let [raised-threshold (+ threshold-increase threshold)]
-        (infof "%s; %s countries above threshold. Raise to %s"
-               case-kw (count (group-by :ccode res)) raised-threshold)
-        (swap! cache/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
-        (group-below-threshold (assoc prm :threshold raised-threshold)))
-      {:data res :threshold threshold})))
+    (let [cnt-countries (count (group-by :ccode res))]
+      (if (> cnt-countries max-plot-lines)
+        (let [raised-threshold (+ threshold-increase threshold)]
+          (infof "%s; %s countries above threshold. Raise to %s"
+                 case-kw cnt-countries raised-threshold)
+          (swap! cache/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
+          (group-below-threshold (assoc prm :threshold raised-threshold)))
+        {:data res :threshold threshold}))))
 
-(defn stats-all-by-case [{:keys [case-kw] :as prm}]
+(defn stats-all-by-case "" [{:keys [case-kw] :as prm}]
   #_((comp
     ;; TODO this will not be necessary, but I can build here a
     ;; consistency check
@@ -335,13 +336,12 @@
                                    (case-kw hm)]))))
          (partial group-by :ccode)
          (partial reduce into [])
-         #_flatten
-         ;; fill the rest with zeros
          (partial map
                   (fn [[t hms]]
                     ((comp
                       (partial cset/union hms)
                       set
+                      ;; fill the rest with zeros
                       (partial map (partial hash-map :t t case-kw 0 :ccode))
                       (partial cset/difference countries-threshold)
                       set
