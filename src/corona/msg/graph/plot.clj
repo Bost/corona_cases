@@ -330,20 +330,30 @@
                     hms0)))
     (partial group-by :t))))
 
-(defn fill-rest "" [{:keys [case-kw] :as prm}]
+(defn stats-all-by-case [{:keys [case-kw] :as prm}]
   #_((comp
     ;; TODO this will not be necessary, but I can build here a
     ;; consistency check
     (partial take-last 365)
     (fn [d] (debugf "(count d) %s" (count d)) d))
-     all-data)
+   all-data)
   (update
    (sum-all-by-date-by-case prm)
    :data
    (fn [data]
      (let [countries-threshold ((comp set (partial map :ccode)) data)]
        ((comp
+         sort-by-last-val
+         (partial plotcom/map-kv
+                  (comp
+                   (partial sort-by first)
+                   (partial map (fn [hm]
+                                  [((comp to-java-time-local-date :t) hm)
+                                   (case-kw hm)]))))
+         (partial group-by :ccode)
          (partial reduce into [])
+         #_flatten
+         ;; fill the rest with zeros
          (partial map
                   (fn [[t hms]]
                     ((comp
@@ -357,20 +367,6 @@
                      hms)))
          (partial group-by :t))
         data)))))
-
-(defn stats-all-by-case [{:keys [case-kw] :as prm}]
-  (update
-   (fill-rest prm)
-   :data
-   (comp
-    sort-by-last-val
-    (partial plotcom/map-kv
-             (comp
-              (partial sort-by first)
-              (partial map (fn [hm]
-                             [((comp to-java-time-local-date :t) hm)
-                              (case-kw hm)]))))
-    (partial group-by :ccode))))
 
 (defn legend [json-data]
   (map (fn [c r] (vector :rect r {:color c}))
