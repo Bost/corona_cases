@@ -35,6 +35,22 @@
   ((comp
     #_(partial sort-by (juxt :ccode :t))
     flatten
+    (partial map
+             (fn [[ccode hms]]
+               ((comp
+                 (fn [[fst rst]]
+                   (conj rst
+                         [{:ccode ccode
+                           :t ((comp :t last) fst)
+                           case-kw ((comp case-kw last) fst)}]))
+                 ;; TODO 365 is the count of days in the plot
+                 ;; See also corona.msg.graph.plot/stats-for-country
+                 (fn [ms] (split-at (- (count ms) 365) ms))
+                 (partial sort-by :t))
+                hms)))
+    (partial group-by :ccode)
+
+    flatten
     (partial map (fn [[t hms]] ;; process-date
                    ((comp
                      #_(fn [ms] (debugf "(count ms) %s" (count ms)) ms)
@@ -110,6 +126,16 @@
   [json]
   (let [data-with-pop (data/data-with-pop json)
         cnt-raw-dates (count (data/raw-dates json))
+
+        #_(map (fn [per-100k-kw case-kw]
+               {per-100k-kw (com/calculate-cases-per-100k case-kw)})
+             [:v100k :a100k :r100k :d100k :c100k]
+             [:v :a :r :d :c])
+
+        #_(map (fn [rate-kw case-kw]
+               {per-100k (com/calc-rate case-kw)})
+             [:v-rate :a-rate :r-rate :d-rate :c-rate]
+             [:v :a :r :d :c])
         v100k-fun  (com/calculate-cases-per-100k :v)
         a100k-fun  (com/calculate-cases-per-100k :a)
         r100k-fun  (com/calculate-cases-per-100k :r)
