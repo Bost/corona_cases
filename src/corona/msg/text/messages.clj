@@ -33,6 +33,7 @@
     (partial hash-map :inline_keyboard)
     vector
     (partial reduce into))
+   ;; TODO use `for` instead of nested mappings
    (mapv (fn [aggregation-kw]
            (mapv (fn [case-kw]
                    (conj
@@ -60,22 +61,17 @@
         url (format "%s/%s/%s/%s/%s"
                     com/webapp-server com/graphs-path
                     id (name plot-type) (name case-kw))]
-    (debugf "url %s" url)
-    (let [msg (doall
-               (if com/use-webhook?
-                  ;; TODO alternatively send file to a dump channel, get file
-                  ;; id, edit message media, delete message from channel
-                 (morse/edit-media
-                  com/telegram-token chat-id message-id options
-                  {:type "photo"
-                   :media url})
-                 (morse/send-photo
-                  com/telegram-token chat-id options
-                   ;; the plot is fetched from the cache, stats and report need
-                   ;; not to be specified
-                  (plot/aggregation!
-                   id (:type data-hm) (:case-kw data-hm)))))]
-      (debugf "(count msg) %s" (count msg)))))
+    (doall
+     (if com/use-webhook?
+       ;; alternatively send file to a dump channel, get file id, edit message
+       ;; media, delete message from channel
+       (morse/edit-media com/telegram-token chat-id message-id options
+                         {:type "photo" :media url})
+       (morse/send-photo com/telegram-token chat-id options
+                         ;; the plot is fetched from the cache, stats and report
+                         ;; need not to be specified
+                         (plot/aggregation! id (:type data-hm)
+                                            (:case-kw data-hm)))))))
 
 ;; mapvals
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
