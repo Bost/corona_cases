@@ -134,18 +134,18 @@
 
         #_(map (fn [rate-kw case-kw]
                {per-1e5 (com/calc-rate case-kw)})
-             [:v-rate :a-rate :r-rate :d-rate :c-rate]
+             [:v% :a% :r% :d% :c%]
              [:v :a :r :d :c])
         v1e5-fun  (com/calculate-cases-per-1e5 :v)
         a1e5-fun  (com/calculate-cases-per-1e5 :a)
         r1e5-fun  (com/calculate-cases-per-1e5 :r)
         d1e5-fun  (com/calculate-cases-per-1e5 :d)
         c1e5-fun  (com/calculate-cases-per-1e5 :c)
-        v-rate-fun (com/calc-rate :v)
-        a-rate-fun (com/calc-rate :a)
-        r-rate-fun (com/calc-rate :r)
-        d-rate-fun (com/calc-rate :d)
-        c-rate-fun (com/calc-rate :c)
+        v%-fun (com/calc-rate :v)
+        a%-fun (com/calc-rate :a)
+        r%-fun (com/calc-rate :r)
+        d%-fun (com/calc-rate :d)
+        c%-fun (com/calc-rate :c)
         ]
     #_(def data-with-pop data-with-pop)
     ((comp
@@ -174,11 +174,11 @@
                     :r1e5  (r1e5-fun prm)
                     :d1e5  (d1e5-fun prm)
                     :c1e5  (c1e5-fun prm)
-                    :v-rate (v-rate-fun prm)
-                    :a-rate (a-rate-fun prm)
-                    :r-rate (r-rate-fun prm)
-                    :d-rate (d-rate-fun prm)
-                    :c-rate (c-rate-fun prm)))))
+                    :v% (v%-fun prm)
+                    :a% (a%-fun prm)
+                    :r% (r%-fun prm)
+                    :d% (d%-fun prm)
+                    :c% (c%-fun prm)))))
       ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
       ;; sorted   [pic-data] 46.4 MiB
       (partial map (partial sort-by (juxt :ccode :t)))

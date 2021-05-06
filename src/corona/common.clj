@@ -410,11 +410,11 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
    {:idx  9 :kw :d1e5}
    {:idx 10 :kw :c1e5}  ;; closed-per-1e5
 
-   {:idx 11 :kw :v-rate}
-   {:idx 12 :kw :a-rate}
-   {:idx 13 :kw :r-rate}
-   {:idx 14 :kw :d-rate}
-   {:idx 15 :kw :c-rate} ;; closed-rate
+   {:idx 11 :kw :v%}
+   {:idx 12 :kw :a%}
+   {:idx 13 :kw :r%}
+   {:idx 14 :kw :d%}
+   {:idx 15 :kw :c%}     ;; closed-rate
    {:idx 16 :kw :ea}     ;; estimate-active
    {:idx 17 :kw :er}     ;; estimate-recovered
    {:idx 18 :kw :ea1e5} ;; estimate-active-per-1e5
