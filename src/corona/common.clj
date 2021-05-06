@@ -136,16 +136,16 @@
   "Telegram chat-id."
   "112885364")
 
-(defn calculate-closed [recovered deaths]
+(defn calc-closed [recovered deaths]
   (+ recovered deaths))
 
-(defn calculate-activ [new-confirmed recove deaths]
+(defn calc-active [new-confirmed recove deaths]
   ((comp
     (fn [new-confirmed recove deaths] (- new-confirmed
-                                        (calculate-closed recove deaths))))
+                                        (calc-closed recove deaths))))
    new-confirmed recove deaths))
 
-(defn calculate-recov [new-confirmed deaths]
+(defn calc-recov [new-confirmed deaths]
   ((comp
     #_(fn [result]
       (printf "[calculate-recov] (+ %s %s): %s\n" new-confirmed deaths result)
@@ -153,10 +153,10 @@
     (fn [confirmed deaths] (- confirmed deaths)))
    new-confirmed deaths))
 
-(defn calculate-closed [recovered deaths]
+(defn calc-closed [recovered deaths]
   (+ recovered deaths))
 
-(defn calculate-closed [recovered deaths]
+(defn calc-closed [recovered deaths]
   (+ recovered deaths))
 
 (defn calc-rate-precision-1 [case-kw]
@@ -189,7 +189,7 @@
   ([mode place total-count]
    (utn/round mode (/ (* place 1e5) total-count))))
 
-(defn calculate-cases-per-1e5 [case-kw]
+(defn calc-per-1e5 [case-kw]
   (fn [{:keys [p] :as prm}]
     (if (zero? p)
       0

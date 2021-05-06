@@ -23,15 +23,7 @@
 
 (defn fmt [raw-date] (.parse sdf (data/keyname raw-date)))
 
-(defn xf-for-case
-  "E.g.
-(
-  {:ccode \"SK\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :deaths 1}
-  {:ccode \"SK\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :deaths 0}
-  {:ccode \"US\" :t #inst \"2020-04-04T00:00:00.000-00:00\" :deaths 8407}
-  {:ccode \"US\" :t #inst \"2020-03-31T00:00:00.000-00:00\" :deaths 3873})
-  "
-  [cnt-raw-dates data-with-pop case-kw]
+(defn xf-for-case "" [cnt-raw-dates data-with-pop case-kw]
   ((comp
     #_(partial sort-by (juxt :ccode :t))
     flatten
@@ -117,8 +109,7 @@
 
 (defn-fun-id pic-data "" [json]
   (let [data-with-pop (data/data-with-pop json)
-        cnt-raw-dates (count (data/raw-dates json))
-        ]
+        cnt-raw-dates (count (data/raw-dates json))]
     #_(def data-with-pop data-with-pop)
     ((comp
       #_(fn [v] (def pd v) v)
@@ -134,16 +125,16 @@
                             :t     t
                             :p     population
                             :v     vaccinated
-                            :a     (com/calculate-activ new-confirmed recovered deaths)
+                            :a     (com/calc-active new-confirmed recovered deaths)
                             :r     recovered
                             :d     deaths
                             :n     new-confirmed
-                            :c     (com/calculate-closed deaths recovered)}]
+                            :c     (com/calc-closed deaths recovered)}]
                    ((comp
                      (partial conj prm)
                      (partial reduce into {})
                      (partial map (fn [rate-kw per-1e5-kw case-kw]
-                                    {per-1e5-kw ((com/calculate-cases-per-1e5 case-kw) prm)
+                                    {per-1e5-kw ((com/calc-per-1e5 case-kw) prm)
                                      rate-kw ((com/calc-rate case-kw) prm)})))
                     [:v% :a% :r% :d% :c%]
                     [:v1e5 :a1e5 :r1e5 :d1e5 :c1e5]

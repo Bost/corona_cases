@@ -44,14 +44,14 @@
              (fn [[ccode hms]]
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
-                                              com/calculate-closed)
+                                              com/calc-closed)
                                         :ec1e5 [{:kw :er :shift 0}
                                                  {:kw :d :shift shift-deaths}])
                   [ccode hms]))))
     (partial group-by :ccode)
 
     flatten
-    (partial map (estim-for-country-fn com/calculate-closed
+    (partial map (estim-for-country-fn com/calc-closed
                                        :ec [{:kw :er :shift 0}
                                             {:kw :d  :shift shift-deaths}]))
     (partial group-by :ccode)
@@ -61,7 +61,7 @@
              (fn [[ccode hms]]
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
-                                              com/calculate-activ)
+                                              com/calc-active)
                                         :ea1e5 [{:kw :n  :shift 0}
                                                  {:kw :er :shift 0}
                                                  {:kw :d  :shift shift-deaths}])
@@ -70,7 +70,7 @@
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;
     flatten
-    (partial map (estim-for-country-fn com/calculate-activ
+    (partial map (estim-for-country-fn com/calc-active
                                        :ea [{:kw :n  :shift 0}
                                             {:kw :er :shift 0}
                                             {:kw :d  :shift shift-deaths}]))
@@ -81,14 +81,14 @@
              (fn [[ccode hms]]
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
-                                              com/calculate-recov)
+                                              com/calc-recov)
                                         :er1e5 [{:kw :n :shift shift-recovery}
                                                  {:kw :d :shift shift-deaths}])
                   [ccode hms]))))
     (partial group-by :ccode)
     ;;;;;;;;;;;;;;;;;;;;;;;;;;
     flatten
-    (partial map (estim-for-country-fn com/calculate-recov
+    (partial map (estim-for-country-fn com/calc-recov
                                        :er [{:kw :n :shift shift-recovery}
                                             {:kw :d :shift shift-deaths}]))
     (partial group-by :ccode)
