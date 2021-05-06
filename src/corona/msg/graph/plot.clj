@@ -8,7 +8,7 @@
             [clojure2d.color :as c]
             [clojure2d.core :as c2d]
             [corona.api.cache :as cache]
-            [corona.common :as com]
+            [corona.common :as com :refer [sum]]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -88,12 +88,6 @@
          (partial sort-by second)
          (partial map (juxt first (comp second last second))))
    hm))
-
-(defn sum [fun hms]
-  ((comp
-    (partial reduce +)
-    (partial map fun))
-   hms))
 
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
@@ -353,11 +347,11 @@
          (partial map (fn [[t hms0]]
                         ((comp
                           (partial map
-                                   (fn [[ccode hms1]]
+                                   (fn [[ccode hms]]
                                      ((comp
                                        (partial hash-map :ccode ccode :t t case-kw)
                                        (partial sum case-kw))
-                                      hms1)))
+                                      hms)))
                           (partial group-by :ccode))
                          hms0)))
          (partial group-by :t))

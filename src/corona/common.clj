@@ -597,6 +597,12 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
        (update-in state [:acc]
                   (fn [_] (vec (concat accumulator (vector calc-time)))))))))
 
+(defn sum [fun hms]
+  ((comp
+    (partial reduce +)
+    (partial map fun))
+   hms))
+
 (defn estim-fun
   "TODO have a look at lenses"
   [kw]

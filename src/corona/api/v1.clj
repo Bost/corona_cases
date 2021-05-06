@@ -4,7 +4,7 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require [corona.api.expdev07 :as data]
-            [corona.common :as com]
+            [corona.common :as com :refer [sum]]
             [corona.country-codes :as ccc]
             [taoensso.timbre :as timbre]
             [corona.macro :refer [defn-fun-id debugf errorf warnf]]
@@ -40,12 +40,17 @@
                      #_(fn [ms] (debugf "(count ms) %s" (count ms)) ms)
                      (fn [ms]
                        (conj ms
-                             {:ccode "ZZ" :t t
-                              case-kw (reduce + (map case-kw ms))}))
+                             ((comp
+                               (partial hash-map :ccode "ZZ" :t t case-kw)
+                               (partial sum case-kw))
+                              ms)))
                      ;; group together provinces of the given country
-                     (partial map (fn [[ccode hms]]
-                                    {:ccode ccode :t t
-                                     case-kw (reduce + (map case-kw hms))}))
+                     (partial map
+                              (fn [[ccode hms]]
+                                ((comp
+                                  (partial hash-map :ccode ccode :t t case-kw)
+                                  (partial sum case-kw))
+                                 hms)))
                      (partial group-by :ccode))
                     hms)))
     (partial group-by :t)
@@ -114,7 +119,8 @@
         a-rate-fun (com/calc-rate :a)
         r-rate-fun (com/calc-rate :r)
         d-rate-fun (com/calc-rate :d)
-        c-rate-fun (com/calc-rate :c)]
+        c-rate-fun (com/calc-rate :c)
+        ]
     #_(def data-with-pop data-with-pop)
     ((comp
       #_(fn [v] (def pd v) v)
