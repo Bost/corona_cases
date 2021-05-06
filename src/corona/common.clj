@@ -396,13 +396,10 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   :c ~ closed cases
   :r ~ recovered cases
   :d ~ deaths
-  :a ~ active cases i.e. ill
-
-  TODO see https://github.com/clojure/data.priority-map"
+  :a ~ active cases i.e. ill"
   [{:idx  0 :kw :v                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  1 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
    {:idx  2 :kw :n                :threshold {:inc 50000     :val (int 3560e3)}}
-   #_{:idx  2 :kw :n                :threshold {:inc 50000     :val (int 3460e3)}}
    {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 2737e3)}}
    {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 85e3)}}
    {:idx  5 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 989e3)}}
@@ -411,25 +408,26 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
    {:idx  7 :kw :a100k}
    {:idx  8 :kw :r100k}
    {:idx  9 :kw :d100k}
-   {:idx 10 :kw :c100k} ;; closed per 100k
+   {:idx 10 :kw :c100k}  ;; closed-per-100k
 
    {:idx 11 :kw :v-rate}
    {:idx 12 :kw :a-rate}
    {:idx 13 :kw :r-rate}
    {:idx 14 :kw :d-rate}
    {:idx 15 :kw :c-rate} ;; closed-rate
-   {:idx 16 :kw :ea} ;; estimate-active
-   {:idx 17 :kw :er} ;; estimate-recovered
-   {:idx 18 :kw :ea100k} ;; estimate-active
-   {:idx 19 :kw :er100k} ;; estimate-recovered
+   {:idx 16 :kw :ea}     ;; estimate-active
+   {:idx 17 :kw :er}     ;; estimate-recovered
+   {:idx 18 :kw :ea100k} ;; estimate-active-per-100k
+   {:idx 19 :kw :er100k} ;; estimate-recovered-per-100k
+   {:idx 20 :kw :c}      ;; closed
+   {:idx 21 :kw :ec}     ;; estimate-closed
+   {:idx 22 :kw :ec100k} ;; estimate-closed-per-100k
    ])
 
 (def aggregation-params
   ":idx - defines an order in appearance"
-  [
-   {:idx  0 :kw :sum}
-   {:idx  1 :kw :abs}
-   ])
+  [{:idx  0 :kw :sum}
+   {:idx  1 :kw :abs}])
 
 (def aggregation-cases
   (tore aggregation-params
@@ -455,7 +453,10 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   (tore case-params
         (map :kw)))
 
-(def ranking-cases [:p :c100k :r100k :d100k :a100k :v100k])
+(def ranking-cases
+  (tore case-params
+        (filter (fn [m] (utc/in? [1 6 7 8 9 10] (:idx m))))
+        (mapv :kw)))
 
 (def listing-cases-per-100k
   (tore case-params

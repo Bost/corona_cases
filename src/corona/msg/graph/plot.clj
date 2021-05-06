@@ -129,6 +129,7 @@
 (defn fmt-last-date
   "TODO pass the last date from corona.telegram"
   [stats]
+  ;; TODO (type hms): if it's vector the use peek, if it's a list use last
   ((comp com/fmt-date :t last (partial sort-by :t)) stats))
 
 (defn fmt-report [report] (format "%s %s" lang/report report))
