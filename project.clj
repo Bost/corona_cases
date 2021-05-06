@@ -92,7 +92,7 @@
    [com.clojure-goes-fast/clj-memory-meter "0.1.3"]
 
    ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-   [com.github.seancorfield/next.jdbc "1.1.646"]
+   [com.github.seancorfield/next.jdbc "1.2.659"]
    [org.postgresql/postgresql "42.2.20"]]
 
   :min-lein-version "2.0.0"
