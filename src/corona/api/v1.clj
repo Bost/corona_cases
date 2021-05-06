@@ -115,37 +115,9 @@
                                (assoc dhm k 0)))))
      default-hms)))
 
-(defn-fun-id pic-data
-  "Returns a collection of hash-maps containing e.g.:
-(
-  {:ccode \"SK\" :t #inst \"...\" :c 471    :r 10    :d 1    :p 5459642   :a 460}
-  {:ccode \"SK\" :t #inst \"...\" :c 363    :r 3     :d 0    :p 5459642   :a 360}
-  {:ccode \"US\" :t #inst \"...\" :c 308853 :r 14652 :d 8407 :p 331002651 :a 285794}
-  {:ccode \"US\" :t #inst \"...\" :c 188172 :r 7024  :d 3873 :p 331002651 :a 177275}
-)"
-  [json]
+(defn-fun-id pic-data "" [json]
   (let [data-with-pop (data/data-with-pop json)
         cnt-raw-dates (count (data/raw-dates json))
-
-        #_(map (fn [per-1e5-kw case-kw]
-               {per-1e5-kw (com/calculate-cases-per-1e5 case-kw)})
-             [:v1e5 :a1e5 :r1e5 :d1e5 :c1e5]
-             [:v :a :r :d :c])
-
-        #_(map (fn [rate-kw case-kw]
-               {per-1e5 (com/calc-rate case-kw)})
-             [:v% :a% :r% :d% :c%]
-             [:v :a :r :d :c])
-        v1e5-fun  (com/calculate-cases-per-1e5 :v)
-        a1e5-fun  (com/calculate-cases-per-1e5 :a)
-        r1e5-fun  (com/calculate-cases-per-1e5 :r)
-        d1e5-fun  (com/calculate-cases-per-1e5 :d)
-        c1e5-fun  (com/calculate-cases-per-1e5 :c)
-        v%-fun (com/calc-rate :v)
-        a%-fun (com/calc-rate :a)
-        r%-fun (com/calc-rate :r)
-        d%-fun (com/calc-rate :d)
-        c%-fun (com/calc-rate :c)
         ]
     #_(def data-with-pop data-with-pop)
     ((comp
@@ -167,18 +139,15 @@
                             :d     deaths
                             :n     new-confirmed
                             :c     (com/calculate-closed deaths recovered)}]
-                   (assoc
-                    prm
-                    :v1e5  (v1e5-fun prm)
-                    :a1e5  (a1e5-fun prm)
-                    :r1e5  (r1e5-fun prm)
-                    :d1e5  (d1e5-fun prm)
-                    :c1e5  (c1e5-fun prm)
-                    :v% (v%-fun prm)
-                    :a% (a%-fun prm)
-                    :r% (r%-fun prm)
-                    :d% (d%-fun prm)
-                    :c% (c%-fun prm)))))
+                   ((comp
+                     (partial conj prm)
+                     (partial reduce into {})
+                     (partial map (fn [rate-kw per-1e5-kw case-kw]
+                                    {per-1e5-kw ((com/calculate-cases-per-1e5 case-kw) prm)
+                                     rate-kw ((com/calc-rate case-kw) prm)})))
+                    [:v% :a% :r% :d% :c%]
+                    [:v1e5 :a1e5 :r1e5 :d1e5 :c1e5]
+                    [:v :a :r :d :c]))))
       ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
       ;; sorted   [pic-data] 46.4 MiB
       (partial map (partial sort-by (juxt :ccode :t)))
