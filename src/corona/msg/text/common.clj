@@ -160,7 +160,7 @@
        (partial cstr/join spacer)
        (partial map com/encode-cmd)
        (partial mapv lang/list-sorted-by))
-      (concat com/listing-cases-per-100k com/listing-cases-absolute)))))
+      (concat com/listing-cases-per-1e5 com/listing-cases-absolute)))))
 
 (defn worldwide? [ccode]
   (utc/in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code

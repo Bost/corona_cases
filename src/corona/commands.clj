@@ -137,13 +137,13 @@
                  (partial get-in @cache/cache)
                  (partial apply msgl/list-kw)
                  (fn [case-kw]
-                   [(if (in? com/listing-cases-per-100k case-kw)
-                      'corona.msg.text.lists/per-100k
+                   [(if (in? com/listing-cases-per-1e5 case-kw)
+                      'corona.msg.text.lists/per-1e5
                       'corona.msg.text.lists/absolute-vals)
                     case-kw]))
                 case-kw))
         :desc (lang/list-sorted-by-desc case-kw)}))
-    (partial into com/listing-cases-per-100k))
+    (partial into com/listing-cases-per-1e5))
    com/listing-cases-absolute))
 
 (def all-handlers

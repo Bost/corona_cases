@@ -106,17 +106,17 @@
          (partial apply com/calculate-closed)
          (juxt fun-d
                fun-r))
-        fun-c100k
-        (lense-fun :c100k)
+        fun-c1e5
+        (lense-fun :c1e5)
         ;; alternatively implement (lense-fun :c) - i.e. :ec
         #_(comp
          (partial apply com/calculate-closed)
-         (juxt fun-d100k
-               fun-r100k))
+         (juxt fun-d1e5
+               fun-r1e5))
 
-        fun-a100k (lense-fun :a100k)
-        fun-r100k (lense-fun :r100k)
-        fun-d100k (lense-fun :d100k)
+        fun-a1e5 (lense-fun :a1e5)
+        fun-r1e5 (lense-fun :r1e5)
+        fun-d1e5 (lense-fun :d1e5)
         popula-last-7 (last-7 (lense-fun :p) last-8)
         vaccin-last-7 (last-7 fun-v last-8)
         active-last-7 (last-7 fun-a last-8)]
@@ -137,9 +137,9 @@
            :n (fun-a last-report)
            :diff (fun-a delta)
            :emoji "🤒"}
-          {:s (fun-a100k lang/hm-active-per-1e5)
-           :n (fun-a100k last-report)
-           :diff (fun-a100k delta)}
+          {:s (fun-a1e5 lang/hm-active-per-1e5)
+           :n (fun-a1e5 last-report)
+           :diff (fun-a1e5 delta)}
           {:s (fun-a lang/hm-active-last-7-avg)
            :n ((comp round-nr mean) active-last-7)}
           {:s (fun-a lang/hm-active-change-last-7-avg)
@@ -167,23 +167,23 @@
            :n (fun-r last-report)
            :diff (fun-r delta)
            :emoji "🎉"}
-          {:s (fun-r100k lang/hm-recove-per-1e5)
-           :n (fun-r100k last-report)
-           :diff (fun-r100k delta)}
+          {:s (fun-r1e5 lang/hm-recove-per-1e5)
+           :n (fun-r1e5 last-report)
+           :diff (fun-r1e5 delta)}
           {:s lang/deaths
            :n (fun-d last-report)
            :diff (fun-d delta)
            :emoji "⚰️"}
           {:s lang/deaths-per-1e5
-           :n (fun-d100k last-report)
-           :diff (fun-d100k delta)}
+           :n (fun-d1e5 last-report)
+           :diff (fun-d1e5 delta)}
           {:s (fun-c lang/hm-closed)
            :n (fun-c last-report)
            :diff (fun-c delta)
            :emoji "🏁"}
-          {:s (fun-c100k lang/hm-closed-per-1e5)
-           :n (fun-c100k last-report)
-           :diff (fun-c100k delta)
+          {:s (fun-c1e5 lang/hm-closed-per-1e5)
+           :n (fun-c1e5 last-report)
+           :diff (fun-c1e5 delta)
            ;; TODO create command lang/cmd-closed-per-1e5
            #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}]))
       ;; 1. no country ranking can be displayed for worldwide statistics
@@ -216,10 +216,10 @@
              (def rankings rankings)
              (def hm hm)
              [["%s" [lang/people (:p hm)]]
-              ["%s" (label-val rankings-lense-fun lang/hm-active-per-1e5 :a100k hm)]
-              ["%s" (label-val rankings-lense-fun lang/hm-recove-per-1e5 :r100k hm)]
-              ["%s" [lang/deaths-per-1e5 (:d100k hm)]]
-              ["%s" (label-val rankings-lense-fun lang/hm-closed-per-1e5 :c100k hm)]])
+              ["%s" (label-val rankings-lense-fun lang/hm-active-per-1e5 :a1e5 hm)]
+              ["%s" (label-val rankings-lense-fun lang/hm-recove-per-1e5 :r1e5 hm)]
+              ["%s" [lang/deaths-per-1e5 (:d1e5 hm)]]
+              ["%s" (label-val rankings-lense-fun lang/hm-closed-per-1e5 :c1e5 hm)]])
            :line-fmt "%s:<b>%s</b>   "
            :fn-fmts
            (fn [fmts] (format lang/ranking-desc
@@ -259,7 +259,7 @@
 ;; they obey a stack discipline:
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 (defn-fun-id message
-  "Shows the table with the absolute and %-wise nr of cases, cases per-100k etc.
+  "Shows the table with the absolute and %-wise nr of cases, cases per-1e5 etc.
   TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)

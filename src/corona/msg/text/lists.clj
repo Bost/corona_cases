@@ -20,7 +20,7 @@
   [:list ((comp keyword :name meta find-var) fun) case-kw])
 
 (defn calc-listings! "" [stats {:keys [lense-fun] :as prm} case-kws fun]
-  ;; fun is on of: per-100k, absolute-vals - TODO spec it!
+  ;; fun is on of: per-1e5, absolute-vals - TODO spec it!
   ((comp
     doall
     (partial
@@ -105,7 +105,7 @@
             case-kw msg-idx (com/measure msg))
     msg))
 
-(defn-fun-id per-100k
+(defn-fun-id per-1e5
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
   [case-kw {:keys [msg-idx cnt-msgs data cnt-reports lense-fun header footer]}]
@@ -119,11 +119,11 @@
          (msgc/format-linewise
           [["%s\n" [header]]
            ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["%s "  [(column-label lense-fun lang/hm-active-per-1e5 :a100k case-kw)]]
+           ["%s "  [(column-label lense-fun lang/hm-active-per-1e5 :a1e5 case-kw)]]
            ["%s"   [spacer]]
-           ["%s "  [(column-label lense-fun lang/hm-recove-per-1e5 :r100k case-kw)]]
+           ["%s "  [(column-label lense-fun lang/hm-recove-per-1e5 :r1e5 case-kw)]]
            ["%s"   [spacer]]
-           ["%s"   [(str lang/deaths-per-1e5 (sort-sign :d100k case-kw))]]
+           ["%s"   [(str lang/deaths-per-1e5 (sort-sign :d1e5 case-kw))]]
            ["\n%s" [(str
                      "%s"     ; listing table
                      "%s"     ; sorted-by description; has its own new-line
@@ -131,16 +131,16 @@
                      )]]])
          ((comp
            (partial cstr/join "\n")
-           (partial map (fn [{:keys [d100k ccode] :as hm}]
-                          (let [a100k ((lense-fun :a100k) hm)
-                                r100k ((lense-fun :r100k) hm)
+           (partial map (fn [{:keys [d1e5 ccode] :as hm}]
+                          (let [a1e5 ((lense-fun :a1e5) hm)
+                                r1e5 ((lense-fun :r1e5) hm)
                                 cname (ccr/country-name-aliased ccode)]
                             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
-                                    (com/left-pad a100k " " omag-active)
+                                    (com/left-pad a1e5 " " omag-active)
                                     spacer
-                                    (com/left-pad r100k " " omag-recove)
+                                    (com/left-pad r1e5 " " omag-recove)
                                     spacer
-                                    (com/left-pad d100k " " omag-deaths)
+                                    (com/left-pad d1e5 " " omag-deaths)
                                     (com/right-pad cname 17)
                                     (cstr/lower-case (com/encode-cmd ccode)))))))
           data)

@@ -225,7 +225,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
             m-result doall
             (partial map (partial apply msgl/calc-listings! stats-countries prm)))
            [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
-            [com/listing-cases-per-100k 'corona.msg.text.lists/per-100k]]))
+            [com/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
         _ (com/add-calc-time "all-calc-listings" all-calc-listings)
 
         _ (m-result

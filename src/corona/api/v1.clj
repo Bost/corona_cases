@@ -127,20 +127,20 @@
   (let [data-with-pop (data/data-with-pop json)
         cnt-raw-dates (count (data/raw-dates json))
 
-        #_(map (fn [per-100k-kw case-kw]
-               {per-100k-kw (com/calculate-cases-per-100k case-kw)})
-             [:v100k :a100k :r100k :d100k :c100k]
+        #_(map (fn [per-1e5-kw case-kw]
+               {per-1e5-kw (com/calculate-cases-per-1e5 case-kw)})
+             [:v1e5 :a1e5 :r1e5 :d1e5 :c1e5]
              [:v :a :r :d :c])
 
         #_(map (fn [rate-kw case-kw]
-               {per-100k (com/calc-rate case-kw)})
+               {per-1e5 (com/calc-rate case-kw)})
              [:v-rate :a-rate :r-rate :d-rate :c-rate]
              [:v :a :r :d :c])
-        v100k-fun  (com/calculate-cases-per-100k :v)
-        a100k-fun  (com/calculate-cases-per-100k :a)
-        r100k-fun  (com/calculate-cases-per-100k :r)
-        d100k-fun  (com/calculate-cases-per-100k :d)
-        c100k-fun  (com/calculate-cases-per-100k :c)
+        v1e5-fun  (com/calculate-cases-per-1e5 :v)
+        a1e5-fun  (com/calculate-cases-per-1e5 :a)
+        r1e5-fun  (com/calculate-cases-per-1e5 :r)
+        d1e5-fun  (com/calculate-cases-per-1e5 :d)
+        c1e5-fun  (com/calculate-cases-per-1e5 :c)
         v-rate-fun (com/calc-rate :v)
         a-rate-fun (com/calc-rate :a)
         r-rate-fun (com/calc-rate :r)
@@ -169,11 +169,11 @@
                             :c     (com/calculate-closed deaths recovered)}]
                    (assoc
                     prm
-                    :v100k  (v100k-fun prm)
-                    :a100k  (a100k-fun prm)
-                    :r100k  (r100k-fun prm)
-                    :d100k  (d100k-fun prm)
-                    :c100k  (c100k-fun prm)
+                    :v1e5  (v1e5-fun prm)
+                    :a1e5  (a1e5-fun prm)
+                    :r1e5  (r1e5-fun prm)
+                    :d1e5  (d1e5-fun prm)
+                    :c1e5  (c1e5-fun prm)
                     :v-rate (v-rate-fun prm)
                     :a-rate (a-rate-fun prm)
                     :r-rate (r-rate-fun prm)

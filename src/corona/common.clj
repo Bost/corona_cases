@@ -189,7 +189,7 @@
   ([mode place total-count]
    (utn/round mode (/ (* place 1e5) total-count))))
 
-(defn calculate-cases-per-100k [case-kw]
+(defn calculate-cases-per-1e5 [case-kw]
   (fn [{:keys [p] :as prm}]
     (if (zero? p)
       0
@@ -404,11 +404,11 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
    {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 85e3)}}
    {:idx  5 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 989e3)}}
    ;; TODO the order matters: it must be the same as in the info-message
-   {:idx  6 :kw :v100k}
-   {:idx  7 :kw :a100k}
-   {:idx  8 :kw :r100k}
-   {:idx  9 :kw :d100k}
-   {:idx 10 :kw :c100k}  ;; closed-per-100k
+   {:idx  6 :kw :v1e5}
+   {:idx  7 :kw :a1e5}
+   {:idx  8 :kw :r1e5}
+   {:idx  9 :kw :d1e5}
+   {:idx 10 :kw :c1e5}  ;; closed-per-1e5
 
    {:idx 11 :kw :v-rate}
    {:idx 12 :kw :a-rate}
@@ -417,11 +417,11 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
    {:idx 15 :kw :c-rate} ;; closed-rate
    {:idx 16 :kw :ea}     ;; estimate-active
    {:idx 17 :kw :er}     ;; estimate-recovered
-   {:idx 18 :kw :ea100k} ;; estimate-active-per-100k
-   {:idx 19 :kw :er100k} ;; estimate-recovered-per-100k
+   {:idx 18 :kw :ea1e5} ;; estimate-active-per-1e5
+   {:idx 19 :kw :er1e5} ;; estimate-recovered-per-1e5
    {:idx 20 :kw :c}      ;; closed
    {:idx 21 :kw :ec}     ;; estimate-closed
-   {:idx 22 :kw :ec100k} ;; estimate-closed-per-100k
+   {:idx 22 :kw :ec1e5} ;; estimate-closed-per-1e5
    ])
 
 (def aggregation-params
@@ -458,7 +458,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
         (filter (fn [m] (utc/in? [1 6 7 8 9 10] (:idx m))))
         (mapv :kw)))
 
-(def listing-cases-per-100k
+(def listing-cases-per-1e5
   (tore case-params
         (filter (fn [m] (utc/in? [7 8 9] (:idx m))))
         (map :kw)))
@@ -610,9 +610,9 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
   (get {:r :er
         :a :ea
         :c :ec
-        :r100k :er100k
-        :a100k :ea100k
-        :c100k :ec100k
+        :r1e5 :er1e5
+        :a1e5 :ea1e5
+        :c1e5 :ec1e5
         :s :es}
        ;; second kw is for `not-found` parameter of `get`
        kw kw))

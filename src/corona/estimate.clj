@@ -45,7 +45,7 @@
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
                                               com/calculate-closed)
-                                        :ec100k [{:kw :er :shift 0}
+                                        :ec1e5 [{:kw :er :shift 0}
                                                  {:kw :d :shift shift-deaths}])
                   [ccode hms]))))
     (partial group-by :ccode)
@@ -62,7 +62,7 @@
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
                                               com/calculate-activ)
-                                        :ea100k [{:kw :n  :shift 0}
+                                        :ea1e5 [{:kw :n  :shift 0}
                                                  {:kw :er :shift 0}
                                                  {:kw :d  :shift shift-deaths}])
                   [ccode hms]))))
@@ -82,7 +82,7 @@
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
                                               com/calculate-recov)
-                                        :er100k [{:kw :n :shift shift-recovery}
+                                        :er1e5 [{:kw :n :shift shift-recovery}
                                                  {:kw :d :shift shift-deaths}])
                   [ccode hms]))))
     (partial group-by :ccode)

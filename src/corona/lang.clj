@@ -80,9 +80,9 @@
 (def ^:const deaths-per-1e5 "Deaths per 100 000"          (str "Dea" hundred-k))
 (def ^:const closed-per-1e5 "Closed per 100 000"          (str clo hundred-k))
 
-(def hm-active-per-1e5 {:a100k active-per-1e5 :ea100k (str "*" active-per-1e5)})
-(def hm-recove-per-1e5 {:r100k recove-per-1e5 :er100k (str "*" recove-per-1e5)})
-(def hm-closed-per-1e5 {:c100k closed-per-1e5 :ec100k (str "*" closed-per-1e5)})
+(def hm-active-per-1e5 {:a1e5 active-per-1e5 :ea1e5 (str "*" active-per-1e5)})
+(def hm-recove-per-1e5 {:r1e5 recove-per-1e5 :er1e5 (str "*" recove-per-1e5)})
+(def hm-closed-per-1e5 {:c1e5 closed-per-1e5 :ec1e5 (str "*" closed-per-1e5)})
 
 (def ^:const active-max "Peak of active cases from all reports" (format "Max %s" active))
 (def hm-active-max {:a active-max :ea (str "*" active-max)})
