@@ -162,6 +162,14 @@ then
 ```
 ## Others
 
+Inspect logfile
 ```bash
 heroku pt ":type -'ssl-client-cert' -'$MY_TELEGRAM_ID'" --app <YOUR-HEROKU-APP-NAME> | grep -v -e '^[[:space:]]*$
 ```
+
+Inspect memory
+```bash
+# sudo apt install visualvm
+visualvm -J-DsocksProxyHost=localhost -J-DsocksProxyPort=1080 & disown
+```
+
