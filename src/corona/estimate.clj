@@ -29,7 +29,8 @@
               (map (comp
                     (fn [{:keys [vs shift]}] (into (drop-last shift vs)
                                                   (repeat shift 0)))
-                    (fn [{:keys [kw shift]}] {:vs (map kw stats-country)
+                    (fn [{:keys [kw shift]}] {:vs (map (fn [stats] (get-in stats kw))
+                                                      stats-country)
                                              :shift shift}))
                    kw-shift-maps))
        stats-country))))
@@ -45,15 +46,15 @@
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
                                               com/calc-closed)
-                                        :ec1e5 [{:kw :er :shift 0}
-                                                 {:kw :d :shift shift-deaths}])
+                                        :ec1e5 [{:kw [:er] :shift 0}
+                                                {:kw [:d] :shift shift-deaths}])
                   [ccode hms]))))
     (partial group-by :ccode)
 
     flatten
     (partial map (estim-for-country-fn com/calc-closed
-                                       :ec [{:kw :er :shift 0}
-                                            {:kw :d  :shift shift-deaths}]))
+                                       :ec [{:kw [:er] :shift 0}
+                                            {:kw [:d]  :shift shift-deaths}]))
     (partial group-by :ccode)
 
     flatten
@@ -62,18 +63,18 @@
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
                                               com/calc-active)
-                                        :ea1e5 [{:kw :n  :shift 0}
-                                                 {:kw :er :shift 0}
-                                                 {:kw :d  :shift shift-deaths}])
+                                        :ea1e5 [{:kw [:n]  :shift 0}
+                                                {:kw [:er] :shift 0}
+                                                {:kw [:d]  :shift shift-deaths}])
                   [ccode hms]))))
     (partial group-by :ccode)
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;
     flatten
     (partial map (estim-for-country-fn com/calc-active
-                                       :ea [{:kw :n  :shift 0}
-                                            {:kw :er :shift 0}
-                                            {:kw :d  :shift shift-deaths}]))
+                                       :ea [{:kw [:n]  :shift 0}
+                                            {:kw [:er] :shift 0}
+                                            {:kw [:d]  :shift shift-deaths}]))
     (partial group-by :ccode)
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;
     flatten
@@ -82,15 +83,15 @@
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
                                               com/calc-recov)
-                                        :er1e5 [{:kw :n :shift shift-recovery}
-                                                 {:kw :d :shift shift-deaths}])
+                                        :er1e5 [{:kw [:n] :shift shift-recovery}
+                                                {:kw [:d] :shift shift-deaths}])
                   [ccode hms]))))
     (partial group-by :ccode)
     ;;;;;;;;;;;;;;;;;;;;;;;;;;
     flatten
     (partial map (estim-for-country-fn com/calc-recov
-                                       :er [{:kw :n :shift shift-recovery}
-                                            {:kw :d :shift shift-deaths}]))
+                                       :er [{:kw [:n] :shift shift-recovery}
+                                            {:kw [:d] :shift shift-deaths}]))
     (partial group-by :ccode)
 
     #_(fn [v] (def m1 v) v)
