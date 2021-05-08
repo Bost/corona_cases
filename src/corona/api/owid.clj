@@ -79,7 +79,6 @@
 (defn vaccination-data [{:keys [raw-dates-v1 json-owid]}]
   ((comp
     (partial hash-map :vaccinated)
-    (partial hash-map :locations)
     (partial map
              (comp
               (partial apply merge)

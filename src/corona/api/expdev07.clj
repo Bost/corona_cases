@@ -123,7 +123,6 @@
 (defn population-data [raw-dates-v1]
   ((comp
     (partial hash-map :population)
-    (partial hash-map :locations)
     (partial map
              (comp
               (partial apply merge)
@@ -146,29 +145,25 @@
              (fn [case-kw-full-name]
                ((comp
                  (partial hash-map case-kw-full-name)
-                 (fn [case-m]
-                   (if (contains? case-m :locations)
-                     (update-in
-                      case-m [:locations]
-                      (comp
-                       (partial into [])
-                       (partial map (fn [m]
-                                      (update-in
-                                       m [:history]
-                                       (comp
-                                        (partial into {})
-                                        (partial filter
-                                                 (comp
-                                                  (partial utc/in? raw-dates-v1)
-                                                  first))))))
-                       ;; here the country_code keyword comes from the json
-                       (partial filter
-                                (comp
-                                 (partial utc/in? ccc/relevant-country-codes)
-                                 :country_code))))
-                     case-m))
-                 (partial get json))
+                 (partial into [])
+                 (partial map (fn [m]
+                                (update-in
+                                 m [:history]
+                                 (comp
+                                  (partial into {})
+                                  (partial filter
+                                           (comp
+                                            (partial utc/in? raw-dates-v1)
+                                            first))))))
+                 ;; here the country_code keyword comes from the json
+                 (partial filter
+                          (comp
+                           (partial utc/in? ccc/relevant-country-codes)
+                           :country_code))
+                 (partial get-in json)
+                 (fn [kw] [kw :locations]))
                 case-kw-full-name)))
+    (partial filter (partial utc/in? [:confirmed :deaths :recovered]))
     keys)
    json))
 

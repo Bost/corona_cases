@@ -93,8 +93,8 @@
                     "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ" "IN" "ES" "CO"
                     "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"}
                   (:country_code loc))))
-    (partial get-in data-with-pop))
-   [case-kw :locations]))
+    (partial get data-with-pop))
+   case-kw))
 
 (defn normalize "" [default-hms k hms]
   (let [hms-set ((comp
