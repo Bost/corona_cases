@@ -172,8 +172,8 @@
 Note: command line params accepted - is that OK?"
   []
   (infof "Starting ...")
-  (schema/migrate)
   (macro/system-ok?)
+  (schema/migrate)
   (if (= (str (ctc/default-time-zone))
          (str (ZoneId/systemDefault))
          (.getID (TimeZone/getDefault)))

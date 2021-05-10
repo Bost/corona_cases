@@ -37,12 +37,12 @@
          ~'fun-id
          (= ~'fun-id "-main")
          (= corona.common/env-type :devel))
+        (taoensso.timbre/infof "[%s]\n  %s"
+                               ~'fun-id
+                               (clojure.string/join
+                                "\n  "
+                                (corona.common/show-env)))
         (let [~'dbase-ok? (corona.models.migration/migrated?)]
-          (taoensso.timbre/infof "[%s]\n  %s"
-                                 ~'fun-id
-                                 (clojure.string/join
-                                  "\n  "
-                                  (corona.common/show-env)))
           (taoensso.timbre/infof "[%s] dbase-ok? %s" ~'fun-id ~'dbase-ok?)
           ~'dbase-ok?))
       (do
