@@ -5,7 +5,7 @@
   TODO run in a separate REPL under different JVM"
   (:require [compojure.core :refer [defroutes GET]]
             [ring.adapter.jetty :refer [run-jetty]]
-            [corona.common :refer [mockup-port]]
+            [corona.envdef :refer [mockup-port]]
             [ring.middleware.json :refer [wrap-json-body]]))
 
 (def path "resources/mockup")
