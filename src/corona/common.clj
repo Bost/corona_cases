@@ -74,7 +74,13 @@
 (def ^:const ^String webapp-server
   (get-in environment [env-type :web-server]))
 
-(def db-uri (java.net.URI. (System/getenv "DATABASE_URL")))
+(def db-uri (java.net.URI.
+             (let [env-var "DATABASE_URL"]
+               (if-let [uri (System/getenv env-var)]
+                 uri
+                 (throw (Exception.
+                         (format "Undefined environment variable: %s"
+                                 env-var)))))))
 
 (def user-and-password
   (if (nil? (.getUserInfo db-uri))
