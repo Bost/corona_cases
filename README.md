@@ -22,6 +22,12 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 <!-- ``` -->
 
 * [Clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
+* [Heroku for Clojure](https://devcenter.heroku.com/articles/getting-started-with-clojure)
+```bash
+# The `sudo snap install heroku --classic` doesn't work
+# See https://github.com/heroku/cli/issues/822
+curl https://cli-assets.heroku.com/install.sh | sh
+```
 * [Babashka](https://github.com/babashka/babashka#installer-script)
 * postgresql:
 ```bash
@@ -39,6 +45,9 @@ postgres -D pg &   # this doesn't work: pg_ctl -D pg -l logfile start
 ```
 Open new console and log in
 ```bash
+# in case of:
+#    psql: error: FATAL:  role "username" does not exist
+# sudo -u postgres createuser -s <username>
 psql --dbname=postgres
 ```
 ```postgres
@@ -64,7 +73,7 @@ containing:
 CORONA_ENV_TYPE=devel
 #
 # https://clojure.org/guides/getting_started#_installation_on_linux
-# See also `.heroku-local.env` and the output of `clojure --help | grep Version`
+# See also `.heroku-local.env`, `.env` and the output of `cli --version`
 CLOJURE_CLI_VERSION=1.10.3.822
 #
 # HEROKU tokens for:
@@ -89,11 +98,7 @@ TELEGRAM_TOKEN:       ...
 Ideally, copy the whole project to a separate directory
 ```bash
 ./heroku.clj getMockData
-clj -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} com.billpiel/sayid {:mvn/version "0.1.0"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.1"} cider/cider-nrepl {:mvn/version "0.25.9"}} :aliases {:cider/nrepl {:main-opts ["-m" "nrepl.cmdline" "--middleware" "[com.billpiel.sayid.nrepl-middleware/wrap-sayid,refactor-nrepl.middleware/wrap-refactor,cider.nrepl/cider-middleware]"]}}}'
-```
-```clojure
-user=> (load "corona/api/mockup")
-user=> (corona.api.mockup/run-server)
+clj -J-Djdk.attach.allowAttachSelf -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} com.billpiel/sayid {:mvn/version "0.1.0"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.1"} cider/cider-nrepl {:mvn/version "0.25.9"}} :aliases {:cider/nrepl {:main-opts ["-m" "nrepl.cmdline" "--middleware" "[com.billpiel.sayid.nrepl-middleware/wrap-sayid,refactor-nrepl.middleware/wrap-refactor,cider.nrepl/cider-middleware]"]}}}' --eval '(load "corona/api/mockup") (corona.api.mockup/run-server)'
 ```
 
 2. In Emacs Cider `M-x cider-jack-in-clj`, or start the nREPL from the command line:
@@ -172,4 +177,3 @@ Inspect memory
 # sudo apt install visualvm
 visualvm -J-DsocksProxyHost=localhost -J-DsocksProxyPort=1080 & disown
 ```
-
