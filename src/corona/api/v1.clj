@@ -24,6 +24,7 @@
 (defn fmt [raw-date] (.parse sdf (data/keyname raw-date)))
 
 (defn xf-for-case "" [cnt-raw-dates data-with-pop case-kw]
+  (let [lensed-case-kw (com/tmp-lense case-kw)]
   ((comp
     #_(partial sort-by (juxt :ccode :t))
     flatten
@@ -50,14 +51,14 @@
                        (conj ms
                              ((comp
                                (partial hash-map :ccode "ZZ" :t t case-kw)
-                               (partial sum case-kw))
+                               (partial sum lensed-case-kw))
                               ms)))
                      ;; group together provinces of the given country
                      (partial map
                               (fn [[ccode hms]]
                                 ((comp
                                   (partial hash-map :ccode ccode :t t case-kw)
-                                  (partial sum case-kw))
+                                  (partial sum lensed-case-kw))
                                  hms)))
                      (partial group-by :ccode))
                     hms)))
@@ -94,7 +95,8 @@
                     "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"}
                   (:country_code loc))))
     (partial get data-with-pop))
-   case-kw))
+   case-kw)
+  ))
 
 (defn normalize "" [default-hms k hms]
   (let [hms-set ((comp

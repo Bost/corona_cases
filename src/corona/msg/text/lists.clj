@@ -26,27 +26,29 @@
     (partial
      map
      (fn [case-kw]
-       (let [lensed-case-kw (lense-fun case-kw)
-             coll (sort-by lensed-case-kw < stats)
-             ;; Split the long list of all countries into smaller sub-parts
-             sub-msgs (partition-all (/ (count coll)
-                                        cnt-messages-in-listing) coll)
-             sub-msgs-prm (assoc prm :cnt-msgs (count sub-msgs))]
-         ((comp
-           doall
-           (partial map-indexed
-                    (fn [idx sub-msg]
-                      ((comp
-                        (partial cache/cache!
-                                 (fn [] ((eval fun) case-kw
-                                        (assoc sub-msgs-prm
-                                               :msg-idx (inc idx)
-                                               :data sub-msg))))
-                        (partial conj (list-kw fun case-kw))
-                        keyword
-                        str)
-                       idx))))
-          sub-msgs)))))
+       (let [lensed-case-kw (lense-fun case-kw)]
+         (let [coll ((comp
+                      (partial sort-by (com/unlense lensed-case-kw) <))
+                     stats)
+               ;; Split the long list of all countries into smaller sub-parts
+               sub-msgs (partition-all (/ (count coll)
+                                          cnt-messages-in-listing) coll)
+               sub-msgs-prm (assoc prm :cnt-msgs (count sub-msgs))]
+           ((comp
+             doall
+             (partial map-indexed
+                      (fn [idx sub-msg]
+                        ((comp
+                          (partial cache/cache!
+                                   (fn [] ((eval fun) case-kw
+                                          (assoc sub-msgs-prm
+                                                 :msg-idx (inc idx)
+                                                 :data sub-msg))))
+                          (partial conj (list-kw fun case-kw))
+                          keyword
+                          str)
+                         idx))))
+            sub-msgs))))))
    case-kws))
 
 (defn sort-sign [sorted-case-kw case-kw]
@@ -57,7 +59,7 @@
 (defn column-label
   "I.e. a header for a column table - see corona.msg.text.details/label-val"
   [lense-fun hm-text sorted-case-kw case-kw]
-  (str ((lense-fun sorted-case-kw) hm-text)
+  (str (get-in hm-text (lense-fun sorted-case-kw))
        (sort-sign sorted-case-kw case-kw)))
 
 (defn-fun-id absolute-vals
@@ -87,8 +89,8 @@
          ((comp
            (partial cstr/join "\n")
            (partial map (fn [{:keys [d ccode] :as hm}]
-                          (let [a ((lense-fun :a) hm)
-                                r ((lense-fun :r) hm)
+                          (let [a (get-in hm (lense-fun :a))
+                                r (get-in hm (lense-fun :r))
                                 cname (ccr/country-name-aliased ccode)]
                             (format "<code>%s%s%s%s%s %s</code>  %s"
                                     (com/left-pad a " " omag-active)
@@ -132,8 +134,8 @@
          ((comp
            (partial cstr/join "\n")
            (partial map (fn [{:keys [d1e5 ccode] :as hm}]
-                          (let [a1e5 ((lense-fun :a1e5) hm)
-                                r1e5 ((lense-fun :r1e5) hm)
+                          (let [a1e5 (get-in hm (lense-fun :a1e5))
+                                r1e5 (get-in hm (lense-fun :r1e5))
                                 cname (ccr/country-name-aliased ccode)]
                             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                                     (com/left-pad a1e5 " " omag-active)

@@ -604,25 +604,34 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
        (update-in state [:acc]
                   (fn [_] (vec (concat accumulator (vector calc-time)))))))))
 
-(defn sum [fun hms]
+(defn sum [kws hms]
   ((comp
     (partial reduce +)
-    (partial map fun))
+    (partial map (fn [hm] (get-in hm kws))))
    hms))
 
 (defn estim-fun
   "TODO have a look at lenses"
   [kw]
-  (get {:r :er
-        :a :ea
-        :c :ec
-        :r1e5 :er1e5
-        :a1e5 :ea1e5
-        :c1e5 :ec1e5
-        :s :es}
-       ;; second kw is for `not-found` parameter of `get`
-       kw kw))
+  ((comp
+    vector
+    (partial apply get {:r :er
+                        :a :ea
+                        :c :ec
+                        :r1e5 :er1e5
+                        :a1e5 :ea1e5
+                        :c1e5 :ec1e5
+                        :s :es})
+    ;; second kw is for `not-found` parameter of `get`
+    (fn [kw] [kw kw]))
+   kw))
 
-(defn ident-fun "TODO have a look at lenses" [kw] kw)
+(defn ident-fun "TODO have a look at lenses" [kw]
+  ((comp
+    vector)
+   kw))
+
+(defn tmp-lense [case-kw] (vector case-kw))
+(defn unlense [lensed-case-kw] (last lensed-case-kw))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

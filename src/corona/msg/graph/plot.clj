@@ -320,7 +320,8 @@
    (group-below-threshold prm)
    :data
    (fn [data]
-     (let [countries-threshold ((comp set (partial map :ccode)) data)]
+     (let [countries-threshold ((comp set (partial map :ccode)) data)
+           lensed-case-kw (com/tmp-lense case-kw)]
        ((comp
          sort-by-last-val
          (partial plotcom/map-kv
@@ -328,7 +329,7 @@
                    (partial sort-by first)
                    (partial map (fn [hm]
                                   [((comp to-java-time-local-date :t) hm)
-                                   (case-kw hm)]))))
+                                   (get-in hm lensed-case-kw)]))))
          (partial group-by :ccode)
          (partial reduce into [])
          (partial map
@@ -351,7 +352,7 @@
                                    (fn [[ccode hms]]
                                      ((comp
                                        (partial hash-map :ccode ccode :t t case-kw)
-                                       (partial sum case-kw))
+                                       (partial sum lensed-case-kw))
                                       hms)))
                           (partial group-by :ccode))
                          hms0)))
