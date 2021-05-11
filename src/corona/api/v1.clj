@@ -27,6 +27,7 @@
   (let [lensed-case-kw (com/tmp-lense case-kw)]
   ((comp
     #_(partial sort-by (juxt :ccode :t))
+    #_(partial take-last 1)
     flatten
     (partial map
              (fn [[ccode hms]]
@@ -110,9 +111,11 @@
      default-hms)))
 
 (defn-fun-id pic-data "" [json]
+  #_(def json json)
   (let [data-with-pop (data/data-with-pop json)
         cnt-raw-dates (count (data/raw-dates json))]
     #_(def data-with-pop data-with-pop)
+    #_(def cnt-raw-dates cnt-raw-dates)
     ((comp
       #_(fn [v] (def pd v) v)
       (partial apply
@@ -122,6 +125,28 @@
                    {:keys [confirmed ccode t]}
                    {:keys [recovered]}
                    {:keys [deaths]}]
+                 #_(let [new-confirmed confirmed
+                       prm {:ccode ccode
+                            :t     t
+                            :p     population
+                            :v     vaccinated
+                            :a     (com/calc-active new-confirmed recovered deaths)
+                            :r     recovered
+                            :d     deaths
+                            :n     new-confirmed
+                            :c     (com/calc-closed deaths recovered)}
+                       kws [#_:v :a :r :d :c]]
+                   ((comp
+                     (partial conj
+                              {:ccode ccode :t t :p population :v vaccinated :n new-confirmed})
+                     (partial zipmap [:abs :1e5 :%%%])
+                     (partial map (partial zipmap kws))
+                     utc/transpose
+                     (partial map (fn [case-kw]
+                                    [((identity case-kw) prm)
+                                     ((com/calc-per-1e5 case-kw) prm)
+                                     ((com/calc-rate case-kw) prm)])))
+                    kws))
                  (let [new-confirmed confirmed
                        prm {:ccode ccode
                             :t     t
