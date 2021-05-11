@@ -6,7 +6,8 @@
   (:require [clojure.set :as cset]
             [clojure.string :as cstr]
             taoensso.encore
-            [taoensso.timbre :as timbre]))
+            [taoensso.timbre :as timbre]
+            [taoensso.timbre.appenders.core :as appenders]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -53,6 +54,8 @@
  {:output-fn
   log-output
   #_timbre/default-output-fn
+  ;; TODO log only last N days
+  :appenders {:spit (appenders/spit-appender {:fname "corona.log"})}
   :timestamp-opts
   (conj {:timezone (java.util.TimeZone/getTimeZone zone-id)}
         {:pattern "HH:mm:ss.SSSX"})})
