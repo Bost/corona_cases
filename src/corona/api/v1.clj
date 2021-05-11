@@ -133,6 +133,26 @@
                             :n     new-confirmed
                             :c     (com/calc-closed deaths recovered)}]
                    ((comp
+                     #_(partial
+                      conj
+                      (let [kws [:a :r :d :c]]
+                        {
+                         ;; :ccode ccode :t t :p p :v v :n n
+                         :abs prm
+                         #_((comp
+                             (partial into {})
+                             (partial map (fn [kw] {kw (kw prm)})))
+                            kws)
+                         :1e5
+                         ((comp
+                           (partial into {})
+                           (partial map (fn [kw] {kw ((com/calc-per-1e5 kw) prm)})))
+                          kws)
+                         :%
+                         ((comp
+                           (partial into {})
+                           (partial map (fn [kw] {kw ((com/calc-rate kw) prm)})))
+                          kws)}))
                      (partial conj prm)
                      (partial reduce into {})
                      (partial map (fn [rate-kw per-1e5-kw case-kw]
