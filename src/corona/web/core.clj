@@ -24,7 +24,7 @@
             ring.middleware.params
             [ring.middleware.session :as session]
             ring.util.http-response
-            [corona.macro :as macro :refer [defn-fun-id debugf infof]]
+            [corona.macro :as macro :refer [defn-fun-id debugf infof warnf]]
             [taoensso.timbre :as timbre]
             [corona.models.migration :as schema]
             ;; needed for the 'ok?' macro
@@ -54,29 +54,35 @@
   (moh/apply-macro moh/defhandler tgram-handlers (tgram/create-handlers))
   (timbre/debugf "Defining tgram-handlers at compile time ... done"))
 
+(defn-fun-id webhook-not-set? "" [telegram-token]
+  (if telegram-token
+    ((comp
+      empty?
+      :url
+      :result
+      :body
+      moa/get-info-webhook)
+     telegram-token)
+    (warnf "Undefined telegram-token")))
+
 (defn-fun-id setup-webhook "" []
-  (let [webhook-not-set? ((comp
-                           empty?
-                           :url
-                           :result
-                           :body
-                           moa/get-info-webhook)
-                          com/telegram-token)]
-    (if com/use-webhook?
-      (when webhook-not-set?
+  ;; Note: due the com/use-webhook? condition the 'when' and 'when-not' are not
+  ;; mutually exclusive
+  (if com/use-webhook?
+    (when (webhook-not-set? com/telegram-token)
+      ((comp
+        (fn [v] (debugf "(set-webhook ...) %s" v))
+        :body
+        (partial moa/set-webhook com/telegram-token)
+        webhook-url)
+       com/telegram-token))
+    (when-not (webhook-not-set? com/telegram-token)
+      (let [res ()]
         ((comp
-          (fn [v] (debugf "(set-webhook ...) %s" v))
+          (fn [v] (debugf "(del-webhook ...) %s" v) v)
           :body
-          (partial moa/set-webhook com/telegram-token)
-          webhook-url)
-         com/telegram-token))
-      (when-not webhook-not-set?
-        (let [res ()]
-          ((comp
-            (fn [v] (debugf "(del-webhook ...) %s" v) v)
-            :body
-            moa/del-webhook)
-            com/telegram-token))))))
+          moa/del-webhook)
+         com/telegram-token)))))
 
 (defn- authenticated? [user pass]
   ;; TODO: heroku config:add REPL_USER=[...] REPL_PASSWORD=[...]

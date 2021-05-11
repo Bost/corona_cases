@@ -213,8 +213,8 @@
                       (partial map :rank)
                       (partial filter (fn [hm] (= (:ccode hm) ccode))))
                      (:vals rankings))]
-             (def rankings rankings)
-             (def hm hm)
+             ;; TODO test estimated-indication for a subset of countries which
+             ;; do report recovery cases
              [["%s" [lang/people (:p hm)]]
               ["%s" (label-val rankings-lense-fun lang/hm-active-per-1e5 :a1e5 hm)]
               ["%s" (label-val rankings-lense-fun lang/hm-recove-per-1e5 :r1e5 hm)]
