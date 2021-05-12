@@ -162,7 +162,7 @@
 (defn-fun-id calc-cache!
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
-  [aggregation-hash json-v1 json-owid]
+  [aggregation-hash json-owid json-v1]
   (let [;; tbeg must be captured before the function composition
         init-state {:tbeg (com/system-time) :acc []}]
     ((comp
@@ -361,8 +361,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   ((comp
     (partial
      apply
-     (fn [json-v1 json-owid]
-       (let [any-json-changed (some boolean [json-v1 json-owid])]
+     (fn [json-owid json-v1]
+       (let [any-json-changed (some boolean [json-owid json-v1])]
          (debugf "any-json-changed %s" any-json-changed)
          (when any-json-changed
            #_(calc-cache! (cache/aggregation-hash)
@@ -376,15 +376,15 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                         [calc-result
                          (m-result
                           (calc-cache! (cache/aggregation-hash)
-                                       json-v1
-                                       json-owid))
+                                       json-owid
+                                       json-v1))
                          _ (com/add-calc-time "calc-cache!" calc-result)]
                         calc-result))
               init-state))))))
     ;; TODO use pmap to speed up things
     (partial map json-changed!))
-   [{:json-fn data/json-data :cache-storage [:v1]}
-    {:json-fn vac/json-data  :cache-storage [:owid]}])
+   [{:json-fn vac/json-data  :cache-storage [:owid]}
+    {:json-fn data/json-data :cache-storage [:v1]}])
 
   (debugf "(keys @cache/cache) %s" (keys @cache/cache))
   (debugf "Responses %s" (select-keys @cache/cache [:v1 :owid]))
