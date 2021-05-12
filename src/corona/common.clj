@@ -372,16 +372,13 @@
 'Reading JSON with jsonista seems faster than reading EDN with read-string'
 https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20as.20a.20file/near/202927428"
   [url]
-  (let [msg (format "Requesting data from %s" url)]
-    ((comp
-      (fn [s] (json/read-str s :key-fn clojure.core/keyword))
-      :body
-      (fn [url]
-        (clj-http.client/get
-         url
-         (conj
-          (let [;; 1.5 minutes
-                timeout (int (* 3/2 60 1000))]
+  ((comp
+    (fn [s] (json/read-str s :key-fn clojure.core/keyword))
+    :body
+    (fn [url]
+      (let [;; 1.5 minutes
+            timeout (int (* 3/2 60 1000))
+            prms
             {;; See
              ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
              ;; SO_TIMEOUT - timeout for waiting for data or, put
@@ -395,46 +392,23 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 
              ;; timeout until a connection is established
              ;; :connect-timeout timeout
-             })
-          {:accept :json}
-          #_{:debug true}
-          #_{:debug-body true}))
-        #_(let [;; tbeg must be captured before the function composition
-              init-state {:tbeg (system-time) :acc []}]
-          ((comp
-            first
-            (domonad
-             #_identity-m
-             state-m
-             [data
-              (m-result
-               (clj-http.client/get
-                url
-                (conj
-                 (let [;; 1.5 minutes
-                       timeout (int (* 3/2 60 1000))]
-                   {;; See
-                    ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
-                    ;; SO_TIMEOUT - timeout for waiting for data or, put
-                    ;; differently, a maximum period inactivity between two
-                    ;; consecutive data packets
-                    :socket-timeout timeout
-
-                    ;; timeout used when requesting a connection from the
-                    ;; connection manager
-                    :connection-timeout timeout
-
-                    ;; timeout until a connection is established
-                    ;; :connect-timeout timeout
-                    })
-                 {:accept :json}
-                 #_{:debug true}
-                 #_{:debug-body true})))
-              _ (add-calc-time "data" data)]
-             data))
-           init-state)))
-      (fn [url] (infof msg) url))
-     url)))
+             ;; :debug true
+             ;; :debug-body true
+             :accept :json}
+            ;; tbeg must be captured before the monadic function composition
+            init-state {:tbeg (system-time) :acc []}]
+        #_(clj-http.client/get url prms)
+        ((comp
+          first
+          (domonad
+           #_identity-m
+           state-m
+           [data (m-result (clj-http.client/get url prms))
+            _ (add-calc-time "data" data)]
+           data))
+         init-state)))
+    (fn [url] (infof "Requesting data from %s" url) url))
+   url))
 
 (defn-fun-id get-json "Retries `get-json-single` 3 times" [url]
   (try
