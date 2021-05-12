@@ -377,7 +377,29 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
       (fn [s] (json/read-str s :key-fn clojure.core/keyword))
       :body
       (fn [url]
-        (let [;; tbeg must be captured before the function composition
+        (clj-http.client/get
+         url
+         (conj
+          (let [;; 1.5 minutes
+                timeout (int (* 3/2 60 1000))]
+            {;; See
+             ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
+             ;; SO_TIMEOUT - timeout for waiting for data or, put
+             ;; differently, a maximum period inactivity between two
+             ;; consecutive data packets
+             :socket-timeout timeout
+
+             ;; timeout used when requesting a connection from the
+             ;; connection manager
+             :connection-timeout timeout
+
+             ;; timeout until a connection is established
+             ;; :connect-timeout timeout
+             })
+          {:accept :json}
+          #_{:debug true}
+          #_{:debug-body true}))
+        #_(let [;; tbeg must be captured before the function composition
               init-state {:tbeg (system-time) :acc []}]
           ((comp
             first
