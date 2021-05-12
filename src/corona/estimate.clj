@@ -20,83 +20,86 @@
   18)
 
 (defn estim-for-country-fn [calculate-fun kw-estim kw-shift-maps]
-  (fn [[_ stats-country-unsorted]]
-    (let [stats-country (sort-by :t stats-country-unsorted)]
-      #_(def stats-country stats-country)
-      (map
-       (fn [estim stats-hm] (conj stats-hm {kw-estim estim}))
-       (apply map calculate-fun
-              (map (comp
-                    (fn [{:keys [vs shift]}] (into (drop-last shift vs)
-                                                  (repeat shift 0)))
-                    (fn [{:keys [kw shift]}] {:vs (map (fn [stats] (get-in stats kw))
-                                                      stats-country)
-                                             :shift shift}))
-                   kw-shift-maps))
-       stats-country))))
+  (fn [[ccode hms-stats-country-unsorted]]
+    [ccode
+     (let [stats-country (sort-by :t hms-stats-country-unsorted)]
+       #_(def stats-country stats-country)
+       (map
+        (fn [estim stats-hm] (conj stats-hm {kw-estim estim}))
+        (apply map calculate-fun
+               (map (comp
+                     (fn [{:keys [vs shift]}] (into (drop-last shift vs)
+                                                   (repeat shift 0)))
+                     (fn [{:keys [kw shift]}] {:vs (map (fn [stats] (get-in stats kw))
+                                                       stats-country)
+                                              :shift shift}))
+                    kw-shift-maps))
+        stats-country))]))
 
 (defn estimate [pic-data]
+  #_(def pic-data pic-data)
   ((comp
-    ;; unsorted [estim] 75.1 MiB
-    ;; sorted   [estim] 144.0 MiB
+    ;; "134.0 MiB"
+    #_(fn [v] (def sorted-flat-hms v) v)
     #_(partial sort-by (juxt :ccode :t))
+    ;; "52.8 MiB"
+    #_(fn [v] (def flat-hms v) v)
     flatten
+    ;; "52.8 MiB"
+    #_(fn [v] (def hms v) v)
+    (partial map (fn [[ccode hms]] hms))
+    ;; "52.8 MiB"
+    #_(fn [v] (def ec1e5 v) v)
     (partial map
              (fn [[ccode hms]]
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
                                               com/calc-closed)
-                                        :ec1e5 [{:kw [:er] :shift 0}
-                                                {:kw [:d] :shift shift-deaths}])
+                                        :ec1e5 [{:kw (com/tmp-lense :er) :shift 0}
+                                                {:kw (com/tmp-lense :d)  :shift shift-deaths}])
                   [ccode hms]))))
-    (partial group-by :ccode)
-
-    flatten
+    ;; "52.9 MiB"
+    #_(fn [v] (def ec v) v)
     (partial map (estim-for-country-fn com/calc-closed
-                                       :ec [{:kw [:er] :shift 0}
-                                            {:kw [:d]  :shift shift-deaths}]))
-    (partial group-by :ccode)
-
-    flatten
+                                       :ec [{:kw (com/tmp-lense :er) :shift 0}
+                                            {:kw (com/tmp-lense :d)  :shift shift-deaths}]))
+    ;; "52.8 MiB"
+    #_(fn [v] (def ea1e5 v) v)
     (partial map
              (fn [[ccode hms]]
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
                                               com/calc-active)
-                                        :ea1e5 [{:kw [:n]  :shift 0}
-                                                {:kw [:er] :shift 0}
-                                                {:kw [:d]  :shift shift-deaths}])
+                                        :ea1e5 [{:kw (com/tmp-lense :n)  :shift 0}
+                                                {:kw (com/tmp-lense :er) :shift 0}
+                                                {:kw (com/tmp-lense :d)  :shift shift-deaths}])
                   [ccode hms]))))
-    (partial group-by :ccode)
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    flatten
+    ;; "52.7 MiB"
+    #_(fn [v] (def ea v) v)
     (partial map (estim-for-country-fn com/calc-active
-                                       :ea [{:kw [:n]  :shift 0}
-                                            {:kw [:er] :shift 0}
-                                            {:kw [:d]  :shift shift-deaths}]))
-    (partial group-by :ccode)
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    flatten
+                                       :ea [{:kw (com/tmp-lense :n)  :shift 0}
+                                            {:kw (com/tmp-lense :er) :shift 0}
+                                            {:kw (com/tmp-lense :d)  :shift shift-deaths}]))
+    ;; "52.6 MiB"
+    #_(fn [v] (def er1e5 v) v)
     (partial map
              (fn [[ccode hms]]
                (let [population ((comp :p first) hms)]
                  ((estim-for-country-fn (comp (fn [place] (com/per-1e5 place population))
                                               com/calc-recov)
-                                        :er1e5 [{:kw [:n] :shift shift-recovery}
-                                                {:kw [:d] :shift shift-deaths}])
+                                        :er1e5 [{:kw (com/tmp-lense :n) :shift shift-recovery}
+                                                {:kw (com/tmp-lense :d) :shift shift-deaths}])
                   [ccode hms]))))
-    (partial group-by :ccode)
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;
-    flatten
+    ;; "52.6 MiB"
+    #_(fn [v] (def er v) v)
     (partial map (estim-for-country-fn com/calc-recov
                                        :er [{:kw [:n] :shift shift-recovery}
                                             {:kw [:d] :shift shift-deaths}]))
+    ;; "51.2 MiB"
+    #_(fn [v] (def gc v) v)
     (partial group-by :ccode)
-
-    #_(fn [v] (def m1 v) v)
-    #_(partial sort-by (juxt :ccode :t))
-    #_(fn [v] (def m0 v) v))
+    ;; "56.3 MiB"
+    )
    pic-data))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.estimate)
