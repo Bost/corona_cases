@@ -278,14 +278,15 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                          :estim estim)]
           ((comp
             m-result doall
-            (partial pmap ;; use pmap in PROD and map in development
+            (partial map ;; pmap eats too much heap memory
                      (fn [ccode]
-                       [
-                        (cache/cache! (fn [] (msgi/message ccode prm)) (msgi/message-kw ccode))
+                       [(cache/cache! (fn [] (msgi/message ccode prm))
+                                      (msgi/message-kw ccode))
                         (debugf "msgi/message ccode %s done" ccode)
-                        (cache/cache! (fn [] (plot/message ccode estim cnt-reports)) (plot/message-kw ccode))
-                        (debugf "plot/message ccode %s done" ccode)
-                        ])))
+                        (cache/cache! (fn [] (plot/message ccode
+                                                          estim cnt-reports))
+                                      (plot/message-kw ccode))
+                        (debugf "plot/message ccode %s done" ccode)])))
            ;; here also "ZZ" worldwide messages
            ccc/all-country-codes))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
