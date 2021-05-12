@@ -27,11 +27,11 @@
   (let [lensed-case-kw (com/tmp-lense case-kw)]
   ((comp
     #_(partial sort-by (juxt :ccode :t))
-    #_(partial take-last 1)
     flatten
     (partial map
              (fn [[ccode hms]]
                ((comp
+                 #_(partial take-last 2)
                  (fn [[fst rst]]
                    (conj rst
                          [{:ccode ccode

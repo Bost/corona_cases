@@ -19,30 +19,6 @@
     (.setTimeZone sdf (TimeZone/getDefault))
     sdf))
 
-(defn date [rd] (.parse date-format rd))
-
-(defn raw-dates [json]
-  ((comp
-    (partial map :date)
-    (fn [m] (get-in m [:ITA :data])))
-   json))
-
-(defn dates [raw-dates]
-  ((comp
-    (partial map date))
-   raw-dates))
-
-(defn convert
-  "Convert to month/day/year:
-  (convert \"2021-01-20\") -> :1/20/21
-  (convert \"2021-02-04\") -> :2/4/21"
-  [s]
-  ((comp
-    keyword
-    com/fmt-vaccination-date
-    (fn [s] (.parse date-format s)))
-   s))
-
 (defn vaccination [json ccode]
   ((comp
     (partial reduce merge)
@@ -50,7 +26,14 @@
                    ((comp
                      (partial apply hash-map)
                      (juxt :date :total_vaccinations)
-                     (fn [r] (update-in r [:date] convert))
+                     (fn [r] (update-in r [:date]
+                                       ;; Convert to month/day/year:
+                                       ;; "2021-01-20" -> :1/20/21
+                                       ;; "2021-02-04" -> :2/4/21
+                                       (comp
+                                        keyword
+                                        com/fmt-vaccination-date
+                                        (fn [s] (.parse date-format s)))))
                      (fn [r] (update-in r [:total_vaccinations]
                                        (fn [v] (if v (int v) 0))))
                      (partial select-keys m))
@@ -63,8 +46,8 @@
                           ccode)]
         (get ccode-map :data)
         ((comp
-          (partial map (partial hash-map :date))
-          raw-dates)
+          (partial map (fn [m] (select-keys m [:date])))
+          (fn [m] (get-in m [:ITA :data])))
          m))))
    json))
 

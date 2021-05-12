@@ -325,14 +325,15 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                    {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
                    (select-keys
                     @cache/cache [:plot :msg :list :threshold])))))
+
         garbage-coll
         (m-result
          (do
            (debugf "(System/gc)")
            (System/gc) ;; also (.gc (Runtime/getRuntime))
            (Thread/sleep 100)))
-        _ (com/add-calc-time "garbage-coll" garbage-coll)]
-
+        _ (com/add-calc-time "garbage-coll" garbage-coll)
+        ]
        calc-result))
      init-state)))
 
