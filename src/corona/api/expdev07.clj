@@ -40,16 +40,11 @@
           xs))))))
 
 (defn-fun-id json-data "Iterate over the list of com/json-apis-v1" []
-  (let [ks [:v1 :json]]
-    (when-not (get-in @cache/cache ks)
-      (debugf "cache-miss %s;" ks)
-      #_(clojure.stacktrace/print-stack-trace (Exception.)))
-    (cache/from-cache! (fn []
-                         (loop [[url & urls] com/json-apis-v1]
-                           (when url
-                             (if-let [res (com/get-json url)]
-                               res
-                               (recur urls))))) ks)))
+  (loop [[url & urls] com/json-apis-v1]
+    (when url
+      (if-let [res (com/get-json url)]
+        res
+        (recur urls)))))
 
 (def xform-raw-dates
   (comp
@@ -114,11 +109,11 @@
 
 (defn date [rd] (.parse date-format (keyname rd)))
 
-(defn dates [json]
+(defn dates [raw-dates-v1]
   ((comp
     (fn [val] (cache/from-cache! (fn [] val) [:v1 :dates]))
     (partial map date))
-   (raw-dates json)))
+   raw-dates-v1))
 
 (defn population-data [raw-dates-v1]
   ((comp
@@ -167,11 +162,10 @@
     keys)
    json))
 
-(defn data-with-pop [json]
-  (let [raw-dates-v1 (raw-dates json)]
-    (conj (corona-data raw-dates-v1 json)
-          (vac/vaccination-data {:raw-dates-v1 raw-dates-v1
-                                 :json-owid (vac/json-data)})
-          (population-data raw-dates-v1))))
+(defn data-with-pop [raw-dates-v1 json-v1 json-owid]
+  (conj (corona-data raw-dates-v1 json-v1)
+        (vac/vaccination-data {:raw-dates-v1 raw-dates-v1
+                               :json-owid json-owid})
+        (population-data raw-dates-v1)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.expdev07)

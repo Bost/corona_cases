@@ -162,7 +162,7 @@
 (defn-fun-id calc-cache!
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
-  [aggregation-hash json]
+  [aggregation-hash json-v1 json-owid]
   (let [;; tbeg must be captured before the function composition
         init-state {:tbeg (com/system-time) :acc []}]
     ((comp
@@ -170,9 +170,10 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
       (domonad
        state-m
        [
-        dates       ((comp m-result data/dates) json)
-        last-date   ((comp m-result last (partial sort-by :t)) dates)
-        cnt-reports ((comp m-result count) dates)
+        raw-dates-v1 ((comp m-result data/raw-dates) json-v1)
+        dates        ((comp m-result data/dates) raw-dates-v1)
+        last-date    ((comp m-result last (partial sort-by :t)) dates)
+        cnt-reports  ((comp m-result count) dates)
 
         has-estim-vals? (m-result true)
         ;; some-recove?
@@ -194,7 +195,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                      #_(fn [v] (def pd v) v)
                      (partial v1/pic-data cnt-reports)
                      data/data-with-pop)
-               json)
+               raw-dates-v1 json-v1 json-owid)
         _ (com/add-calc-time "estim" estim)
 
         ;; WTF!?! Size of estim and stats-countries is too big. See filtering of
@@ -313,21 +314,6 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
       (swap! cache/cache update-in hash-kws (fn [_] new-hash)))
     hashes-changed))
 
-(defn-fun-id clear-cache!
-  "Atomic dissoc :json from under :v1 and :owid
-
-  For non-atomic dissoc:
-    (swap! cache/cache update-in [:v1]   dissoc :json)
-    (swap! cache/cache update-in [:owid] dissoc :json)"
-  []
-  ((comp
-    (partial reset! cache/cache)
-    (partial merge @cache/cache)
-    (partial apply merge)
-    (partial map (fn [[k v]] {k (dissoc v :json)}))
-    (partial select-keys @cache/cache))
-   [:v1 :owid]))
-
 (defn-fun-id reset-cache! "" []
   ;; full cache cleanup is not really necessary
   #_(swap! cache/cache (fn [_] {}))
@@ -340,9 +326,19 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
           ((comp
             first
             (domonad state-m
-                     [calc-result (m-result
-                                   (calc-cache! (cache/aggregation-hash)
-                                                (data/json-data)))
+                     [json-v1
+                      (m-result (data/json-data))
+                      _ (com/add-calc-time "json-v1" json-v1)
+
+                      json-owid
+                      (m-result (vac/json-data))
+                      _ (com/add-calc-time "json-owid" json-owid)
+
+                      calc-result
+                      (m-result
+                       (calc-cache! (cache/aggregation-hash)
+                                    json-v1
+                                    json-owid))
                       _ (com/add-calc-time "calc-cache!" calc-result)]
                      calc-result))
            init-state))))
@@ -352,7 +348,6 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
    [{:json-fn data/json-data :cache-storage [:v1]}
     {:json-fn vac/json-data  :cache-storage [:owid]}])
 
-  (clear-cache!)
   (debugf "(keys @cache/cache) %s" (keys @cache/cache))
   (debugf "Responses %s" (select-keys @cache/cache [:v1 :owid]))
   (debugf "Cache size %s" (com/measure @cache/cache)))
