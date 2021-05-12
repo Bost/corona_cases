@@ -233,11 +233,16 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
              (warnf "Some stuff may not be calculated. Too few %s: %s"
                     'cnt-reports cnt-reports)))
 
+        rankings
+        ((comp m-result)
+         (msgi/all-rankings lense-fun stats-countries))
+        _ (com/add-calc-time "rankings" rankings)
+
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
         (let [prm (assoc prm-base
                          :dates dates
-                         :rankings (msgi/all-rankings lense-fun stats-countries)
+                         :rankings rankings
                          :estim estim)]
           ((comp
             m-result doall
