@@ -23,14 +23,12 @@
 
 (defn raw-dates [json]
   ((comp
-    #_(partial take-last 4)
     (partial map :date)
     (fn [m] (get-in m [:ITA :data])))
    json))
 
 (defn dates [raw-dates]
   ((comp
-    #_(partial take-last 4)
     (partial map date))
    raw-dates))
 
@@ -39,7 +37,6 @@
   (convert \"2021-01-20\") -> :1/20/21
   (convert \"2021-02-04\") -> :2/4/21"
   [s]
-  #_(com/fmt-vaccination-date (.parse date-format s))
   ((comp
     keyword
     com/fmt-vaccination-date
@@ -57,18 +54,11 @@
                      (fn [r] (update-in r [:total_vaccinations] (fn [v] (if v (int v) 0))))
                      (partial select-keys m))
                     [:date :total_vaccinations])))
-    #_(partial take-last 4)
     (fn [m]
       (let [kw-ccode (keyword (ccc/country-code-3-letter ccode))]
         (if-let [ccode-map (get m kw-ccode)]
           (get ccode-map :data)
-          (let [default
-                #_{kw-ccode {:data (mapv (fn [rd] {:date rd}) raw-dates)}}
-                (map (fn [rd] {:date rd}) (raw-dates json))]
-            #_(errorf "ccode %s not found in json; using %s"
-                      ccode
-                      default)
-            default)))))
+          (map (fn [rd] {:date rd}) (raw-dates json))))))
    json))
 
 (defn vaccination-data [{:keys [raw-dates-v1 json-owid]}]
@@ -85,11 +75,7 @@
                (comp
                 (partial hash-map :history)
                 (partial merge (zipmap raw-dates-v1 (cycle [0])))
-                (partial vaccination json-owid)
-                #_(partial zipmap raw-dates-v1)
-                #_cycle
-                #_(fn [_] [245 2350 9822 18554 21775 22411 27371 32293 43317
-                          49488 57226 59930 60302 71982 72060]))))))
+                (partial vaccination json-owid))))))
    ccc/relevant-country-codes))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.owid)
