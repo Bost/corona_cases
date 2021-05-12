@@ -189,6 +189,14 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                                :cnt-reports cnt-reports})
         _ (com/add-calc-time "prm-base" prm-base)
 
+        garbage-coll
+        (m-result
+         (do
+           (debugf "(System/gc)")
+           (System/gc) ;; also (.gc (Runtime/getRuntime))
+           (Thread/sleep 100)))
+        _ (com/add-calc-time "garbage-coll" garbage-coll)
+
         estim ((comp m-result
                      #_(fn [v] (def es v) v)
                      est/estimate
@@ -212,6 +220,14 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         estim)
         _ (com/add-calc-time "stats-countries" stats-countries)
 
+        garbage-coll
+        (m-result
+         (do
+           (debugf "(System/gc)")
+           (System/gc) ;; also (.gc (Runtime/getRuntime))
+           (Thread/sleep 100)))
+        _ (com/add-calc-time "garbage-coll" garbage-coll)
+
         ;; TODO always use estimated vals since there is at
         ;; least 1 country not reporting recovered cases
         lense-fun (m-result com/estim-fun)
@@ -233,10 +249,26 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
              (warnf "Some stuff may not be calculated. Too few %s: %s"
                     'cnt-reports cnt-reports)))
 
+        garbage-coll
+        (m-result
+         (do
+           (debugf "(System/gc)")
+           (System/gc) ;; also (.gc (Runtime/getRuntime))
+           (Thread/sleep 100)))
+        _ (com/add-calc-time "garbage-coll" garbage-coll)
+
         rankings
         ((comp m-result)
          (msgi/all-rankings lense-fun stats-countries))
         _ (com/add-calc-time "rankings" rankings)
+
+        garbage-coll
+        (m-result
+         (do
+           (debugf "(System/gc)")
+           (System/gc) ;; also (.gc (Runtime/getRuntime))
+           (Thread/sleep 100)))
+        _ (com/add-calc-time "garbage-coll" garbage-coll)
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
@@ -258,15 +290,13 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
            ccc/all-country-codes))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
 
-        cleanups0
+        garbage-coll
         (m-result
          (do
-           (com/heap-info)
            (debugf "(System/gc)")
            (System/gc) ;; also (.gc (Runtime/getRuntime))
-           (Thread/sleep 100)
-           (com/heap-info)))
-        _ (com/add-calc-time "cleanups0" cleanups0)
+           (Thread/sleep 100)))
+        _ (com/add-calc-time "garbage-coll" garbage-coll)
 
         all-aggregations
         ((comp
@@ -293,15 +323,13 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                    {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
                    (select-keys
                     @cache/cache [:plot :msg :list :threshold])))))
-        cleanups1
+        garbage-coll
         (m-result
          (do
-           (com/heap-info)
            (debugf "(System/gc)")
            (System/gc) ;; also (.gc (Runtime/getRuntime))
-           (Thread/sleep 100)
-           (com/heap-info)))
-        _ (com/add-calc-time "cleanups1" cleanups1)]
+           (Thread/sleep 100)))
+        _ (com/add-calc-time "garbage-coll" garbage-coll)]
 
        calc-result))
      init-state)))

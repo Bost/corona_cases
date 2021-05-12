@@ -596,10 +596,17 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
     (let [accumulator (get state :acc)
           time-begin (get state :tbeg)
           calc-time (- (system-time) (+ (apply + accumulator) time-begin))]
-      (timbre/debugf "[%s] %s obtained in %s ms" fun-id (if (nil? plain-val)
-                                                          "nil-value"
-                                                          (measure plain-val))
-                     calc-time)
+      (timbre/debugf
+       "[%s] %s obtained in %s ms. Free heap %s"
+       fun-id (if (nil? plain-val) "nil-value" (measure plain-val))
+       calc-time
+       ;; amount of free memory within the heap in bytes. This size will
+       ;; increase after garbage collection and decrease as new objects are
+       ;; created.
+       ((comp
+         format-bytes
+         (fn [runtime] (.freeMemory runtime)))
+        (Runtime/getRuntime)))
       ((domonad state-m [mvv (m-result plain-val)] mvv)
        (update-in state [:acc]
                   (fn [_] (vec (concat accumulator (vector calc-time)))))))))
