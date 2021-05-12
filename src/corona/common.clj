@@ -321,11 +321,6 @@
   ([s with padding-len]
    (cstr/replace (format (str "%" padding-len "s") s) " " with)))
 
-#_
-(defn left-pad [s padding-len]
-  (str (cstr/join (repeat (- padding-len (count s)) " "))
-       s))
-
 (defn right-pad
   ([s padding-len] (right-pad s " " padding-len))
   ([s with padding-len]
@@ -540,9 +535,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
             \"4/26/20\"))
   E.g.:
   2021-01-15 -> 1/15/20"
-  (fmt-date-fun
-   "M/d/yy"
-   #_"dd MMM yy"))
+  (fmt-date-fun "M/d/yy"))
 
 (def fmt-date
   "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
@@ -606,14 +599,6 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
       ;; after garbage collection and decrease as new objects are created.
       :free (.freeMemory runtime)})))
 
-#_(comment
-  (def obj "clojure.core.async.impl.channels.ManyToManyChannel@490f97e1")
-  (def obj "morse.handlers$handlers$fn__65503@5fbc0011")
-  (def obj "corona.telegram$reset_cache_BANG_@754f7409"))
-
-;; #object[corona.api.expdev07$json_data 0x75d505c3 "corona.api.expdev07$json_data@75d505c3"]
-;; #object[corona.api.vaccination$json_data 0x5a8cc329 "corona.api.vaccination$json_data@5a8cc329"]
-
 (defn log-obj [obj]
   (let [so (str obj)
         separator (cond
@@ -624,7 +609,6 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
                     ;; (.contains so "handlers$") "handlers$"
                     ;; (.contains so "@") "@"
                     :else so)]
-    #_(debugf "so: %s" so)
     (subs so (.indexOf so separator))))
 
 (defn sum [kws hms]
