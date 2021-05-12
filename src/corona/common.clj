@@ -132,6 +132,58 @@
 (def ^:const ^String repl-user      (env/env :repl-user))
 (def ^:const ^String repl-password  (env/env :repl-password))
 
+(defn system-time [] (System/currentTimeMillis))
+
+(defn measure
+  "require [corona.common :as com]"
+  [object & prm]
+  (apply (partial meter/measure object) prm))
+
+(defn format-bytes
+  "Nicely format `num-bytes` as kilobytes/megabytes/etc.
+    (format-bytes 1024) ; -> 2.0 KB
+  See
+  https://github.com/metabase/metabase
+  metabase.util/format-bytes "
+  [num-bytes]
+  (loop [n num-bytes [suffix & more] ["B" "kB" "MB" "GB"]]
+    (if (and (seq more)
+             (>= n 1024))
+      (recur (/ n 1024) more)
+      (format "%.1f %s" (float n) suffix))))
+
+(defn add-calc-time
+  "Returns a state-monad function that assumes the state to be a map"
+  [fun-id plain-val]
+  (fn [state]
+    #_(def fun-id fun-id)
+    #_(def plain-val plain-val)
+    (let [accumulator (get state :acc)
+          time-begin (get state :tbeg)
+          calc-time (- (system-time) (+ (apply + accumulator) time-begin))]
+      (timbre/debugf
+       "[%s] %s obtained in %s ms. Available heap %s"
+       fun-id (if (nil? plain-val) "nil-value" (measure plain-val))
+       calc-time
+       ((comp
+         #_(fn [v] (debugf "%s" v)) ;; debugf is a macro
+         #_(partial fmap format-bytes)
+         format-bytes
+         (fn [{:keys [size max free]}] (+ (- max size) free)))
+        (let [runtime (Runtime/getRuntime)]
+          {:size (.totalMemory runtime) ;; current size of heap in bytes
+
+           ;; max size of heap in bytes. The heap cannot grow beyond this size. Any
+           ;; attempt will result in an OutOfMemoryException.
+           :max (.maxMemory runtime)
+
+           ;; amount of free memory within the heap in bytes. This size will increase
+           ;; after garbage collection and decrease as new objects are created.
+           :free (.freeMemory runtime)})))
+      ((domonad state-m [mvv (m-result plain-val)] mvv)
+       (update-in state [:acc]
+                  (fn [_] (vec (concat accumulator (vector calc-time)))))))))
+
 (defn system-exit
   "!!! It looks line it can't be defined by defn-fun-id !!!"
   [exit-status]
@@ -288,11 +340,6 @@
     (-> (format "%x" (BigInteger. 1 raw))
         (subs 0 hash-size))))
 
-(defn measure
-  "require [corona.common :as com]"
-  [object & prm]
-  (apply (partial meter/measure object) prm))
-
 (defn my-find-var
   "find-var throws exception "
   [sym]
@@ -335,32 +382,40 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
       (fn [s] (json/read-str s :key-fn clojure.core/keyword))
       :body
       (fn [url]
-        (with-monad identity-m
-          (domonad
-           ;; start the time measurement
-           [_ (m-result nil)]
-           (clj-http.client/get
-            url
-            (conj
-             (let [;; 1.5 minutes
-                   timeout (int (* 3/2 60 1000))]
-               {;; See
-                ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
-                ;; SO_TIMEOUT - timeout for waiting for data or, put
-                ;; differently, a maximum period inactivity between two
-                ;; consecutive data packets
-                :socket-timeout timeout
+        (let [;; tbeg must be captured before the function composition
+              init-state {:tbeg (system-time) :acc []}]
+          ((comp
+            first
+            (domonad
+             #_identity-m
+             state-m
+             [data
+              (m-result
+               (clj-http.client/get
+                url
+                (conj
+                 (let [;; 1.5 minutes
+                       timeout (int (* 3/2 60 1000))]
+                   {;; See
+                    ;; https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/config/RequestConfig.html
+                    ;; SO_TIMEOUT - timeout for waiting for data or, put
+                    ;; differently, a maximum period inactivity between two
+                    ;; consecutive data packets
+                    :socket-timeout timeout
 
-                ;; timeout used when requesting a connection from the
-                ;; connection manager
-                :connection-timeout timeout
+                    ;; timeout used when requesting a connection from the
+                    ;; connection manager
+                    :connection-timeout timeout
 
-                ;; timeout until a connection is established
-                ;; :connect-timeout timeout
-                })
-             {:accept :json}
-             #_{:debug true}
-             #_{:debug-body true})))))
+                    ;; timeout until a connection is established
+                    ;; :connect-timeout timeout
+                    })
+                 {:accept :json}
+                 #_{:debug true}
+                 #_{:debug-body true})))
+              _ (add-calc-time "data" data)]
+             data))
+           init-state)))
       (fn [url] (infof msg) url))
      url)))
 
@@ -529,19 +584,6 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 (def ^:const ^String bot-name-in-markdown
   (cstr/replace bot-name #"_" "\\\\_"))
 
-(defn format-bytes
-  "Nicely format `num-bytes` as kilobytes/megabytes/etc.
-    (format-bytes 1024) ; -> 2.0 KB
-  See
-  https://github.com/metabase/metabase
-  metabase.util/format-bytes "
-  [num-bytes]
-  (loop [n num-bytes [suffix & more] ["B" "kB" "MB" "GB"]]
-    (if (and (seq more)
-             (>= n 1024))
-      (recur (/ n 1024) more)
-      (format "%.1f %s" (float n) suffix))))
-
 (defn fmap
   "See clojure.algo.generic.functor/fmap"
   [f m]
@@ -584,32 +626,6 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
                     :else so)]
     #_(debugf "so: %s" so)
     (subs so (.indexOf so separator))))
-
-(defn system-time [] (System/currentTimeMillis))
-
-(defn add-calc-time
-  "Returns a state-monad function that assumes the state to be a map"
-  [fun-id plain-val]
-  (fn [state]
-    (def fun-id fun-id)
-    (def plain-val plain-val)
-    (let [accumulator (get state :acc)
-          time-begin (get state :tbeg)
-          calc-time (- (system-time) (+ (apply + accumulator) time-begin))]
-      (timbre/debugf
-       "[%s] %s obtained in %s ms. Free heap %s"
-       fun-id (if (nil? plain-val) "nil-value" (measure plain-val))
-       calc-time
-       ;; amount of free memory within the heap in bytes. This size will
-       ;; increase after garbage collection and decrease as new objects are
-       ;; created.
-       ((comp
-         format-bytes
-         (fn [runtime] (.freeMemory runtime)))
-        (Runtime/getRuntime)))
-      ((domonad state-m [mvv (m-result plain-val)] mvv)
-       (update-in state [:acc]
-                  (fn [_] (vec (concat accumulator (vector calc-time)))))))))
 
 (defn sum [kws hms]
   ((comp

@@ -278,7 +278,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                          :estim estim)]
           ((comp
             m-result doall
-            (partial map ;; pmap eats too much heap memory
+            ;; TODO use pmap to speed up things
+            (partial map ;; however pmap eats too much heap memory
                      (fn [ccode]
                        [(cache/cache! (fn [] (msgi/message ccode prm))
                                       (msgi/message-kw ccode))
@@ -335,50 +336,52 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
        calc-result))
      init-state)))
 
-(defn-fun-id json-changed! "" [{:keys [json-fn cache-storage] :as m}]
+(defn-fun-id json-changed! "" [{:keys [json-fn cache-storage]}]
   ;; TODO spec: cache-storage must be vector; json-fns must be function
-  (let [hash-kws (conj cache-storage :json-hash)
-         ;; (json-fn) also stores the json-data in the cache
+  (let [json (json-fn)
+        hash-kws (conj cache-storage :json-hash)
         old-hash (get-in @cache/cache hash-kws)
-        new-hash (com/hash-fn (json-fn))
+        new-hash (com/hash-fn json)
         hashes-changed (not= old-hash new-hash)]
     (debugf "%s; old hash %s; new hash %s; hashes-changed: %s"
             cache-storage old-hash new-hash hashes-changed)
     (when hashes-changed
-      (swap! cache/cache update-in hash-kws (fn [_] new-hash)))
-    hashes-changed))
+      (swap! cache/cache update-in hash-kws (fn [_] new-hash))
+      #_(do
+          (debugf "(System/gc)")
+          (System/gc) ;; also (.gc (Runtime/getRuntime))
+          (Thread/sleep 100)
+          #_(com/heap-info))
+      json)))
 
 (defn-fun-id reset-cache! "" []
   ;; full cache cleanup is not really necessary
   #_(swap! cache/cache (fn [_] {}))
   ((comp
-    (fn [any-json-changed]
-      (debugf "any-json-changed %s" any-json-changed)
-      (when any-json-changed
-        (let [;; tbeg must be captured before the function composition
-              init-state {:tbeg (com/system-time) :acc []}]
-          ((comp
-            first
-            (domonad state-m
-                     [json-v1
-                      (m-result (data/json-data))
-                      _ (com/add-calc-time "json-v1" json-v1)
-
-                      json-owid
-                      (m-result (vac/json-data))
-                      _ (com/add-calc-time "json-owid" json-owid)
-
-                      calc-result
-                      (m-result
-                       (calc-cache! (cache/aggregation-hash)
-                                    json-v1
-                                    json-owid))
-                      _ (com/add-calc-time "calc-cache!" calc-result)]
-                     calc-result))
-           init-state))))
-    boolean
-    (partial some true?)
-    (partial pmap json-changed!))
+    (partial
+     apply
+     (fn [json-v1 json-owid]
+       (let [any-json-changed (some boolean [json-v1 json-owid])]
+         (debugf "any-json-changed %s" any-json-changed)
+         (when any-json-changed
+           #_(calc-cache! (cache/aggregation-hash)
+                        json-v1
+                        json-owid)
+           (let [;; tbeg must be captured before the function composition
+                 init-state {:tbeg (com/system-time) :acc []}]
+             ((comp
+               first
+               (domonad state-m
+                        [calc-result
+                         (m-result
+                          (calc-cache! (cache/aggregation-hash)
+                                       json-v1
+                                       json-owid))
+                         _ (com/add-calc-time "calc-cache!" calc-result)]
+                        calc-result))
+              init-state))))))
+    ;; TODO use pmap to speed up things
+    (partial map json-changed!))
    [{:json-fn data/json-data :cache-storage [:v1]}
     {:json-fn vac/json-data  :cache-storage [:owid]}])
 
