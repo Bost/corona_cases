@@ -188,15 +188,13 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                                :cnt-reports cnt-reports})
         _ (com/add-calc-time "prm-base" prm-base)
 
-        pic-data ((comp m-result
-                        #_(fn [v] (def pd v) v)
-                        v1/pic-data)
-                  json)
-        _ (com/add-calc-time "pic-data" pic-data)
-
         estim ((comp m-result
                      #_(fn [v] (def es v) v)
-                     est/estimate) pic-data)
+                     est/estimate
+                     #_(fn [v] (def pd v) v)
+                     (partial v1/pic-data cnt-reports)
+                     data/data-with-pop)
+               json)
         _ (com/add-calc-time "estim" estim)
 
         ;; WTF!?! Size of estim and stats-countries is too big. See filtering of
