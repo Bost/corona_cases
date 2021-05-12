@@ -51,17 +51,24 @@
                      (partial apply hash-map)
                      (juxt :date :total_vaccinations)
                      (fn [r] (update-in r [:date] convert))
-                     (fn [r] (update-in r [:total_vaccinations] (fn [v] (if v (int v) 0))))
+                     (fn [r] (update-in r [:total_vaccinations]
+                                       (fn [v] (if v (int v) 0))))
                      (partial select-keys m))
                     [:date :total_vaccinations])))
     (fn [m]
-      (let [kw-ccode (keyword (ccc/country-code-3-letter ccode))]
-        (if-let [ccode-map (get m kw-ccode)]
-          (get ccode-map :data)
-          (map (fn [rd] {:date rd}) (raw-dates json))))))
+      (if-let [ccode-map ((comp
+                           (partial get m)
+                           keyword
+                           ccc/country-code-3-letter)
+                          ccode)]
+        (get ccode-map :data)
+        ((comp
+          (partial map (partial hash-map :date))
+          raw-dates)
+         m))))
    json))
 
-(defn vaccination-data [{:keys [raw-dates-v1 json-owid]}]
+(defn vaccination-data [raw-dates-v1 json-owid]
   ((comp
     (partial hash-map :vaccinated)
     (partial map

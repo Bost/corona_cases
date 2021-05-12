@@ -164,8 +164,7 @@
 
 (defn data-with-pop [raw-dates-v1 json-v1 json-owid]
   (conj (corona-data raw-dates-v1 json-v1)
-        (vac/vaccination-data {:raw-dates-v1 raw-dates-v1
-                               :json-owid json-owid})
+        (vac/vaccination-data raw-dates-v1 json-owid)
         (population-data raw-dates-v1)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.expdev07)
