@@ -76,6 +76,7 @@
 (def users "users")
 (def promote "promote")
 (def getMockData "getMockData")
+(def getLogs "getLogs")
 
 (defn validate-args
   "Validate command line arguments. Either return a map indicating the program
@@ -93,7 +94,9 @@
       ;; custom validation on arguments
       (= 1 (count arguments))
       (cond
-        (#{restart deploy deleteWebhook setWebhook users promote getMockData} (first arguments))
+        (#{restart deploy deleteWebhook setWebhook users promote getMockData
+           getLogs}
+         (first arguments))
         {:action (first arguments) :options options}
 
         :else
@@ -236,6 +239,35 @@
 
         promote
         (promote! "hokuspokus-bot" options)
+
+        #_(str "
+         # Search in logs:
+         rg --search-zip SEARCH_TERM ./log/
+         gzip -cd ./log/* | grep SEARCH_TERM
+         gzip --to-stdout --decompress ./log/* | grep SEARCH_TERM
+
+         heroku logs --num 1500 --app $APP # last 1500 lines
+         heroku logs --tail --app $APP
+         ")
+        getLogs
+        (let [log-dir (str "log/" heroku-env)
+              pt-token (sh-heroku heroku-app "config:get" "PAPERTRAIL_API_TOKEN")
+              pt-header (format "X-Papertrail-Token: %s" pt-token)]
+
+          (sh "mkdir" "-p" log-dir)
+
+          (doseq [hour-ago '(0 1)]
+            ;; It takes approximately 6-7 hours for logs to be available in the archive.
+            ;; https://help.papertrailapp.com/kb/how-it-works/permanent-log-archives
+
+            (let [hour-ago-delayed (+ hour-ago 7)
+                  date (str hour-ago-delayed " hours ago")
+                  date-ago (sh "date" "-u" (str "--date=" date) "+%Y-%m-%d-%H")
+                  out-file (format "%s/%s-UTC.tsv.gz" log-dir date-ago)]
+              (sh
+               "curl" "--silent" "--no-include" "--output" out-file
+               "--location" "--header" pt-header
+               (str "https://papertrailapp.com/api/v1/archives/" date-ago "/download")))))
 
         getMockData
         (do
