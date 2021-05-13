@@ -381,8 +381,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                          _ (com/add-calc-time "calc-cache!" calc-result)]
                         calc-result))
               init-state))))))
-    ;; TODO use pmap to speed up things
-    (partial map json-changed!))
+    (partial pmap json-changed!))
    [{:json-fn vac/json-data  :cache-storage [:owid]}
     {:json-fn data/json-data :cache-storage [:v1]}])
 
