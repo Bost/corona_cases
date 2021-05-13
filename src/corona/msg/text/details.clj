@@ -76,7 +76,8 @@
      (map (fn [ccode]
             ((comp
               (partial apply utc/deep-merge)
-              (partial reduce into [])
+              ;; TODO have a look at lazy-cat
+              (partial reduce concat)
               (partial map (partial filter (fn [hm] (= (:ccode hm) ccode)))))
              stats-all-ranking-cases))
           ccc/relevant-country-codes)}))

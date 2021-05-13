@@ -249,6 +249,8 @@
          heroku logs --num 1500 --app $APP # last 1500 lines
          heroku logs --tail --app $APP
          ")
+        ;; TODO plot log entries on a timescale:
+        ;; parse the logfile, compute timestamp diffs
         getLogs
         (let [log-dir (str "log/" heroku-env)
               pt-token (sh-heroku heroku-app "config:get" "PAPERTRAIL_API_TOKEN")

@@ -278,8 +278,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                          :estim estim)]
           ((comp
             m-result doall
-            ;; TODO use pmap to speed up things
-            (partial map ;; however pmap eats too much heap memory
+            (partial map ;; pmap is faster however it eats too much memory
                      (fn [ccode]
                        [(cache/cache! (fn [] (msgi/message ccode prm))
                                       (msgi/message-kw ccode))
