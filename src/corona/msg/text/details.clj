@@ -19,7 +19,9 @@
 (defn fmt
   [{:keys
     [header cname-aliased country-cmds cnt-reports population vaccinated
-    new-confirmed footer notes details]}]
+     new-confirmed
+     new-confirmed-incidence
+     footer notes details]}]
   (msgc/format-linewise
    ;; extended header
    [["%s\n" [(msgc/format-linewise [["%s  " [header]]
@@ -98,9 +100,63 @@
   (let [fun-case-kw (lense-fun case-kw)]
     [(get-in hm-text fun-case-kw) (get-in hm fun-case-kw)]))
 
+#_(defn delta-case-kw [case-kw pair]
+  ((comp
+    (partial reduce merge)
+    (partial apply (fn [fst lst]
+                     (hash-map case-kw (- (case-kw lst) (case-kw fst))))))
+   pair))
+
+(defn delta-all-cases [pair]
+  #_((comp
+    (fn [case-kw] (delta-case-kw case-kw pair)))
+   com/all-cases)
+  ((comp
+    (partial reduce merge)
+    (partial apply (fn [fst lst]
+                     ((comp
+                       (partial map (fn [k]
+                                      (hash-map k (- (k lst) (k fst))))))
+                      com/all-cases))))
+   pair))
+
+(defn pairs [ls-init]
+  (loop [ls ls-init
+         acc []]
+    (if (>= (count ls) 2)
+      (let [[fst snd & tail] ls
+            vfst (vector fst)
+            vsnd (vector snd)]
+        (recur (concat vsnd tail) (conj acc (concat vfst vsnd))))
+      acc)))
+
+(defn deltas-case-kw [lensed-case-kw nr-of-reports country-stats]
+  ((comp
+    (partial map (fn [hm] (get-in hm lensed-case-kw)))
+    ;; TODO use delta-case-kw
+    (partial map delta-all-cases)
+    pairs
+    (partial take-last nr-of-reports))
+   country-stats))
+
+(defn incidence
+  "e.g. last two weeks:
+  (incidence :n 14 country-stats)"
+  [lensed-case-kw nr-of-reports country-stats]
+  ((comp
+    round-nr
+    (fn [diffs]
+      (let [population ((comp :p first) country-stats)]
+        (* (/ (reduce + diffs)
+              population)
+           1e5))))
+   (deltas-case-kw lensed-case-kw nr-of-reports country-stats)))
+
 (defn-fun-id confirmed-info "TODO reintroduce max-active-date"
-  [ccode some-recove? lense-fun has-n-confi? last-report
-   last-8 rankings delta maxes cnt-countries]
+  [ccode some-recove? lense-fun has-n-confi?
+   ccode-stats
+   last-report
+   last-8 rankings delta-last-2 maxes cnt-countries]
   #_(debugf "ccode %s" ccode)
   (let [{max-active :a max-deaths :d} maxes
         fun-s (fn [hm] (lense-fun :s))
@@ -132,8 +188,11 @@
         active-last-7 (last-7 fun-a last-8)]
     #_(def lense-fun lense-fun)
     #_(def last-8 last-8)
-    #_(def delta delta)
+    #_(def delta-last-2 delta-last-2)
     #_(def fun-c fun-c)
+    #_(def last-report last-report)
+    #_(def active-last-7 active-last-7)
+    #_(def new-conf-last-7 (last-7 (lense-fun :n) last-8))
     ;; TODO some countries report too low recov. numbers
     ;; TODO add effective reproduction number (R)
     ((comp
@@ -143,13 +202,20 @@
         (mapv
          f
          [
+          (let [nr-or-reports 7]
+            #_(def nr-or-reports nr-or-reports)
+            #_(def ccode-stats ccode-stats)
+            #_(def fun-n fun-n)
+            {:s (lang/incidence nr-or-reports)
+             ;; TODO incidence diff
+             :n (incidence fun-n nr-or-reports ccode-stats)})
           {:s    (get-in lang/hm-active fun-a)
            :n    (get-in last-report fun-a)
-           :diff (get-in delta fun-a)
+           :diff (get-in delta-last-2 fun-a)
            :emoji "🤒"}
           {:s    (get-in lang/hm-active-per-1e5 fun-a1e5)
            :n    (get-in last-report fun-a1e5)
-           :diff (get-in delta fun-a1e5)}
+           :diff (get-in delta-last-2 fun-a1e5)}
           {:s (get-in lang/hm-active-last-7-avg fun-a)
            :n ((comp round-nr mean) active-last-7)}
           {:s (get-in lang/hm-active-change-last-7-avg fun-a)
@@ -165,36 +231,37 @@
            ;; ActCL7CAvg =
            ;; = (ActC(t0)+ActC(t0-1d)+ActC(t0-2d)+...+ActC(t0-6d)) / 7
            ;; = (active(t0) - active(t0-7d)) / 7
-           (-> (/ (- (get-in last-report fun-a)
-                     ((comp
-                       first)
-                      (get-in
-                       ;; 8 values are needed to calculate 7 differences among them
-                       last-8 fun-a)))
-                  7.0)
-               round-nr #_plus-minus)
+           (let [fun fun-a]
+             (-> (/ (- (get-in last-report fun)
+                       ((comp
+                         first)
+                        (get-in
+                         ;; 8 values are needed to calculate 7 differences among them
+                         last-8 fun)))
+                    7.0)
+                 round-nr #_plus-minus))
            :show-plus-minus true}
           {:s    (get-in lang/hm-recovered fun-r)
            :n    (get-in last-report fun-r)
-           :diff (get-in delta fun-r)
+           :diff (get-in delta-last-2 fun-r)
            :emoji "🎉"}
           {:s    (get-in lang/hm-recove-per-1e5 fun-r1e5)
            :n    (get-in last-report fun-r1e5)
-           :diff (get-in delta fun-r1e5)}
+           :diff (get-in delta-last-2 fun-r1e5)}
           {:s lang/deaths
            :n    (get-in last-report fun-d)
-           :diff (get-in delta fun-d)
+           :diff (get-in delta-last-2 fun-d)
            :emoji "⚰️"}
           {:s lang/deaths-per-1e5
            :n    (get-in last-report fun-d1e5)
-           :diff (get-in delta fun-d1e5)}
+           :diff (get-in delta-last-2 fun-d1e5)}
           {:s    (get-in lang/hm-closed fun-c)
            :n    (get-in last-report fun-c)
-           :diff (get-in delta fun-c)
+           :diff (get-in delta-last-2 fun-c)
            :emoji "🏁"}
           {:s    (get-in lang/hm-closed-per-1e5 fun-c1e5)
            :n    (get-in last-report fun-c1e5)
-           :diff (get-in delta fun-c1e5)
+           :diff (get-in delta-last-2 fun-c1e5)
            ;; TODO create command lang/cmd-closed-per-1e5
            #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}]))
       ;; 1. no country ranking can be displayed for worldwide statistics
@@ -271,7 +338,7 @@
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 (defn-fun-id message
   "Shows the table with the absolute and %-wise nr of cases, cases per-1e5 etc.
-  TODO 3. show Case / Infection Fatality Rate (CFR / IFR)
+  TODO Case / Infection Fatality Rate (CFR / IFR)
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
@@ -283,15 +350,15 @@
       (debugf "ccode %s size %s" ccode (com/measure info))
       info)
     fmt)
-   (let [ccode-estim (filter (fn [ehm] (= ccode (:ccode ehm))) estim)
-         last-8 (let [kws ((comp keys first) ccode-estim)]
+   (let [ccode-stats (filter (fn [ehm] (= ccode (:ccode ehm))) estim)
+         last-8 (let [kws ((comp keys first) ccode-stats)]
                   ((comp
                     (partial zipmap kws)
                     (partial map vals)
                     utc/transpose
                     (partial map (fn [hm] (select-keys hm kws)))
                     (partial take-last 8))
-                   ccode-estim))]
+                   ccode-stats))]
      #_(def last-8 last-8)
      (let [some-recove?
            ((comp (partial some pos?))
@@ -310,22 +377,15 @@
          (debugf "ccode %s some-recove? %s - %s"
                  ccode some-recove? (last-7 (com/ident-fun :r) last-8)))
        #_(def lense-fun lense-fun)
-       (let [last-2-reports (take-last 2 ccode-estim)
+       #_(def ccode-stats ccode-stats)
+       (let [last-2-reports (take-last 2 ccode-stats)
              last-report    (last last-2-reports)
              vaccinated     (or (get-in last-report fun-v) 0)
              new-confirmed  (or (get-in last-report fun-n) 0)
-             delta ((comp
-                     (partial reduce into {})
-                     (partial apply (fn [prev-report last-report]
-                                      ((comp
-                                        (partial map (fn [k]
-                                                       {k (- (k last-report)
-                                                             (k prev-report))})))
-                                       com/all-cases))))
-                    last-2-reports)]
+             delta-last-2   (delta-all-cases last-2-reports)]
          #_(def last-2-reports last-2-reports)
          #_(def last-report last-report)
-         #_(def delta delta)
+         #_(def delta-last-2 delta-last-2)
          (conj
           (select-keys prm [:header :footer])
           {:cname-aliased (ccr/country-name-aliased ccode)
@@ -340,13 +400,13 @@
            :vaccinated
            (f {:s lang/vaccinated
                :n    (if (zero? vaccinated) com/unknown vaccinated)
-               :diff (if (zero? vaccinated) com/unknown (get-in delta fun-v))
+               :diff (if (zero? vaccinated) com/unknown (get-in delta-last-2 fun-v))
                :emoji "💉"})
 
            :new-confirmed
            (f {:emoji "🦠"
                :s lang/confirmed :n new-confirmed
-               :diff (if-let [dn (get-in delta fun-n)] dn 0)})}
+               :diff (if-let [dn (get-in delta-last-2 fun-n)] dn 0)})}
 
           (when (zero? vaccinated)
             {:notes (when (zero? vaccinated)
@@ -361,17 +421,18 @@
                          some-recove?
                          lense-fun
                          has-n-confi?
+                         ccode-stats
                          last-report
                          last-8
                          rankings
-                         delta
+                         delta-last-2
                          (let [kws [:d :a]]
                            ((comp
                              (partial zipmap kws)
                              (partial map (fn [data] (max-vals data dates)))
                              (partial map
                                       (fn [ks]
-                                        (map (fn [hm] (get-in hm ks)) ccode-estim)))
+                                        (map (fn [hm] (get-in hm ks)) ccode-stats)))
                              (partial map lense-fun))
                             kws))
                          (count ccc/relevant-country-codes))}))))))))

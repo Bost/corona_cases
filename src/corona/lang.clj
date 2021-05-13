@@ -109,8 +109,18 @@
 (def ^:const rate-of-confirmed (str "% of " confirmed))
 
 (def ^:const L7 "L7")
+(def ^:const L14 "L14")
 (def ^:const active-last-7 "Active cases in last 7 reports" (str act L7))
 (def hm-active-last-7 {:a active-last-7 :ea (str "*" active-last-7)})
+
+(defn incidence [nr-of-reports]
+  (str "Incidence"
+       (case nr-of-reports
+         7 L7
+         14 L14
+         (throw (Exception.
+                 (format "Wrong nr-of-reports %s - must be 7 or 14"
+                         nr-of-reports))))))
 
 (def ^:const vaccin-last-7 "Vaccinations in last 7 reports" (str vac L7))
 
