@@ -350,14 +350,21 @@
                     (partial map (fn [hm] (select-keys hm kws)))
                     (partial take-last 8))
                    ccode-stats))
-         some-recove?
-         ((comp (partial some pos?))
-          (last-7
-           ;; the 'original' value does or does not contain recovered cases
-           (com/ident-fun :r)
-           last-8))
+         country-reports-recovered?
+         ;; the difference between reported and estimated values must be within
+         ;; the range <0.8, 1.2>
+         ((comp
+           (partial some (fn [v] (<= 0.8 v 1.2)))
+           (partial apply map (comp float
+                                    (fn [reported estimated]
+                                      (if (pos? estimated)
+                                        (/ reported estimated)
+                                        0))))
+           (partial map (fn [fun]
+                          (last-7 (fun :r) last-8))))
+          [com/ident-fun com/estim-fun])
 
-         lense-fun (if (and some-recove?
+         lense-fun (if (and country-reports-recovered?
                             (not (msgc/worldwide? ccode)))
                      com/ident-fun com/estim-fun)
          fun-v (lense-fun :v)
@@ -371,6 +378,16 @@
          vaccinated     (or (get-in last-report fun-v) 0)
          new-confirmed  (or (get-in last-report fun-n) 0)
          delta-last-2   (delta-all-cases last-2-reports)]
+     #_(when-not (= country-reports-recovered?
+                    ((comp (partial some pos?))
+                     (last-7
+                      ;; the 'original' value does or does not contain recovered
+                      ;; cases
+                      (com/ident-fun :r)
+                      last-8)))
+         #_(reset! diff [])
+         (defonce diff (atom []))
+         (swap! diff (fn [_] (conj @diff ccode))))
      #_(def last-8 last-8)
      #_(def lense-fun lense-fun)
      #_(def ccode-stats ccode-stats)
@@ -417,7 +434,7 @@
                             :fun-d fun-d
                             :fun-a fun-a
                             :fun-p fun-p}
-                predicates {:country-reports-recovered? some-recove?
+                predicates {:country-reports-recovered? country-reports-recovered?
                             :has-n-confi? has-n-confi?}
                 ]
             {:details (confirmed-info
