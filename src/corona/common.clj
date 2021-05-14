@@ -613,9 +613,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
     (partial map (fn [hm] (get-in hm kws))))
    hms))
 
-(defn estim-fun
-  "TODO have a look at lenses"
-  [kw]
+(defn estim-fun "" [kw]
   ((comp
     vector
     (partial apply get {:r :er
@@ -629,7 +627,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
     (fn [kw] [kw kw]))
    kw))
 
-(defn ident-fun "TODO have a look at lenses" [kw]
+(defn ident-fun "" [kw]
   ((comp
     vector)
    kw))
