@@ -39,7 +39,6 @@
     set
     (partial map (fn [henv] (str henv "-bot"))))
    heroku-envs))
-
 #_(println "heroku-apps" heroku-apps)
 
 #_(System/exit 1)
@@ -299,8 +298,8 @@
                     setWebhook telegram-token))
 
         users
-        ;; TODO -'ssl-client-cert' etc. doesn't work
-        ((comp)
-         (sh-heroku heroku-app "pt" "\":type\""))
-        #_(sh-heroku heroku-app "pt" (format ":type -ssl-client-cert -%s"
-                                           (System/getenv "MY_TELEGRAM_ID")))))))
+        ;; TODO prohibit sh-heroku from writing to stdout
+        ((comp
+          (fn [s] (cstr/split s #"\n")))
+         (sh-heroku heroku-app "pt" (format ":type -ssl-client-cert -%s"
+                                            (System/getenv "MY_TELEGRAM_ID"))))))))
