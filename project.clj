@@ -45,7 +45,7 @@
    ;; Clojure interface for Telegram Bot API
    [org.clojars.bost/morse  "0.0.0-164-0xe94b"]
 
-   [org.clojure/data.json   "2.2.3"]
+   [org.clojure/data.json   "2.3.0"]
 
    ;; wrapper for Java 8 Date-Time API.
    [clojure.java-time "0.3.2"]

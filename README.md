@@ -74,7 +74,7 @@ CORONA_ENV_TYPE=devel
 #
 # https://clojure.org/guides/getting_started#_installation_on_linux
 # See also `.heroku-local.env`, `.env` and the output of `cli --version`
-CLOJURE_CLI_VERSION=1.10.3.822
+CLOJURE_CLI_VERSION=1.10.3.839
 #
 # HEROKU tokens for:
 PAPERTRAIL_API_TOKEN=<...>
@@ -83,7 +83,7 @@ TELEGRAM_TOKEN="<...>"
 * Heroku Config Vars. See [https://dashboard.heroku.com/apps/\<YOUR-HEROKU-APP-NAME\>/settings](). See also:
 ```bash
 $ heroku config --app <YOUR-HEROKU-APP-NAME>
-CLOJURE_CLI_VERSION:  1.10.3.822
+CLOJURE_CLI_VERSION:  1.10.3.839
 COMMIT:               ...
 CORONA_ENV_TYPE:      HOKUSPOKUS
 PAPERTRAIL_API_TOKEN: ...
