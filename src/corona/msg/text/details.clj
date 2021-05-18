@@ -159,9 +159,10 @@
 
 (defn confirmed-info ""
   [ccode
-   {:keys [country-reports-recovered? has-n-confi?] :as predicates}
+   {:keys [country-reports-recovered? has-n-confi? some-vaccinated?] :as predicates}
    {:keys [lense-fun fun-v fun-n fun-d fun-a fun-p] :as lense-funs}
    {:keys [ccode-stats last-report last-8] :as reports}
+   vaccin-last-7
    rankings
    delta-last-2
    maxes
@@ -176,7 +177,6 @@
         fun-r1e5 (lense-fun :r1e5)
         fun-d1e5 (lense-fun :d1e5)
         popula-last-7 (last-7 fun-p last-8)
-        vaccin-last-7 (last-7 fun-v last-8)
         active-last-7 (last-7 fun-a last-8)]
     #_(def lense-fun lense-fun)
     #_(def ccode ccode)
@@ -186,8 +186,6 @@
     #_(def last-report last-report)
     #_(def active-last-7 active-last-7)
     #_(def new-conf-last-7 (last-7 fun-n last-8))
-    ;; TODO some countries report too low recov. numbers
-    ;; TODO add effective reproduction number (R)
     ((comp
       (partial remove nil?)
       (partial apply conj))
@@ -284,8 +282,6 @@
                       (partial map :rank)
                       (partial filter (fn [hm] (= (:ccode hm) ccode))))
                      (:vals rankings))]
-             ;; TODO test estimated-indication for a subset of countries which
-             ;; do report recovery cases
              [["%s" [lang/people (:p hm-ranking)]]
               ["%s" (label-val rankings-lense-fun lang/hm-active-per-1e5 :a1e5 hm-ranking)]
               ["%s" (label-val rankings-lense-fun lang/hm-recove-per-1e5 :r1e5 hm-ranking)]
@@ -295,7 +291,7 @@
            :fn-fmts
            (fn [fmts] (format lang/ranking-desc
                              cnt-countries (cstr/join "" fmts))))]])
-      (when (some pos? vaccin-last-7)
+      (when some-vaccinated?
         (last-7-block
          {:emoji "💉🗓"
           :title (format "%s - %s" lang/vaccin-last-7 lang/rate-of-people)
@@ -333,6 +329,7 @@
   TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
   TODO create an API web service(s) for every field displayed in the messages
+  TODO add effective reproduction number (R)
   "
   [ccode {:keys [cnt-reports dates estim rankings] :as prm}]
   #_(debugf "ccode %s" ccode)
@@ -420,9 +417,9 @@
         {:notes (when (zero? vaccinated)
                   ["%s\n" [lang/vaccin-data-not-published]])})
 
-      (let [has-n-confi? ((comp pos? (fn [hm] (get-in hm fun-n))) last-report)
-            some-vaccinated? ((comp (partial some pos?))
-                              (last-7 fun-v last-8))]
+      (let [vaccin-last-7 (last-7 fun-v last-8)
+            has-n-confi? ((comp pos? (fn [hm] (get-in hm fun-n))) last-report)
+            some-vaccinated? ((comp (partial some pos?)) vaccin-last-7)]
         (when (or has-n-confi? some-vaccinated?)
           (let [reports {:ccode-stats ccode-stats
                          :last-report last-report
@@ -435,13 +432,15 @@
                             :fun-a fun-a
                             :fun-p fun-p}
                 predicates {:country-reports-recovered? country-reports-recovered?
-                            :has-n-confi? has-n-confi?}
+                            :has-n-confi?               has-n-confi?
+                            :some-vaccinated?           some-vaccinated?}
                 ]
             {:details (confirmed-info
                        ccode
                        predicates
                        lense-funs
                        reports
+                       vaccin-last-7
                        rankings
                        delta-last-2
                        (let [kws [:d :a]]
