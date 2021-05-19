@@ -177,3 +177,7 @@ Inspect memory
 # sudo apt install visualvm
 visualvm -J-DsocksProxyHost=localhost -J-DsocksProxyPort=1080 & disown
 ```
+
+```bash
+heroku run bash --app <YOUR-HEROKU-APP-NAME>
+```
