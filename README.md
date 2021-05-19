@@ -65,7 +65,7 @@ SELECT datname FROM pg_database;
 ### Configure
 * Local environment variables. Create `.env` file in your project root directory:
 ```bash
-$ touch .env
+touch .env
 ```
 containing:
 ```bash
@@ -82,7 +82,7 @@ TELEGRAM_TOKEN="<...>"
 ```
 * Heroku Config Vars. See [https://dashboard.heroku.com/apps/\<YOUR-HEROKU-APP-NAME\>/settings](). See also:
 ```bash
-$ heroku config --app <YOUR-HEROKU-APP-NAME>
+heroku config --app <YOUR-HEROKU-APP-NAME>
 CLOJURE_CLI_VERSION:  1.10.3.839
 COMMIT:               ...
 CORONA_ENV_TYPE:      HOKUSPOKUS
@@ -104,34 +104,34 @@ clj -J-Djdk.attach.allowAttachSelf -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.
 2. In Emacs Cider `M-x cider-jack-in-clj`, or start the nREPL from the command line:
 <!-- No line continuations '\' accepted -->
 ```bash
-$ clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.0"} cider/cider-nrepl {:mvn/version "0.25.5"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.0"} cider/cider-nrepl {:mvn/version "0.25.5"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
 ```
 and connect to it from the editor of your choice.
 
 3. Start the telegram chatbot long-polling:
 ```clojure
-user> (require '[corona.telegram])
-user> (corona.telegram/start)
+(require '[corona.telegram])
+(corona.telegram/start)
 ```
 
 4. Start the web server:
 ```clojure
-user> (require '[corona.web])
-user> (alter-var-root #'system component/start)
+(require '[corona.web])
+(alter-var-root #'system component/start)
 ```
 and check the [http://localhost:5050/](http://localhost:5050/) if it's running.
 
 ## Run locally
 
 ```bash
-$ bin/build; and heroku local --env=.heroku-local.env
+bin/build; and heroku local --env=.heroku-local.env
 # or:
 # bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...
 ```
 
 ## Deploy to Heroku
 ```bash
-$ bb heroku.clj deploy --heroku-env <YOUR-HEROKU-APP-NAME>
+bb heroku.clj deploy --heroku-env <YOUR-HEROKU-APP-NAME>
 ```
 
 ## MySQL -> PostgreSQL script conversion
@@ -147,7 +147,7 @@ createdb postgres # or: dropdb postgres
 psql --dbname=postgres   --quiet            --file=dbase/my.sql
 
 # get the psql prompt:
-  psql --dbname=postgres
+psql --dbname=postgres
 ```
 
 ```bash
