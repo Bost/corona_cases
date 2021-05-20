@@ -332,6 +332,8 @@
   TODO add effective reproduction number (R)
   "
   [ccode {:keys [cnt-reports dates estim rankings] :as prm}]
+  (when (= ccode "DE")
+    (def prm-de prm))
   #_(debugf "ccode %s" ccode)
   ((comp
     (fn [info]
