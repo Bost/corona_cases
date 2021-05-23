@@ -174,8 +174,7 @@
     web-server))
 
 (defn-fun-id -main
-  "TODO test it by: bin/build; and heroku local --env=.heroku-local.env
-Note: command line params accepted - is that OK?"
+  "TODO command line params accepted - is that OK?"
   []
   (infof "Starting ...")
   (macro/system-ok?)

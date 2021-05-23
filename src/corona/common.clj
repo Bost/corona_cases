@@ -367,10 +367,7 @@
         (recur (assoc-in prm [:attempt] (inc attempt))))
       (:value res))))
 
-(defn-fun-id get-json-single
-  "TODO See
-'Reading JSON with jsonista seems faster than reading EDN with read-string'
-https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20as.20a.20file/near/202927428"
+(defn-fun-id get-json-single ""
   [url]
   ((comp
     (fn [s] (json/read-str s :key-fn clojure.core/keyword))
@@ -398,6 +395,7 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
             ;; tbeg must be captured before the monadic function composition
             init-state {:tbeg (system-time) :acc []}]
         #_(clj-http.client/get url prms)
+        ;; TODO there's a bug in the monad or something!
         ((comp
           first
           (domonad
@@ -546,11 +544,6 @@ https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20a
 (def ^:const desc-ws
   "A placeholder"
   "")
-
-;; TODO evaluate web services
-;; https://sheets.googleapis.com/v4/spreadsheets/1jxkZpw2XjQzG04VTwChsqRnWn4-FsHH6a7UHVxvO95c/values/Dati?majorDimension=ROWS&key=AIzaSyAy6NFBLKa42yB9KMkFNucI4NLyXxlJ6jQ
-
-;; https://github.com/iceweasel1/COVID-19-Germany
 
 (def ^:const api-data-source
   "jhu"

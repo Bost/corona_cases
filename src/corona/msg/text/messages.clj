@@ -33,7 +33,11 @@
     (partial hash-map :inline_keyboard)
     vector
     (partial reduce into))
-   ;; TODO use `for` instead of nested mappings
+   ;; TODO replace `for` instead of nested mappings & DRY the `for` pattern
+   #_(for [a com/aggregation-cases
+         b com/absolute-cases]
+     [a b])
+
    (mapv (fn [aggregation-kw]
            (mapv (fn [case-kw]
                    (conj

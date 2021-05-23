@@ -314,6 +314,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
           ;; 3. map 3779ms
           (partial map (partial apply plot/aggregation!
                                 estim cnt-reports aggregation-hash)))
+         ;; TODO DRY the '(for [...] ...)' pattern
          (for [a com/aggregation-cases
                b com/absolute-cases]
            [a b]))

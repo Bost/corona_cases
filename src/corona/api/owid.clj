@@ -45,6 +45,7 @@
                            ccc/country-code-3-letter)
                           ccode)]
         (get ccode-map :data)
+        ;; to obtain all dates pick any country (e.g. Italy) and read its dates
         ((comp
           (partial map (fn [m] (select-keys m [:date])))
           (fn [m] (get-in m [:ITA :data])))
