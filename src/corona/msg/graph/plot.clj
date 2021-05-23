@@ -188,7 +188,7 @@
                            }}))
 
 (defn stroke-estim-activ []
-  (conj line-cfg {:color :green
+  (conj line-cfg {:color :olive #_:green
                   :stroke {:size 1.5
                            ;; :dash [20.0] :dash-phase 10
                            ;; :dash [5.0 2.0 2.0 2.0]
