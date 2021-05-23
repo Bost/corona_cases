@@ -182,6 +182,7 @@
            :free (.freeMemory runtime)})))
       ((domonad state-m [mvv (m-result plain-val)] mvv)
        (update-in state [:acc]
+                  ;; the acc-value is ignored so `comp` can't be used
                   (fn [_] (vec (concat accumulator (vector calc-time)))))))))
 
 (defn system-exit
