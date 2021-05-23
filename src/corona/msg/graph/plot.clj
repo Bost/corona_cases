@@ -126,22 +126,16 @@
       (partial keep (partial find mapped-hm)))
      [:a :r :d :n :p :er :ea])))
 
-(defn fmt-last-date
-  "TODO pass the last date from corona.telegram"
-  [stats]
-  ;; TODO (type hms): if it's vector the use peek, if it's a list use last
-  ((comp com/fmt-date :t last (partial sort-by :t)) stats))
-
 (defn fmt-report [report] (format "%s %s" lang/report report))
 
 (defn plot-label
   "report-nr - Nth report since the outbreak
   ccode - country code
   stats - statistics active, confirmed, etc. for the given country code"
-  [report-nr ccode stats]
+  [report-nr ccode stats last-date]
   (format "%s; %s; %s: %s"
           (fmt-report report-nr)
-          (fmt-last-date stats)
+          (com/fmt-date last-date)
           com/bot-name
           (format "%s %s %s"
                   lang/stats
@@ -224,12 +218,11 @@
 (defn-fun-id message-img
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
-  [ccode & [unsorted-stats report]]
+  [ccode stats last-date report]
   (when-not (in? ccc/excluded-country-codes ccode)
     #_(def stats stats)
     #_(def report report)
-    (let [stats (sort-by :t unsorted-stats)
-          base-data (stats-for-country ccode stats)
+    (let [base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
                                (in? #_[:n :a :r :d] [:n :p :er :ea] case-kw))
                              base-data)
@@ -243,7 +236,7 @@
       ;; TODO annotation by value and labeling doesn't work:
       ;; :annotate? true
       ;; :annotate-fmt "%.1f"
-      ;; {:label (plot-label report ccode stats)}
+      ;; {:label (plot-label report ccode stats last-date)}
       (boiler-plate
        {:series (b/series
                  [:grid]
@@ -273,20 +266,20 @@
                        [:line lang/recov-estim     (stroke-estim-recov)]
                        [:line lang/activ-estim     (stroke-estim-activ)]
                        #_[:line lang/people    stroke-population]))
-        :label (plot-label report ccode stats)
+        :label (plot-label report ccode stats last-date)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
 
 (defn-fun-id message
   "Country-specific cumulative plot of active, recovered, deaths and
   active-absolute cases."
-  [ccode & [stats report]]
+  [ccode stats last-date report]
   ((comp
     (fn [arr]
       (debugf "ccode %s size %s" ccode (if arr (com/measure arr) 0))
       arr)
     to-byte-array-auto-closable
     message-img)
-   ccode stats report))
+   ccode stats last-date report))
 
 (defn message-kw [ccode] [:plot (keyword ccode)])
 
@@ -376,10 +369,10 @@
 (def label-conf {:color (c/darken :steelblue) :font-size 14})
 
 (defn label-str
-  [report stats case-kw threshold postfix]
+  [report stats last-date case-kw threshold postfix]
   (format "%s; %s; %s: %s > %s"
           (fmt-report report)
-          (fmt-last-date stats)
+          (com/fmt-date last-date)
           com/bot-name
           ((comp
             (fn [s] (str s postfix))
@@ -397,7 +390,7 @@
                            }}))
 
 (defn-fun-id aggregation-img ""
-  [stats cnt-reports aggregation-kw case-kw]
+  [stats last-date cnt-reports aggregation-kw case-kw]
   (let [{data :data threshold-recalced :threshold}
         (stats-all-by-case {:report cnt-reports
                             :stats stats
@@ -420,7 +413,7 @@
                data)
       :x-axis-formatter date-fmt-fn
       :y-axis-formatter (y-axis-formatter data)
-      :label (label-str cnt-reports stats case-kw threshold-recalced
+      :label (label-str cnt-reports stats last-date case-kw threshold-recalced
                         (condp = aggregation-kw
                           :abs (str " " lang/absolute)
                           :sum ""))
@@ -430,13 +423,13 @@
   ([id aggregation-kw case-kw]
    {:pre [(string? id)]}
    (get-in @cache/cache [:plot (keyword id) aggregation-kw case-kw]))
-  ([stats cnt-reports id aggregation-kw case-kw]
+  ([stats last-date cnt-reports id aggregation-kw case-kw]
    {:pre [(string? id)]}
    (cache/cache! (fn []
                    ((comp
                      #_(fn [arr] (com/heap-info) arr)
                      to-byte-array-auto-closable)
-                    (aggregation-img stats cnt-reports aggregation-kw case-kw)))
+                    (aggregation-img stats last-date cnt-reports aggregation-kw case-kw)))
                  [:plot (keyword id) aggregation-kw case-kw])))
 
 ;;;; lazy-evaluation CPS (Continuation Passing Style)

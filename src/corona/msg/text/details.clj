@@ -331,10 +331,15 @@
   TODO create an API web service(s) for every field displayed in the messages
   TODO add effective reproduction number (R)
   "
-  [ccode {:keys [cnt-reports dates estim rankings] :as prm}]
-  #_(when (= ccode "DE")
-    (def prm-de prm))
-  #_(debugf "ccode %s" ccode)
+  [ccode estim dates rankings cnt-reports
+   ;; TODO take apart prm. It contains :header and :footer
+   prm]
+  ;; (def ccode ccode)
+  ;; (def estim estim)
+  ;; (def dates dates)
+  ;; (def rankings rankings)
+  ;; (def cnt-reports cnt-reports)
+  ;; (def prm prm)
   ((comp
     (fn [info]
       (debugf "ccode %s size %s" ccode (com/measure info))

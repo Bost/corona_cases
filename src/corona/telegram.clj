@@ -278,20 +278,22 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
-        (let [prm (assoc prm-base
-                         :dates dates
-                         :rankings rankings
-                         :estim estim)]
+        (let [sorted-estim (sort-by :t estim)]
           ((comp
             m-result doall
             (partial map ;; pmap is faster however it eats too much memory
                      (fn [ccode]
-                       [(cache/cache! (fn [] (msgi/message ccode prm))
-                                      (msgi/message-kw ccode))
+                       [(cache/cache!
+                         (fn []
+                           (msgi/message
+                            ccode estim dates rankings cnt-reports prm-base))
+                         (msgi/message-kw ccode))
                         (debugf "msgi/message ccode %s done" ccode)
-                        (cache/cache! (fn [] (plot/message ccode
-                                                          estim cnt-reports))
-                                      (plot/message-kw ccode))
+                        (cache/cache!
+                         (fn []
+                           (plot/message
+                            ccode sorted-estim last-date cnt-reports))
+                         (plot/message-kw ccode))
                         (debugf "plot/message ccode %s done" ccode)])))
            ;; here also "ZZ" worldwide messages
            ccc/all-country-codes))
@@ -313,7 +315,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
           ;; 2. map 3982ms
           ;; 3. map 3779ms
           (partial map (partial apply plot/aggregation!
-                                estim cnt-reports aggregation-hash)))
+                                estim last-date
+                                cnt-reports aggregation-hash)))
          ;; TODO DRY the '(for [...] ...)' pattern
          (for [a com/aggregation-cases
                b com/absolute-cases]
