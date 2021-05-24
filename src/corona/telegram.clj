@@ -79,17 +79,17 @@
 
 (defn-fun-id create-callbacks "" [funs]
   (map
-   (fn [fun]
-     (->> fun
-          (wrap-in-hooks
-           {:pre (fn [& args]
-                   (let [{:keys [data message]} (first args)]
-                     (infof ":pre data %s chat %s" data (:chat message))))
-            :post (fn [& args]
-                    (let [[fn-result {:keys [data message]}] args]
-                      (infof ":post data %s chat %s" data (:chat message))
-                      fn-result))})
-          (moh/callback-fn)))
+   (comp
+    moh/callback-fn
+    (partial
+     wrap-in-hooks
+     {:pre (fn [& args]
+             (let [{:keys [data message]} (first args)]
+               (infof ":pre data %s chat %s" data (:chat message))))
+      :post (fn [& args]
+              (let [[fn-result {:keys [data message]}] args]
+                (infof ":post data %s chat %s" data (:chat message))
+                fn-result))}))
    funs))
 
 (defn-fun-id create-handlers

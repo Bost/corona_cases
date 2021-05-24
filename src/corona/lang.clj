@@ -59,7 +59,7 @@
 (def ^:const vaccinated-cases "Vaccinations")
 (def ^:const death-cases      (format "%s %s" "Death" cases))
 
-;; TODO recov-estim & friends are used in the graphs
+;; recov-estim & friends are used in the graphs
 (def ^:const recov-estim      "Recov. estimated")
 (def ^:const activ-estim      "Active estimated")
 (def ^:const close-estim      "Closed estimated")
