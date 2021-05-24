@@ -317,10 +317,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
           (partial map (partial apply plot/aggregation!
                                 estim last-date
                                 cnt-reports aggregation-hash)))
-         ;; TODO DRY the '(for [...] ...)' pattern
-         (for [a com/aggregation-cases
-               b com/absolute-cases]
-           [a b]))
+         com/cartesian-product-all-case-types)
         _ (com/add-calc-time "all-aggregations" all-aggregations)
 
         ;; discard the intermediary results, i.e. keep only those items in the

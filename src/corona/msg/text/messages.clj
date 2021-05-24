@@ -32,24 +32,20 @@
     json/write-str
     (partial hash-map :inline_keyboard)
     vector
-    (partial reduce into))
-   ;; TODO replace `for` instead of nested mappings & DRY the `for` pattern
-   #_(for [a com/aggregation-cases
-         b com/absolute-cases]
-     [a b])
-
-   (mapv (fn [aggregation-kw]
-           (mapv (fn [case-kw]
-                   (conj
-                    {:text (lang/button-text case-kw aggregation-kw)
-                     :callback_data (pr-str (assoc (dissoc prm :message_id)
-                                                   :case-kw case-kw
-                                                   :type aggregation-kw))}
-                    ;; when used the Telegram Web doesn't display the picture
-                    ;; see also https://core.telegram.org/bots/api#sendphoto
-                    #_{:caption "Foo"}))
-                 com/absolute-cases))
-         com/aggregation-cases)))
+    (partial
+     mapv
+     (partial
+      apply
+      (fn [aggregation-kw case-kw]
+        (conj
+         {:text (lang/button-text case-kw aggregation-kw)
+          :callback_data (pr-str (assoc (dissoc prm :message_id)
+                                        :case-kw case-kw
+                                        :type aggregation-kw))}
+         ;; when used the Telegram Web doesn't display the picture
+         ;; see also https://core.telegram.org/bots/api#sendphoto
+         #_{:caption "Foo"})))))
+   com/cartesian-product-all-case-types))
 
 (defn-fun-id worldwide-plots ""
   [{:keys [data message]}]

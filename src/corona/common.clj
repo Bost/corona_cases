@@ -490,6 +490,11 @@
         (filter (fn [m] (utc/in? [2 3 4 5] (:idx m))))
         (map :kw)))
 
+(def cartesian-product-all-case-types
+  (for [a aggregation-cases
+        b absolute-cases]
+    [a b]))
+
 (def basic-cases
   (tore case-params
         (filter (fn [m] (utc/in? [2 3 4 5 #_6 7 8 9 10] (:idx m))))
