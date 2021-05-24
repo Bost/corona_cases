@@ -49,7 +49,7 @@
   ;; TODO see also https://github.com/juxt/jinx json-schema
   ;; 'Reading JSON with jsonista seems faster than reading EDN with read-string'
   ;; https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/hashmap.20as.20a.20file/near/202927428
-  org.clojure/data.json   {:mvn/version "2.3.0"}
+  org.clojure/data.json   {:mvn/version "2.3.1"}
 
   ;; wrapper for Java 8 Date-Time API.
   clojure.java-time/clojure.java-time {:mvn/version "0.3.2"}
