@@ -332,7 +332,7 @@
   TODO add effective reproduction number (R)
   "
   [ccode {:keys [cnt-reports dates estim rankings] :as prm}]
-  (when (= ccode "DE")
+  #_(when (= ccode "DE")
     (def prm-de prm))
   #_(debugf "ccode %s" ccode)
   ((comp
@@ -389,6 +389,7 @@
          (swap! diff (fn [_] (conj @diff ccode))))
      #_(def last-8 last-8)
      #_(def lense-fun lense-fun)
+     #_(def country-reports-recovered? country-reports-recovered?)
      #_(def ccode-stats ccode-stats)
      #_(def last-2-reports last-2-reports)
      #_(def last-report last-report)
@@ -422,6 +423,8 @@
       (let [vaccin-last-7 (last-7 fun-v last-8)
             has-n-confi? ((comp pos? (fn [hm] (get-in hm fun-n))) last-report)
             some-vaccinated? ((comp (partial some pos?)) vaccin-last-7)]
+        #_(def vaccin-last-7 vaccin-last-7)
+        #_(def some-vaccinated? some-vaccinated?)
         (when (or has-n-confi? some-vaccinated?)
           (let [reports {:ccode-stats ccode-stats
                          :last-report last-report

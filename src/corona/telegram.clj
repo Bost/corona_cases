@@ -202,6 +202,12 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                      est/estimate
                      #_(fn [v] (def pd v) v)
                      (partial v1/pic-data cnt-reports)
+                     (fn [x]
+                       (def cnt-reports cnt-reports)
+                       (def raw-dates-v1 raw-dates-v1)
+                       (def json-v1 json-v1)
+                       (def json-owid json-owid)
+                       x)
                      data/data-with-pop)
                raw-dates-v1 json-v1 json-owid)
         _ (com/add-calc-time "estim" estim)
@@ -214,7 +220,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         stats-countries
         ((comp
           m-result
-          (fn [v] (def sc v) v)
+          #_(fn [v] (def sc v) v)
           (partial filter (fn [hm] (= (:t hm) last-date)))
           #_(partial sort-by (juxt :ccode :t)))
         estim)
