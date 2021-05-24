@@ -11,8 +11,12 @@
               (jdbc/get-connection mcom/datasource)]
     ((comp
       ;; not checking the indexes etc.
-      (fn [tables] (= tables ["user" "message" "chat" "callback_query"
-                              "thresholds"]))
+      (fn [tables]
+        (debugf "Tables found %s" tables)
+        (clojure.set/subset?
+         #{"user" "message" "chat" "callback_query" "thresholds"}
+         tables))
+      set
       (partial map :tables/table_name)
       (fn [cmd] (jdbc/execute! connection [cmd]))
       #_(reduce my-fn init-value (jdbc/plan connection [...]))
