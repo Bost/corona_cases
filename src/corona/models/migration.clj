@@ -21,7 +21,7 @@
           " where table_schema = 'public'"))))
 
 (defn-fun-id migrate "" []
-  (when (not (migrated?))
+  (when-not (migrated?)
     (debugf "Starting ...")
     (with-open [connection (jdbc/get-connection mcom/datasource)]
       (jdbc/execute! connection ["
