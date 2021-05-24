@@ -6,6 +6,7 @@
             [clojure.string :as cstr]
             [corona.api.cache :as cache]
             [corona.common :as com]
+            [corona.cases :as cases]
             [corona.estimate :as est]
             [corona.lang :as lang]
             [corona.macro :refer [defn-fun-id]]
@@ -45,7 +46,7 @@
          ;; when used the Telegram Web doesn't display the picture
          ;; see also https://core.telegram.org/bots/api#sendphoto
          #_{:caption "Foo"})))))
-   com/cartesian-product-all-case-types))
+   cases/cartesian-product-all-case-types))
 
 (defn-fun-id worldwide-plots ""
   [{:keys [data message]}]

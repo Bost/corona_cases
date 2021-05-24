@@ -431,101 +431,6 @@
               identity)]
     (fun lexical-token)))
 
-(defmacro tore
-  "->>-or-eduction. In fact both have the same performance.
-  See also:
-  - my explanations at https://clojuredocs.org/clojure.core/eduction
-  - https://github.com/rplevy/swiss-arrows"
-  [coll & fns]
-  `(->> ~coll ~@fns)
-  #_`(sequence (eduction ~@fns ~coll)))
-
-(def case-params
-  ":idx - defines an order in appearance
-  :v ~ vaccinated
-  :p ~ population
-  :n ~ new-confirmed cased
-  :c ~ closed cases
-  :r ~ recovered cases
-  :d ~ deaths
-  :a ~ active cases i.e. ill"
-  [{:idx  0 :kw :v                :threshold {:inc (int 1e6) :val (int 1e7)}}
-   {:idx  1 :kw :p                :threshold {:inc (int 1e6) :val (int 1e7)}}
-   {:idx  2 :kw :n                :threshold {:inc 50000     :val (int 3660e3)}}
-   {:idx  3 :kw :r :listing-idx 1 :threshold {:inc 10000     :val (int 2937e3)}}
-   {:idx  4 :kw :d :listing-idx 2 :threshold {:inc 1000      :val (int 87e3)}}
-   {:idx  5 :kw :a :listing-idx 0 :threshold {:inc 10000     :val (int 1029e3)}}
-   ;; TODO the order matters: it must be the same as in the info-message
-   {:idx  6 :kw :v1e5}
-   {:idx  7 :kw :a1e5}
-   {:idx  8 :kw :r1e5}
-   {:idx  9 :kw :d1e5}
-   {:idx 10 :kw :c1e5}  ;; closed-per-1e5
-
-   {:idx 11 :kw :v%}
-   {:idx 12 :kw :a%}
-   {:idx 13 :kw :r%}
-   {:idx 14 :kw :d%}
-   {:idx 15 :kw :c%}     ;; closed-rate
-   {:idx 16 :kw :ea}     ;; estimate-active
-   {:idx 17 :kw :er}     ;; estimate-recovered
-   {:idx 18 :kw :ea1e5} ;; estimate-active-per-1e5
-   {:idx 19 :kw :er1e5} ;; estimate-recovered-per-1e5
-   {:idx 20 :kw :c}      ;; closed
-   {:idx 21 :kw :ec}     ;; estimate-closed
-   {:idx 22 :kw :ec1e5} ;; estimate-closed-per-1e5
-   ])
-
-(def aggregation-params
-  ":idx - defines an order in appearance"
-  [{:idx  0 :kw :sum}
-   {:idx  1 :kw :abs}])
-
-(def aggregation-cases
-  (tore aggregation-params
-        (filter (fn [m] (utc/in? [0 1] (:idx m))))
-        (map :kw)))
-
-(def absolute-cases
-  (tore case-params
-        (filter (fn [m] (utc/in? [2 3 4 5] (:idx m))))
-        (map :kw)))
-
-(def cartesian-product-all-case-types
-  (for [a aggregation-cases
-        b absolute-cases]
-    [a b]))
-
-(def basic-cases
-  (tore case-params
-        (filter (fn [m] (utc/in? [2 3 4 5 #_6 7 8 9 10] (:idx m))))
-        (map :kw)))
-
-(def all-report-cases
-  (tore case-params
-        (filter (fn [m] (utc/in? [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15] (:idx m))))
-        (map :kw)))
-
-(def all-cases
-  (tore case-params
-        (map :kw)))
-
-(def ranking-cases
-  (tore case-params
-        (filter (fn [m] (utc/in? [1 6 7 8 9 10] (:idx m))))
-        (mapv :kw)))
-
-(def listing-cases-per-1e5
-  (tore case-params
-        (filter (fn [m] (utc/in? [7 8 9] (:idx m))))
-        (map :kw)))
-
-(def listing-cases-absolute
-  (->> case-params
-       (filter (fn [m] (utc/in? [0 1 2] (:listing-idx m))))
-       (sort-by :listing-idx)
-       (map :kw)))
-
 (defn fmt-date-fun [fmts]
   (fn [date]
     (ctf/unparse (ctf/with-zone (ctf/formatter fmts) (ctime/default-time-zone))
@@ -563,12 +468,6 @@
 (def ttl
   "Time to live in (* <hours> <minutes> <seconds> <milliseconds>)."
   (* 3 60 60 1000))
-
-(defn text-for-case [case-kw texts]
-  ((comp (partial nth texts)
-         first
-         (partial keep-indexed (fn [i k] (when (= k case-kw) i))))
-   basic-cases))
 
 (def ^:const ^String bot-name-in-markdown
   (cstr/replace bot-name #"_" "\\\\_"))

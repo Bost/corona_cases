@@ -4,6 +4,7 @@
   (:require [clojure.string :as cstr]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
+            [corona.cases :as cases]
             [corona.macro :refer [defn-fun-id debugf]]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -160,7 +161,7 @@
        (partial cstr/join spacer)
        (partial map com/encode-cmd)
        (partial mapv lang/list-sorted-by))
-      (concat com/listing-cases-per-1e5 com/listing-cases-absolute)))))
+      (concat cases/listing-cases-per-1e5 cases/listing-cases-absolute)))))
 
 (defn worldwide? [ccode]
   (utc/in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code

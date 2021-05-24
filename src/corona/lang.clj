@@ -3,6 +3,7 @@
 (ns corona.lang
   (:require
    [corona.common :as com]
+   [corona.cases :as cases]
    [clojure.string :as cstr]
    ))
 
@@ -183,7 +184,7 @@
 (defn- lower-case-texts [case-kw texts]
   ((comp
     cstr/lower-case
-    (partial com/text-for-case case-kw))
+    (partial cases/text-for-case case-kw))
    texts))
 
 (defn list-sorted-by [case-kw]
@@ -204,10 +205,10 @@
     cmd-vaccin-per-1e5 active-per-1e5 recove-per-1e5 deaths-per-1e5]))
 
 (def ^:const short-case-name "Shortened case names"
-  (zipmap com/absolute-cases ["Co" "Re" "De" "Ac"]))
+  (zipmap cases/absolute-cases ["Co" "Re" "De" "Ac"]))
 
 (def ^:const aggregations "Aggregations for worldwide graphs"
-  (zipmap com/aggregation-cases ["Σ" "A"]))
+  (zipmap cases/aggregation-cases ["Σ" "A"]))
 
 (defn button-text [case-kw aggregation-kw]
   (str (get short-case-name case-kw)

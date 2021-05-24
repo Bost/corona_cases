@@ -25,9 +25,7 @@
 (def insert {:type :insert :cmd "insert into %s (%s) values (%s)"})
 (def upsert
   {:type :upsert :cmd
-   "insert into %s (%s) values (%s)
-    on conflict (%s) do update set
-    %s"
+   "insert into %s (%s) values (%s) on conflict (%s) do update set %s"
    })
 
 (defn col-names [cols]
@@ -47,18 +45,19 @@
    cols))
 
 ;; TODO create spec against the :else branch
-(defn-fun-id prepate-statement "" [crud-cmd table cols]
+(defn-fun-id prepate-statement ""
+  [{:keys [type cmd conflict-col set-cmd]} table cols]
   (cond
-    (= (:type crud-cmd) :upsert)
-    (format (:cmd crud-cmd)
+    (= type :upsert)
+    (format cmd
             (pr-str table)
             (col-names cols)
             (col-vals cols)
-            (:conflict-col crud-cmd)
-            )
+            conflict-col
+            set-cmd)
 
-    (= (:type crud-cmd) :insert)
-    (format (:cmd crud-cmd)
+    (= type :insert)
+    (format cmd
             (pr-str table)
             (col-names cols)
             (col-vals cols))
@@ -83,14 +82,22 @@
 
 (defn-fun-id upsert-threshold!
   "(upsert-threshold! {:kw :v :inc (int 1e6) :val (int 1e7)})"
-  [{:keys [kw inc val]}]
+  [{:keys [kw inc val] :as prm}]
+  (def prm prm)
   (with-open [connection (jdbc/get-connection mcom/datasource)]
     (let [table "thresholds"
           cols [:kw :inc :val :updated_at]
           prep-stmt (prepate-statement
                      (assoc upsert
-                            :conflict-col (name :kw))
+                            :conflict-col (name :kw)
+                            :set-cmd (str
+                                      (name :val) " = " val
+                                      ","
+                                      ;; (name :updated_at) " = " cast('now()' as timestamp(0))
+                                      (name :updated_at) " = cast('now()' as timestamp(0))"
+                                      ))
                      table cols)]
+      (debugf "prep-stmt\n    %s" prep-stmt)
       ((comp
         #_(fn [res] (debugf "res: %s" res) res)
         (fn [cmd] (try (jdbc/execute-one! connection cmd)
@@ -102,15 +109,15 @@
        #_[:v (int 1e6) (int 1e7) "now()"]
        [kw inc val "now()"]))))
 
-(comment
+(defn get-thresholds []
   (with-open [connection (jdbc/get-connection mcom/datasource)]
-    (def table "thresholds")
-    ((comp
-      (fn [cmd] (jdbc/execute! connection [cmd]))
-      #_(reduce my-fn init-value (jdbc/plan connection [...]))
-      (fn [cmd] (timbre/debugf "\n%s" cmd)
-        cmd))
-     (format "select * from %s" (pr-str table)))))
+    (let [table "thresholds"]
+      ((comp
+        (fn [cmd] (jdbc/execute! connection [cmd]))
+        #_(reduce my-fn init-value (jdbc/plan connection [...]))
+        (fn [cmd] (timbre/debugf "\n%s" cmd)
+          cmd))
+       (format "select * from %s" (pr-str table))))))
 
 (comment
   (with-open [connection (jdbc/get-connection mcom/datasource)]
@@ -121,7 +128,6 @@
       (fn [cmd] (timbre/debugf "\n%s" cmd)
         cmd))
      (format "select * from %s" (pr-str table)))))
-
 
 (comment
   (with-open [connection (jdbc/get-connection mcom/datasource)]

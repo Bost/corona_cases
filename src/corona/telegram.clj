@@ -12,6 +12,7 @@
             [corona.api.v1 :as v1]
             [corona.commands :as cmd]
             [corona.common :as com]
+            [corona.cases :as cases]
             [corona.country-codes :as ccc]
             [corona.countries :as ccr]
             [corona.estimate :as est]
@@ -245,8 +246,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
           ((comp
             m-result doall
             (partial map (partial apply msgl/calc-listings! stats-countries prm)))
-           [[com/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
-            [com/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
+           [[cases/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
+            [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
         _ (com/add-calc-time "all-calc-listings" all-calc-listings)
 
         _ (m-result
@@ -317,7 +318,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
           (partial map (partial apply plot/aggregation!
                                 estim last-date
                                 cnt-reports aggregation-hash)))
-         com/cartesian-product-all-case-types)
+         cases/cartesian-product-all-case-types)
         _ (com/add-calc-time "all-aggregations" all-aggregations)
 
         ;; discard the intermediary results, i.e. keep only those items in the

@@ -5,6 +5,7 @@
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
             [corona.common :as com]
+            [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -72,7 +73,7 @@
           utc/transpose
           (partial map (partial rank-for-case stats-countries))
           (partial map lense-fun))
-         com/ranking-cases)]
+         cases/ranking-cases)]
     {:lense-fun lense-fun
      :vals
      (map (fn [ccode]
@@ -117,7 +118,7 @@
                      ((comp
                        (partial map (fn [k]
                                       (hash-map k (- (k lst) (k fst))))))
-                      com/all-cases))))
+                      cases/all-cases))))
    pair))
 
 (defn pairs [ls-init]

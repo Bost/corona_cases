@@ -9,6 +9,7 @@
             [clojure2d.core :as c2d]
             [corona.api.cache :as cache]
             [corona.common :as com :refer [sum]]
+            [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -16,7 +17,8 @@
             ;; shown when released. WTF?
             cljplot.core
             [corona.macro :refer [defn-fun-id debugf infof]]
-            [utils.core :refer [in?]])
+            [utils.core :refer [in?]]
+            [corona.models.dbase :as dbase])
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
            [java.time LocalDate ZoneId]
@@ -32,7 +34,7 @@
     first
     (partial map :threshold)
     (partial filter (fn [m] (= (:kw m) case-kw))))
-   com/case-params))
+   cases/case-params))
 
 (defn min-threshold
   "Countries with the number of cases less than the threshold are grouped into
@@ -299,6 +301,9 @@
           (infof "%s; %s countries above threshold. Raise to %s"
                  case-kw cnt-countries raised-threshold)
           (swap! cache/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
+          (dbase/upsert-threshold! {:kw case-kw
+                                    :inc threshold-increase
+                                    :val raised-threshold})
           (group-below-threshold (assoc prm :threshold raised-threshold)))
         {:data res :threshold threshold}))))
 
@@ -376,7 +381,7 @@
           com/bot-name
           ((comp
             (fn [s] (str s postfix))
-            (partial com/text-for-case case-kw))
+            (partial cases/text-for-case case-kw))
            [lang/confirmed lang/recovered lang/deaths lang/active-cases])
           threshold))
 

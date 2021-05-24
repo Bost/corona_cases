@@ -3,6 +3,7 @@
 (ns corona.commands
   (:require [clojure.string :as cstr]
             [corona.common :as com]
+            [corona.cases :as cases]
             [corona.api.cache :as cache]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -137,14 +138,14 @@
                  (partial get-in @cache/cache)
                  (partial apply msgl/list-kw)
                  (fn [case-kw]
-                   [(if (in? com/listing-cases-per-1e5 case-kw)
+                   [(if (in? cases/listing-cases-per-1e5 case-kw)
                       'corona.msg.text.lists/per-1e5
                       'corona.msg.text.lists/absolute-vals)
                     case-kw]))
                 case-kw))
         :desc (lang/list-sorted-by-desc case-kw)}))
-    (partial into com/listing-cases-per-1e5))
-   com/listing-cases-absolute))
+    (partial into cases/listing-cases-per-1e5))
+   cases/listing-cases-absolute))
 
 (def all-handlers
   "Create a vector of hash-maps for all available commands."

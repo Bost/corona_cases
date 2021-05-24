@@ -265,7 +265,7 @@ CREATE INDEX IF NOT EXISTS message_id ON callback_query (message_id);
 
 -- migration 001
 CREATE TABLE IF NOT EXISTS thresholds (
-  kw VARCHAR(255) NOT NULL DEFAULT '',
+  kw VARCHAR(255) NOT NULL UNIQUE,
   inc integer,
   val integer,
   updated_at timestamp(0) NULL DEFAULT NULL
