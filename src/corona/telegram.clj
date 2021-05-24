@@ -402,17 +402,19 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   "Fetch api service data and only then register the telegram commands."
   []
   (infof "Starting ...")
-  (macro/system-ok?)
-  (reset-cache!)
-  (swap! initialized (fn [_]
-                       ;; TODO use morse.handler instead of true?
-                       true))
-  (let [funs (into [p-endlessly]
-                   (when-not com/use-webhook?
-                     [p-long-polling]))]
-    (debugf "Parallel run %s ..." funs)
-    (pmap (fn [fun] (fun)) funs))
-  (infof "Starting ... done"))
+  (if (macro/system-ok?)
+    (do
+      (reset-cache!)
+      (swap! initialized (fn [_]
+                           ;; TODO use morse.handler instead of true?
+                           true))
+      (let [funs (into [p-endlessly]
+                       (when-not com/use-webhook?
+                         [p-long-polling]))]
+        (debugf "Parallel run %s ..." funs)
+        (pmap (fn [fun] (fun)) funs))
+      (infof "Starting ... done"))
+    (fatalf "Start aborted")))
 
 (defn-fun-id stop "" []
   (infof "Stopping ...")
