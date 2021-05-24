@@ -395,9 +395,10 @@
              :accept :json}
             ;; tbeg must be captured before the monadic function composition
             init-state {:tbeg (system-time) :acc []}]
-        #_(clj-http.client/get url prms)
-        ;; TODO there's a bug in the monad or something!
-        ((comp
+        ;; Can't use the monad due to the bug:
+        ;;   Unable to make field jdk.internal.ref.PhantomCleanable
+        (clj-http.client/get url prms)
+        #_((comp
           first
           (domonad
            #_identity-m
