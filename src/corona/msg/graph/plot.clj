@@ -277,8 +277,8 @@
     (let [cnt-countries (count (group-by :ccode res))]
       (if (> cnt-countries max-plot-lines)
         (let [raised-threshold (+ threshold-increase threshold)]
-          (infof "%s; %s countries above threshold. Raise to %s"
-                 case-kw cnt-countries raised-threshold)
+          (infof "%s; %s countries above threshold %s. Raise to %s"
+                 case-kw cnt-countries threshold raised-threshold)
           (swap! cache/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
           (dbase/upsert-threshold! {:kw case-kw
                                     :inc threshold-increase

@@ -13,7 +13,9 @@
         exists-kw :exists]
     (with-open [connection (jdbc/get-connection mcom/datasource)]
       ((comp
-        (fn [rows] (-> rows first exists-kw))
+        exists-kw
+        first
+        (fn [result] (debugf "result:\n    %s" result) result)
         (fn [cmd] (jdbc/execute! connection [cmd id]))
         #_(reduce my-fn init-value (jdbc/plan connection [...]))
         (fn [cmd] (debugf "\n%s" cmd) cmd))
@@ -70,7 +72,7 @@
           cols [:id :first_name :username :type :created_at]
           prep-stmt (prepate-statement insert table cols)]
       ((comp
-        #_(fn [res] (debugf "res: %s" res) res)
+        (fn [result] (debugf "result:\n    %s" result) result)
         (fn [cmd] (try (jdbc/execute-one! connection cmd)
                        (catch Exception e
                          (errorf "Caught %s" e))))
@@ -83,7 +85,6 @@
 (defn-fun-id upsert-threshold!
   "(upsert-threshold! {:kw :v :inc (int 1e6) :val (int 1e7)})"
   [{:keys [kw inc val] :as prm}]
-  (def prm prm)
   (with-open [connection (jdbc/get-connection mcom/datasource)]
     (let [table "thresholds"
           cols [:kw :inc :val :updated_at]
@@ -92,30 +93,30 @@
                             :conflict-col (name :kw)
                             :set-cmd (str
                                       (name :val) " = " val
-                                      ","
-                                      ;; (name :updated_at) " = " cast('now()' as timestamp(0))
+                                      ", "
                                       (name :updated_at) " = cast('now()' as timestamp(0))"
                                       ))
                      table cols)]
-      (debugf "prep-stmt\n    %s" prep-stmt)
+      (debugf "prep-stmt:\n    %s" prep-stmt)
       ((comp
-        #_(fn [res] (debugf "res: %s" res) res)
+        (fn [result] (debugf "result:\n    %s" result) result)
         (fn [cmd] (try (jdbc/execute-one! connection cmd)
                       (catch Exception e
                         (errorf "Caught %s" e))))
-        (fn [cmd] (debugf "cmd %s" cmd) cmd)
+        (fn [cmd] (debugf "cmd:\n    %s" cmd) cmd)
         (partial into [prep-stmt])
         (partial map (fn [v] (if (keyword? v) (name v) v))))
        #_[:v (int 1e6) (int 1e7) "now()"]
        [kw inc val "now()"]))))
 
-(defn get-thresholds []
+(defn-fun-id get-thresholds "" []
   (with-open [connection (jdbc/get-connection mcom/datasource)]
     (let [table "thresholds"]
       ((comp
+        (fn [result] (debugf "result:\n    %s" result) result)
         (fn [cmd] (jdbc/execute! connection [cmd]))
         #_(reduce my-fn init-value (jdbc/plan connection [...]))
-        (fn [cmd] (timbre/debugf "\n%s" cmd)
+        (fn [cmd] (debugf "cmd:\n    %s" cmd)
           cmd))
        (format "select * from %s" (pr-str table))))))
 
