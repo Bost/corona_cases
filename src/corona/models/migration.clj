@@ -268,7 +268,8 @@ CREATE TABLE IF NOT EXISTS thresholds (
   kw VARCHAR(255) NOT NULL UNIQUE,
   inc integer,
   val integer,
-  updated_at timestamp(0) NULL DEFAULT NULL
+  updated_at timestamp(0) NULL DEFAULT NULL,
+  PRIMARY KEY (kw)
 );
 
 END

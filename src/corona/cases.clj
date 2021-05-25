@@ -17,66 +17,59 @@
   `(->> ~coll ~@fns)
   #_`(sequence (eduction ~@fns ~coll)))
 
-(defn-fun-id norm "" [dbt kw default]
+(def threshold-defaults
+  ((comp (partial sort-by :kw))
+   [{:kw :v :inc (int 1e6) :val (int 1e7)}
+    {:kw :p :inc (int 1e6) :val (int 1e7)}
+    {:kw :n :inc 50000     :val (int 3660e3)}
+    {:kw :r :inc 10000     :val (int 2937e3)}
+    {:kw :d :inc 1000      :val (int 87e3)}
+    {:kw :a :inc 10000     :val (int 1029e3)}]))
+
+(defn norm [raw-ths]
   ((comp
-    (fn [col] (if-let [fst ((comp first seq) col)]
-                ((comp
-                  (fn [m] (update-in m [:kw] keyword))
-                  (fn [m]
-                    (clojure.set/rename-keys
-                     m
-                     {:thresholds/kw :kw
-                      :thresholds/inc :inc
-                      :thresholds/val :val
-                      :thresholds/updated_at :updated_at})))
-                 fst)
-                (do
-                  (warnf "%s Using default threshold %s" kw default)
-                  default)))
-    (partial filter (comp
-                     (partial = kw)
-                     keyword
-                     :thresholds/kw)))
-   dbt))
+    (fn [ths] (def ths ths) ths)
+    (partial map
+             (comp
+              (fn [m] (update-in m [:kw] keyword))
+              (fn [m]
+                (clojure.set/rename-keys
+                 m
+                 {:thresholds/kw :kw
+                  :thresholds/inc :inc
+                  :thresholds/val :val
+                  :thresholds/updated_at :updated_at}))))
+    (fn [ths] (def raw-ths ths) ths))
+   raw-ths))
 
-(defonce case-params
-  ;; :idx - defines an order in appearance
-  ;; :v ~ vaccinated
-  ;; :p ~ population
-  ;; :n ~ new-confirmed cased
-  ;; :c ~ closed cases
-  ;; :r ~ recovered cases
-  ;; :d ~ deaths
-  ;; :a ~ active cases i.e. ill
-  (let [dbt
-        (dbase/get-thresholds)]
-    [{:idx  0 :kw :v                :threshold (norm dbt :v {:inc (int 1e6) :val (int 1e7)})}
-     {:idx  1 :kw :p                :threshold (norm dbt :p {:inc (int 1e6) :val (int 1e7)})}
-     {:idx  2 :kw :n                :threshold (norm dbt :n {:inc 50000     :val (int 3660e3)})}
-     {:idx  3 :kw :r :listing-idx 1 :threshold (norm dbt :r {:inc 10000     :val (int 2937e3)})}
-     {:idx  4 :kw :d :listing-idx 2 :threshold (norm dbt :d {:inc 1000      :val (int 87e3)})}
-     {:idx  5 :kw :a :listing-idx 0 :threshold (norm dbt :a {:inc 10000     :val (int 1029e3)})}
+(def case-params
+  [{:idx  0 :kw :v}
+   {:idx  1 :kw :p}
+   {:idx  2 :kw :n}
+   {:idx  3 :kw :r :listing-idx 1}
+   {:idx  4 :kw :d :listing-idx 2}
+   {:idx  5 :kw :a :listing-idx 0}
 
-     ;; TODO the order matters: it must be the same as in the info-message
-     {:idx  6 :kw :v1e5}
-     {:idx  7 :kw :a1e5}
-     {:idx  8 :kw :r1e5}
-     {:idx  9 :kw :d1e5}
-     {:idx 10 :kw :c1e5}  ;; closed-per-1e5
+   ;; TODO the order matters: it must be the same as in the info-message
+   {:idx  6 :kw :v1e5}
+   {:idx  7 :kw :a1e5}
+   {:idx  8 :kw :r1e5}
+   {:idx  9 :kw :d1e5}
+   {:idx 10 :kw :c1e5}  ;; closed-per-1e5
 
-     {:idx 11 :kw :v%}
-     {:idx 12 :kw :a%}
-     {:idx 13 :kw :r%}
-     {:idx 14 :kw :d%}
-     {:idx 15 :kw :c%}     ;; closed-rate
-     {:idx 16 :kw :ea}     ;; estimate-active
-     {:idx 17 :kw :er}     ;; estimate-recovered
-     {:idx 18 :kw :ea1e5} ;; estimate-active-per-1e5
-     {:idx 19 :kw :er1e5} ;; estimate-recovered-per-1e5
-     {:idx 20 :kw :c}      ;; closed
-     {:idx 21 :kw :ec}     ;; estimate-closed
-     {:idx 22 :kw :ec1e5} ;; estimate-closed-per-1e5
-     ]))
+   {:idx 11 :kw :v%}
+   {:idx 12 :kw :a%}
+   {:idx 13 :kw :r%}
+   {:idx 14 :kw :d%}
+   {:idx 15 :kw :c%}     ;; closed-rate
+   {:idx 16 :kw :ea}     ;; estimate-active
+   {:idx 17 :kw :er}     ;; estimate-recovered
+   {:idx 18 :kw :ea1e5} ;; estimate-active-per-1e5
+   {:idx 19 :kw :er1e5} ;; estimate-recovered-per-1e5
+   {:idx 20 :kw :c}      ;; closed
+   {:idx 21 :kw :ec}     ;; estimate-closed
+   {:idx 22 :kw :ec1e5} ;; estimate-closed-per-1e5
+   ])
 
 (def aggregation-params
   ":idx - defines an order in appearance"

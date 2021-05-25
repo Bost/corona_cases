@@ -27,27 +27,6 @@
 
 ;; (set! *warn-on-reflection* true)
 
-(defn- threshold
-  "See also https://github.com/rplevy/swiss-arrows"
-  [case-kw]
-  ((comp
-    first
-    (partial map :threshold)
-    (partial filter (fn [m] (= (:kw m) case-kw))))
-   cases/case-params))
-
-(defn min-threshold
-  "Countries with the number of cases less than the threshold are grouped into
-  \"Rest\"."
-  [aggregation-kw case-kw]
-  (cache/from-cache! (fn [] ((comp :val threshold) case-kw))
-                    [:threshold aggregation-kw case-kw]))
-
-(defn threshold-increase
-  "Case-dependent threshold recalculation increase."
-  [case-kw]
-  ((comp :inc threshold) case-kw))
-
 (defn metrics-prefix-formatter
   "Show 1k instead of 1000; i.e. kilo, mega etc.
       1 400 -> 1400
@@ -395,13 +374,26 @@
                            }}))
 
 (defn-fun-id aggregation-img ""
-  [stats last-date cnt-reports aggregation-kw case-kw]
+  [thresholds stats last-date cnt-reports aggregation-kw case-kw]
+;; (def thresholds thresholds)
+;; (def stats stats)
+;; (def last-date last-date)
+;; (def cnt-reports cnt-reports)
+;; (def aggregation-kw aggregation-kw)
+;; (def case-kw case-kw)
   (let [{data :data threshold-recalced :threshold}
-        (stats-all-by-case {:report cnt-reports
-                            :stats stats
-                            :threshold (min-threshold aggregation-kw case-kw)
-                            :threshold-increase (threshold-increase case-kw)
-                            :case-kw case-kw})]
+        (stats-all-by-case
+         (conj
+          {:report cnt-reports
+           :stats stats
+           :case-kw case-kw}
+          (let [th ((comp
+                     first
+                     (partial filter (comp (partial = case-kw) :kw)))
+                    thresholds)]
+            {:threshold (cache/from-cache! (fn [] (:val th))
+                                           [:threshold aggregation-kw case-kw])
+             :threshold-increase (:inc th)})))]
     (boiler-plate
      {:series (condp = aggregation-kw
                 :abs ((comp
@@ -428,13 +420,14 @@
   ([id aggregation-kw case-kw]
    {:pre [(string? id)]}
    (get-in @cache/cache [:plot (keyword id) aggregation-kw case-kw]))
-  ([stats last-date cnt-reports id aggregation-kw case-kw]
+  ([thresholds stats last-date cnt-reports id aggregation-kw case-kw]
    {:pre [(string? id)]}
    (cache/cache! (fn []
                    ((comp
                      #_(fn [arr] (com/heap-info) arr)
                      to-byte-array-auto-closable)
-                    (aggregation-img stats last-date cnt-reports aggregation-kw case-kw)))
+                    (aggregation-img thresholds stats last-date cnt-reports
+                                     aggregation-kw case-kw)))
                  [:plot (keyword id) aggregation-kw case-kw])))
 
 ;;;; lazy-evaluation CPS (Continuation Passing Style)

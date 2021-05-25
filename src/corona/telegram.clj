@@ -308,6 +308,21 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
            (Thread/sleep 100)))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
 
+        thresholds
+        (let [norm-ths (cases/norm (dbase/get-thresholds))]
+          ((comp
+            m-result
+            (partial concat norm-ths)
+            flatten
+            (partial map (fn [case-kw]
+                           (filter (comp (partial = case-kw) :kw)
+                            #_(fn [m] (= kw (:kw m))) cases/threshold-defaults)))
+            (fn [ts]
+              (clojure.set/difference
+               (set (map :kw cases/threshold-defaults))
+               (set (map :kw ts)))))
+           norm-ths))
+
         all-aggregations
         ((comp
           m-result doall
@@ -315,9 +330,11 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
           ;; 1. map 4100ms, pmap 8737ms
           ;; 2. map 3982ms
           ;; 3. map 3779ms
-          (partial map (partial apply plot/aggregation!
-                                estim last-date
-                                cnt-reports aggregation-hash)))
+          (partial map
+                   (partial apply
+                            plot/aggregation!
+                            thresholds estim last-date cnt-reports
+                            aggregation-hash)))
          cases/cartesian-product-all-case-types)
         _ (com/add-calc-time "all-aggregations" all-aggregations)
 

@@ -46,7 +46,7 @@
 
 ;; TODO create spec against the :else branch
 (defn-fun-id prepate-statement ""
-  [{:keys [type cmd conflict-col set-cmd]} table cols]
+  [{:keys [type cmd conflict-col set-cmd] :as crud-cmd} table cols]
   (cond
     (= type :upsert)
     (format cmd
