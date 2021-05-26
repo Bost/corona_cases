@@ -29,6 +29,7 @@
             [corona.models.migration :as schema]
             ;; needed for the 'ok?' macro
             corona.models.migration
+            [corona.api.cache :as cache]
             )
   (:import java.time.ZoneId
            java.util.TimeZone))
@@ -125,6 +126,11 @@
                    id
                    (keyword aggregation)
                    (keyword case))})
+  (cjc/GET (format "/dbg" ws-path) []
+           {:status 200
+            :headers {"Content-Type" "application/json"}
+            :body
+            (json/write-str (get-in @cache/cache [:dbg]))})
   #_(cjc/GET (format "/%s/beds" ws-path) []
     (webresp/web-service {:type :beds}))
   #_(cjc/GET (format "/%s/names" ws-path) []

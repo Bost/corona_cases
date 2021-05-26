@@ -204,10 +204,11 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                      #_(fn [v] (def pd v) v)
                      (partial v1/pic-data cnt-reports)
                      (fn [x]
-                       (def cnt-reports cnt-reports)
-                       (def raw-dates-v1 raw-dates-v1)
-                       (def json-v1 json-v1)
-                       (def json-owid json-owid)
+                       (swap! cache/cache update-in [:dbg]
+                              (fn [_] {:cnt-reports cnt-reports
+                                       :raw-dates-v1 raw-dates-v1
+                                       :json-v1 json-v1
+                                       :json-owid json-owid}))
                        x)
                      data/data-with-pop)
                raw-dates-v1 json-v1 json-owid)
@@ -348,7 +349,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                    {:v1   {:json-hash (get-in @cache/cache [:v1   :json-hash])}}
                    {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
                    (select-keys
-                    @cache/cache [:plot :msg :list :threshold])))))
+                    @cache/cache [:plot :msg :list :threshold :dbg])))))
 
         garbage-coll
         (m-result
