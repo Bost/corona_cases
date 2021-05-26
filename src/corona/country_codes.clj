@@ -7,7 +7,8 @@
             [clojure.string :as cstr]
             taoensso.encore
             [taoensso.timbre :as timbre]
-            [taoensso.timbre.appenders.core :as appenders]))
+            [taoensso.timbre.appenders.core :as appenders]
+            [corona.common :as com]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -51,14 +52,14 @@
 
 #_(timbre/set-config! timbre/default-config)
 (timbre/merge-config!
- {:output-fn
-  log-output
-  #_timbre/default-output-fn
-  ;; TODO log only last N days
-  :appenders {:spit (appenders/spit-appender {:fname "corona.log"})}
-  :timestamp-opts
-  (conj {:timezone (java.util.TimeZone/getTimeZone zone-id)}
-        {:pattern "HH:mm:ss.SSSX"})})
+ (conj
+  {:output-fn log-output #_timbre/default-output-fn
+   :timestamp-opts
+   (conj {:timezone (java.util.TimeZone/getTimeZone zone-id)}
+         {:pattern "HH:mm:ss.SSSX"})}
+  (when-not (= com/env-type :devel)
+    ;; TODO log only last N days
+    {:appenders {:spit (appenders/spit-appender {:fname "corona.log"})}})))
 
 (def country-codes
   ["CR" "TG" "TJ" "ZA" "IM" "PE" "LC" "CH" "RU" "MP" "CK" "SI" "AU" "KR" "IT"
