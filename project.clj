@@ -40,7 +40,7 @@
 
    ;; for the get-json function. Not having it cheshire as a dependency results
    ;; in: `namespace 'cheshire.factory' not found`
-   [clj-http                "3.12.1"]
+   [clj-http                "3.12.2"]
 
    ;; Clojure interface for Telegram Bot API
    [org.clojars.bost/morse  "0.0.0-164-0xe94b"]

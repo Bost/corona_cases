@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <groupId>corona_cases</groupId>
   <artifactId>corona_cases</artifactId>
-  <version>2.6.1</version>
+  <version>2.6.2</version>
   <name>corona_cases</name>
   <dependencies>
     <dependency>
@@ -70,7 +70,7 @@
     <dependency>
       <groupId>clj-http</groupId>
       <artifactId>clj-http</artifactId>
-      <version>3.12.1</version>
+      <version>3.12.2</version>
     </dependency>
     <dependency>
       <groupId>org.clojars.bost</groupId>

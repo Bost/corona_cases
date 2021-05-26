@@ -34,7 +34,7 @@
 
   ;; for the get-json function. Not having it cheshire as a dependency results
   ;; in: `namespace 'cheshire.factory' not found`
-  clj-http/clj-http {:mvn/version "3.12.1"}
+  clj-http/clj-http {:mvn/version "3.12.2"}
 
   ;; TODO see also https://github.com/meinside/clogram.git
   ;; TODO see also https://github.com/wdhowe/telegrambot-lib.git
