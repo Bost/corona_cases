@@ -122,28 +122,6 @@
                  {:keys [confirmed ccode t]}
                  {:keys [recovered]}
                  {:keys [deaths]}]
-               #_(let [new-confirmed confirmed
-                       prm {:ccode ccode
-                            :t     t
-                            :p     population
-                            :v     vaccinated
-                            :a     (com/calc-active new-confirmed recovered deaths)
-                            :r     recovered
-                            :d     deaths
-                            :n     new-confirmed
-                            :c     (com/calc-closed deaths recovered)}
-                       kws [#_:v :a :r :d :c]]
-                   ((comp
-                     (partial conj
-                              {:ccode ccode :t t :p population :v vaccinated :n new-confirmed})
-                     (partial zipmap [:abs :1e5 :%%%])
-                     (partial map (partial zipmap kws))
-                     utc/transpose
-                     (partial map (fn [case-kw]
-                                    [((identity case-kw) prm)
-                                     ((com/calc-per-1e5 case-kw) prm)
-                                     ((com/calc-rate case-kw) prm)])))
-                    kws))
                (let [new-confirmed confirmed
                      prm {:ccode ccode
                           :t     t
@@ -155,26 +133,6 @@
                           :n     new-confirmed
                           :c     (com/calc-closed deaths recovered)}]
                  ((comp
-                   #_(partial
-                      conj
-                      (let [kws [:a :r :d :c]]
-                        {
-                         ;; :ccode ccode :t t :p p :v v :n n
-                         :abs prm
-                         #_((comp
-                             (partial into {})
-                             (partial map (fn [kw] {kw (kw prm)})))
-                            kws)
-                         :1e5
-                         ((comp
-                           (partial into {})
-                           (partial map (fn [kw] {kw ((com/calc-per-1e5 kw) prm)})))
-                          kws)
-                         :%
-                         ((comp
-                           (partial into {})
-                           (partial map (fn [kw] {kw ((com/calc-rate kw) prm)})))
-                          kws)}))
                    (partial conj prm)
                    (partial reduce into {})
                    (partial map (fn [rate-kw per-1e5-kw case-kw]
