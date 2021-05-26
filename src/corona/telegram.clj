@@ -368,17 +368,17 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         hash-kws (conj cache-storage :json-hash)
         old-hash (get-in @cache/cache hash-kws)
         new-hash (com/hash-fn json)
-        hashes-changed (not= old-hash new-hash)]
-    (debugf "%s; old hash %s; new hash %s; hashes-changed: %s"
-            cache-storage old-hash new-hash hashes-changed)
-    (when hashes-changed
+        hash-changed (not= old-hash new-hash)]
+    (debugf "%s; old hash %s; new hash %s; hash-changed: %s"
+            cache-storage old-hash new-hash hash-changed)
+    (when hash-changed
       (swap! cache/cache update-in hash-kws (fn [_] new-hash))
       #_(do
           (debugf "(System/gc)")
           (System/gc) ;; also (.gc (Runtime/getRuntime))
           (Thread/sleep 100)
-          #_(com/heap-info))
-      json)))
+          #_(com/heap-info)))
+    {:json json :hash-changed hash-changed}))
 
 (defn-fun-id reset-cache! "" []
   ;; full cache cleanup is not really necessary
@@ -386,8 +386,11 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   ((comp
     (partial
      apply
-     (fn [json-owid json-v1]
-       (let [any-json-changed (some boolean [json-owid json-v1])]
+     (fn [hm-owid hm-v1]
+       (let [any-json-changed ((comp
+                                (partial some boolean)
+                                (partial map :hash-changed))
+                               [hm-owid hm-v1])]
          (debugf "any-json-changed %s" any-json-changed)
          (when any-json-changed
            #_(calc-cache! (cache/aggregation-hash)
@@ -399,10 +402,11 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                first
                (domonad state-m
                         [calc-result
-                         (m-result
-                          (calc-cache! (cache/aggregation-hash)
-                                       json-owid
-                                       json-v1))
+                         ((comp
+                           m-result
+                           (partial apply (partial calc-cache! (cache/aggregation-hash)))
+                           (partial map :json))
+                          [hm-owid hm-v1])
                          _ (com/add-calc-time "calc-cache!" calc-result)]
                         calc-result))
               init-state))))))
