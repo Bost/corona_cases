@@ -5,7 +5,8 @@
             [clojure.edn :as edn]
             [clojure.string :as cstr]
             [corona.api.cache :as cache]
-            [corona.common :as com]
+            [corona.common :as com :refer [lense kact kd kest kmax krep k1e5
+                                           kls7 kabs kavg]]
             [corona.cases :as cases]
             [corona.estimate :as est]
             [corona.lang :as lang]
@@ -106,50 +107,53 @@
    (format "%s\n"
            lang/data-source-text)
    "\n"
-   (format "• %s %s = %s + %s\n"
-           lang/closed lang/cases lang/recovered lang/deaths)
-   (format "• %s: <%s> / %s\n" lang/percentage-calc lang/cases lang/confirmed)
-   (format (str "• %s:\n"
-                "  %s\n")
-           lang/active-last-7
-           (:doc (meta #'lang/active-last-7)))
-   (format (str "• %s:\n"
-                "  %s\n")
-           lang/vaccin-last-7
-           (:doc (meta #'lang/vaccin-last-7)))
-   #_(format (str "• %s:\n"
+   (com/encode-pseudo-cmd
+    (str
+     (format "• %s %s = %s + %s\n"
+             lang/closed lang/cases lang/recovered lang/deaths)
+     (format "• %s: <%s> / %s\n" lang/percentage-calc lang/cases lang/confirmed)
+     (format (str "• %s:\n"
                   "  %s\n")
-             lang/active-last-7-med
-             (:doc (meta #'lang/active-last-7-med)))
-   (format (str "• %s:\n"
-                "  %s\n")
-           lang/active-last-7-avg
-           (:doc (meta #'lang/active-last-7-avg)))
-   (format (str "• %s = (%s - %s) / 7\n"
-                "  %s\n")
-           lang/active-change-last-7-avg
-           lang/active lang/active-last-8th
-           (:doc (meta #'lang/active-change-last-7-avg)))
-   ;; (abbreviated) content of the former reference message
-   (format (str "• %s, %s, %s, %s:\n"
-                "  %s\n")
-           lang/active-per-1e5
-           lang/recove-per-1e5
-           lang/deaths-per-1e5
-           lang/closed-per-1e5
-           lang/cases-per-1e5)
-   "\n"
-   (format "%s:\n" lang/estim-motivation)
-   (format (str "• %s:\n"
-                "  %s: %s\n")
-           lang/recov-estim
-           lang/recov-estim-explained
-           est/shift-recovery)
-   (format (str "• %s:\n"
-                "  %s: %s\n")
-           lang/activ-estim
-           lang/activ-estim-explained
-           est/shift-deaths)
+             lang/active-last-7
+             (:doc (meta #'lang/active-last-7)))
+     (format (str "• %s:\n"
+                  "  %s\n")
+             lang/vaccin-last-7
+             (:doc (meta #'lang/vaccin-last-7)))
+     #_(format (str "• %s:\n"
+                    "  %s\n")
+               lang/active-last-7-med
+               (:doc (meta #'lang/active-last-7-med)))
+     (format (str "• %s:\n"
+                  "  %s\n")
+             lang/active-last-7-avg
+             (:doc (meta #'lang/active-last-7-avg)))
+     (format (str "• %s = (%s - %s) / 7\n"
+                  "  %s\n")
+             lang/active-change-last-7-avg
+             lang/active lang/active-last-8th
+             (:doc (meta #'lang/active-change-last-7-avg)))
+     ;; (abbreviated) content of the former reference message
+     (format (str "• %s, %s, %s, %s:\n"
+                  "  %s\n")
+             lang/active-per-1e5
+             lang/recove-per-1e5
+             lang/deaths-per-1e5
+             lang/closed-per-1e5
+             lang/cases-per-1e5)
+     "\n"
+     (format "%s:\n" lang/estim-motivation)
+     (format (str "• %s:\n"
+                  "  %s: %s\n")
+             lang/recov-estim
+             lang/recov-estim-explained
+             est/shift-recovery)
+     (format (str "• %s:\n"
+                  "  %s: %s\n")
+             lang/activ-estim
+             lang/activ-estim-explained
+             est/shift-deaths))
+    parse_mode)
    "\n"
    (format "🙏 Thanks goes to %s. Please ✍️ write %s\n"
            (com/encode-cmd lang/contributors)

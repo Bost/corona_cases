@@ -160,6 +160,12 @@
     (fun))
   (warnf "Starting ... done. Data will NOT be updated!"))
 
+(defn gc []
+  #_(do
+    (timbre/debugf "(System/gc)")
+    (System/gc) ;; also (.gc (Runtime/getRuntime))
+    (Thread/sleep 100)))
+
 (defn-fun-id calc-cache!
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
@@ -190,66 +196,85 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                                :cnt-reports cnt-reports})
         _ (com/add-calc-time "prm-base" prm-base)
 
-        garbage-coll
-        (m-result
-         (do
-           (debugf "(System/gc)")
-           (System/gc) ;; also (.gc (Runtime/getRuntime))
-           (Thread/sleep 100)))
+        garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
 
-        estim ((comp m-result
-                     #_(fn [v] (def es v) v)
-                     est/estimate
-                     #_(fn [v] (def pd v) v)
-                     (partial v1/pic-data cnt-reports)
-                     (fn [x]
-                       (swap! cache/cache update-in [:dbg]
-                              (fn [_] {:cnt-reports cnt-reports
-                                       :raw-dates-v1 raw-dates-v1
-                                       :json-v1 json-v1
-                                       :json-owid json-owid}))
-                       x)
-                     data/data-with-pop)
-               raw-dates-v1 json-v1 json-owid)
-        _ (com/add-calc-time "estim" estim)
+        estim-old
+        ((comp m-result
+               (fn [v] (def eo v) v)
+               est/estimate
+               (fn [v] (def po v) v)
+               (partial v1/pic-data cnt-reports)
+               #_(fn [x]
+                   (swap! cache/cache update-in [:dbg]
+                          (fn [_] {:cnt-reports cnt-reports
+                                   :raw-dates-v1 raw-dates-v1
+                                   :json-v1 json-v1
+                                   :json-owid json-owid}))
+                   x)
+               data/data-with-pop)
+         raw-dates-v1 json-v1 json-owid)
+        _ (com/add-calc-time "estim-old" estim-old)
 
-        ;; WTF!?! Size of estim and stats-countries is too big. See filtering of
+        estim-new
+        ((comp m-result
+               (fn [v] (def en v) v)
+               est/estimate-new
+               (fn [v] (def pn v) v)
+               (partial v1/pic-data-new cnt-reports)
+               #_(fn [x]
+                   (swap! cache/cache update-in [:dbg]
+                          (fn [_] {:cnt-reports cnt-reports
+                                   :raw-dates-v1 raw-dates-v1
+                                   :json-v1 json-v1
+                                   :json-owid json-owid}))
+                   x)
+               data/data-with-pop)
+         raw-dates-v1 json-v1 json-owid)
+        _ (com/add-calc-time "estim-new" estim-new)
+
+        ;; WTF!?! Size of estim-old and stats-countries-old is too big. See filtering of
         ;; sorted / unsorted data
         ;; [pic-data] 46.9 MiB
-        ;; [estim] 151.7 MiB
-        ;; [stats-countries] 151.7 MiB; should be just ~184.0 KiB
-        stats-countries
+        ;; [estim-old] 151.7 MiB
+        ;; [stats-countries-old] 151.7 MiB; should be just ~184.0 KiB
+        stats-countries-old
         ((comp
           m-result
-          #_(fn [v] (def sc v) v)
+          (fn [v] (def so v) v)
           (partial filter (fn [hm] (= (:t hm) last-date)))
           #_(partial sort-by (juxt :ccode :t)))
-        estim)
-        _ (com/add-calc-time "stats-countries" stats-countries)
+        estim-old)
+        _ (com/add-calc-time "stats-countries-old" stats-countries-old)
 
-        garbage-coll
-        (m-result
-         (do
-           (debugf "(System/gc)")
-           (System/gc) ;; also (.gc (Runtime/getRuntime))
-           (Thread/sleep 100)))
+        stats-countries-new
+        ((comp
+          m-result
+          (fn [v] (def sn v) v)
+          (partial filter (fn [hm] (= (:t hm) last-date)))
+          #_(partial sort-by (juxt :ccode :t)))
+         estim-new)
+        _ (com/add-calc-time "stats-countries-new" stats-countries-new)
+
+        garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
 
         ;; TODO always use estimated vals since there is at
         ;; least 1 country not reporting recovered cases
-        lense-fun (m-result com/estim-fun)
+        lense-fun-old (m-result com/estim-fun)
+        lense-fun-new (m-result com/estim-fun-new)
 
-        all-calc-listings
+        all-calc-listings-old
         (let [prm (assoc prm-base
                          :ccode (ccr/get-country-code ccc/worldwide)
-                         :lense-fun lense-fun)]
+                         :lense-fun lense-fun-old)]
           ((comp
             m-result doall
-            (partial map (partial apply msgl/calc-listings! stats-countries prm)))
+            (partial map (partial apply msgl/calc-listings!
+                                  stats-countries-old prm)))
            [[cases/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
             [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
-        _ (com/add-calc-time "all-calc-listings" all-calc-listings)
+        _ (com/add-calc-time "all-calc-listings-old" all-calc-listings-old)
 
         _ (m-result
            ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
@@ -257,63 +282,78 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
              (warnf "Some stuff may not be calculated. Too few %s: %s"
                     'cnt-reports cnt-reports)))
 
-        garbage-coll
-        (m-result
-         (do
-           (debugf "(System/gc)")
-           (System/gc) ;; also (.gc (Runtime/getRuntime))
-           (Thread/sleep 100)))
+        all-calc-listings-new
+        (let [prm-new
+              (assoc prm-base
+                     :ccode (ccr/get-country-code ccc/worldwide)
+                     ;; :lense-fun lense-fun-old
+                     ;; :lense-fun-new lense-fun-new
+                     :lense-fun lense-fun-new
+                     )]
+          ((comp
+            m-result doall
+            (partial map (partial apply msgl/calc-listings!-new
+                                  stats-countries-new prm-new)))
+           [[cases/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
+            [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
+        _ (com/add-calc-time "all-calc-listings-new" all-calc-listings-new)
+
+        garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
 
-        rankings
-        ((comp m-result)
-         (msgi/all-rankings lense-fun stats-countries))
-        _ (com/add-calc-time "rankings" rankings)
+        lense-fun-ranking-old (m-result com/estim-fun)
+        lense-fun-ranking-new (m-result com/ranking-fun)
 
-        garbage-coll
-        (m-result
-         (do
-           (debugf "(System/gc)")
-           (System/gc) ;; also (.gc (Runtime/getRuntime))
-           (Thread/sleep 100)))
+        rankings-old
+        ((comp
+          m-result
+          (fn [v]
+            (def lense-fun-ranking-old lense-fun-ranking-old)
+            (def ro v) v))
+         (msgi/all-rankings lense-fun-ranking-old stats-countries-old))
+        _ (com/add-calc-time "rankings-old" rankings-old)
+
+        rankings-new
+        ((comp
+          m-result
+          (fn [v] (def rn v) v))
+         (msgi/all-rankings-new lense-fun-ranking-new stats-countries-new))
+        _ (com/add-calc-time "rankings-new" rankings-new)
+
+        garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
-        (let [sorted-estim (sort-by :t estim)]
+        (let [sorted-estim-new (sort-by :t estim-new)]
           ((comp
             m-result doall
             (partial map ;; pmap is faster however it eats too much memory
                      (fn [ccode]
-                       [(cache/cache!
+                       [#_(debugf (str "Creating messages... ccode " ccode))
+                        (cache/cache!
                          (fn []
                            (msgi/message
-                            ccode estim dates rankings cnt-reports prm-base))
+                            ccode estim-new dates rankings-new cnt-reports prm-base))
                          (msgi/message-kw ccode))
-                        #_(debugf "msgi/message ccode %s done" ccode)
                         (cache/cache!
                          (fn []
                            (plot/message
-                            ccode sorted-estim last-date cnt-reports))
+                            ccode sorted-estim-new last-date cnt-reports))
                          (plot/message-kw ccode))
-                        #_(debugf "plot/message ccode %s done" ccode)
                         (debugf (str "Messages created. ccode " ccode))])))
            ;; here also "ZZ" worldwide messages
            ccc/all-country-codes))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
 
-        garbage-coll
-        (m-result
-         (do
-           (debugf "(System/gc)")
-           (System/gc) ;; also (.gc (Runtime/getRuntime))
-           (Thread/sleep 100)))
+        garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
 
         thresholds
         (let [norm-ths (cases/norm (dbase/get-thresholds))]
           ((comp
             m-result
+            (fn [v] (def thresholds v) v)
             (partial concat norm-ths)
             flatten
             (partial map (fn [case-kw]
@@ -332,10 +372,11 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
           ;; 1. map 4100ms, pmap 8737ms
           ;; 2. map 3982ms
           ;; 3. map 3779ms
+          (fn [v] (def an v) v)
           (partial map
                    (partial apply
                             plot/aggregation!
-                            thresholds estim last-date cnt-reports
+                            thresholds estim-old estim-new last-date cnt-reports
                             aggregation-hash)))
          cases/cartesian-product-all-case-types)
         _ (com/add-calc-time "all-aggregations" all-aggregations)
@@ -352,16 +393,24 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                    (select-keys
                     @cache/cache [:plot :msg :list :threshold :dbg])))))
 
-        garbage-coll
-        (m-result
-         (do
-           (debugf "(System/gc)")
-           (System/gc) ;; also (.gc (Runtime/getRuntime))
-           (Thread/sleep 100)))
+        garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
         ]
        calc-result))
      init-state)))
+
+(defn case-equal?
+  "Compare old with new"
+  [old new case-kw]
+  ((comp
+    (partial reduce = )
+    (partial map (fn [idx] ((comp (partial reduce = )
+                                  (partial map (fn [m]
+                                                 (get-in (nth (get-in m case-kw) idx)
+                                                         (get-in m :l)))))
+                            [{:l [:ea]          case-kw old}
+                             {:l [:a :est :abs] case-kw new}]))))
+   (range (count old))))
 
 (defn-fun-id json-changed! "" [{:keys [json-fn cache-storage]}]
   ;; TODO spec: cache-storage must be vector; json-fns must be function
@@ -374,11 +423,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
             cache-storage old-hash new-hash hash-changed)
     (when hash-changed
       (swap! cache/cache update-in hash-kws (fn [_] new-hash))
-      #_(do
-          (debugf "(System/gc)")
-          (System/gc) ;; also (.gc (Runtime/getRuntime))
-          (Thread/sleep 100)
-          #_(com/heap-info)))
+      #_(do (gc) (com/heap-info)))
     {:json json :hash-changed hash-changed}))
 
 (defn-fun-id reset-cache! "" []

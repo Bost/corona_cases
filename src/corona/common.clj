@@ -23,8 +23,7 @@
               domonad with-monad
               identity-m ;; sequence-m maybe-m writer-m m-lift
               state-m
-              ]]
-            )
+              ]])
   (:import java.security.MessageDigest
            java.net.URI))
 
@@ -428,7 +427,10 @@
   (let [fun (if (= parse_mode html)
               (comp #(cstr/replace % "<" "&lt;")
                     #(cstr/replace % ">" "&gt;"))
-              identity)]
+              (comp #(cstr/replace % "_" "\\_")
+                    #(cstr/replace % "*" "\\*")
+                    #(cstr/replace % "`" "\\`")
+                    #(cstr/replace % "[" "\\[")))]
     (fun lexical-token)))
 
 (defn fmt-date-fun [fmts]
@@ -512,7 +514,47 @@
     (partial map (fn [hm] (get-in hm kws))))
    hms))
 
-(defn estim-fun "" [kw]
+(defn tmp-lense [case-kw] (vector case-kw))
+(defn lense [& case-kws] (apply vector case-kws))
+(defn unlense [lensed-case-kw] (last lensed-case-kw))
+
+;; k as in keyword
+(def kabs "absolute" #_:α :abs)
+(def krnk "ranking = σειρά κατάταξης [seirá katátaxis]"
+  #_:ξ :rnk)
+(def kest "estimate/assessment = εκτίμηση [ektímisi]"
+  #_:ε :est)
+(def krep "reported"
+  #_:ρ :rep)
+(def k1e5 "per 100 0000"
+  #_:κ :1e5)
+(def k%%% "percent = τοις εκατό [tois ekató]"
+  #_:τ :%%%)
+(def kls7 "last 7"
+  #_:7 :ls7)
+(def kavg "average = arithmetic mean"
+  #_:ø :avg)
+(def kchg "change"
+  #_:Δ :chg)
+(def kmax "maximum = μέγιστο [mégisto]"
+  #_:μ :max)
+
+(def kccode :ccode)
+(def kt "timestamp"     :t)
+(def kp "population"    :p)
+(def kv "vaccinated"    :v)
+(def kact "active"      :a)
+(def kr "recovered"     :r)
+(def kd "deaths"        :d)
+(def kn "new confirmed" :n)
+(def kc "closed"        :c)
+
+(defn estim-fun
+  "Returns a vector containing the keyword for estimates values. E.g.:
+  (estim-fun :r)
+  => [:er]
+  This can be used by e.g. (get-in hm (estim-fun :r))"
+  [kw]
   ((comp
     vector
     (partial apply get {:r :er
@@ -521,17 +563,67 @@
                         :r1e5 :er1e5
                         :a1e5 :ea1e5
                         :c1e5 :ec1e5
+                        ;; :s is a string - could be used for translations
                         :s :es})
     ;; second kw is for `not-found` parameter of `get`
     (fn [kw] [kw kw]))
+   kw))
+
+(defn estim-fun-new
+  "Returns a vector containing the keyword for estimates values. E.g.:
+  (estim-fun-new :r)
+  => [:r :est :abs]
+  This can be used by e.g. (get-in hm (estim-fun-new :r))"
+  [kw]
+  ((comp
+    (partial apply get {:a (lense kact kest kabs)  ;; can be only estimated
+                        :r (lense kr kest kabs)    ;; can be only estimated
+                        :d (lense kd krep kabs)    ;; reported
+                        :c (lense kc kest kabs)    ;; can be only estimated
+                        ;; TODO population can be also estimated and reported i.e. absolute
+                        :p (lense kp)
+                        :rank (lense :rank)
+
+                        ;;; for rankings? ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                        :a1e5 (lense kact kest k1e5)
+                        :r1e5 (lense kr   kest k1e5)
+                        :d1e5 (lense kd   krep k1e5) ;; reported
+                        :c1e5 (lense kc   kest k1e5)
+                        :v1e5 (lense kv   krep kabs) ;; reported
+                        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+                        ;; :s is a string - could be used for translations
+                        :s (lense :es)})
+    ;; second element is for `not-found` parameter of `get`
+    (fn [kw] [kw (lense kw krep kabs)]))
+   kw))
+
+(defn ranking-fun
+  [kw]
+  ((comp
+    (partial apply get {
+                        ;; see cases/ranking-cases
+                        ;; TODO population can be also estimated and reported i.e. absolute
+                        :p (lense kp krnk)
+                        :a (lense kact kest krnk)   ;; can be only estimated
+                        :r (lense kr   kest krnk)   ;; can be only estimated
+                        :d (lense kd   krep krnk)   ;; reported
+                        :c (lense kc   kest krnk)   ;; can be only estimated
+
+                        :a1e5 (lense kact kest k1e5 krnk)
+                        :r1e5 (lense kr   kest k1e5 krnk)
+                        :d1e5 (lense kd   krep k1e5 krnk) ;; reported
+                        :c1e5 (lense kc   kest k1e5 krnk)
+                        :v1e5 (lense kv   krep kabs krnk) ;; reported
+
+                        })
+    ;; second element is for `not-found` parameter of `get`
+    (fn [kw] [kw (lense kw krep kabs)]))
    kw))
 
 (defn ident-fun "" [kw]
   ((comp
     vector)
    kw))
-
-(defn tmp-lense [case-kw] (vector case-kw))
-(defn unlense [lensed-case-kw] (last lensed-case-kw))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

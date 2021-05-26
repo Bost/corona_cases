@@ -2,7 +2,8 @@
 
 (ns corona.lang
   (:require
-   [corona.common :as com]
+   [corona.common :as com :refer [lense kact kr kc kd kest kmax krep k1e5
+                                  kchg kls7 kabs kavg]]
    [corona.cases :as cases]
    [clojure.string :as cstr]
    ))
@@ -23,49 +24,17 @@
 (def ^:const contributors     "contributors")
 (def ^:const feedback         "feedback")
 
-(def ^:const estimated-values "* Estimated values")
-;; :s as in 'String'
-(def ^:const hm-estimated        {:s "" :es "*"})
-
-(def ^:const hm-rec              {:r "Rec"       :er "*Rec"})
-(def ^:const hm-recov            {:r "Recov"     :er "*Recov"})
-(def ^:const hm-recove           {:r "Recove"    :er "*Recove"})
-(def ^:const hm-recovered        {:r "Recovered" :er "*Recovered"})
-(def ^:const hm-act              {:a "Act"       :ea "*Act"})
-(def ^:const hm-active           {:a "Active"    :ea "*Active"})
-(def ^:const hm-clo              {:c "Clo"       :ec "*Clo"})
-(def ^:const hm-closed           {:c "Closed"    :ec "*Closed"})
-
-(def ^:const vac              "Vac")
-(def ^:const vacc             "Vacc")
-(def ^:const vaccinated       "Vaccinated")
-(def ^:const conf             "Conf")
-(def ^:const confir           "Confir")
-(def ^:const confirmed        "Confirmed")
-(def ^:const deaths           "Deaths")
-(def ^:const rec              (get-in hm-rec (com/ident-fun :r)))
-(def ^:const recov            (get-in hm-recov (com/ident-fun :r)))
-(def ^:const recove           (get-in hm-recove (com/ident-fun :r)))
-(def ^:const recovered        (get-in hm-recovered (com/ident-fun :r)))
-(def ^:const act              (get-in hm-act (com/ident-fun :a)))
-(def ^:const active           (get-in hm-active (com/ident-fun :a)))
-(def ^:const clo              (get-in hm-clo (com/ident-fun :c)))
-(def ^:const closed           (get-in hm-closed (com/ident-fun :c)))
-
-
-(def ^:const active-cases     (format "%s %s" active cases))
-(def ^:const recovered-cases  (format "%s %s" recovered cases))
-(def ^:const closed-cases     (format "%s %s" closed cases))
-(def ^:const confirmed-cases  (format "%s %s" confirmed cases))
-(def ^:const vaccinated-cases "Vaccinations")
-(def ^:const death-cases      (format "%s %s" "Death" cases))
-
 ;; recov-estim & friends are used in the graphs
 (def ^:const recov-estim      "Recov. estimated")
 (def ^:const activ-estim      "Active estimated")
 (def ^:const close-estim      "Closed estimated")
 
-(def ^:const people "The word 'Population' is too long. See `fmt-to-cols`"  "People")
+(def ^:const estimated-values "* Estimated values")
+;; :s as in 'String'
+
+(def ^:const people
+  "The word 'Population' is too long. See `fmt-to-cols`"
+  "People")
 
 (def ^:const hundred-k        "100k")
 (def ^:const cmd-active-per-1e5 (str "a" hundred-k))
@@ -75,20 +44,96 @@
 (def ^:const cmd-vaccin-per-1e5 (str "v" hundred-k))
 (def ^:const cases-per-1e5 "Cases per 100 000 people")
 
+(def ^:const L7 "L7")
+(def ^:const L14 "L14")
+(def ^:const avg "Avg")
+
+(def ^:const hm-estimated {:s "" :es "*"})
+
+(def ^:const hm-rec       {kr {krep {kabs "Rec"}
+                               kest {kabs "*Rec"}}})
+(def ^:const hm-recov     {kr {krep {kabs "Recov"}
+                               kest {kabs "*Recov"}}})
+(def ^:const hm-recove    {kr {krep {kabs "Recove"}
+                               kest {kabs "*Recove"}}})
+(def ^:const hm-recovered {kr {krep {kabs "Recovered"}
+                               kest {kabs "*Recovered"
+                                     k1e5 "*Rec100k"}}})
+(def ^:const hm-act       {kact {krep {kabs "Act"}
+                               kest {kabs "*Act"}}})
+
+(def ^:const hm-active    {kact {krep {kabs "Active"
+                                     k1e5 "Act100k"
+                                     kls7 {kabs {kabs "ActL7"
+                                                 kavg "ActL7Avg"}
+                                           kchg {kavg "ActCL7Avg"}}}
+                               kest {kabs "*Active"
+                                     k1e5 "*Act100k"
+                                     kmax "*Max Active"
+                                     kls7 {kabs {kabs "*ActL7"
+                                                 kavg "*ActL7Avg"}
+                                           kchg {kavg "*ActCL7Avg"}}}}})
+
+(def ^:const hm-clo       {kc {krep {kabs "Clo"}
+                               kest {kabs "*Clo"}}})
+(def ^:const hm-closed    {kc {krep {kabs "Closed"}
+                               kest {kabs "*Closed"
+                                     k1e5 "*Clo100k"}}})
+(def ^:const hm-deaths    {kd {krep {kabs "Deaths"
+                                     k1e5 "Dea100k"}}})
+
+(def ^:const estim-active-last-7-avg
+  "Estimated active cases in last 7 reports - simple moving Average rounded"
+  (get-in hm-active
+          (lense
+           kact kest kls7 kabs kavg)))
+
+(def ^:const active-last-7-avg
+  "Active cases in last 7 reports - simple moving Average rounded"
+  ;; remove leading asterisk '*'
+  (subs estim-active-last-7-avg 1))
+
+(def ^:const vac              "Vac")
+(def ^:const vacc             "Vacc")
+(def ^:const vaccinated       "Vaccinated")
+(def ^:const conf             "Conf")
+(def ^:const confir           "Confir")
+(def ^:const confirmed        "Confirmed")
+(def ^:const deaths           "Deaths")
+(def ^:const rec              (get-in hm-rec       (lense kr krep kabs)))
+(def ^:const recov            (get-in hm-recov     (lense kr krep kabs)))
+(def ^:const recove           (get-in hm-recove    (lense kr krep kabs)))
+(def ^:const recovered        (get-in hm-recovered (lense kr krep kabs)))
+(def ^:const act              (get-in hm-act       (lense kact krep kabs)))
+(def ^:const active           (get-in hm-active    (lense kact krep kabs)))
+(def ^:const clo              (get-in hm-clo       (lense kc krep kabs)))
+(def ^:const closed           (get-in hm-closed    (lense kc krep kabs)))
+
+(def ^:const active-cases     (format "%s %s" active cases))
+(def ^:const recovered-cases  (format "%s %s" recovered cases))
+(def ^:const closed-cases     (format "%s %s" closed cases))
+(def ^:const confirmed-cases  (format "%s %s" confirmed cases))
+(def ^:const vaccinated-cases "Vaccinations")
+(def ^:const death-cases      (format "%s %s" "Death" cases))
+
 (def ^:const vaccin-per-1e5 "Vaccinations per 100 000"    (str vac hundred-k))
 (def ^:const active-per-1e5 "Active cases per 100 000"    (str act hundred-k))
 (def ^:const recove-per-1e5 "Recovered cases per 100 000" (str rec hundred-k))
 (def ^:const deaths-per-1e5 "Deaths per 100 000"          (str "Dea" hundred-k))
 (def ^:const closed-per-1e5 "Closed per 100 000"          (str clo hundred-k))
 
+(def ^:const estim-active-last-7 "Estimated active cases in last 7 reports"
+  (get-in hm-active
+          (lense
+           kact kest kls7 kabs kabs)))
+
+;; TODO active-last-7 is only for the backward compatibility, under /explain
+(def ^:const active-last-7 "Active cases in last 7 reports"
+  (subs estim-active-last-7 1))
+
 (def hm-active-per-1e5 {:a1e5 active-per-1e5 :ea1e5 (str "*" active-per-1e5)})
 (def hm-recove-per-1e5 {:r1e5 recove-per-1e5 :er1e5 (str "*" recove-per-1e5)})
 (def hm-closed-per-1e5 {:c1e5 closed-per-1e5 :ec1e5 (str "*" closed-per-1e5)})
-
-(def ^:const active-max "Peak of active cases from all reports" (format "Max %s" active))
-(def hm-active-max {:a active-max :ea (str "*" active-max)})
-
-(def ^:const deaths-max "Peak of deaths from all reports"       (format "Max %s" deaths))
 
 (def ^:const report
   "Coincidentally there is 1 report per day"
@@ -109,11 +154,6 @@
 (def ^:const rate-of-people    (str "% of " people))
 (def ^:const rate-of-confirmed (str "% of " confirmed))
 
-(def ^:const L7 "L7")
-(def ^:const L14 "L14")
-(def ^:const active-last-7 "Active cases in last 7 reports" (str act L7))
-(def hm-active-last-7 {:a active-last-7 :ea (str "*" active-last-7)})
-
 (defn incidence [nr-of-reports]
   (str "Incidence"
        (case nr-of-reports
@@ -132,18 +172,13 @@
   "Active cases in last 7 reports - simple moving Median rounded"
   (str active-last-7 "Med"))
 
-(def ^:const avg "Avg")
-(def ^:const active-last-7-avg
-  "Active cases in last 7 reports - simple moving Average rounded" (str active-last-7 avg))
-
-(def hm-active-last-7-avg {:a active-last-7-avg :ea (str "*" active-last-7-avg)})
-
-(def ^:const active-last-8th "Active cases of the last 8th report"
+(def ^:const active-last-8th
+  "Active cases of the last 8th report"
   (str act "L8th"))
-(def ^:const active-change-last-7-avg "Active cases Change - simple moving Average of last 7 values"
-  (str act "C" L7 avg))
 
-(def hm-active-change-last-7-avg {:a active-change-last-7-avg :ea (str "*" active-change-last-7-avg)})
+(def ^:const active-change-last-7-avg
+  "Active cases Change - simple moving Average of last 7 values"
+  (str act "C" L7 avg))
 
 (def ^:const write-a-message-to
   "Just write a message to @RostislavSvoboda thanks.")
@@ -152,12 +187,12 @@
   (str
    "Data provided by "
    "[Our World in Data]"
-   "(https://github.com/owid/covid-19-data/tree/master/public/data)"
+   "(https://github.owid/covid-19-data/tree/master/public/data)"
    " and "
-   "[JHU CSSE](https://github.com/CSSEGISandData/COVID-19)"
+   "[JHU CSSE](https://github.CSSEGISandData/COVID-19)"
    ", via "
    "[ExpDev07/coronavirus-tracker-api]"
-   "(https://github.com/ExpDev07/coronavirus-tracker-api) service"))
+   "(https://github.ExpDev07/coronavirus-tracker-api) service"))
 
 (def ^:const contributors-text
   (str

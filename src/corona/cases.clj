@@ -6,7 +6,7 @@
    [corona.models.dbase :as dbase]
    [taoensso.timbre :as timbre]
    [corona.macro :refer [defn-fun-id debugf infof warnf]]
-   ))
+   [corona.common :refer [kt kp kv kact kr kd kn kc]]))
 
 (defmacro tore
   "->>-or-eduction. In fact both have the same performance.
@@ -24,7 +24,7 @@ update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) w
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'n';
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'r';
 select * from thresholds order by kw;
-" 5159000 132000 5310000 3667000)
+" 5279000 134000 5410000 3867000)
 (def threshold-defaults
   "Recovery data is not provided anymore. So:
 Old values on corona-cases:
@@ -67,7 +67,9 @@ r  | 10000 | 3867000 | 2021-07-27 05:22:40"
    raw-ths))
 
 (def case-params
-  [{:idx  0 :kw :v}
+  [
+   ;; absolute values
+   {:idx  0 :kw :v}
    {:idx  1 :kw :p}
    {:idx  2 :kw :n}
    {:idx  3 :kw :r :listing-idx 1}
@@ -75,17 +77,21 @@ r  | 10000 | 3867000 | 2021-07-27 05:22:40"
    {:idx  5 :kw :a :listing-idx 0}
 
    ;; TODO the order matters: it must be the same as in the info-message
+   ;; Incidence per 1e5
    {:idx  6 :kw :v1e5}
    {:idx  7 :kw :a1e5}
    {:idx  8 :kw :r1e5}
    {:idx  9 :kw :d1e5}
    {:idx 10 :kw :c1e5}  ;; closed-per-1e5
 
+   ;; rates
    {:idx 11 :kw :v%}
    {:idx 12 :kw :a%}
    {:idx 13 :kw :r%}
    {:idx 14 :kw :d%}
    {:idx 15 :kw :c%}     ;; closed-rate
+
+   ;; estimations
    {:idx 16 :kw :ea}     ;; estimate-active
    {:idx 17 :kw :er}     ;; estimate-recovered
    {:idx 18 :kw :ea1e5} ;; estimate-active-per-1e5

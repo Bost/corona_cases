@@ -405,7 +405,7 @@
 (def all-country-codes
   "All country codes (potentially including worldwide \"ZZ\")"
   (or
-   #_#{"BE"}
+   #_#{"DE" "ZZ"}
    #_#{"GG"}
    #_#{"AR"}
    #_#{"SK" "PE" "KR" "TW" "AR" "TH" "MX"}

@@ -8,7 +8,8 @@
             [clojure2d.color :as c]
             [clojure2d.core :as c2d]
             [corona.api.cache :as cache]
-            [corona.common :as com :refer [sum]]
+            [corona.common :as com :refer
+             [sum lense kr kd kact kest kabs kd krep]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -18,7 +19,9 @@
             cljplot.core
             [corona.macro :refer [defn-fun-id debugf infof]]
             [utils.core :refer [in?]]
-            [corona.models.dbase :as dbase])
+            [corona.models.dbase :as dbase]
+            [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
+            )
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
            [java.time LocalDate ZoneId]
@@ -81,12 +84,12 @@
      (fn [[t hms]]
        [
         {:ccode ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
-        {:ccode ccode :t t :case-kw :er :cnt (sum (com/estim-fun :r) hms)}
-        {:ccode ccode :t t :case-kw :ea :cnt (sum (com/estim-fun :a) hms)}
-        {:ccode ccode :t t :case-kw :n  :cnt (sum (com/ident-fun :n) hms)}
-        {:ccode ccode :t t :case-kw :r  :cnt (sum (com/ident-fun :r) hms)}
-        {:ccode ccode :t t :case-kw :d  :cnt (sum (com/ident-fun :d) hms)}
-        {:ccode ccode :t t :case-kw :a  :cnt (sum (com/ident-fun :a) hms)}]))
+        {:ccode ccode :t t :case-kw :er :cnt (sum (com/estim-fun-new :r) hms)}
+        {:ccode ccode :t t :case-kw :ea :cnt (sum (com/estim-fun-new :a) hms)}
+        {:ccode ccode :t t :case-kw :n  :cnt (sum (com/estim-fun-new :n) hms)}
+        {:ccode ccode :t t :case-kw :r  :cnt (sum (lense kr krep kabs) hms)}
+        {:ccode ccode :t t :case-kw :d  :cnt (sum (com/estim-fun-new :d) hms)}
+        {:ccode ccode :t t :case-kw :a  :cnt (sum (lense kact krep kabs) hms)}]))
     (partial group-by :t)
     (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (:ccode hm)] ccode))))
    stats))
@@ -198,11 +201,11 @@
 
 (defn-fun-id message-img
   "Country-specific cumulative plot of active, recovered, deaths and
-  active-absolute cases."
+  active-absolute cases.. E.g.:
+(message-img ccode stats last-date report)
+"
   [ccode stats last-date report]
   (when-not (in? ccc/excluded-country-codes ccode)
-    #_(def stats stats)
-    #_(def report report)
     (let [base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
                                (in? #_[:n :a :r :d] [:n :p :er :ea] case-kw))
@@ -229,9 +232,9 @@
                  [:line (line-data :ea base-data) (stroke-estim-activ)])
         :x-axis-formatter date-fmt-fn
         :y-axis-formatter (metrics-prefix-formatter
-                                 ;; population numbers have the `max` values, all
-                                 ;; other numbers are derived from them
-                                 ;; don't display the population data for the moment
+                           ;; population numbers have the `max` values, all
+                           ;; other numbers are derived from them
+                           ;; don't display the population data for the moment
                            (max-y-val + sarea-data))
         :legend (reverse
                  (conj (map #(vector :rect %2 {:color %1})
@@ -264,7 +267,17 @@
 
 (defn message-kw [ccode] [:plot (keyword ccode)])
 
-(defn-fun-id group-below-threshold
+(defn tg [eo en]
+  ((comp
+    (partial reduce = )
+    (partial map (fn [idx] ((comp (partial reduce = )
+                                  (partial map (fn [{:keys [l c]}]
+                                                 (get-in (nth c idx) l))))
+                            [{:l [:ea]           :c eo}
+                             {:l [:a :est :abs] :c en}]))))
+   (range (count eo))))
+
+(defn-fun-id group-below-threshold-new
   "Group all countries with the nr of active cases below the threshold under the
   `ccc/default-2-country-code` so that max 10 countries are plotted.
 
@@ -273,10 +286,17 @@
   help to counter this problem."
   [{:keys [case-kw threshold threshold-increase stats] :as prm}]
   (let [max-plot-lines 10
-        res (map (fn [hm] (if (< (case-kw hm) threshold)
-                           (assoc hm :ccode ccc/default-2-country-code)
-                           hm))
-                 stats)]
+        l-fun (cond
+                (= case-kw kact) (lense kact krep kabs)
+                (= case-kw kr)   (lense kr   krep kabs)
+                :else (com/estim-fun-new case-kw))
+        res
+        ((comp
+          (partial map (fn [hm] (if (< (get-in hm l-fun) threshold)
+                                  (assoc hm :ccode ccc/default-2-country-code)
+                                  hm)))
+          (partial sort-by :t))
+         stats)]
     ;; TODO implement recalculation for decreasing case-kw numbers (e.g. active cases)
     (let [cnt-countries (count (group-by :ccode res))]
       (if (> cnt-countries max-plot-lines)
@@ -287,22 +307,28 @@
           (dbase/upsert-threshold! {:kw case-kw
                                     :inc threshold-increase
                                     :val raised-threshold})
-          (group-below-threshold (assoc prm :threshold raised-threshold)))
+          (group-below-threshold-new (assoc prm :threshold raised-threshold)))
         {:data res :threshold threshold}))))
 
-(defn stats-all-by-case "" [{:keys [case-kw] :as prm}]
+(defn stats-all-by-case-new "" [{:keys [case-kw] :as prm}]
   #_((comp
     ;; TODO this will not be necessary, but I can build here a
     ;; consistency check
     (partial take-last 365)
     (fn [d] (debugf "(count d) %s" (count d)) d))
-   all-data)
+     all-data)
   (update
-   (group-below-threshold prm)
+   (group-below-threshold-new prm)
    :data
    (fn [data]
      (let [countries-threshold ((comp set (partial map :ccode)) data)
-           lensed-case-kw (com/tmp-lense case-kw)]
+           new-lensed-case-kw
+           #_(com/estim-fun-new case-kw)
+           (cond
+             (= case-kw kact) (lense kact krep kabs)
+             (= case-kw kr)   (lense kr   krep kabs)
+             :else (com/estim-fun-new case-kw))
+           simple-lensed-case-kw (com/lense case-kw)]
        ((comp
          sort-by-last-val
          (partial plotcom/map-kv
@@ -310,7 +336,10 @@
                    (partial sort-by first)
                    (partial map (fn [hm]
                                   [((comp to-java-time-local-date :t) hm)
-                                   (get-in hm lensed-case-kw)]))))
+                                   (get-in hm simple-lensed-case-kw)]))))
+         (partial reduce into {})
+         (partial map (fn [[ccode hms1]]
+                        {ccode (sort-by :t hms1)}))
          (partial group-by :ccode)
          (partial reduce into [])
          (partial map
@@ -333,7 +362,7 @@
                                    (fn [[ccode hms]]
                                      ((comp
                                        (partial hash-map :ccode ccode :t t case-kw)
-                                       (partial sum lensed-case-kw))
+                                       (partial sum new-lensed-case-kw))
                                       hms)))
                           (partial group-by :ccode))
                          hms0)))
@@ -351,7 +380,7 @@
             (keys json-data))))
 
 (defn y-axis-formatter [json-data]
-   ;; `+` means: sum up all active cases
+  ;; `+` means: sum up all active cases
   (metrics-prefix-formatter (max-y-val + json-data)))
 
 (def label-conf {:color (c/darken :steelblue) :font-size 14})
@@ -378,18 +407,12 @@
                            }}))
 
 (defn-fun-id aggregation-img ""
-  [thresholds stats last-date cnt-reports aggregation-kw case-kw]
-;; (def thresholds thresholds)
-;; (def stats stats)
-;; (def last-date last-date)
-;; (def cnt-reports cnt-reports)
-;; (def aggregation-kw aggregation-kw)
-;; (def case-kw case-kw)
+  [thresholds stats-old stats-new last-date cnt-reports aggregation-kw case-kw]
   (let [{data :data threshold-recalced :threshold}
-        (stats-all-by-case
+        (stats-all-by-case-new
          (conj
           {:report cnt-reports
-           :stats stats
+           :stats stats-new
            :case-kw case-kw}
           (let [th ((comp
                      first
@@ -414,25 +437,28 @@
                data)
       :x-axis-formatter date-fmt-fn
       :y-axis-formatter (y-axis-formatter data)
-      :label (label-str cnt-reports stats last-date case-kw threshold-recalced
+      :label (label-str cnt-reports stats-new last-date case-kw threshold-recalced
                         (condp = aggregation-kw
                           :abs (str " " lang/absolute)
                           :sum ""))
       :label-conf label-conf})))
 
-(defn aggregation!
+(defn aggregation! ""
   ([id aggregation-kw case-kw]
    {:pre [(string? id)]}
    (get-in @cache/cache [:plot (keyword id) aggregation-kw case-kw]))
-  ([thresholds stats last-date cnt-reports id aggregation-kw case-kw]
+  ([thresholds stats-old stats-new last-date cnt-reports id aggregation-kw case-kw]
    {:pre [(string? id)]}
+   (taoensso.timbre/debugf "[aggregation!] case-kw %s aggregation-kw %s" case-kw aggregation-kw)
    (cache/cache! (fn []
                    ((comp
                      #_(fn [arr] (com/heap-info) arr)
                      to-byte-array-auto-closable)
-                    (aggregation-img thresholds stats last-date cnt-reports
-                                     aggregation-kw case-kw)))
+                    (aggregation-img
+                     thresholds stats-old stats-new last-date cnt-reports
+                     aggregation-kw case-kw)))
                  [:plot (keyword id) aggregation-kw case-kw])))
+
 
 ;;;; lazy-evaluation CPS (Continuation Passing Style)
 ;; (defonce ch (atom {}))

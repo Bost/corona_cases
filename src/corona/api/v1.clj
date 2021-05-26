@@ -4,7 +4,8 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require [corona.api.expdev07 :as data]
-            [corona.common :as com :refer [sum]]
+            [corona.common :as com :refer [sum
+                                           krep kest kabs k1e5 k%%%]]
             [corona.country-codes :as ccc]
             [taoensso.timbre :as timbre]
             [corona.macro :refer [defn-fun-id debugf errorf warnf]]
@@ -23,8 +24,19 @@
 
 (defn fmt [raw-date] (.parse sdf (data/keyname raw-date)))
 
+(defn normalize "" [default-hms k hms]
+  (let [hms-set ((comp
+                  set
+                  (partial map (fn [hmc] (select-keys hmc [:ccode :t]))))
+                 hms)]
+    ((comp
+      (partial concat hms)
+      (partial keep (fn [dhm] (when-not (contains? hms-set dhm)
+                               (assoc dhm k 0)))))
+     default-hms)))
+
 (defn xf-for-case "" [cnt-raw-dates data-with-pop case-kw]
-  (let [lensed-case-kw (com/tmp-lense case-kw)]
+  (let [lensed-case-kw (com/lense case-kw)]
   ((comp
     #_(partial sort-by (juxt :ccode :t))
     flatten
@@ -96,23 +108,78 @@
                     "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"}
                   (:country_code loc))))
     (partial get data-with-pop))
-   case-kw)
-  ))
+   case-kw)))
 
-(defn normalize "" [default-hms k hms]
-  (let [hms-set ((comp
-                  set
-                  (partial map (fn [hmc] (select-keys hmc [:ccode :t]))))
-                 hms)]
-    ((comp
-      (partial concat hms)
-      (partial keep (fn [dhm] (when-not (contains? hms-set dhm)
-                               (assoc dhm k 0)))))
-     default-hms)))
+(defn-fun-id pic-data-new "" [cnt-raw-dates data-with-pop]
+  #_(defonce data-with-pop data-with-pop)
+  #_(defonce cnt-raw-dates cnt-raw-dates)
+  ((comp
+    #_(fn [v] (def pd v) v)
+    (partial apply
+             map
+             (fn [{:keys [population]} ;; this hashmap doesn't contain 'ccode' and 't'
+                  {:keys [vaccinated]}
+                  {:keys [confirmed] :as hm-confirmed}
+                  {:keys [recovered]}
+                  {:keys [deaths]}]
+               (let [new-confirmed confirmed
+                     ccode         (com/kccode hm-confirmed)
+                     t             (com/kt hm-confirmed)
+                     prm {com/kccode ccode
+                          com/kt     t
+                          com/kp     population
+                          com/kv     vaccinated
+                          com/kact     (com/calc-active new-confirmed recovered deaths)
+                          com/kr     recovered
+                          com/kd     deaths
+                          com/kn     new-confirmed
+                          com/kc     (com/calc-closed deaths recovered)}
+                     kws [com/kn com/kv com/kact com/kr com/kd com/kc]]
+                 ((comp
+                   (partial conj
+                            {com/kccode ccode com/kt t com/kp population
+                             ;; com/kv vaccinated com/kn new-confirmed
+                             })
+                   (partial zipmap kws)
+                   (partial map (partial hash-map krep))
+                   (partial map
+                            (partial zipmap [kabs k1e5 k%%%]))
+                   (partial map (fn [case-kw]
+                                  [((identity case-kw) prm)
+                                   ((com/calc-per-1e5 case-kw) prm)
+                                   ((com/calc-rate case-kw) prm)])))
+                  kws))))
+    ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
+    ;; sorted   [pic-data] 46.4 MiB
+    (partial map (partial sort-by (juxt com/kccode com/kt)))
+    #_(fn [v] (def xff v) v)
+    #_(partial map-indexed (fn [idx hm]
+                             (debugf "idx %s (count hm) %s" idx (count hm))
+                             hm))
+    (partial apply (fn [hms-population
+                        hms-vaccinated
+                        hms-new-confirmed
+                        hms-recovered
+                        hms-deaths]
+                     ((comp
+                       (partial into [hms-population hms-vaccinated]))
+                      (let [default-hms ((comp
+                                          set
+                                          (partial map
+                                                   (fn [hm]
+                                                     (select-keys
+                                                      hm [com/kccode com/kt]))))
+                                         hms-population)]
+                        (map (partial normalize default-hms)
+                             [:confirmed :recovered :deaths]
+                             [hms-new-confirmed hms-recovered hms-deaths])))))
+    #_(fn [v] (def xfb v) v)
+    (partial map (partial xf-for-case cnt-raw-dates data-with-pop)))
+   [:population :vaccinated :confirmed :recovered :deaths]))
 
 (defn-fun-id pic-data "" [cnt-raw-dates data-with-pop]
-  #_(def data-with-pop data-with-pop)
-  #_(def cnt-raw-dates cnt-raw-dates)
+  #_(defonce data-with-pop data-with-pop)
+  #_(defonce cnt-raw-dates cnt-raw-dates)
   ((comp
     #_(fn [v] (def pd v) v)
     (partial apply
@@ -138,9 +205,9 @@
                    (partial map (fn [rate-kw per-1e5-kw case-kw]
                                   {per-1e5-kw ((com/calc-per-1e5 case-kw) prm)
                                    rate-kw ((com/calc-rate case-kw) prm)})))
-                  [:v% :a% :r% :d% :c%]
+                  [:v%   :a%   :r%   :d%   :c%]
                   [:v1e5 :a1e5 :r1e5 :d1e5 :c1e5]
-                  [:v :a :r :d :c]))))
+                  [:v    :a    :r    :d    :c]))))
     ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
     ;; sorted   [pic-data] 46.4 MiB
     (partial map (partial sort-by (juxt :ccode :t)))
@@ -168,5 +235,6 @@
     #_(fn [v] (def xfb v) v)
     (partial map (partial xf-for-case cnt-raw-dates data-with-pop)))
    [:population :vaccinated :confirmed :recovered :deaths]))
+
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.v1)

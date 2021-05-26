@@ -4,7 +4,9 @@
   (:require [clojure.string :as cstr]
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
-            [corona.common :as com]
+            [corona.common :as com :refer [lense kact kr kc kd kest kmax krep k1e5
+                                           kchg
+                                           kls7 kabs kavg]]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -19,16 +21,63 @@
 (defn list-kw [fun case-kw]
   [:list ((comp keyword :name meta find-var) fun) case-kw])
 
-(defn calc-listings! "" [stats {:keys [lense-fun] :as prm} case-kws fun]
-  ;; fun is on of: per-1e5, absolute-vals - TODO spec it!
+(defn calc-listings!-new "" [stats-new {:keys [lense-fun] :as prm-new} case-kws listing-fun]
+  ;; fun is one of: per-1e5, absolute-vals - TODO spec it!
   ((comp
     doall
     (partial
      map
      (fn [case-kw]
        (let [lensed-case-kw (lense-fun case-kw)]
+         (let [coll
+               #_(let [lense [:a :b]]
+                   (sort-by (apply comp (reverse lense)) <
+                            [(update-in {} lense (fn [_] 2))
+                             (update-in {} lense (fn [_] 1))
+                             (update-in {} lense (fn [_] 0))]))
+               ((comp
+                 (partial sort-by (apply comp (reverse lensed-case-kw)) <)
+                 #_(partial sort-by (com/unlense lensed-case-kw) <))
+                  stats-new)
+               #_(sort-by (apply comp (reverse lensed-case-kw)) <
+                        stats-new)
+
+               ;; Split the long list of all countries into smaller sub-parts
+               sub-msgs (partition-all (/ (count coll)
+                                          cnt-messages-in-listing) coll)
+               sub-msgs-prm (assoc prm-new :cnt-msgs (count sub-msgs))]
+           ((comp
+             doall
+             (partial map-indexed
+                      (fn [idx sub-msg]
+                        ((comp
+                          (partial cache/cache!
+                                   (fn [] ((eval listing-fun) case-kw
+                                          (assoc sub-msgs-prm
+                                                 :msg-idx (inc idx)
+                                                 :data sub-msg))))
+                          (partial conj (list-kw listing-fun case-kw))
+                          keyword
+                          str)
+                         idx))))
+            sub-msgs))))))
+   case-kws))
+
+(defn calc-listings! "" [stats {:keys [lense-fun] :as prm} case-kws listing-fun]
+  #_(def stats stats)
+  #_(def prm prm)
+  #_(def listing-fun listing-fun)
+  #_(def case-kws case-kws)
+  #_(def lense-fun lense-fun)
+  ;; fun is on of: per-1e5, absolute-vals - TODO spec it!
+  ((comp
+    doall
+    (partial
+     map
+     (fn [case-kw]
+       (let [lensed-case-kw-old (lense-fun case-kw)]
          (let [coll ((comp
-                      (partial sort-by (com/unlense lensed-case-kw) <))
+                      (partial sort-by (com/unlense lensed-case-kw-old) <))
                      stats)
                ;; Split the long list of all countries into smaller sub-parts
                sub-msgs (partition-all (/ (count coll)
@@ -40,11 +89,11 @@
                       (fn [idx sub-msg]
                         ((comp
                           (partial cache/cache!
-                                   (fn [] ((eval fun) case-kw
+                                   (fn [] ((eval listing-fun) case-kw
                                           (assoc sub-msgs-prm
                                                  :msg-idx (inc idx)
                                                  :data sub-msg))))
-                          (partial conj (list-kw fun case-kw))
+                          (partial conj (list-kw listing-fun case-kw))
                           keyword
                           str)
                          idx))))
@@ -58,9 +107,8 @@
 
 (defn column-label
   "I.e. a header for a column table - see corona.msg.text.details/label-val"
-  [lense-fun hm-text sorted-case-kw case-kw]
-  (str (get-in hm-text (lense-fun sorted-case-kw))
-       (sort-sign sorted-case-kw case-kw)))
+  [text sorted-case-kw case-kw]
+  (str text (sort-sign sorted-case-kw case-kw)))
 
 (defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the
@@ -76,9 +124,9 @@
          (msgc/format-linewise
           [["%s\n"    [header]]
            ["%s\n"    [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["    %s " [(column-label lense-fun lang/hm-active :a case-kw)]]
+           ["    %s " [(column-label (get-in lang/hm-active (lense-fun kact)) kact case-kw)]]
            ["%s"      [spacer]]
-           ["%s "     [(column-label lense-fun lang/hm-recovered :r case-kw)]]
+           ["%s "     [(column-label (get-in lang/hm-recovered (lense-fun kr)) kr case-kw)]]
            ["%s"      [spacer]]
            ["%s\n"    [(str lang/deaths (sort-sign :d case-kw))]]
            ["%s"      [(str
@@ -86,12 +134,15 @@
                         "%s"     ; sorted-by description; has its own new-line
                         "\n\n%s" ; footer
                         )]]])
+         #_(debugf "case-kw %s" case-kw)
          ((comp
            (partial cstr/join "\n")
-           (partial map (fn [{:keys [d ccode] :as hm}]
+           (partial map (fn [{:keys [ccode] :as hm}]
                           (let [a (get-in hm (lense-fun :a))
                                 r (get-in hm (lense-fun :r))
+                                d (get-in hm (lense-fun :d))
                                 cname (ccr/country-name-aliased ccode)]
+                            #_(def hm hm)
                             (format "<code>%s%s%s%s%s %s</code>  %s"
                                     (com/left-pad a " " omag-active)
                                     spacer
@@ -112,6 +163,7 @@
   listing. See also `footer`, `bot-father-edit`."
   [case-kw {:keys [msg-idx cnt-msgs data cnt-reports lense-fun header footer]}]
   #_(debugf "case-kw %s" case-kw)
+  #_(def case-kw case-kw)
   (let [spacer " "
         omag-active 4 ;; omag - order of magnitude i.e. number of digits
         omag-recove omag-active
@@ -121,9 +173,9 @@
          (msgc/format-linewise
           [["%s\n" [header]]
            ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["%s "  [(column-label lense-fun lang/hm-active-per-1e5 :a1e5 case-kw)]]
+           ["%s "  [(column-label (get-in lang/hm-active (lense kact kest k1e5)) :a1e5 case-kw)]]
            ["%s"   [spacer]]
-           ["%s "  [(column-label lense-fun lang/hm-recove-per-1e5 :r1e5 case-kw)]]
+           ["%s "  [(column-label (get-in lang/hm-recovered (lense kr kest k1e5)) :r1e5 case-kw)]]
            ["%s"   [spacer]]
            ["%s"   [(str lang/deaths-per-1e5 (sort-sign :d1e5 case-kw))]]
            ["\n%s" [(str
@@ -133,9 +185,10 @@
                      )]]])
          ((comp
            (partial cstr/join "\n")
-           (partial map (fn [{:keys [d1e5 ccode] :as hm}]
+           (partial map (fn [{:keys [ccode] :as hm}]
                           (let [a1e5 (get-in hm (lense-fun :a1e5))
                                 r1e5 (get-in hm (lense-fun :r1e5))
+                                d1e5 (get-in hm (lense-fun :d1e5))
                                 cname (ccr/country-name-aliased ccode)]
                             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                                     (com/left-pad a1e5 " " omag-active)
