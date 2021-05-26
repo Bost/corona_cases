@@ -349,7 +349,7 @@
                         :or {attempt 1} :as prm}]
   (let [res
         (do
-          (infof "%s %s - attempt %s of %s"
+          (infof "(%s %s) attempt %s of %s"
                  (some-> fun my-find-var meta :name)
                  (pr-str args)
                  attempt
@@ -396,7 +396,9 @@
             init-state {:tbeg (system-time) :acc []}]
         ;; Can't use the monad due to the bug:
         ;;   Unable to make field jdk.internal.ref.PhantomCleanable
-        (clj-http.client/get url prms)
+        (let [data (clj-http.client/get url prms)]
+          (debugf "from %s ... %s obtained" url (measure data))
+          data)
         #_((comp
           first
           (domonad
@@ -406,7 +408,7 @@
             _ (add-calc-time "data" data)]
            data))
          init-state)))
-    (fn [url] (infof "Requesting data from %s" url) url))
+    (fn [url] (infof "from %s ..." url) url))
    url))
 
 (defn-fun-id get-json "Retries `get-json-single` 3 times" [url]
