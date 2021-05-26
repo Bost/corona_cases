@@ -174,13 +174,30 @@
     {:pre [(in? heroku-apps app)]}
   (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version))
 
+(defn stop! [app]
+  {:pre [(in? heroku-apps app)]}
+  (sh-heroku app "ps:scale" "web=0"))
+
+(defn start! [app]
+  {:pre [(in? heroku-apps app)]}
+  (sh-heroku app "ps:scale" "web=1"))
+
+(defn restart!
+  "There's a special heroku command for it"
+  [app]
+  {:pre [(in? heroku-apps app)]}
+  (sh-heroku app "ps:restart"))
+
+(defn open-papertrail [app]
+  {:pre [(in? heroku-apps app)]}
+  (sh-heroku app "addons:open" "papertrail"))
+
 (defn publish-source!
   "Publish the source code only when deploying to production"
   [commit rest-args]
   ;; seems like `git push --tags` pushes only tags w/o the code
   (sh "git" "tag" "--annotate" "--message" "''"
       (str pom/pom-version "-" commit))
-
   (doseq [remote ["origin" "gitlab"]]
     ;; See also `git push --tags $pushFlags $remote`
     (sh "git" "push" rest-args "--follow-tags" "--verbose" remote)))
@@ -196,12 +213,11 @@
         app (str heroku-env "-bot")
         remote (str "heroku-" app)
         rest-args (if (:force options) "--force" "")]
-
-    (sh-heroku app "addons:open" "papertrail")
-    (sh-heroku app "ps:scale" "web=0")
-    (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
+    (open-papertrail app)
+    (stop! app)
+    (set-config! app commit clojure-cli-version)
     (sh "git" "push" rest-args remote "master")
-    (sh-heroku app "ps:scale" "web=1")
+    (start! app)
     (when (= heroku-env heroku-env-prod)
       (publish-source! commit rest-args))))
 
@@ -213,10 +229,11 @@
                               (.load props (jio/reader ".heroku-local.env"))
                               (str key "=" (get props key)))
         rest-args (if (:force options) "--force" "")]
-
-    (sh-heroku app "addons:open" "papertrail")
-    (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version)
+    (open-papertrail app)
+    (stop! app)
+    (set-config! app commit clojure-cli-version)
     (sh-heroku app "pipelines:promote")
+    (start! app)
     (publish-source! commit rest-args)))
 
 ;; Examples:
@@ -230,14 +247,9 @@
           telegram-token (get-in env/environment
                                  [(keyword heroku-env) :telegram-token])]
       (condp = action
-        restart
-        (sh-heroku heroku-app "ps:restart")
-
-        deploy
-        (deploy! heroku-app options)
-
-        promote
-        (promote! "hokuspokus-bot" options)
+        restart (restart! heroku-app)
+        deploy  (deploy! heroku-app options)
+        promote (promote! "hokuspokus-bot" options)
 
         #_(str "
          # Search in logs:
