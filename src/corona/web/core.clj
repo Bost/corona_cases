@@ -107,13 +107,13 @@
       (tgram-handlers body)
       (ring.util.http-response/ok)))
 
-  (cjc/POST
+  #_(cjc/POST
     (format "/%s/%s" google-hook com/telegram-token)
     req ;; {{input :input} :params}
     {:status 200
      :headers {"Content-Type" "text/plain"}
      :body
-     (json/write-str {:chat_id (->> req :params :message :chat :id)
+     (json/write-str {:chat_id ((comp :id :chat :message :params) req)
                       :text (format "Hello from %s webhook" google-hook)})})
   (cjc/GET "/" [] (home-page))
   (cjc/GET "/links" [] (webresp/links))
@@ -125,11 +125,11 @@
                    id
                    (keyword aggregation)
                    (keyword case))})
-  (cjc/GET (format "/%s/beds" ws-path) []
+  #_(cjc/GET (format "/%s/beds" ws-path) []
     (webresp/web-service {:type :beds}))
-  (cjc/GET (format "/%s/names" ws-path) []
+  #_(cjc/GET (format "/%s/names" ws-path) []
     (webresp/web-service {:type :names}))
-  (cjc/GET (format "/%s/codes" ws-path) []
+  #_(cjc/GET (format "/%s/codes" ws-path) []
     (webresp/web-service {:type :codes}))
   (cjc/ANY "*" []
     (ring.util.http-response/not-found)

@@ -409,7 +409,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
    [{:json-fn vac/json-data  :cache-storage [:owid]}
     {:json-fn data/json-data :cache-storage [:v1]}])
 
-  (debugf "(keys @cache/cache) %s" (keys @cache/cache))
+  (debugf "Keys kept in the cache %s" (keys @cache/cache))
   (debugf "Responses %s" (select-keys @cache/cache [:v1 :owid]))
   (debugf "Cache size %s" (com/measure @cache/cache)))
 

@@ -68,7 +68,7 @@
               "photo=@/tmp/pic.png"
               url-sendPhoto)]))})
 
-(defn-fun-id web-service "" [{:keys [type] :as prm}]
+#_(defn-fun-id web-service "" [{:keys [type] :as prm}]
   (infof "%s" prm)
   {:status 200
    :headers {"Content-Type" "application/json"}
