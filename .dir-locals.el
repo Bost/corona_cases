@@ -16,4 +16,5 @@
    ;; -Xmx<size> - keep in sync with Procfile
    (cider-clojure-cli-global-options
     .
-    "-J-Xmx1024m -J-XX:+HeapDumpOnOutOfMemoryError -J-Djdk.attach.allowAttachSelf"))))
+    "-J-Xmx1024m -J-XX:+HeapDumpOnOutOfMemoryError -J-Djdk.attach.allowAttachSelf -J--illegal-access=permit"
+    ))))

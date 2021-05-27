@@ -11,7 +11,7 @@
             [corona.envdef :as envdef]
             [corona.pom-version-get :as pom]
             [environ.core :as env]
-            [corona.macro :refer [defn-fun-id debugf infof errorf]]
+            [corona.macro :refer [defn-fun-id debugf infof warnf errorf]]
             [taoensso.timbre :as timbre]
             [utils.core :as utc]
             [clj-memory-meter.core :as meter]
@@ -133,10 +133,11 @@
 
 (defn system-time [] (System/currentTimeMillis))
 
-(defn measure
-  "require [corona.common :as com]"
-  [object & prm]
-  (apply (partial meter/measure object) prm))
+(defn-fun-id measure "" [object & prm]
+  (try (apply (partial meter/measure object) prm)
+       (catch java.lang.reflect.InaccessibleObjectException e
+         (warnf (str "Caught %s. Returning count of chars.") e)
+         ((comp count str) object))))
 
 (defn format-bytes
   "Nicely format `num-bytes` as kilobytes/megabytes/etc.
@@ -290,6 +291,9 @@
   "TODO should the spec checking be done here?"
   []
   ((comp
+    (partial into
+             [(let [prop "java.runtime.version"]
+                (format "%s: %s" prop (System/getProperty prop)))])
     (partial mapv pr-env))
    ['corona.common/env-type
     'corona.common/use-webhook?
@@ -361,7 +365,7 @@
                    (throw e)
                    {:exception e}))))]
     (if (:exception res)
-      (let [sleep-time (+ 1000 (rand-int 1000))]
+      (let [sleep-time (+ (* 20 1000) (rand-int (* 5 1000)))]
         (debugf "Sleeping for %s ms ..." sleep-time)
         (Thread/sleep sleep-time)
         (recur (assoc-in prm [:attempt] (inc attempt))))
@@ -394,12 +398,7 @@
              :accept :json}
             ;; tbeg must be captured before the monadic function composition
             init-state {:tbeg (system-time) :acc []}]
-        ;; Can't use the monad due to the bug:
-        ;;   Unable to make field jdk.internal.ref.PhantomCleanable
-        (let [data (clj-http.client/get url prms)]
-          (debugf "from %s ... %s obtained" url (measure data))
-          data)
-        #_((comp
+        ((comp
           first
           (domonad
            #_identity-m
