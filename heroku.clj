@@ -221,19 +221,21 @@
     (when (= heroku-env heroku-env-prod)
       (publish-source! commit rest-args))))
 
-(defn promote! [app options]
-  {:pre [(in? heroku-apps app)]}
+(defn promote! [{:keys [src-app dst-app]} options]
+  {:pre [(and (not= src-app dst-app)
+              (in? heroku-apps src-app)
+              (in? heroku-apps dst-app))]}
   (let [commit (get-commit!)
         clojure-cli-version (let [props (java.util.Properties.)
                                   key "CLOJURE_CLI_VERSION"]
                               (.load props (jio/reader ".heroku-local.env"))
                               (str key "=" (get props key)))
         rest-args (if (:force options) "--force" "")]
-    (open-papertrail app)
-    (stop! app)
-    (set-config! app commit clojure-cli-version)
-    (sh-heroku app "pipelines:promote")
-    (start! app)
+    (open-papertrail dst-app)
+    (stop! dst-app)
+    (set-config! dst-app commit clojure-cli-version)
+    (sh-heroku src-app "pipelines:promote")
+    (start! dst-app)
     (publish-source! commit rest-args)))
 
 ;; Examples:
@@ -249,7 +251,7 @@
       (condp = action
         restart (restart! heroku-app)
         deploy  (deploy! heroku-app options)
-        promote (promote! "hokuspokus-bot" options)
+        promote (promote! {:src-app "hokuspokus-bot" :dst-app "corona-cases-bot"} options)
 
         #_(str "
          # Search in logs:
