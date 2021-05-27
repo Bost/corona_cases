@@ -407,7 +407,7 @@
             _ (add-calc-time "data" data)]
            data))
          init-state)))
-    (fn [url] (infof "from %s ..." url) url))
+    #_(fn [url] (infof "from %s ..." url) url))
    url))
 
 (defn-fun-id get-json "Retries `get-json-single` 3 times" [url]

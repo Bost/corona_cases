@@ -12,12 +12,13 @@
     ((comp
       ;; not checking the indexes etc.
       (fn [tables]
-        (debugf "Tables found %s" tables)
+        #_(debugf "Tables found:\n%s" tables)
         (clojure.set/subset?
          #{"user" "message" "chat" "callback_query" "thresholds"}
          tables))
       set
       (partial map :tables/table_name)
+      (fn [result] (debugf "result:\n    %s" result) result)
       (fn [cmd] (jdbc/execute! connection [cmd]))
       #_(reduce my-fn init-value (jdbc/plan connection [...]))
       (fn [cmd] (debugf "\n  %s" cmd)

@@ -255,7 +255,7 @@
   active-absolute cases."
   [ccode stats last-date report]
   ((comp
-    (fn [arr]
+    #_(fn [arr]
       (debugf "ccode %s size %s" ccode (if arr (com/measure arr) 0))
       arr)
     to-byte-array-auto-closable

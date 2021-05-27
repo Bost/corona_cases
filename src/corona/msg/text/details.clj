@@ -342,7 +342,7 @@
   ;; (def cnt-reports cnt-reports)
   ;; (def prm prm)
   ((comp
-    (fn [info]
+    #_(fn [info]
       (debugf "ccode %s size %s" ccode (com/measure info))
       info)
     fmt)

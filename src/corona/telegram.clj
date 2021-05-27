@@ -290,13 +290,14 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                            (msgi/message
                             ccode estim dates rankings cnt-reports prm-base))
                          (msgi/message-kw ccode))
-                        (debugf "msgi/message ccode %s done" ccode)
+                        #_(debugf "msgi/message ccode %s done" ccode)
                         (cache/cache!
                          (fn []
                            (plot/message
                             ccode sorted-estim last-date cnt-reports))
                          (plot/message-kw ccode))
-                        (debugf "plot/message ccode %s done" ccode)])))
+                        #_(debugf "plot/message ccode %s done" ccode)
+                        (debugf (str "Messages created. ccode " ccode))])))
            ;; here also "ZZ" worldwide messages
            ccc/all-country-codes))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
@@ -317,7 +318,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
             flatten
             (partial map (fn [case-kw]
                            (filter (comp (partial = case-kw) :kw)
-                            #_(fn [m] (= kw (:kw m))) cases/threshold-defaults)))
+                                   cases/threshold-defaults)))
             (fn [ts]
               (clojure.set/difference
                (set (map :kw cases/threshold-defaults))
