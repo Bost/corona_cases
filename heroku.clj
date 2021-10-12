@@ -50,7 +50,7 @@
 
 (def cli-options
   ;; An option with a required argument
-  [["-he" "--heroku-env HENV" "Required Heroku environment to run command against"
+  [["-e" "--heroku-env HENV" "Required Heroku environment to run command against"
     :validate [(fn [henv] (in? heroku-envs henv))
                (str "Must be an element of " heroku-envs)]]
    ["-f" "--force" "Force deployment"]
