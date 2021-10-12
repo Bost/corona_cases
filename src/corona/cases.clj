@@ -17,6 +17,14 @@
   `(->> ~coll ~@fns)
   #_`(sequence (eduction ~@fns ~coll)))
 
+#_
+(printf "
+update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'a';
+update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'd';
+update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'n';
+update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'r';
+select * from thresholds order by kw;
+" 5159000 132000 5310000 3667000)
 (def threshold-defaults
   ((comp (partial sort-by :kw))
    [{:kw :v :inc (int 1e6) :val (int 1e7)}

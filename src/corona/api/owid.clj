@@ -35,7 +35,9 @@
                                         com/fmt-vaccination-date
                                         (fn [s] (.parse date-format s)))))
                      (fn [r] (update-in r [:total_vaccinations]
-                                       (fn [v] (if v (int v) 0))))
+                                        ;; can't use (int ...) conversion.
+                                        ;; The `v` is > Integer.MAX_VALUE
+                                       (fn [v] (if v (long v) 0))))
                      (partial select-keys m))
                     [:date :total_vaccinations])))
     (fn [m]
