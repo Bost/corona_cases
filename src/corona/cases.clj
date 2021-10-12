@@ -26,6 +26,22 @@ update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) w
 select * from thresholds order by kw;
 " 5159000 132000 5310000 3667000)
 (def threshold-defaults
+  "Recovery data is not provided anymore. So:
+Old values on corona-cases:
+kw |  inc  |   val   |     updated_at
+----+-------+---------+---------------------
+a  | 10000 | 5119000 | 2021-09-13 05:31:32
+d  |  1000 |  134000 | 2021-06-17 05:21:14
+n  | 50000 | 5260000 | 2021-09-10 04:25:13
+r  | 10000 | 4087000 | 2021-07-30 05:24:33
+
+Old values on hokuspokus:
+kw |  inc  |   val   |     updated_at
+----+-------+---------+---------------------
+a  | 10000 | 5119000 | 2021-09-12 21:26:43
+d  |  1000 |  134000 | 2021-06-23 05:23:34
+n  | 50000 | 5260000 | 2021-09-09 17:27:41
+r  | 10000 | 3867000 | 2021-07-27 05:22:40"
   ((comp (partial sort-by :kw))
    [{:kw :v :inc (int 1e6) :val (int 1e7)}
     {:kw :p :inc (int 1e6) :val (int 1e7)}
