@@ -11,6 +11,7 @@
 (def path "resources/mockup")
 
 (defroutes app-routes
+  ;; TODO code repetition - create a macro
   (GET
     "/all" []
     {:status 200
