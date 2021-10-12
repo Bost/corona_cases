@@ -266,7 +266,11 @@
 
 (defn-fun-id group-below-threshold
   "Group all countries with the nr of active cases below the threshold under the
-  `ccc/default-2-country-code` so that max 10 countries are plotted"
+  `ccc/default-2-country-code` so that max 10 countries are plotted.
+
+  Too many invocations lead to 'OutOfMemoryError: Java heap space'. Garbage
+  Collection on every 4th invocation doesn't help. Tail-Call invocation might
+  help to counter this problem."
   [{:keys [case-kw threshold threshold-increase stats] :as prm}]
   (let [max-plot-lines 10
         res (map (fn [hm] (if (< (case-kw hm) threshold)
@@ -283,6 +287,20 @@
           (dbase/upsert-threshold! {:kw case-kw
                                     :inc threshold-increase
                                     :val raised-threshold})
+          #_(printf "
+update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'a';
+update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'd';
+update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'n';
+update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'r';
+select * from thresholds order by kw;
+" 5159000 132000 5310000 3667000)
+          ;; kw |  inc  |   val   |     updated_at
+          ;; ----+-------+---------+---------------------
+          ;; a  | 10000 | 5159000 | 2021-10-12 15:35:17
+          ;; d  |  1000 |  132000 | 2021-10-12 13:33:11
+          ;; n  | 50000 | 5310000 | 2021-10-12 12:57:01
+          ;; r  | 10000 | 3667000 | 2021-10-12 13:28:16
+
           (group-below-threshold (assoc prm :threshold raised-threshold)))
         {:data res :threshold threshold}))))
 
