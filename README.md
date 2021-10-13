@@ -21,10 +21,11 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 <!-- # nix-env -iA nixpkgs.postgresql_12 -->
 <!-- ``` -->
 
+* Java on GuixOS: `guix install openjdk:jdk`. Thanks to [awb99](https://github.com/clojure-emacs/orchard/issues/117#issuecomment-859987280)
 * [Clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
 * [Heroku for Clojure](https://devcenter.heroku.com/articles/getting-started-with-clojure)
 ```bash
-# The `sudo snap install heroku --classic` doesn't work
+# The `sudo snap install heroku --classic` doesn't work on Ubuntu
 # See https://github.com/heroku/cli/issues/822
 curl https://cli-assets.heroku.com/install.sh | sh
 ```
@@ -41,13 +42,16 @@ sudo chmod --recursive u=rwx,g=---,o=--- pg/
 sudo -su postgres
 fish # start he fish-shell for the postgres user
 set --export PATH /usr/lib/postgresql/*/bin $PATH
-postgres -D pg &   # this doesn't work: pg_ctl -D pg -l logfile start
+# on ubuntu:
+postgres -D pg & # this doesn't work: pg_ctl -D pg -l logfile start
 ```
 Open new console and log in
 ```bash
 # in case of:
-#    psql: error: FATAL:  role "username" does not exist
-# sudo -u postgres createuser -s <username>
+#      psql: error: FATAL:  role "username" does not exist
+#   sudo -u postgres createuser -s <username>
+# or:
+#   createuser -s postgres # on guix
 psql --dbname=postgres
 ```
 ```postgres
@@ -99,26 +103,32 @@ TELEGRAM_TOKEN:       ...
 ## Develop
 
 1. Get the test data and start the mockup data service
-Ideally, copy the whole project to a separate directory
+Initially, copy the whole project to a separate directory:
+```bash
+cd ..
+cp -r corona_cases/ corona_cases.data
+cd corona_cases.data
+```
+1. Repeatedly
 ```bash
 ./heroku.clj getMockData
 clj -J-Djdk.attach.allowAttachSelf -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} com.billpiel/sayid {:mvn/version "0.1.0"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.1"} cider/cider-nrepl {:mvn/version "0.25.9"}} :aliases {:cider/nrepl {:main-opts ["-m" "nrepl.cmdline" "--middleware" "[com.billpiel.sayid.nrepl-middleware/wrap-sayid,refactor-nrepl.middleware/wrap-refactor,cider.nrepl/cider-middleware]"]}}}' --eval '(load "corona/api/mockup") (corona.api.mockup/run-server)'
 ```
 
-2. In Emacs Cider `M-x cider-jack-in-clj`, or start the nREPL from the command line:
+1. In Emacs Cider `M-x cider-jack-in-clj`, or start the nREPL from the command line:
 <!-- No line continuations '\' accepted -->
 ```bash
 clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.0"} cider/cider-nrepl {:mvn/version "0.25.5"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
 ```
 and connect to it from the editor of your choice.
 
-3. Start the telegram chatbot long-polling:
+1. Start the telegram chatbot long-polling:
 ```clojure
 (require '[corona.telegram])
 (corona.telegram/start)
 ```
 
-4. Start the web server:
+1. Start the web server:
 ```clojure
 (require '[corona.web])
 (alter-var-root #'system component/start)
