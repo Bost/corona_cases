@@ -16,28 +16,59 @@
    java.lang.ProcessBuilder$Redirect
    ))
 
-(defn get-heroku-envs [kws]
+(def git "git")
+(def push "push")
+(def master "master")
+
+(def heroku-envs
+  "levels 0 and 1 - the top two levels"
   ((comp
     set
-    vals
-    (partial into {})
-    (partial map (fn [kw] (get-in env/environment [kw :cli]))))
-    kws))
-
-(def heroku-envs (get-heroku-envs (keys env/environment)))
+    (partial map (comp name first))
+    (partial filter (fn [[k v]] (<= (get-in v [:level]) 1))))
+   env/environment))
 #_(println "heroku-envs" heroku-envs)
 
-(def heroku-env-prod ((comp first
-                            get-heroku-envs
-                            vector
-                            keyword)
-                      env/corona-cases))
-#_(println "heroku-env-prod" heroku-env-prod)
+(defn heroku-env-name [level]
+  ((comp
+    name first first
+    (partial filter (fn [[k v]] (= (get-in v [:level]) level))))
+   env/environment))
+
+(def heroku-envs
+  "levels 0 and 1 - the top two levels"
+  (set (map heroku-env-name [0 1])))
+
+(def heroku-prod
+  "levels 0 and 1 - the top two levels"
+  (heroku-env-name 0))
+#_(println "heroku-prod" heroku-prod)
+
+(defn heroku-app-name [heroku-env] (str heroku-env "-bot"))
+
+(def pipelined-heroku-apps
+  "Git branch-names must have the format 'heroku-<map-value>'."
+  (zipmap [:src-app :dst-app]
+          ((comp
+            vec
+            (partial map (comp heroku-app-name heroku-env-name)))
+           [1 0])))
+#_(println "pipelined-heroku-apps" pipelined-heroku-apps)
+
+(defn heroku-app-name [heroku-env] (str heroku-env "-bot"))
+
+(def pipelined-heroku-apps
+  "git branch-names must be equal to map-values"
+  (zipmap [:src-app :dst-app]
+          ((comp
+            vec
+            (partial map (comp heroku-app-name heroku-env-name)))
+           [1 0])))
 
 (def heroku-apps
   ((comp
     set
-    (partial map (fn [henv] (str henv "-bot"))))
+    (partial map heroku-app-name))
    heroku-envs))
 #_(println "heroku-apps" heroku-apps)
 
@@ -162,25 +193,31 @@
                            {:to-string? true}))
            (trim-last-newline))))
 
+(defn sh-mkdir-p [dir-name]
+  (sh "mkdir" "-p" dir-name))
+
 (defn sh-heroku
   [app & cmds]
   {:pre [(in? heroku-apps app)]}
   (apply sh (into ["heroku"] (conj (vec cmds) "--app" app))))
 
-(defn get-commit! []
-  (sh "git" "rev-parse" "--short" "master"))
+(defn get-commit!
+  ([] (get-commit! master))
+  ([branch] (sh git "rev-parse" "--short" branch)))
 
 (defn set-config! [app commit clojure-cli-version]
     {:pre [(in? heroku-apps app)]}
   (sh-heroku app "config:set" (str "COMMIT=" commit) clojure-cli-version))
 
+(def ps:scale "ps:scale")
+
 (defn stop! [app]
   {:pre [(in? heroku-apps app)]}
-  (sh-heroku app "ps:scale" "web=0"))
+  (sh-heroku app ps:scale "web=0"))
 
 (defn start! [app]
   {:pre [(in? heroku-apps app)]}
-  (sh-heroku app "ps:scale" "web=1"))
+  (sh-heroku app ps:scale "web=1"))
 
 (defn restart!
   "There's a special heroku command for it"
@@ -196,36 +233,46 @@
   "Publish the source code only when deploying to production"
   [commit rest-args]
   ;; seems like `git push --tags` pushes only tags w/o the code
-  (sh "git" "tag" "--annotate" "--message" "''"
-      (str pom/pom-version "-" commit))
+  (sh git "tag" "--annotate" "--message" "''"
+      (str pom/pom-version "-" commit) commit)
   (doseq [remote ["origin" "gitlab"]]
     ;; See also `git push --tags $pushFlags $remote`
-    (sh "git" "push" rest-args "--follow-tags" "--verbose" remote)))
+    (sh git push rest-args "--follow-tags" "--verbose" remote)))
 
-(defn deploy! [prm-app options]
+;; (defmacro dbg-let
+;;   "Display the let-values; does not evaluate the body"
+;;   [vs & body]
+;;   `(let ~vs
+;;      ((comp
+;;        doall
+;;        (partial map (fn [~'v]
+;;                       (printf "%s: %s\n" (first ~'v) (eval (second ~'v)))))
+;;        (partial partition-all 2))
+;;       (quote ~vs))))
+
+(defn deploy! [prm-app {:keys [heroku-env] :as options}]
   {:pre [(in? heroku-apps prm-app)]}
   (let [commit (get-commit!)
         clojure-cli-version (let [props (java.util.Properties.)
                                   key "CLOJURE_CLI_VERSION"]
                               (.load props (jio/reader ".heroku-local.env"))
                               (str key "=" (get props key)))
-        heroku-env (:heroku-env options)
-        app (str heroku-env "-bot")
+        app (heroku-app-name heroku-env)
         remote (str "heroku-" app)
         rest-args (if (:force options) "--force" "")]
     (open-papertrail app)
     (stop! app)
     (set-config! app commit clojure-cli-version)
-    (sh "git" "push" rest-args remote "master")
+    (sh git push rest-args remote master)
     (start! app)
-    (when (= heroku-env heroku-env-prod)
+    (when (= heroku-env heroku-prod)
       (publish-source! commit rest-args))))
 
 (defn promote! [{:keys [src-app dst-app]} options]
   {:pre [(and (not= src-app dst-app)
               (in? heroku-apps src-app)
               (in? heroku-apps dst-app))]}
-  (let [commit (get-commit!)
+  (let [commit (get-commit! (format "remotes/%s/%s" src-app master))
         clojure-cli-version (let [props (java.util.Properties.)
                                   key "CLOJURE_CLI_VERSION"]
                               (.load props (jio/reader ".heroku-local.env"))
@@ -238,20 +285,32 @@
     (start! dst-app)
     (publish-source! commit rest-args)))
 
+(defn sh-curl [& cmds] (apply (partial sh "curl") cmds))
+(defn sh-wget [& cmds] (apply (partial sh "wget") cmds))
+
+(def --output-document "--output-document") #_(def -O "-O")
+(def --form "--form")
+
+(defn webhook-action-prms [webhook-action telegram-token]
+  [--form "'drop_pending_updates=true'" "--request" "POST"
+   (format "https://api.telegram.org/bot%s/%s"
+           webhook-action telegram-token)])
+
 ;; Examples:
-;; ./heroku.clj deploy --app hokuspokus-bot
+;; ./heroku.clj deploy --heroku-env hokuspokus
+;; ./heroku.clj deploy -e           hokuspokus
 (let [{:keys [action options exit-message ok?]}
       (validate-args *command-line-args*)]
   (if exit-message
     (exit (if ok? 0 1) exit-message)
     (let [heroku-env (:heroku-env options)
-          heroku-app (str heroku-env "-bot")
+          heroku-app (heroku-app-name heroku-env)
           telegram-token (get-in env/environment
                                  [(keyword heroku-env) :telegram-token])]
       (condp = action
         restart (restart! heroku-app)
         deploy  (deploy! heroku-app options)
-        promote (promote! {:src-app "hokuspokus-bot" :dst-app "corona-cases-bot"} options)
+        promote (promote! pipelined-heroku-apps options)
 
         #_(str "
          # Search in logs:
@@ -269,7 +328,7 @@
               pt-token (sh-heroku heroku-app "config:get" "PAPERTRAIL_API_TOKEN")
               pt-header (format "X-Papertrail-Token: %s" pt-token)]
 
-          (sh "mkdir" "-p" log-dir)
+          (sh-mkdir-p log-dir)
 
           (doseq [hour-ago '(0 1)]
             ;; It takes approximately 6-7 hours for logs to be available in the archive.
@@ -279,14 +338,14 @@
                   date (str hour-ago-delayed " hours ago")
                   date-ago (sh "date" "-u" (str "--date=" date) "+%Y-%m-%d-%H")
                   out-file (format "%s/%s-UTC.tsv.gz" log-dir date-ago)]
-              (sh
-               "curl" "--silent" "--no-include" "--output" out-file
+              (sh-curl "--silent" "--no-include" "--output" out-file
                "--location" "--header" pt-header
                (str "https://papertrailapp.com/api/v1/archives/" date-ago "/download")))))
 
         getMockData
-        (do
-          (sh "wget"
+        (let [dst-dir "resources/mockup"]
+          (sh-mkdir-p dst-dir) ;; when running for the 1st time
+          (sh-wget
               #_"https://coronavirus-tracker-api.herokuapp.com/all"
               #_"https://covid-tracker-us.herokuapp.com/all"
               ((comp
@@ -294,22 +353,19 @@
                 #_first
                 second)
                env/api-servers)
-              "-O" "resources/mockup/all.json")
-          (sh "wget" env/owid-prod
-              "-O" "resources/mockup/owid-covid-data.json"))
+              --output-document (format "%s/all.json" dst-dir))
+          (sh-wget env/owid-prod
+              --output-document (format "%s/owid-covid-data.json" dst-dir)))
 
         deleteWebhook
-        (sh "curl" "--form" "'drop_pending_updates=true'" "--request" "POST"
-            (format "https://api.telegram.org/bot%s/%s"
-                    deleteWebhook telegram-token))
+        (apply sh-curl
+               (webhook-action-prms deleteWebhook telegram-token))
 
         setWebhook
-        (sh "curl"
-            "--form" (format "'url=https://%s.herokuapp.com/%s'"
-                             heroku-app telegram-token)
-            "--form" "'drop_pending_updates=true'" "--request" "POST"
-            (format "https://api.telegram.org/bot%s/%s"
-                    setWebhook telegram-token))
+        (apply sh-curl
+               (into
+                [--form (format "'url=https://%s.herokuapp.com/%s'" heroku-app telegram-token)]
+                (webhook-action-prms setWebhook telegram-token)))
 
         users
         ;; TODO prohibit sh-heroku from writing to stdout

@@ -4,9 +4,11 @@
   (:require [clojure.string :as cstr]))
 
 (def ^:const ^String prod "prod")
+(def ^:const ^String test "test")
 (def ^:const ^String corona-cases "corona-cases")
 (def ^:const ^String hokuspokus "hokuspokus")
 (def ^:const ^String wicki "wicki")
+(def ^:const ^String heroku-app-domain "herokuapp.com")
 
 (def token-corona-cases (System/getenv "TELEGRAM_TOKEN_CORONA_CASES"))
 (def token-hokuspokus   (System/getenv "TELEGRAM_TOKEN_HOKUSPOKUS"))
@@ -49,17 +51,17 @@
   {(keyword corona-cases)
    {:level 0
     :bot-name corona-cases-bot
-    :web-server "https://corona-cases-bot.herokuapp.com"
+    :web-server (format "https://%s.%s" corona-cases-bot heroku-app-domain)
     :json-server {:v1 api-servers :owid owid-prod}
-    :cli {"--prod" "corona-cases"}
+    :cli {(format "--%s" prod) corona-cases}
     :telegram-token token-corona-cases}
 
    (keyword hokuspokus)
    {:level 1
     :bot-name hokuspokus-bot
-    :web-server "https://hokuspokus-bot.herokuapp.com"
+    :web-server (format "https://%s.%s" hokuspokus-bot heroku-app-domain)
     :json-server {:v1 api-servers :owid owid-prod}
-    :cli {"--test" "hokuspokus"}
+    :cli {(format "--%s" test) hokuspokus}
     :telegram-token token-hokuspokus}
 
    (keyword "local")
