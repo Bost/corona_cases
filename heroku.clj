@@ -331,37 +331,40 @@
         ;; parse the logfile, compute timestamp diffs
         getLogs
         (let [log-dir (str "log/" heroku-env)
-              pt-token (sh-heroku heroku-app "config:get" "PAPERTRAIL_API_TOKEN")
+              pt-token (sh-heroku heroku-app
+                                  "config:get" "PAPERTRAIL_API_TOKEN")
               pt-header (format "X-Papertrail-Token: %s" pt-token)]
 
           (sh-mkdir-p log-dir)
 
           (doseq [hour-ago '(0 1)]
-            ;; It takes approximately 6-7 hours for logs to be available in the archive.
+            ;; It takes approximately 6-7 hours for logs to be available in the
+            ;; archive.
             ;; https://help.papertrailapp.com/kb/how-it-works/permanent-log-archives
-
             (let [hour-ago-delayed (+ hour-ago 7)
                   date (str hour-ago-delayed " hours ago")
                   date-ago (sh "date" "-u" (str "--date=" date) "+%Y-%m-%d-%H")
                   out-file (format "%s/%s-UTC.tsv.gz" log-dir date-ago)]
               (sh-curl "--silent" "--no-include" "--output" out-file
-               "--location" "--header" pt-header
-               (str "https://papertrailapp.com/api/v1/archives/" date-ago "/download")))))
+                       "--location" "--header" pt-header
+                       (format "https://papertrailapp.com/api/v1/archives/%s/download"
+                               date-ago)))))
 
         getMockData
         (let [dst-dir "resources/mockup"]
           (sh-mkdir-p dst-dir) ;; when running for the 1st time
           (sh-wget
-              #_"https://coronavirus-tracker-api.herokuapp.com/all"
-              #_"https://covid-tracker-us.herokuapp.com/all"
-              ((comp
-                (partial format "https://%s/all")
-                #_first
-                second)
-               env/api-servers)
-              --output-document (format "%s/all.json" dst-dir))
+           #_"https://coronavirus-tracker-api.herokuapp.com/all"
+           #_"https://covid-tracker-us.herokuapp.com/all"
+           ((comp
+             (partial format "https://%s/all")
+             #_first
+             second)
+            env/api-servers)
+           --output-document (format "%s/all.json" dst-dir))
           (sh-wget env/owid-prod
-              --output-document (format "%s/owid-covid-data.json" dst-dir)))
+                   --output-document
+                   (format "%s/owid-covid-data.json" dst-dir)))
 
         deleteWebhook
         (apply sh-curl
@@ -370,12 +373,14 @@
         setWebhook
         (apply sh-curl
                (into
-                [--form (format "'url=https://%s.herokuapp.com/%s'" heroku-app telegram-token)]
+                [--form (format "'url=https://%s.herokuapp.com/%s'"
+                                heroku-app telegram-token)]
                 (webhook-action-prms setWebhook telegram-token)))
 
         users
         ;; TODO prohibit sh-heroku from writing to stdout
         ((comp
           (fn [s] (cstr/split s #"\n")))
-         (sh-heroku heroku-app "pt" (format ":type -ssl-client-cert -%s"
-                                            (System/getenv "MY_TELEGRAM_ID"))))))))
+         (sh-heroku heroku-app
+                    "pt" (format ":type -ssl-client-cert -%s"
+                                 (System/getenv "MY_TELEGRAM_ID"))))))))
