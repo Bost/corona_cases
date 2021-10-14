@@ -79,6 +79,19 @@
   [sequence elem]
   (boolean (some (fn [e] (= elem e)) sequence)))
 
+(def restart       "restart")
+(def deploy        "deploy")
+(def deleteWebhook "deleteWebhook")
+(def setWebhook    "setWebhook")
+(def users         "users")
+(def promote       "promote")
+(def getMockData   "getMockData")
+(def getLogs       "getLogs")
+
+(def cli-actions
+  "TODO a new action must be manually inserted into this list. Use macros for that"
+  [restart deploy deleteWebhook setWebhook users promote getMockData getLogs])
+
 (def cli-options
   ;; An option with a required argument
   [["-e" "--heroku-env HENV" "Required Heroku environment to run command against"
@@ -90,6 +103,9 @@
 (defn usage [options-summary]
   (->> ["Usage: program-name action [options]"
         ""
+        "Action is one of the:"
+        (cstr/join \newline (map (fn [a] (str "  " a)) cli-actions))
+        ""
         "Options:"
         options-summary]
        (cstr/join \newline)))
@@ -97,16 +113,6 @@
 (defn error-msg [errors]
   (str "The following errors occurred while parsing your command:\n\n"
        (cstr/join \newline errors)))
-
-;; actions
-(def restart "restart")
-(def deploy "deploy")
-(def deleteWebhook "deleteWebhook")
-(def setWebhook "setWebhook")
-(def users "users")
-(def promote "promote")
-(def getMockData "getMockData")
-(def getLogs "getLogs")
 
 (defn validate-args
   "Validate command line arguments. Either return a map indicating the program
