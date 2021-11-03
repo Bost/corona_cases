@@ -79,6 +79,8 @@
   [sequence elem]
   (boolean (some (fn [e] (= elem e)) sequence)))
 
+(def start         "start")
+(def stop          "stop")
 (def restart       "restart")
 (def deploy        "deploy")
 (def deleteWebhook "deleteWebhook")
@@ -89,12 +91,19 @@
 (def getLogs       "getLogs")
 
 (def cli-actions
-  "TODO a new action must be manually inserted into this list. Use macros for that"
-  [restart deploy deleteWebhook setWebhook users promote getMockData getLogs])
+  "TODO a new action must be manually inserted into this list. Use macros for
+  that"
+  [start stop restart deploy deleteWebhook setWebhook users promote getMockData
+  getLogs])
 
 (def cli-options
   ;; An option with a required argument
-  [["-e" "--heroku-env HENV" "Required Heroku environment to run command against"
+  [["-e" "--heroku-env HENV"
+    (str "Heroku environment to run the action against.\n"
+         (let [align "                         "]
+           (str align "One of the:\n"
+                (cstr/join \newline
+                           (map (fn [a] (str align "  " a)) heroku-envs)))))
     :validate [(fn [henv] (in? heroku-envs henv))
                (str "Must be an element of " heroku-envs)]]
    ["-f" "--force" "Force deployment"]
@@ -119,7 +128,8 @@
   should exit (with a error message, and optional ok status), or a map
   indicating the action the program should take and the options provided."
   [args]
-  (let [{:keys [options arguments errors summary]} (parse-opts args cli-options)]
+  (let [{:keys [options arguments errors summary]}
+        (parse-opts args cli-options)]
     (cond
       (:help options) ; help => exit OK with usage summary
       {:exit-message (usage summary) :ok? true}
@@ -130,8 +140,7 @@
       ;; custom validation on arguments
       (= 1 (count arguments))
       (cond
-        (#{restart deploy deleteWebhook setWebhook users promote getMockData
-           getLogs}
+        ((set cli-actions)
          (first arguments))
         {:action (first arguments) :options options}
 
@@ -314,6 +323,8 @@
           telegram-token (get-in env/environment
                                  [(keyword heroku-env) :telegram-token])]
       (condp = action
+        start   (start! heroku-app)
+        stop    (stop! heroku-app)
         restart (restart! heroku-app)
         deploy  (deploy! heroku-app options)
         promote (promote! pipelined-heroku-apps options)
@@ -338,17 +349,17 @@
           (sh-mkdir-p log-dir)
 
           (doseq [hour-ago '(0 1)]
-            ;; It takes approximately 6-7 hours for logs to be available in the
-            ;; archive.
-            ;; https://help.papertrailapp.com/kb/how-it-works/permanent-log-archives
+;;; It takes approximately 6-7 hours for logs to be available in the archive.
+;;; https://help.papertrailapp.com/kb/how-it-works/permanent-log-archives
             (let [hour-ago-delayed (+ hour-ago 7)
                   date (str hour-ago-delayed " hours ago")
                   date-ago (sh "date" "-u" (str "--date=" date) "+%Y-%m-%d-%H")
                   out-file (format "%s/%s-UTC.tsv.gz" log-dir date-ago)]
               (sh-curl "--silent" "--no-include" "--output" out-file
                        "--location" "--header" pt-header
-                       (format "https://papertrailapp.com/api/v1/archives/%s/download"
-                               date-ago)))))
+                       (format
+                        "https://papertrailapp.com/api/v1/archives/%s/download"
+                        date-ago)))))
 
         getMockData
         (let [dst-dir "resources/mockup"]

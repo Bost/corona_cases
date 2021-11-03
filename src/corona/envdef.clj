@@ -3,8 +3,8 @@
 (ns corona.envdef
   (:require [clojure.string :as cstr]))
 
-(def ^:const ^String prod "prod")
-(def ^:const ^String test "test")
+(def ^:const ^String prod-opt "prod")
+(def ^:const ^String test-opt "test")
 (def ^:const ^String corona-cases "corona-cases")
 (def ^:const ^String hokuspokus "hokuspokus")
 (def ^:const ^String wicki "wicki")
@@ -53,7 +53,7 @@
     :bot-name corona-cases-bot
     :web-server (format "https://%s.%s" corona-cases-bot heroku-app-domain)
     :json-server {:v1 api-servers :owid owid-prod}
-    :cli {(format "--%s" prod) corona-cases}
+    :cli {(format "--%s" prod-opt) corona-cases}
     :telegram-token token-corona-cases}
 
    (keyword hokuspokus)
@@ -61,7 +61,7 @@
     :bot-name hokuspokus-bot
     :web-server (format "https://%s.%s" hokuspokus-bot heroku-app-domain)
     :json-server {:v1 api-servers :owid owid-prod}
-    :cli {(format "--%s" test) hokuspokus}
+    :cli {(format "--%s" test-opt) hokuspokus}
     :telegram-token token-hokuspokus}
 
    (keyword "local")
