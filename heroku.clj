@@ -89,12 +89,14 @@
 (def promote       "promote")
 (def getMockData   "getMockData")
 (def getLogs       "getLogs")
+(def updateClojureCliVersion "updateClojureCliVersion")
 
 (def cli-actions
   "TODO a new action must be manually inserted into this list. Use macros for
   that"
   [start stop restart deploy deleteWebhook setWebhook showUsers promote
    getMockData getLogs
+   updateClojureCliVersion])
 
 (def cli-options
   ;; An option with a required argument
@@ -396,4 +398,15 @@
          (sh-heroku heroku-app
                     ;; pt stands for the papertrail plugin
                     "pt" (format ":type -ssl-client-cert -%s"
-                                 (System/getenv "MY_TELEGRAM_ID"))))))))
+                                 (System/getenv "MY_TELEGRAM_ID"))))
+
+        updateClojureCliVersion
+        ((comp
+          (fn [script]
+            (sh "sed" "--in-place" "-e" script ".heroku-local.env" ".env"))
+          (partial format "s|CLOJURE_CLI_VERSION=.*|CLOJURE_CLI_VERSION=%s|")
+          first
+          re-find
+          (partial re-matcher #"((\d+)\.)+(\d+)"))
+         (sh "clj" "--version"))
+        ))))

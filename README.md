@@ -94,17 +94,7 @@ CLOJURE_CLI_VERSION=1.10.3.986
 PAPERTRAIL_API_TOKEN=<...>
 TELEGRAM_TOKEN="<...>"
 ```
-* Heroku Config Vars. See [https://dashboard.heroku.com/apps/\<YOUR-HEROKU-APP-NAME\>/settings](). See also:
-```bash
-heroku config --app <YOUR-HEROKU-APP-NAME>
-CLOJURE_CLI_VERSION:  1.10.3.986
-COMMIT:               ...
-CORONA_ENV_TYPE:      HOKUSPOKUS
-PAPERTRAIL_API_TOKEN: ...
-REPL_PASSWORD:        ...
-REPL_USER:            ...
-TELEGRAM_TOKEN:       ...
-```
+* Heroku Config Vars. See [https://dashboard.heroku.com/apps/\<HEROKU-APP-NAME\>/settings](). See also:
 
 ## Develop
 
@@ -151,7 +141,7 @@ bin/build; and heroku local --env=.heroku-local.env
 
 ## Deploy to Heroku
 ```bash
-bb heroku.clj deploy --heroku-env <YOUR-HEROKU-APP-NAME>
+bb heroku.clj deploy --heroku-env <HEROKU-APP-NAME>
 ```
 
 ## MySQL -> PostgreSQL script conversion
@@ -185,20 +175,23 @@ then
 -- list indices
 \di
 ```
+
+## Update
+```bash
+./heroku.clj updateClojureCliVersion
+```
+
 ## Others
 
-Inspect logfile
 ```bash
+# Inspect logfile:
 # heroku plugins:install heroku-papertrail
-heroku pt ":type -'ssl-client-cert' -'$MY_TELEGRAM_ID'" --app <YOUR-HEROKU-APP-NAME> | grep -v -e '^[[:space:]]*$
-```
+heroku pt ":type -'ssl-client-cert' -'$MY_TELEGRAM_ID'" --app <HEROKU-APP-NAME> | grep -v -e '^[[:space:]]*$
 
-Inspect memory
-```bash
+# Inspect memory:
 # sudo apt install visualvm
 visualvm -J-DsocksProxyHost=localhost -J-DsocksProxyPort=1080 & disown
-```
 
-```bash
-heroku run bash --app <YOUR-HEROKU-APP-NAME>
+# get command line access
+heroku run bash --app <HEROKU-APP-NAME>
 ```
