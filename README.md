@@ -25,9 +25,13 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 * [Clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
 * [Heroku for Clojure](https://devcenter.heroku.com/articles/getting-started-with-clojure)
 ```bash
+# on Ubuntu:
 # The `sudo snap install heroku --classic` doesn't work on Ubuntu
 # See https://github.com/heroku/cli/issues/822
 curl https://cli-assets.heroku.com/install.sh | sh
+
+# on Guix:
+npm install -g heroku
 ```
 * [Babashka](https://github.com/babashka/babashka#installer-script)
 * postgresql:
@@ -42,8 +46,10 @@ sudo chmod --recursive u=rwx,g=---,o=--- pg/
 sudo -su postgres
 fish # start he fish-shell for the postgres user
 set --export PATH /usr/lib/postgresql/*/bin $PATH
-# on ubuntu:
-postgres -D pg & # this doesn't work: pg_ctl -D pg -l logfile start
+# on Ubuntu:
+postgres -D pg & # this doesn't work:
+# on GuixOS
+pg_ctl -D pg -l postgres.log start
 ```
 Open new console and log in
 ```bash
