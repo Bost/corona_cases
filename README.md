@@ -148,14 +148,17 @@ and check the [http://localhost:5050/](http://localhost:5050/) if it's running.
 ## Run locally
 
 ```bash
+# start Postgres
+pg_ctl -D pg -l postgres.log start # on Guix
 bin/build; and heroku local --env=.heroku-local.env
 # or:
 # bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...
 ```
 
-## Deploy to Heroku
+## Heroku CI pipeline
 ```bash
-bb heroku.clj deploy --heroku-env <HEROKU-APP-NAME>
+./heroku.clj deploy --heroku-env hokuspokus
+# ./heroku.clj promote
 ```
 
 ## MySQL -> PostgreSQL script conversion
@@ -193,6 +196,9 @@ then
 ## Update
 ```bash
 ./heroku.clj updateClojureCliVersion
+# see also https://github.com/practicalli/clojure-deps-edn
+clojure -Sdeps '{:deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}}' -M -m antq.core
+clojure Spom
 ```
 
 ## Others
