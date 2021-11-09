@@ -24,10 +24,10 @@
    [compojure               "1.6.2"]
 
    ;; Ring Jetty adapter
-   [ring/ring-jetty-adapter "1.9.3"]
+   [ring/ring-jetty-adapter "1.9.4"]
 
    ;; for the (ring.util.http-response/ok)
-   [metosin/ring-http-response "0.9.2"]
+   [metosin/ring-http-response "0.9.3"]
 
    ;; for [ring.middleware.json :refer [wrap-json-body]]
    [ring/ring-json "0.5.1"]
@@ -36,19 +36,19 @@
    [environ                 "1.2.0"]
 
    ;; JSON and JSON SMILE encoding - see also clj-http
-   [cheshire "5.10.0"]
+   [cheshire "5.10.1"]
 
    ;; for the get-json function. Not having it cheshire as a dependency results
    ;; in: `namespace 'cheshire.factory' not found`
-   [clj-http                "3.12.2"]
+   [clj-http                "3.12.3"]
 
    ;; Clojure interface for Telegram Bot API
    [org.clojars.bost/morse  "0.0.0-164-0xe94b"]
 
-   [org.clojure/data.json   "2.3.1"]
+   [org.clojure/data.json   "2.4.0"]
 
    ;; wrapper for Java 8 Date-Time API.
-   [clojure.java-time "0.3.2"]
+   [clojure.java-time "0.3.3"]
 
    [org.clojars.bost/clj-time "0.6.0-289-0xe68a"]
 
@@ -61,7 +61,7 @@
    #_[aerial.hanami "0.12.1"]
 
    ;; internationalization, ISO 3166-1 country codes etc.
-   [com.neovisionaries/nv-i18n "1.28"]
+   [com.neovisionaries/nv-i18n "1.29"]
 
    ;; parse HTML into Clojure data structures - scrapping data from HTML tables
    [hickory "0.7.1"]
@@ -92,8 +92,8 @@
    [com.clojure-goes-fast/clj-memory-meter "0.1.3"]
 
    ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-   [com.github.seancorfield/next.jdbc "1.2.659"]
-   [org.postgresql/postgresql "42.2.20"]]
+   [com.github.seancorfield/next.jdbc "1.2.737"]
+   [org.postgresql/postgresql "42.3.1"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"
