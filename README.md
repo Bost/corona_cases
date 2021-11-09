@@ -189,6 +189,7 @@ then
 
 Inspect logfile
 ```bash
+# heroku plugins:install heroku-papertrail
 heroku pt ":type -'ssl-client-cert' -'$MY_TELEGRAM_ID'" --app <YOUR-HEROKU-APP-NAME> | grep -v -e '^[[:space:]]*$
 ```
 

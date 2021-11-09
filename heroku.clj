@@ -85,7 +85,7 @@
 (def deploy        "deploy")
 (def deleteWebhook "deleteWebhook")
 (def setWebhook    "setWebhook")
-(def users         "users")
+(def showUsers     "showUsers")
 (def promote       "promote")
 (def getMockData   "getMockData")
 (def getLogs       "getLogs")
@@ -93,8 +93,8 @@
 (def cli-actions
   "TODO a new action must be manually inserted into this list. Use macros for
   that"
-  [start stop restart deploy deleteWebhook setWebhook users promote getMockData
-  getLogs])
+  [start stop restart deploy deleteWebhook setWebhook showUsers promote
+   getMockData getLogs
 
 (def cli-options
   ;; An option with a required argument
@@ -388,10 +388,12 @@
                                 heroku-app telegram-token)]
                 (webhook-action-prms setWebhook telegram-token)))
 
-        users
+        ;; obtain the log using the heroku-papertrail plugin
+        showUsers
         ;; TODO prohibit sh-heroku from writing to stdout
         ((comp
           (fn [s] (cstr/split s #"\n")))
          (sh-heroku heroku-app
+                    ;; pt stands for the papertrail plugin
                     "pt" (format ":type -ssl-client-cert -%s"
                                  (System/getenv "MY_TELEGRAM_ID"))))))))
