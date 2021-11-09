@@ -72,29 +72,43 @@ SELECT datname FROM pg_database;
 * [Telegram Chatbot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
 * [Heroku App](https://www.heroku.com/), optionally add the Papertrail add-on
 
-### Configure
-* Local environment variables. Create `.env` file in your project root directory:
+### Define local environment vars
+Create `.env` in the project root directory and set the `CLOJURE_CLI_VERSION`:
 ```bash
-touch .env
-```
-containing:
-<!-- TODO implement ./heroku.clj updateClojure -->
-```bash
-# Value must be lower-cased, without the "" chars
-CORONA_ENV_TYPE=devel
-#
+echo \
+"# See also .heroku-local.env
+
+# The value must be one of `(keys corona.envdef/environment)`;
+# lower-cased and not surrounded by the double quote chars \"\".
+CORONA_ENV_TYPE=hokuspokus
+# (keyword corona-cases)
+# (keyword hokuspokus)
+# (keyword \"local\")
+# (keyword \"devel\")
+
 # https://clojure.org/guides/getting_started#_installation_on_linux
-# See also:
-#          `cat .heroku-local.env`
-#          `cat .env`
-#          `cli --version`
-CLOJURE_CLI_VERSION=1.10.3.986
-#
-# HEROKU tokens for:
-PAPERTRAIL_API_TOKEN=<...>
-TELEGRAM_TOKEN="<...>"
+CLOJURE_CLI_VERSION=0.0.0.0
+
+PAPERTRAIL_API_TOKEN=\$PAPERTRAIL_API_TOKEN_HOKUSPOKUS
+TELEGRAM_TOKEN=\$TELEGRAM_TOKEN_HOKUSPOKUS
+
+# PAPERTRAIL_API_TOKEN=\$PAPERTRAIL_API_TOKEN_CORONA_CASES
+# TELEGRAM_TOKEN=\$TELEGRAM_TOKEN_CORONA_CASES" > .env
+./heroku.clj updateClojureCliVersion
 ```
-* Heroku Config Vars. See [https://dashboard.heroku.com/apps/\<HEROKU-APP-NAME\>/settings](). See also:
+* Define Heroku config vars
+See [https://dashboard.heroku.com/apps/\<HEROKU-APP-NAME\>/settings]().
+It should contain:
+```bash
+heroku config --app <HEROKU-APP-NAME>
+CLOJURE_CLI_VERSION:  ...
+COMMIT:               ...
+CORONA_ENV_TYPE:      ...
+PAPERTRAIL_API_TOKEN: ...
+REPL_PASSWORD:        ...
+REPL_USER:            ...
+TELEGRAM_TOKEN:       ...
+```
 
 ## Develop
 
