@@ -9,6 +9,10 @@
   {:replace-deps
    {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
    :ns-default hf.depstar
+   :exec-args {}}
+
+  :mockup-server
+  {:exec-fn corona.api.mockup/run-server
    :exec-args {}}}
 
  :deps

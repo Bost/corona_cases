@@ -34,11 +34,14 @@
 (defn run-server
   "See: ss -tulpn | rg 5051 # see `mockup-port`
   (clj-memory-meter.core/measure server) doesn't work"
-  []
+  [_]
   (swap! server (fn [_]
                   (run-jetty
                    (wrap-json-body #'app-routes {:keywords? true})
-                   {:port mockup-port :join? false}))))
+                   {:port mockup-port :join? false})))
+  (println @server))
+
+(defn -main [] (run-server nil))
 
 (comment
   (load "corona/api/mockup")

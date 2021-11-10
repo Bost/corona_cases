@@ -122,13 +122,15 @@ cd corona_cases.data
 1. Repeatedly
 ```bash
 ./heroku.clj getMockData
-clj -J-Djdk.attach.allowAttachSelf -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} com.billpiel/sayid {:mvn/version "0.1.0"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.1"} cider/cider-nrepl {:mvn/version "0.25.9"}} :aliases {:cider/nrepl {:main-opts ["-m" "nrepl.cmdline" "--middleware" "[com.billpiel.sayid.nrepl-middleware/wrap-sayid,refactor-nrepl.middleware/wrap-refactor,cider.nrepl/cider-middleware]"]}}}' --eval '(load "corona/api/mockup") (corona.api.mockup/run-server)'
+clj -X:mockup-server
 ```
 
 1. In Emacs Cider `M-x cider-jack-in-clj`, or start the nREPL from the command line:
 <!-- No line continuations '\' accepted -->
 ```bash
-clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} refactor-nrepl/refactor-nrepl {:mvn/version "2.5.0"} cider/cider-nrepl {:mvn/version "0.25.5"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+# TODO try nrepl/nrepl {:mvn/version "0.9.0-beta4"}
+clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} refactor-nrepl/refactor-nrepl {:mvn/version "3.0.0"} cider/cider-nrepl {:mvn/version "0.27.2"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+clojure -X:mockup-server
 ```
 and connect to it from the editor of your choice.
 
