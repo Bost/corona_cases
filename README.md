@@ -216,4 +216,7 @@ visualvm -J-DsocksProxyHost=localhost -J-DsocksProxyPort=1080 & disown
 
 # get command line access
 heroku run bash --app <HEROKU-APP-NAME>
+
+# postgres database command line
+heroku pg:psql --app <HEROKU-APP-NAME> <DATABASE>
 ```
