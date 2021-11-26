@@ -182,99 +182,31 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         last-date    ((comp m-result last (partial sort-by :t)) dates)
         cnt-reports  ((comp m-result count) dates)
 
-        has-estim-vals? (m-result true)
-        ;; some-recove?
-        ;; ((comp (partial some pos?))
-        ;;  (last-7
-        ;;   ;; the 'original' value does or does not contain recovered cases
-        ;;   (com/ident-fun :r)
-        ;;   last-8))
-        ;; (and some-recove? (not (msgc/worldwide? ccode)))
-
         prm-base    (m-result {:header (msgc/header com/html last-date)
-                               :footer (msgc/footer com/html has-estim-vals?)
+                               :footer (msgc/footer com/html true)
                                :cnt-reports cnt-reports})
         _ (com/add-calc-time "prm-base" prm-base)
 
         garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
 
-        estim-old
+        estim
         ((comp m-result
-               (fn [v] (def eo v) v)
                est/estimate
-               (fn [v] (def po v) v)
                (partial v1/pic-data cnt-reports)
-               #_(fn [x]
-                   (swap! cache/cache update-in [:dbg]
-                          (fn [_] {:cnt-reports cnt-reports
-                                   :raw-dates-v1 raw-dates-v1
-                                   :json-v1 json-v1
-                                   :json-owid json-owid}))
-                   x)
                data/data-with-pop)
          raw-dates-v1 json-v1 json-owid)
-        _ (com/add-calc-time "estim-old" estim-old)
+        _ (com/add-calc-time "estim" estim)
 
-        estim-new
-        ((comp m-result
-               (fn [v] (def en v) v)
-               est/estimate-new
-               (fn [v] (def pn v) v)
-               (partial v1/pic-data-new cnt-reports)
-               #_(fn [x]
-                   (swap! cache/cache update-in [:dbg]
-                          (fn [_] {:cnt-reports cnt-reports
-                                   :raw-dates-v1 raw-dates-v1
-                                   :json-v1 json-v1
-                                   :json-owid json-owid}))
-                   x)
-               data/data-with-pop)
-         raw-dates-v1 json-v1 json-owid)
-        _ (com/add-calc-time "estim-new" estim-new)
-
-        ;; WTF!?! Size of estim-old and stats-countries-old is too big. See filtering of
-        ;; sorted / unsorted data
-        ;; [pic-data] 46.9 MiB
-        ;; [estim-old] 151.7 MiB
-        ;; [stats-countries-old] 151.7 MiB; should be just ~184.0 KiB
-        stats-countries-old
+        stats-countries
         ((comp
           m-result
-          (fn [v] (def so v) v)
-          (partial filter (fn [hm] (= (:t hm) last-date)))
-          #_(partial sort-by (juxt :ccode :t)))
-        estim-old)
-        _ (com/add-calc-time "stats-countries-old" stats-countries-old)
-
-        stats-countries-new
-        ((comp
-          m-result
-          (fn [v] (def sn v) v)
-          (partial filter (fn [hm] (= (:t hm) last-date)))
-          #_(partial sort-by (juxt :ccode :t)))
-         estim-new)
-        _ (com/add-calc-time "stats-countries-new" stats-countries-new)
+          (partial filter (fn [hm] (= (:t hm) last-date))))
+         estim)
+        _ (com/add-calc-time "stats-countries" stats-countries)
 
         garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
-
-        ;; TODO always use estimated vals since there is at
-        ;; least 1 country not reporting recovered cases
-        lense-fun-old (m-result com/estim-fun)
-        lense-fun-new (m-result com/estim-fun-new)
-
-        all-calc-listings-old
-        (let [prm (assoc prm-base
-                         :ccode (ccr/get-country-code ccc/worldwide)
-                         :lense-fun lense-fun-old)]
-          ((comp
-            m-result doall
-            (partial map (partial apply msgl/calc-listings!
-                                  stats-countries-old prm)))
-           [[cases/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
-            [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
-        _ (com/add-calc-time "all-calc-listings-old" all-calc-listings-old)
 
         _ (m-result
            ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
@@ -282,64 +214,48 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
              (warnf "Some stuff may not be calculated. Too few %s: %s"
                     'cnt-reports cnt-reports)))
 
-        all-calc-listings-new
-        (let [prm-new
+        all-calc-listings
+        (let [prm
               (assoc prm-base
                      :ccode (ccr/get-country-code ccc/worldwide)
-                     ;; :lense-fun lense-fun-old
-                     ;; :lense-fun-new lense-fun-new
-                     :lense-fun lense-fun-new
-                     )]
+                     :lense-fun com/estim-fun-new)]
           ((comp
             m-result doall
-            (partial map (partial apply msgl/calc-listings!-new
-                                  stats-countries-new prm-new)))
+            (partial map (partial apply msgl/calc-listings!
+                                  stats-countries prm)))
            [[cases/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
             [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
-        _ (com/add-calc-time "all-calc-listings-new" all-calc-listings-new)
+        _ (com/add-calc-time "all-calc-listings" all-calc-listings)
 
         garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
 
-        lense-fun-ranking-old (m-result com/estim-fun)
-        lense-fun-ranking-new (m-result com/ranking-fun)
-
-        rankings-old
-        ((comp
-          m-result
-          (fn [v]
-            (def lense-fun-ranking-old lense-fun-ranking-old)
-            (def ro v) v))
-         (msgi/all-rankings lense-fun-ranking-old stats-countries-old))
-        _ (com/add-calc-time "rankings-old" rankings-old)
-
-        rankings-new
+        rankings
         ((comp
           m-result
           (fn [v] (def rn v) v))
-         (msgi/all-rankings-new lense-fun-ranking-new stats-countries-new))
-        _ (com/add-calc-time "rankings-new" rankings-new)
+         (msgi/all-rankings com/ranking-fun stats-countries))
+        _ (com/add-calc-time "rankings" rankings)
 
         garbage-coll (m-result (gc))
         _ (com/add-calc-time "garbage-coll" garbage-coll)
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
-        (let [sorted-estim-new (sort-by :t estim-new)]
+        (let [sorted-estim (sort-by :t estim)]
           ((comp
             m-result doall
             (partial map ;; pmap is faster however it eats too much memory
                      (fn [ccode]
-                       [#_(debugf (str "Creating messages... ccode " ccode))
-                        (cache/cache!
+                       [(cache/cache!
                          (fn []
                            (msgi/message
-                            ccode estim-new dates rankings-new cnt-reports prm-base))
+                            ccode estim dates rankings cnt-reports prm-base))
                          (msgi/message-kw ccode))
                         (cache/cache!
                          (fn []
                            (plot/message
-                            ccode sorted-estim-new last-date cnt-reports))
+                            ccode sorted-estim last-date cnt-reports))
                          (plot/message-kw ccode))
                         (debugf (str "Messages created. ccode " ccode))])))
            ;; here also "ZZ" worldwide messages
@@ -353,7 +269,6 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         (let [norm-ths (cases/norm (dbase/get-thresholds))]
           ((comp
             m-result
-            (fn [v] (def thresholds v) v)
             (partial concat norm-ths)
             flatten
             (partial map (fn [case-kw]
@@ -372,11 +287,10 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
           ;; 1. map 4100ms, pmap 8737ms
           ;; 2. map 3982ms
           ;; 3. map 3779ms
-          (fn [v] (def an v) v)
           (partial map
                    (partial apply
                             plot/aggregation!
-                            thresholds estim-old estim-new last-date cnt-reports
+                            thresholds estim last-date cnt-reports
                             aggregation-hash)))
          cases/cartesian-product-all-case-types)
         _ (com/add-calc-time "all-aggregations" all-aggregations)

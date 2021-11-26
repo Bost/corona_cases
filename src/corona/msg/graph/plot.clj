@@ -258,9 +258,6 @@
   active-absolute cases."
   [ccode stats last-date report]
   ((comp
-    #_(fn [arr]
-      (debugf "ccode %s size %s" ccode (if arr (com/measure arr) 0))
-      arr)
     to-byte-array-auto-closable
     message-img)
    ccode stats last-date report))
@@ -277,7 +274,7 @@
                              {:l [:a :est :abs] :c en}]))))
    (range (count eo))))
 
-(defn-fun-id group-below-threshold-new
+(defn-fun-id group-below-threshold
   "Group all countries with the nr of active cases below the threshold under the
   `ccc/default-2-country-code` so that max 10 countries are plotted.
 
@@ -307,10 +304,10 @@
           (dbase/upsert-threshold! {:kw case-kw
                                     :inc threshold-increase
                                     :val raised-threshold})
-          (group-below-threshold-new (assoc prm :threshold raised-threshold)))
+          (group-below-threshold (assoc prm :threshold raised-threshold)))
         {:data res :threshold threshold}))))
 
-(defn stats-all-by-case-new "" [{:keys [case-kw] :as prm}]
+(defn stats-all-by-case "" [{:keys [case-kw] :as prm}]
   #_((comp
     ;; TODO this will not be necessary, but I can build here a
     ;; consistency check
@@ -318,12 +315,11 @@
     (fn [d] (debugf "(count d) %s" (count d)) d))
      all-data)
   (update
-   (group-below-threshold-new prm)
+   (group-below-threshold prm)
    :data
    (fn [data]
      (let [countries-threshold ((comp set (partial map :ccode)) data)
            new-lensed-case-kw
-           #_(com/estim-fun-new case-kw)
            (cond
              (= case-kw kact) (lense kact krep kabs)
              (= case-kw kr)   (lense kr   krep kabs)
@@ -407,12 +403,12 @@
                            }}))
 
 (defn-fun-id aggregation-img ""
-  [thresholds stats-old stats-new last-date cnt-reports aggregation-kw case-kw]
+  [thresholds stats last-date cnt-reports aggregation-kw case-kw]
   (let [{data :data threshold-recalced :threshold}
-        (stats-all-by-case-new
+        (stats-all-by-case
          (conj
           {:report cnt-reports
-           :stats stats-new
+           :stats stats
            :case-kw case-kw}
           (let [th ((comp
                      first
@@ -437,7 +433,7 @@
                data)
       :x-axis-formatter date-fmt-fn
       :y-axis-formatter (y-axis-formatter data)
-      :label (label-str cnt-reports stats-new last-date case-kw threshold-recalced
+      :label (label-str cnt-reports stats last-date case-kw threshold-recalced
                         (condp = aggregation-kw
                           :abs (str " " lang/absolute)
                           :sum ""))
@@ -447,15 +443,14 @@
   ([id aggregation-kw case-kw]
    {:pre [(string? id)]}
    (get-in @cache/cache [:plot (keyword id) aggregation-kw case-kw]))
-  ([thresholds stats-old stats-new last-date cnt-reports id aggregation-kw case-kw]
+  ([thresholds stats last-date cnt-reports id aggregation-kw case-kw]
    {:pre [(string? id)]}
    (taoensso.timbre/debugf "[aggregation!] case-kw %s aggregation-kw %s" case-kw aggregation-kw)
    (cache/cache! (fn []
                    ((comp
-                     #_(fn [arr] (com/heap-info) arr)
                      to-byte-array-auto-closable)
                     (aggregation-img
-                     thresholds stats-old stats-new last-date cnt-reports
+                     thresholds stats last-date cnt-reports
                      aggregation-kw case-kw)))
                  [:plot (keyword id) aggregation-kw case-kw])))
 

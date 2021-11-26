@@ -21,7 +21,7 @@
 (defn list-kw [fun case-kw]
   [:list ((comp keyword :name meta find-var) fun) case-kw])
 
-(defn calc-listings!-new "" [stats-new {:keys [lense-fun] :as prm-new} case-kws listing-fun]
+(defn calc-listings! "" [stats {:keys [lense-fun] :as prm} case-kws listing-fun]
   ;; fun is one of: per-1e5, absolute-vals - TODO spec it!
   ((comp
     doall
@@ -30,55 +30,10 @@
      (fn [case-kw]
        (let [lensed-case-kw (lense-fun case-kw)]
          (let [coll
-               #_(let [lense [:a :b]]
-                   (sort-by (apply comp (reverse lense)) <
-                            [(update-in {} lense (fn [_] 2))
-                             (update-in {} lense (fn [_] 1))
-                             (update-in {} lense (fn [_] 0))]))
                ((comp
-                 (partial sort-by (apply comp (reverse lensed-case-kw)) <)
-                 #_(partial sort-by (com/unlense lensed-case-kw) <))
-                  stats-new)
-               #_(sort-by (apply comp (reverse lensed-case-kw)) <
-                        stats-new)
+                 (partial sort-by (apply comp (reverse lensed-case-kw)) <))
+                  stats)
 
-               ;; Split the long list of all countries into smaller sub-parts
-               sub-msgs (partition-all (/ (count coll)
-                                          cnt-messages-in-listing) coll)
-               sub-msgs-prm (assoc prm-new :cnt-msgs (count sub-msgs))]
-           ((comp
-             doall
-             (partial map-indexed
-                      (fn [idx sub-msg]
-                        ((comp
-                          (partial cache/cache!
-                                   (fn [] ((eval listing-fun) case-kw
-                                          (assoc sub-msgs-prm
-                                                 :msg-idx (inc idx)
-                                                 :data sub-msg))))
-                          (partial conj (list-kw listing-fun case-kw))
-                          keyword
-                          str)
-                         idx))))
-            sub-msgs))))))
-   case-kws))
-
-(defn calc-listings! "" [stats {:keys [lense-fun] :as prm} case-kws listing-fun]
-  #_(def stats stats)
-  #_(def prm prm)
-  #_(def listing-fun listing-fun)
-  #_(def case-kws case-kws)
-  #_(def lense-fun lense-fun)
-  ;; fun is on of: per-1e5, absolute-vals - TODO spec it!
-  ((comp
-    doall
-    (partial
-     map
-     (fn [case-kw]
-       (let [lensed-case-kw-old (lense-fun case-kw)]
-         (let [coll ((comp
-                      (partial sort-by (com/unlense lensed-case-kw-old) <))
-                     stats)
                ;; Split the long list of all countries into smaller sub-parts
                sub-msgs (partition-all (/ (count coll)
                                           cnt-messages-in-listing) coll)

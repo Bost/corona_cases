@@ -51,9 +51,9 @@
      (str msgc/blank title)
      (utc/sjoin vals))]])
 
-(defn rank-for-case-new
+(defn rank-for-case
   "
-  (rank-for-case-new stats-countries lensed-rank-kw)
+  (rank-for-case stats-countries lensed-rank-kw)
   "
   [stats-countries lensed-rank-kw]
   #_(def stats-countries stats-countries)
@@ -70,9 +70,9 @@
              >))
    stats-countries))
 
-(defn all-rankings-new
+(defn all-rankings
   "
-  (all-rankings-new lense-fun stats-countries)
+  (all-rankings lense-fun stats-countries)
   Works also for one and zero countries.
   TODO all-rankings-new should be calculated in the corona.telegram"
   [lense-fun stats-countries]
@@ -81,7 +81,7 @@
   (let [stats-all-ranking-cases
         ((comp
           utc/transpose
-          (partial map (partial rank-for-case-new stats-countries))
+          (partial map (partial rank-for-case stats-countries))
           (partial map lense-fun))
          #_[:p :a :r :d :c]
          cases/ranking-cases)]
@@ -97,47 +97,11 @@
              stats-all-ranking-cases))
           ccc/relevant-country-codes)}))
 
-(defn rank-for-case
-  "stats is stats-countries"
-  [stats rank-kw]
-  (let [unlensed-case-ks
-        (com/unlense rank-kw)
-        ]
-    ((comp
-      (partial map-indexed
-               (fn [idx hm]
-                 (update-in (select-keys hm [:ccode])
-                            [:rank unlensed-case-ks]
-                            ;; inc - ranking starts from 1, not from 0
-                            (fn [_] (inc idx)))))
-      (partial sort-by unlensed-case-ks >))
-     stats)))
-
-(defn all-rankings
-  "Works also for one and zero countries"
-  [lense-fun stats-countries]
-  (let [stats-all-ranking-cases
-        ((comp
-          utc/transpose
-          (partial map (partial rank-for-case stats-countries))
-          (partial map lense-fun))
-         cases/ranking-cases)]
-    {:lense-fun lense-fun
-     :vals
-     (map (fn [ccode]
-            ((comp
-              (partial apply utc/deep-merge)
-              ;; TODO have a look at lazy-cat
-              (partial reduce concat)
-              (partial map (partial filter (fn [hm] (= (:ccode hm) ccode)))))
-             stats-all-ranking-cases))
-          ccc/relevant-country-codes)}))
-
-(defn- last-7 [kws last-8] ((comp rest
+(defn- last-7-xxx [kws last-8] ((comp rest
                                   (partial get-in last-8))
                             kws))
 
-(defn- last-7-new [kws last-8]
+(defn- last-7-yyy [kws last-8]
   (let [case-kw (first kws)]
     ((comp
       (partial map (partial hash-map case-kw))
@@ -224,9 +188,9 @@
         fun-a1e5 (lense-fun :a1e5)
         fun-r1e5 (lense-fun :r1e5)
         fun-d1e5 (lense-fun :d1e5)
-        popula-last-7 (last-7 fun-p last-8)
+        popula-last-7 (last-7-xxx fun-p last-8)
         active-last-7 (map (fn [m] (get-in m fun-a))
-                           (last-7-new fun-a last-8))]
+                           (last-7-yyy fun-a last-8))]
     ((comp
       (partial remove nil?)
       (partial apply conj))
@@ -346,7 +310,7 @@
                      vaccin-last-7 popula-last-7)}))
       (when has-n-confi?
         (let [new-last-7 (map (fn [m] (get-in m fun-n))
-                              (last-7-new fun-n last-8))]
+                              (last-7-yyy fun-n last-8))]
           (last-7-block
            {:emoji "🤒🗓"
             :title (format "%s - %s"
@@ -405,13 +369,12 @@
                                         (/ reported estimated)
                                         0))))
            (partial map (fn [fun]
-                          (last-7 (fun :r) last-8))))
+                          (last-7-xxx (fun :r) last-8))))
           [com/ident-fun com/estim-fun])
 
          lense-fun (if (and country-reports-recovered?
                             (not (msgc/worldwide? ccode)))
                      com/ident-fun
-                     #_com/estim-fun
                      com/estim-fun-new)
          fun-v (lense-fun :v)
          fun-n (lense-fun :n)
@@ -488,7 +451,7 @@
                     ["%s\n" [lang/vaccin-data-not-published]])})
 
         (let [vaccin-last-7 (map (fn [m] (get-in m fun-v))
-                                 (last-7-new fun-v last-8))
+                                 (last-7-yyy fun-v last-8))
               has-n-confi? ((comp pos? (fn [hm] (get-in hm fun-n))) last-report)
               some-vaccinated? ((comp (partial some pos?)) vaccin-last-7)]
           (when (or has-n-confi? some-vaccinated?)

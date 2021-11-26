@@ -110,11 +110,8 @@
     (partial get data-with-pop))
    case-kw)))
 
-(defn-fun-id pic-data-new "" [cnt-raw-dates data-with-pop]
-  #_(defonce data-with-pop data-with-pop)
-  #_(defonce cnt-raw-dates cnt-raw-dates)
+(defn-fun-id pic-data "" [cnt-raw-dates data-with-pop]
   ((comp
-    #_(fn [v] (def pd v) v)
     (partial apply
              map
              (fn [{:keys [population]} ;; this hashmap doesn't contain 'ccode' and 't'
@@ -129,7 +126,7 @@
                           com/kt     t
                           com/kp     population
                           com/kv     vaccinated
-                          com/kact     (com/calc-active new-confirmed recovered deaths)
+                          com/kact   (com/calc-active new-confirmed recovered deaths)
                           com/kr     recovered
                           com/kd     deaths
                           com/kn     new-confirmed
@@ -137,9 +134,7 @@
                      kws [com/kn com/kv com/kact com/kr com/kd com/kc]]
                  ((comp
                    (partial conj
-                            {com/kccode ccode com/kt t com/kp population
-                             ;; com/kv vaccinated com/kn new-confirmed
-                             })
+                            {com/kccode ccode com/kt t com/kp population})
                    (partial zipmap kws)
                    (partial map (partial hash-map krep))
                    (partial map
@@ -152,10 +147,6 @@
     ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
     ;; sorted   [pic-data] 46.4 MiB
     (partial map (partial sort-by (juxt com/kccode com/kt)))
-    #_(fn [v] (def xff v) v)
-    #_(partial map-indexed (fn [idx hm]
-                             (debugf "idx %s (count hm) %s" idx (count hm))
-                             hm))
     (partial apply (fn [hms-population
                         hms-vaccinated
                         hms-new-confirmed
@@ -173,68 +164,7 @@
                         (map (partial normalize default-hms)
                              [:confirmed :recovered :deaths]
                              [hms-new-confirmed hms-recovered hms-deaths])))))
-    #_(fn [v] (def xfb v) v)
     (partial map (partial xf-for-case cnt-raw-dates data-with-pop)))
    [:population :vaccinated :confirmed :recovered :deaths]))
-
-(defn-fun-id pic-data "" [cnt-raw-dates data-with-pop]
-  #_(defonce data-with-pop data-with-pop)
-  #_(defonce cnt-raw-dates cnt-raw-dates)
-  ((comp
-    #_(fn [v] (def pd v) v)
-    (partial apply
-             map
-             (fn [{:keys [population]} ;; this hashmap doesn't contain 'ccode' and 't'
-                 {:keys [vaccinated]}
-                 {:keys [confirmed ccode t]}
-                 {:keys [recovered]}
-                 {:keys [deaths]}]
-               (let [new-confirmed confirmed
-                     prm {:ccode ccode
-                          :t     t
-                          :p     population
-                          :v     vaccinated
-                          :a     (com/calc-active new-confirmed recovered deaths)
-                          :r     recovered
-                          :d     deaths
-                          :n     new-confirmed
-                          :c     (com/calc-closed deaths recovered)}]
-                 ((comp
-                   (partial conj prm)
-                   (partial reduce into {})
-                   (partial map (fn [rate-kw per-1e5-kw case-kw]
-                                  {per-1e5-kw ((com/calc-per-1e5 case-kw) prm)
-                                   rate-kw ((com/calc-rate case-kw) prm)})))
-                  [:v%   :a%   :r%   :d%   :c%]
-                  [:v1e5 :a1e5 :r1e5 :d1e5 :c1e5]
-                  [:v    :a    :r    :d    :c]))))
-    ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
-    ;; sorted   [pic-data] 46.4 MiB
-    (partial map (partial sort-by (juxt :ccode :t)))
-    #_(fn [v] (def xff v) v)
-    #_(partial map-indexed (fn [idx hm]
-                             (debugf "idx %s (count hm) %s" idx (count hm))
-                             hm))
-    (partial apply (fn [hms-population
-                       hms-vaccinated
-                       hms-new-confirmed
-                       hms-recovered
-                       hms-deaths]
-                     ((comp
-                       (partial into [hms-population hms-vaccinated]))
-                      (let [default-hms ((comp
-                                          set
-                                          (partial map
-                                                   (fn [hm]
-                                                     (select-keys
-                                                      hm [:ccode :t]))))
-                                         hms-population)]
-                        (map (partial normalize default-hms)
-                             [:confirmed :recovered :deaths]
-                             [hms-new-confirmed hms-recovered hms-deaths])))))
-    #_(fn [v] (def xfb v) v)
-    (partial map (partial xf-for-case cnt-raw-dates data-with-pop)))
-   [:population :vaccinated :confirmed :recovered :deaths]))
-
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.v1)

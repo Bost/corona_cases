@@ -155,8 +155,6 @@
   "Returns a state-monad function that assumes the state to be a map"
   [fun-id plain-val]
   (fn [state]
-    #_(def fun-id fun-id)
-    #_(def plain-val plain-val)
     (let [accumulator (get state :acc)
           time-begin (get state :tbeg)
           calc-time (- (system-time) (+ (apply + accumulator) time-begin))]
@@ -165,8 +163,6 @@
        fun-id (if (nil? plain-val) "nil-value" (measure plain-val))
        calc-time
        ((comp
-         #_(fn [v] (debugf "%s" v)) ;; debugf is a macro
-         #_(partial fmap format-bytes)
          format-bytes
          (fn [{:keys [size max free]}] (+ (- max size) free)))
         (let [runtime (Runtime/getRuntime)]
@@ -198,18 +194,11 @@
   (+ recovered deaths))
 
 (defn calc-active [new-confirmed recove deaths]
-  ((comp
-    (fn [new-confirmed recove deaths] (- new-confirmed
-                                        (calc-closed recove deaths))))
-   new-confirmed recove deaths))
+  (- new-confirmed
+     (calc-closed recove deaths)))
 
 (defn calc-recov [new-confirmed deaths]
-  ((comp
-    #_(fn [result]
-      (printf "[calculate-recov] (+ %s %s): %s\n" new-confirmed deaths result)
-      result)
-    (fn [confirmed deaths] (- confirmed deaths)))
-   new-confirmed deaths))
+  (- new-confirmed deaths))
 
 (defn calc-closed [recovered deaths]
   (+ recovered deaths))
@@ -219,27 +208,17 @@
 
 (defn calc-rate-precision-1 [case-kw]
   (fn [{:keys [p n] :as prm}]
-    ((comp
-      #_(fn [ret]
-          (when (utc/in? [:a :v] case-kw)
-            (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
-          ret))
-     (utn/round-div-precision (* (case-kw prm) 100.0)
-                              (case case-kw
-                                :v p
-                                n)
-                              1))))
+    (utn/round-div-precision (* (case-kw prm) 100.0)
+                             (case case-kw
+                               :v p
+                               n)
+                             1)))
 
 (defn calc-rate [case-kw]
   (fn [{:keys [p n] :as prm}]
-    ((comp
-      #_(fn [ret]
-          (when (utc/in? [:a :v] case-kw)
-            (debugf "[%s] case-kw %s; ret %s; %s" "calc-rate" case-kw ret (dissoc prm :t)))
-          ret))
-     (utn/percentage (case-kw prm) (case case-kw
-                                     :v p
-                                     n)))))
+    (utn/percentage (case-kw prm) (case case-kw
+                                    :v p
+                                    n))))
 
 (defn per-1e5
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
@@ -550,10 +529,7 @@
 (def kc "closed"        :c)
 
 (defn estim-fun
-  "Returns a vector containing the keyword for estimates values. E.g.:
-  (estim-fun :r)
-  => [:er]
-  This can be used by e.g. (get-in hm (estim-fun :r))"
+  ""
   [kw]
   ((comp
     vector
