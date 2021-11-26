@@ -8,7 +8,7 @@
 /target
 /.lein-repl-history
 /.nrepl-port
-/log/
+/var/log/
 /.cpcache/
 /.clj-kondo/
 /.lsp/
