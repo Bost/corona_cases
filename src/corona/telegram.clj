@@ -249,7 +249,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                      (fn [ccode]
                        [(cache/cache!
                          (fn []
-                           (msgi/message
+                           (msgi/mexxage
                             ccode estim dates rankings cnt-reports prm-base))
                          (msgi/message-kw ccode))
                         (cache/cache!
