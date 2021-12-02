@@ -15,35 +15,13 @@ done
 prjdir=~/dec/corona_cases
 
 start () {
-    pg_ctl -D pg -l /var/log/postgres.log start
+    pg_ctl -D /var/pg -l /var/log/postgres.log start
     ./heroku.clj getMockData && clj -X:mockup-server
 }
 
-## Install MariaDB on first run
-if [ ! -d /var/lib/mysql/data/mysql ]; then
-    # Awful hack, required to solve a bug on mariadb guix' package
-    lc_messages_dir=$(find /gnu/store -type d -name english | grep mysql)
-    sed -i -e "s|#lc_messages_dir#|$lc_messages_dir|" /usr/etc/my.cnf
-
-    mysqlPassword=$(randpw 24)
-    mysql_install_db
-    mysqld_safe &
-    sleep 3
-    sed -i -e "s|# password|password = $mysqlPassword|" /usr/etc/my.cnf
-
-    mysql --user $USER << EOF
-DROP DATABASE IF EXISTS associations;
-CREATE DATABASE IF NOT EXISTS associations;
-GRANT ALL PRIVILEGES ON associations.* TO '$USER'@'localhost' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-select '-- Loading test data ...' AS '';
-SOURCE dec/fdk/map/database/db-export/associations.sql;
--- SHOW TABLES;
--- SHOW COLUMNS IN activities;
-SELECT count(*) as 'count-of-activities (should be ~130)'
-FROM associations.activities;
-EOF
-    mysqladmin shutdown
+## test if the database directory is empty
+if [ -z "$(ls -A /var/pg)" ]; then
+    echo "TODO initialize postgres database"
 fi
 
 cat << EOF
@@ -53,8 +31,4 @@ cat << EOF
 | |  _|  \| | | | | | |  _| | | | \ \/ /
 | |_| | |\  | |_| | | |_| | |_| | |>  <
  \____|_| \_|\___/   \____|\__,_|_/_/\_\\
-
-Welcome! Available commands:
-  start_php, serve_map, serve_form, version, build, deploy_test, deploy_prod
-  kill_all : (broken: killing a node process messes up the terminal)
 EOF

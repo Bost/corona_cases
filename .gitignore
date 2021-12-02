@@ -9,8 +9,8 @@
 /.lein-repl-history
 /.nrepl-port
 /var/log/
+/var/pg/
 /.cpcache/
 /.clj-kondo/
 /.lsp/
 /resources/mockup/
-/pg/

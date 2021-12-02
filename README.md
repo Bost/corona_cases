@@ -151,7 +151,7 @@ and check the [http://localhost:5050/](http://localhost:5050/) if it's running.
 
 ```bash
 # start Postgres
-pg_ctl -D pg -l var/log/postgres.log start # on Guix
+pg_ctl -D ./var/pg -l ./var/log/postgres.log start # on Guix
 bin/build; and heroku local --env=.heroku-local.env
 # or:
 # bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...
