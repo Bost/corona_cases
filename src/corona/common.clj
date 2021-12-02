@@ -518,15 +518,24 @@
 (def kmax "maximum = μέγιστο [mégisto]"
   #_:μ :max)
 
-(def kccode :ccode)
-(def ktst "timestamp"     :t)
-(def kpop "population"    :p)
-(def kvac "vaccinated"    :v)
-(def kact "active"        :a)
-(def krec "recovered"     :r)
-(def kdea "deaths"        :d)
-(def knew "new confirmed" :n)
-(def kclo "closed"        :c)
+(def kcco "country code"
+  :ccode)
+(def ktst "timestamp"
+  :t)
+(def kpop "population"
+  :p)
+(def kvac "vaccinated"
+  :v)
+(def kact "active"
+  :a)
+(def krec "recovered"
+  :r)
+(def kdea "deaths"
+  :d)
+(def knew "new confirmed"
+  :n)
+(def kclo "closed"
+  :c)
 
 (defn estim-fun
   "Returns a vector containing the keyword for estimates values. E.g.:

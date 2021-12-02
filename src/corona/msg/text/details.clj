@@ -5,7 +5,8 @@
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
             [corona.common :as com :refer
-             [lense kact kdea krec kclo kest kmax krep k1e5 kls7 kabs kavg kchg krnk]]
+             [kact kdea krec kclo kest kmax krep k1e5 kls7 kabs kavg kchg krnk kcco
+              lense]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -61,7 +62,7 @@
   ((comp
     (partial map-indexed
              (fn [idx hm]
-               (update-in (select-keys hm [:ccode])
+               (update-in (select-keys hm [kcco])
                           lensed-rank-kw
                           ;; inc - ranking starts from 1, not from 0
                           (fn [_] (inc idx)))))
@@ -93,7 +94,7 @@
               (partial apply utc/deep-merge)
               ;; TODO have a look at lazy-cat
               (partial reduce concat)
-              (partial map (partial filter (fn [hm] (= (:ccode hm) ccode)))))
+              (partial map (partial filter (fn [hm] (= (kcco hm) ccode)))))
              stats-all-ranking-cases))
           ccc/relevant-country-codes)}))
 
@@ -281,7 +282,7 @@
                  ((comp
                    first
                    (fn [v] (def flt v) v)
-                   (partial filter (fn [hm] (= (:ccode hm) ccode))))
+                   (partial filter (fn [hm] (= (kcco hm) ccode))))
                   (:vals rankings))]
              #_(when (= ccode "DE")
                  (def hm-ranking hm-ranking)
@@ -346,7 +347,7 @@
   ((comp
     fmt)
    (let [
-         ccode-stats (filter (fn [ehm] (= ccode (:ccode ehm))) estim)
+         ccode-stats (filter (fn [ehm] (= ccode (kcco ehm))) estim)
          ccode-stats-last-8 ((comp
                               (partial take-last 8))
                              ccode-stats)

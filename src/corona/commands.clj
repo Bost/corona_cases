@@ -2,7 +2,8 @@
 
 (ns corona.commands
   (:require [clojure.string :as cstr]
-            [corona.common :as com]
+            [corona.common :as com :refer
+             [kcco]]
             [corona.cases :as cases]
             [corona.api.cache :as cache]
             [corona.countries :as ccr]
@@ -36,8 +37,10 @@
      (timbre/debugf "[%s] morse/send-text: %s sent" fun-id (com/measure content))
      resp-body)))
 
-(defn-fun-id world "" [{:keys [chat-id ccode] :as prm-orig}]
-  (let [prm
+(defn-fun-id world "" [prm-orig]
+  (let [chat-id (get prm-orig :chat-id)
+        ccode (get prm-orig kcco)
+        prm
         ;; override default parse_mode
         (assoc prm-orig :parse_mode com/html)]
     (send-text fun-id ;; defined by defn-fun-id macro
@@ -48,7 +51,7 @@
                ;; specified
                content (get-in @cache/cache (p/message-kw ccode))]
       (let [options (if (msgc/worldwide? ccode)
-                      (msg/reply-markup-btns (select-keys prm [:chat-id :ccode :message_id]))
+                      (msg/reply-markup-btns (select-keys prm [:chat-id kcco :message_id]))
                       {})
             resp-body (doall
                        (morse/send-photo com/telegram-token chat-id options content))]
@@ -91,14 +94,14 @@
    (fn [fun]
      {:name (fun ccode)
       :fun (fn [chat-id] (world {:chat-id chat-id
-                                 :ccode ccode}))})
+                                 kcco ccode}))})
    [identity                  ;; DE -> DE
     ccc/country-code-3-letter ;; DE -> DEU
     normalize]))              ;; United States -> UnitedStates
 
 (defn-fun-id inline-handlers "" []
   (let [prm (assoc msg/options
-                   :ccode (ccr/get-country-code ccc/worldwide))]
+                   kcco (ccr/get-country-code ccc/worldwide))]
     [{:name lang/contributors
       :fun (fn [chat-id] (contributors (assoc prm :chat-id chat-id)))
       :desc "Give credit where credit is due"}

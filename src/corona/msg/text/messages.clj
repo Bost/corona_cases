@@ -5,8 +5,9 @@
             [clojure.edn :as edn]
             [clojure.string :as cstr]
             [corona.api.cache :as cache]
-            [corona.common :as com :refer [lense kact kdea kest kmax krep k1e5
-                                           kls7 kabs kavg]]
+            [corona.common :as com :refer
+             [kcco kact kdea kest kmax krep k1e5 kls7 kabs kavg
+              lense]]
             [corona.cases :as cases]
             [corona.estimate :as est]
             [corona.lang :as lang]
@@ -52,12 +53,12 @@
 (defn-fun-id worldwide-plots ""
   [{:keys [data message]}]
   (let [data-hm (edn/read-string data)
-
-        {chat-id :chat-id ccode :ccode plot-type :type case-kw :case-kw}
-        data-hm
-
+        chat-id (get data-hm :chat-id)
+        ccode (get data-hm kcco)
+        plot-type (get data-hm :type)
+        case-kw (get data-hm :case-kw)
         message-id (:message_id message)
-        options (reply-markup-btns {:chat-id chat-id :ccode ccode
+        options (reply-markup-btns {:chat-id chat-id kcco ccode
                                     :message_id message-id})
         id (cache/aggregation-hash)
         url (format "%s/%s/%s/%s/%s"

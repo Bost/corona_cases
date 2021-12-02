@@ -11,7 +11,8 @@
             [corona.api.owid :as vac]
             [corona.api.v1 :as v1]
             [corona.commands :as cmd]
-            [corona.common :as com]
+            [corona.common :as com :refer
+             [kcco]]
             [corona.cases :as cases]
             [corona.country-codes :as ccc]
             [corona.countries :as ccr]
@@ -217,7 +218,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         all-calc-listings
         (let [prm
               (assoc prm-base
-                     :ccode (ccr/get-country-code ccc/worldwide)
+                     kcco (ccr/get-country-code ccc/worldwide)
                      :lense-fun com/estim-fun)]
           ((comp
             m-result doall

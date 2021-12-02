@@ -6,7 +6,7 @@
   (:require [corona.api.expdev07 :as data]
             [corona.common :as com :refer
              [ktst krep kest kabs k1e5 k%%% knew kvac kact krec kdea kclo kpop
-              kccode sum]]
+              kcco sum]]
             [corona.country-codes :as ccc]
             [taoensso.timbre :as timbre]
             [corona.macro :refer [defn-fun-id debugf errorf warnf]]
@@ -28,7 +28,7 @@
 (defn normalize "" [default-hms k hms]
   (let [hms-set ((comp
                   set
-                  (partial map (fn [hmc] (select-keys hmc [:ccode :t]))))
+                  (partial map (fn [hmc] (select-keys hmc [kcco :t]))))
                  hms)]
     ((comp
       (partial concat hms)
@@ -39,7 +39,7 @@
 (defn xf-for-case "" [cnt-raw-dates data-with-pop case-kw]
   (let [lensed-case-kw (com/lense case-kw)]
   ((comp
-    #_(partial sort-by (juxt :ccode :t))
+    #_(partial sort-by (juxt kcco :t))
     flatten
     (partial map
              (fn [[ccode hms]]
@@ -47,7 +47,7 @@
                  #_(partial take-last 2)
                  (fn [[fst rst]]
                    (conj rst
-                         [{:ccode ccode
+                         [{kcco ccode
                            :t ((comp :t last) fst)
                            case-kw ((comp case-kw last) fst)}]))
                  ;; TODO 365 is the count of days in the plot
@@ -55,7 +55,7 @@
                  (fn [ms] (split-at (- (count ms) 365) ms))
                  (partial sort-by :t))
                 hms)))
-    (partial group-by :ccode)
+    (partial group-by kcco)
 
     flatten
     (partial map (fn [[t hms]] ;; process-date
@@ -64,17 +64,17 @@
                      (fn [ms]
                        (conj ms
                              ((comp
-                               (partial hash-map :ccode "ZZ" :t t case-kw)
+                               (partial hash-map kcco "ZZ" :t t case-kw)
                                (partial sum lensed-case-kw))
                               ms)))
                      ;; group together provinces of the given country
                      (partial map
                               (fn [[ccode hms]]
                                 ((comp
-                                  (partial hash-map :ccode ccode :t t case-kw)
+                                  (partial hash-map kcco ccode :t t case-kw)
                                   (partial sum lensed-case-kw))
                                  hms)))
-                     (partial group-by :ccode))
+                     (partial group-by kcco))
                     hms)))
     (partial group-by :t)
     flatten
@@ -85,7 +85,7 @@
                      ;; https://github.com/owid/covid-19-data/issues/1113
                      (partial take-last cnt-raw-dates)
                      (partial sort-by :t)
-                     (partial map (fn [[t v]] {:ccode country_code
+                     (partial map (fn [[t v]] {kcco country_code
                                               :t (fmt t) case-kw v})))
                     history)))
     #_(partial filter
@@ -121,9 +121,9 @@
                   {:keys [recovered]}
                   {:keys [deaths]}]
                (let [new-confirmed confirmed
-                     ccode         (kccode hm-confirmed)
+                     ccode         (kcco hm-confirmed)
                      t             (ktst hm-confirmed)
-                     prm {kccode ccode
+                     prm {kcco ccode
                           ktst   t
                           kpop   population
                           kvac   vaccinated
@@ -135,7 +135,7 @@
                      kws [knew kvac kact krec kdea kclo]]
                  ((comp
                    (partial conj
-                            {kccode ccode ktst t kpop population})
+                            {kcco ccode ktst t kpop population})
                    (partial zipmap kws)
                    (partial map (partial hash-map krep))
                    (partial map
@@ -147,7 +147,7 @@
                   kws))))
     ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
     ;; sorted   [pic-data] 46.4 MiB
-    (partial map (partial sort-by (juxt kccode ktst)))
+    (partial map (partial sort-by (juxt kcco ktst)))
     (partial apply (fn [hms-population
                         hms-vaccinated
                         hms-new-confirmed
@@ -160,7 +160,7 @@
                                           (partial map
                                                    (fn [hm]
                                                      (select-keys
-                                                      hm [kccode ktst]))))
+                                                      hm [kcco ktst]))))
                                          hms-population)]
                         (map (partial normalize default-hms)
                              [:confirmed :recovered :deaths]

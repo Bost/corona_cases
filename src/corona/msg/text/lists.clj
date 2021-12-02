@@ -5,8 +5,8 @@
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
             [corona.common :as com :refer
-             [lense kact krec kclo kdea kest kmax krep k1e5 kchg kls7 kabs
-              kavg]]
+             [kcco kact krec kclo kdea kest kmax krep k1e5 kchg kls7 kabs kavg
+              lense]]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -92,8 +92,9 @@
          #_(debugf "case-kw %s" case-kw)
          ((comp
            (partial cstr/join "\n")
-           (partial map (fn [{:keys [ccode] :as hm}]
-                          (let [a (get-in hm (lense-fun :a))
+           (partial map (fn [hm]
+                          (let [ccode (get hm kcco)
+                                a (get-in hm (lense-fun :a))
                                 r (get-in hm (lense-fun :r))
                                 d (get-in hm (lense-fun :d))
                                 cname (ccr/country-name-aliased ccode)]
@@ -140,8 +141,9 @@
                      )]]])
          ((comp
            (partial cstr/join "\n")
-           (partial map (fn [{:keys [ccode] :as hm}]
-                          (let [a1e5 (get-in hm (lense-fun :a1e5))
+           (partial map (fn [hm]
+                          (let [ccode (get hm kcco)
+                                a1e5 (get-in hm (lense-fun :a1e5))
                                 r1e5 (get-in hm (lense-fun :r1e5))
                                 d1e5 (get-in hm (lense-fun :d1e5))
                                 cname (ccr/country-name-aliased ccode)]

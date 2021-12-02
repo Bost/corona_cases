@@ -9,7 +9,8 @@
             [clojure2d.core :as c2d]
             [corona.api.cache :as cache]
             [corona.common :as com :refer
-             [sum lense krec kact kest kabs kdea krep]]
+             [kcco krec kact kest kabs kdea krep
+              sum lense]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -83,15 +84,15 @@
      map
      (fn [[t hms]]
        [
-        {:ccode ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
-        {:ccode ccode :t t :case-kw :er :cnt (sum (com/estim-fun :r) hms)}
-        {:ccode ccode :t t :case-kw :ea :cnt (sum (com/estim-fun :a) hms)}
-        {:ccode ccode :t t :case-kw :n  :cnt (sum (com/estim-fun :n) hms)}
-        {:ccode ccode :t t :case-kw :r  :cnt (sum (lense krec krep kabs) hms)}
-        {:ccode ccode :t t :case-kw :d  :cnt (sum (com/estim-fun :d) hms)}
-        {:ccode ccode :t t :case-kw :a  :cnt (sum (lense kact krep kabs) hms)}]))
+        {kcco ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
+        {kcco ccode :t t :case-kw :er :cnt (sum (com/estim-fun :r) hms)}
+        {kcco ccode :t t :case-kw :ea :cnt (sum (com/estim-fun :a) hms)}
+        {kcco ccode :t t :case-kw :n  :cnt (sum (com/estim-fun :n) hms)}
+        {kcco ccode :t t :case-kw :r  :cnt (sum (lense krec krep kabs) hms)}
+        {kcco ccode :t t :case-kw :d  :cnt (sum (com/estim-fun :d) hms)}
+        {kcco ccode :t t :case-kw :a  :cnt (sum (lense kact krep kabs) hms)}]))
     (partial group-by :t)
-    (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (:ccode hm)] ccode))))
+    (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (kcco hm)] ccode))))
    stats))
 
 (defn stats-for-country [ccode stats]
@@ -290,12 +291,12 @@
         res
         ((comp
           (partial map (fn [hm] (if (< (get-in hm l-fun) threshold)
-                                  (assoc hm :ccode ccc/default-2-country-code)
+                                  (assoc hm kcco ccc/default-2-country-code)
                                   hm)))
           (partial sort-by :t))
          stats)]
     ;; TODO implement recalculation for decreasing case-kw numbers (e.g. active cases)
-    (let [cnt-countries (count (group-by :ccode res))]
+    (let [cnt-countries (count (group-by kcco res))]
       (if (> cnt-countries max-plot-lines)
         (let [raised-threshold (+ threshold-increase threshold)]
           (infof "%s; %s countries above threshold %s. Raise to %s"
@@ -318,7 +319,7 @@
    (group-below-threshold prm)
    :data
    (fn [data]
-     (let [countries-threshold ((comp set (partial map :ccode)) data)
+     (let [countries-threshold ((comp set (partial map kcco)) data)
            new-lensed-case-kw
            (cond
              (= case-kw kact) (lense kact krep kabs)
@@ -336,7 +337,7 @@
          (partial reduce into {})
          (partial map (fn [[ccode hms1]]
                         {ccode (sort-by :t hms1)}))
-         (partial group-by :ccode)
+         (partial group-by kcco)
          (partial reduce into [])
          (partial map
                   (fn [[t hms]]
@@ -344,11 +345,11 @@
                       (partial cset/union hms)
                       set
                       ;; fill the rest with zeros
-                      (partial map (partial hash-map :t t case-kw 0 :ccode))
+                      (partial map (partial hash-map :t t case-kw 0 kcco))
                       (partial cset/difference countries-threshold)
                       set
                       keys
-                      (partial group-by :ccode))
+                      (partial group-by kcco))
                      hms)))
          (partial group-by :t)
          flatten
@@ -357,10 +358,10 @@
                           (partial map
                                    (fn [[ccode hms]]
                                      ((comp
-                                       (partial hash-map :ccode ccode :t t case-kw)
+                                       (partial hash-map kcco ccode :t t case-kw)
                                        (partial sum new-lensed-case-kw))
                                       hms)))
-                          (partial group-by :ccode))
+                          (partial group-by kcco))
                          hms0)))
          (partial group-by :t))
         data)))))

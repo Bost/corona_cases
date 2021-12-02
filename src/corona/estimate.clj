@@ -3,7 +3,7 @@
 (ns corona.estimate
   (:require [corona.common :as com :refer
              [kclo kact kpop krec knew kdea krep kest kabs k1e5 k%%% kpop
-              lense kccode]]
+              lense kcco]]
             [corona.macro :refer [defn-fun-id debugf infof warnf]]))
 
 (def ^:const shift-recovery
@@ -85,7 +85,7 @@
                                    (lense krec kest kabs)
                                    [{:kw (lense knew krep kabs) :shift shift-recovery}
                                     {:kw (lense kdea krep kabs) :shift shift-deaths}]))
-    (partial group-by kccode))
+    (partial group-by kcco))
    pic-data))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.estimate)
