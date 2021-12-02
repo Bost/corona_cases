@@ -4,9 +4,9 @@
   (:require [clojure.string :as cstr]
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
-            [corona.common :as com :refer [lense kact kr kc kd kest kmax krep k1e5
-                                           kchg
-                                           kls7 kabs kavg]]
+            [corona.common :as com :refer
+             [lense kact krec kclo kdea kest kmax krep k1e5 kchg kls7 kabs
+              kavg]]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -81,7 +81,7 @@
            ["%s\n"    [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
            ["    %s " [(column-label (get-in lang/hm-active (lense-fun kact)) kact case-kw)]]
            ["%s"      [spacer]]
-           ["%s "     [(column-label (get-in lang/hm-recovered (lense-fun kr)) kr case-kw)]]
+           ["%s "     [(column-label (get-in lang/hm-recovered (lense-fun krec)) krec case-kw)]]
            ["%s"      [spacer]]
            ["%s\n"    [(str lang/deaths (sort-sign :d case-kw))]]
            ["%s"      [(str
@@ -130,7 +130,7 @@
            ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
            ["%s "  [(column-label (get-in lang/hm-active (lense kact kest k1e5)) :a1e5 case-kw)]]
            ["%s"   [spacer]]
-           ["%s "  [(column-label (get-in lang/hm-recovered (lense kr kest k1e5)) :r1e5 case-kw)]]
+           ["%s "  [(column-label (get-in lang/hm-recovered (lense krec kest k1e5)) :r1e5 case-kw)]]
            ["%s"   [spacer]]
            ["%s"   [(str lang/deaths-per-1e5 (sort-sign :d1e5 case-kw))]]
            ["\n%s" [(str

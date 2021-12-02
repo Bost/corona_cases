@@ -9,7 +9,7 @@
             [clojure2d.core :as c2d]
             [corona.api.cache :as cache]
             [corona.common :as com :refer
-             [sum lense kr kd kact kest kabs kd krep]]
+             [sum lense krec kact kest kabs kdea krep]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -84,11 +84,11 @@
      (fn [[t hms]]
        [
         {:ccode ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
-        {:ccode ccode :t t :case-kw :er :cnt (sum (com/estim-fun-new :r) hms)}
-        {:ccode ccode :t t :case-kw :ea :cnt (sum (com/estim-fun-new :a) hms)}
-        {:ccode ccode :t t :case-kw :n  :cnt (sum (com/estim-fun-new :n) hms)}
-        {:ccode ccode :t t :case-kw :r  :cnt (sum (lense kr krep kabs) hms)}
-        {:ccode ccode :t t :case-kw :d  :cnt (sum (com/estim-fun-new :d) hms)}
+        {:ccode ccode :t t :case-kw :er :cnt (sum (com/estim-fun :r) hms)}
+        {:ccode ccode :t t :case-kw :ea :cnt (sum (com/estim-fun :a) hms)}
+        {:ccode ccode :t t :case-kw :n  :cnt (sum (com/estim-fun :n) hms)}
+        {:ccode ccode :t t :case-kw :r  :cnt (sum (lense krec krep kabs) hms)}
+        {:ccode ccode :t t :case-kw :d  :cnt (sum (com/estim-fun :d) hms)}
         {:ccode ccode :t t :case-kw :a  :cnt (sum (lense kact krep kabs) hms)}]))
     (partial group-by :t)
     (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (:ccode hm)] ccode))))
@@ -285,8 +285,8 @@
   (let [max-plot-lines 10
         l-fun (cond
                 (= case-kw kact) (lense kact krep kabs)
-                (= case-kw kr)   (lense kr   krep kabs)
-                :else (com/estim-fun-new case-kw))
+                (= case-kw krec)   (lense krec   krep kabs)
+                :else (com/estim-fun case-kw))
         res
         ((comp
           (partial map (fn [hm] (if (< (get-in hm l-fun) threshold)
@@ -322,8 +322,8 @@
            new-lensed-case-kw
            (cond
              (= case-kw kact) (lense kact krep kabs)
-             (= case-kw kr)   (lense kr   krep kabs)
-             :else (com/estim-fun-new case-kw))
+             (= case-kw krec)   (lense krec   krep kabs)
+             :else (com/estim-fun case-kw))
            simple-lensed-case-kw (com/lense case-kw)]
        ((comp
          sort-by-last-val

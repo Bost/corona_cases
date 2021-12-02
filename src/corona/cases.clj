@@ -6,7 +6,7 @@
    [corona.models.dbase :as dbase]
    [taoensso.timbre :as timbre]
    [corona.macro :refer [defn-fun-id debugf infof warnf]]
-   [corona.common :refer [kt kp kv kact kr kd kn kc]]))
+   [corona.common :refer [ktst kpop kvac kact krec kdea knew kclo]]))
 
 (defmacro tore
   "->>-or-eduction. In fact both have the same performance.
@@ -90,15 +90,6 @@ r  | 10000 | 3867000 | 2021-07-27 05:22:40"
    {:idx 13 :kw :r%}
    {:idx 14 :kw :d%}
    {:idx 15 :kw :c%}     ;; closed-rate
-
-   ;; estimations
-   {:idx 16 :kw :ea}     ;; estimate-active
-   {:idx 17 :kw :er}     ;; estimate-recovered
-   {:idx 18 :kw :ea1e5} ;; estimate-active-per-1e5
-   {:idx 19 :kw :er1e5} ;; estimate-recovered-per-1e5
-   {:idx 20 :kw :c}      ;; closed
-   {:idx 21 :kw :ec}     ;; estimate-closed
-   {:idx 22 :kw :ec1e5} ;; estimate-closed-per-1e5
    ])
 
 (def aggregation-params

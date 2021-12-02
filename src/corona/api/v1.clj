@@ -4,8 +4,9 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require [corona.api.expdev07 :as data]
-            [corona.common :as com :refer [sum
-                                           krep kest kabs k1e5 k%%%]]
+            [corona.common :as com :refer
+             [ktst krep kest kabs k1e5 k%%% knew kvac kact krec kdea kclo kpop
+              kccode sum]]
             [corona.country-codes :as ccc]
             [taoensso.timbre :as timbre]
             [corona.macro :refer [defn-fun-id debugf errorf warnf]]
@@ -120,21 +121,21 @@
                   {:keys [recovered]}
                   {:keys [deaths]}]
                (let [new-confirmed confirmed
-                     ccode         (com/kccode hm-confirmed)
-                     t             (com/kt hm-confirmed)
-                     prm {com/kccode ccode
-                          com/kt     t
-                          com/kp     population
-                          com/kv     vaccinated
-                          com/kact   (com/calc-active new-confirmed recovered deaths)
-                          com/kr     recovered
-                          com/kd     deaths
-                          com/kn     new-confirmed
-                          com/kc     (com/calc-closed deaths recovered)}
-                     kws [com/kn com/kv com/kact com/kr com/kd com/kc]]
+                     ccode         (kccode hm-confirmed)
+                     t             (ktst hm-confirmed)
+                     prm {kccode ccode
+                          ktst   t
+                          kpop   population
+                          kvac   vaccinated
+                          kact   (com/calc-active new-confirmed recovered deaths)
+                          krec   recovered
+                          kdea   deaths
+                          knew   new-confirmed
+                          kclo   (com/calc-closed deaths recovered)}
+                     kws [knew kvac kact krec kdea kclo]]
                  ((comp
                    (partial conj
-                            {com/kccode ccode com/kt t com/kp population})
+                            {kccode ccode ktst t kpop population})
                    (partial zipmap kws)
                    (partial map (partial hash-map krep))
                    (partial map
@@ -146,7 +147,7 @@
                   kws))))
     ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
     ;; sorted   [pic-data] 46.4 MiB
-    (partial map (partial sort-by (juxt com/kccode com/kt)))
+    (partial map (partial sort-by (juxt kccode ktst)))
     (partial apply (fn [hms-population
                         hms-vaccinated
                         hms-new-confirmed
@@ -159,7 +160,7 @@
                                           (partial map
                                                    (fn [hm]
                                                      (select-keys
-                                                      hm [com/kccode com/kt]))))
+                                                      hm [kccode ktst]))))
                                          hms-population)]
                         (map (partial normalize default-hms)
                              [:confirmed :recovered :deaths]

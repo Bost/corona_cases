@@ -2,7 +2,7 @@
 
 (ns corona.lang
   (:require
-   [corona.common :as com :refer [lense kact kr kc kd kest kmax krep k1e5
+   [corona.common :as com :refer [lense kact krec kclo kdea kest kmax krep k1e5
                                   kchg kls7 kabs kavg]]
    [corona.cases :as cases]
    [clojure.string :as cstr]
@@ -50,37 +50,37 @@
 
 (def ^:const hm-estimated {:s "" :es "*"})
 
-(def ^:const hm-rec       {kr {krep {kabs "Rec"}
-                               kest {kabs "*Rec"}}})
-(def ^:const hm-recov     {kr {krep {kabs "Recov"}
-                               kest {kabs "*Recov"}}})
-(def ^:const hm-recove    {kr {krep {kabs "Recove"}
-                               kest {kabs "*Recove"}}})
-(def ^:const hm-recovered {kr {krep {kabs "Recovered"}
-                               kest {kabs "*Recovered"
-                                     k1e5 "*Rec100k"}}})
+(def ^:const hm-rec       {krec {krep {kabs "Rec"}
+                                 kest {kabs "*Rec"}}})
+(def ^:const hm-recov     {krec {krep {kabs "Recov"}
+                                 kest {kabs "*Recov"}}})
+(def ^:const hm-recove    {krec {krep {kabs "Recove"}
+                                 kest {kabs "*Recove"}}})
+(def ^:const hm-recovered {krec {krep {kabs "Recovered"}
+                                 kest {kabs "*Recovered"
+                                       k1e5 "*Rec100k"}}})
 (def ^:const hm-act       {kact {krep {kabs "Act"}
-                               kest {kabs "*Act"}}})
+                                 kest {kabs "*Act"}}})
 
 (def ^:const hm-active    {kact {krep {kabs "Active"
-                                     k1e5 "Act100k"
-                                     kls7 {kabs {kabs "ActL7"
-                                                 kavg "ActL7Avg"}
-                                           kchg {kavg "ActCL7Avg"}}}
-                               kest {kabs "*Active"
-                                     k1e5 "*Act100k"
-                                     kmax "*Max Active"
-                                     kls7 {kabs {kabs "*ActL7"
-                                                 kavg "*ActL7Avg"}
-                                           kchg {kavg "*ActCL7Avg"}}}}})
+                                       k1e5 "Act100k"
+                                       kls7 {kabs {kabs "ActL7"
+                                                   kavg "ActL7Avg"}
+                                             kchg {kavg "ActCL7Avg"}}}
+                                 kest {kabs "*Active"
+                                       k1e5 "*Act100k"
+                                       kmax "*Max Active"
+                                       kls7 {kabs {kabs "*ActL7"
+                                                   kavg "*ActL7Avg"}
+                                             kchg {kavg "*ActCL7Avg"}}}}})
 
-(def ^:const hm-clo       {kc {krep {kabs "Clo"}
-                               kest {kabs "*Clo"}}})
-(def ^:const hm-closed    {kc {krep {kabs "Closed"}
-                               kest {kabs "*Closed"
-                                     k1e5 "*Clo100k"}}})
-(def ^:const hm-deaths    {kd {krep {kabs "Deaths"
-                                     k1e5 "Dea100k"}}})
+(def ^:const hm-clo       {kclo {krep {kabs "Clo"}
+                                 kest {kabs "*Clo"}}})
+(def ^:const hm-closed    {kclo {krep {kabs "Closed"}
+                                 kest {kabs "*Closed"
+                                       k1e5 "*Clo100k"}}})
+(def ^:const hm-deaths    {kdea {krep {kabs "Deaths"
+                                       k1e5 "Dea100k"}}})
 
 (def ^:const estim-active-last-7-avg
   "Estimated active cases in last 7 reports - simple moving Average rounded"
@@ -99,15 +99,16 @@
 (def ^:const conf             "Conf")
 (def ^:const confir           "Confir")
 (def ^:const confirmed        "Confirmed")
+(def ^:const dea              "Dea")
 (def ^:const deaths           "Deaths")
-(def ^:const rec              (get-in hm-rec       (lense kr krep kabs)))
-(def ^:const recov            (get-in hm-recov     (lense kr krep kabs)))
-(def ^:const recove           (get-in hm-recove    (lense kr krep kabs)))
-(def ^:const recovered        (get-in hm-recovered (lense kr krep kabs)))
+(def ^:const rec              (get-in hm-rec       (lense krec krep kabs)))
+(def ^:const recov            (get-in hm-recov     (lense krec krep kabs)))
+(def ^:const recove           (get-in hm-recove    (lense krec krep kabs)))
+(def ^:const recovered        (get-in hm-recovered (lense krec krep kabs)))
 (def ^:const act              (get-in hm-act       (lense kact krep kabs)))
 (def ^:const active           (get-in hm-active    (lense kact krep kabs)))
-(def ^:const clo              (get-in hm-clo       (lense kc krep kabs)))
-(def ^:const closed           (get-in hm-closed    (lense kc krep kabs)))
+(def ^:const clo              (get-in hm-clo       (lense kclo krep kabs)))
+(def ^:const closed           (get-in hm-closed    (lense kclo krep kabs)))
 
 (def ^:const active-cases     (format "%s %s" active cases))
 (def ^:const recovered-cases  (format "%s %s" recovered cases))
@@ -119,7 +120,7 @@
 (def ^:const vaccin-per-1e5 "Vaccinations per 100 000"    (str vac hundred-k))
 (def ^:const active-per-1e5 "Active cases per 100 000"    (str act hundred-k))
 (def ^:const recove-per-1e5 "Recovered cases per 100 000" (str rec hundred-k))
-(def ^:const deaths-per-1e5 "Deaths per 100 000"          (str "Dea" hundred-k))
+(def ^:const deaths-per-1e5 "Deaths per 100 000"          (str dea hundred-k))
 (def ^:const closed-per-1e5 "Closed per 100 000"          (str clo hundred-k))
 
 (def ^:const estim-active-last-7 "Estimated active cases in last 7 reports"
@@ -130,10 +131,6 @@
 ;; TODO active-last-7 is only for the backward compatibility, under /explain
 (def ^:const active-last-7 "Active cases in last 7 reports"
   (subs estim-active-last-7 1))
-
-(def hm-active-per-1e5 {:a1e5 active-per-1e5 :ea1e5 (str "*" active-per-1e5)})
-(def hm-recove-per-1e5 {:r1e5 recove-per-1e5 :er1e5 (str "*" recove-per-1e5)})
-(def hm-closed-per-1e5 {:c1e5 closed-per-1e5 :ec1e5 (str "*" closed-per-1e5)})
 
 (def ^:const report
   "Coincidentally there is 1 report per day"

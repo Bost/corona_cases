@@ -519,33 +519,16 @@
   #_:μ :max)
 
 (def kccode :ccode)
-(def kt "timestamp"     :t)
-(def kp "population"    :p)
-(def kv "vaccinated"    :v)
-(def kact "active"      :a)
-(def kr "recovered"     :r)
-(def kd "deaths"        :d)
-(def kn "new confirmed" :n)
-(def kc "closed"        :c)
+(def ktst "timestamp"     :t)
+(def kpop "population"    :p)
+(def kvac "vaccinated"    :v)
+(def kact "active"        :a)
+(def krec "recovered"     :r)
+(def kdea "deaths"        :d)
+(def knew "new confirmed" :n)
+(def kclo "closed"        :c)
 
 (defn estim-fun
-  ""
-  [kw]
-  ((comp
-    vector
-    (partial apply get {:r :er
-                        :a :ea
-                        :c :ec
-                        :r1e5 :er1e5
-                        :a1e5 :ea1e5
-                        :c1e5 :ec1e5
-                        ;; :s is a string - could be used for translations
-                        :s :es})
-    ;; second kw is for `not-found` parameter of `get`
-    (fn [kw] [kw kw]))
-   kw))
-
-(defn estim-fun-new
   "Returns a vector containing the keyword for estimates values. E.g.:
   (estim-fun-new :r)
   => [:r :est :abs]
@@ -553,19 +536,19 @@
   [kw]
   ((comp
     (partial apply get {:a (lense kact kest kabs)  ;; can be only estimated
-                        :r (lense kr kest kabs)    ;; can be only estimated
-                        :d (lense kd krep kabs)    ;; reported
-                        :c (lense kc kest kabs)    ;; can be only estimated
+                        :r (lense krec kest kabs)    ;; can be only estimated
+                        :d (lense kdea krep kabs)    ;; reported
+                        :c (lense kclo kest kabs)    ;; can be only estimated
                         ;; TODO population can be also estimated and reported i.e. absolute
-                        :p (lense kp)
+                        :p (lense kpop)
                         :rank (lense :rank)
 
                         ;;; for rankings? ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                         :a1e5 (lense kact kest k1e5)
-                        :r1e5 (lense kr   kest k1e5)
-                        :d1e5 (lense kd   krep k1e5) ;; reported
-                        :c1e5 (lense kc   kest k1e5)
-                        :v1e5 (lense kv   krep kabs) ;; reported
+                        :r1e5 (lense krec kest k1e5)
+                        :d1e5 (lense kdea krep k1e5) ;; reported
+                        :c1e5 (lense kclo kest k1e5)
+                        :v1e5 (lense kvac krep kabs) ;; reported
                         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
                         ;; :s is a string - could be used for translations
@@ -580,17 +563,17 @@
     (partial apply get {
                         ;; see cases/ranking-cases
                         ;; TODO population can be also estimated and reported i.e. absolute
-                        :p (lense kp krnk)
+                        :p (lense kpop krnk)
                         :a (lense kact kest krnk)   ;; can be only estimated
-                        :r (lense kr   kest krnk)   ;; can be only estimated
-                        :d (lense kd   krep krnk)   ;; reported
-                        :c (lense kc   kest krnk)   ;; can be only estimated
+                        :r (lense krec kest krnk)   ;; can be only estimated
+                        :d (lense kdea krep krnk)   ;; reported
+                        :c (lense kclo kest krnk)   ;; can be only estimated
 
                         :a1e5 (lense kact kest k1e5 krnk)
-                        :r1e5 (lense kr   kest k1e5 krnk)
-                        :d1e5 (lense kd   krep k1e5 krnk) ;; reported
-                        :c1e5 (lense kc   kest k1e5 krnk)
-                        :v1e5 (lense kv   krep kabs krnk) ;; reported
+                        :r1e5 (lense krec kest k1e5 krnk)
+                        :d1e5 (lense kdea krep k1e5 krnk) ;; reported
+                        :c1e5 (lense kclo kest k1e5 krnk)
+                        :v1e5 (lense kvac krep kabs krnk) ;; reported
 
                         })
     ;; second element is for `not-found` parameter of `get`

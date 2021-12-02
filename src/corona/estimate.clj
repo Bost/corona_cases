@@ -1,12 +1,14 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.estimate)
 
 (ns corona.estimate
-  (:require [corona.common :as com :refer [lense kc kact kp kr kn kd krep kest kabs k1e5 k%%%]]
+  (:require [corona.common :as com :refer
+             [kclo kact kpop krec knew kdea krep kest kabs k1e5 k%%% kpop
+              lense kccode]]
             [corona.macro :refer [defn-fun-id debugf infof warnf]]))
 
 (def ^:const shift-recovery
-  "Mean number of days/reports between symptoms outbreak and full recovery. (Lucky
-  coincidence of 1 report per 1 day!)
+  "Mean number of days/reports between symptoms outbreak and full recovery.
+ (Lucky coincidence of 1 report per 1 day!)
 
   Seems like different countries have different recovery reporting policies:
   * Germany  - 14 days/reports
@@ -44,46 +46,46 @@
     (partial map (fn [[ccode hms]] hms))
     (partial map
              (fn [[ccode hms]]
-               (let [population ((comp com/kp first) hms)]
+               (let [population ((comp kpop first) hms)]
                  ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
                                           com/calc-closed)
-                                    (lense kc kest k1e5)
-                                    [{:kw (lense kr kest kabs) :shift 0} ;; from kest
-                                     {:kw (lense kd krep kabs) :shift shift-deaths}])
+                                    (lense kclo kest k1e5)
+                                    [{:kw (lense krec kest kabs) :shift 0} ;; from kest
+                                     {:kw (lense kdea krep kabs) :shift shift-deaths}])
                   [ccode hms]))))
     (partial map (estim-country-fn com/calc-closed
-                                   (lense kc kest kabs)
-                                   [{:kw (lense kr kest kabs) :shift 0} ;; from kest
-                                    {:kw (lense kd krep kabs) :shift shift-deaths}]))
+                                   (lense kclo kest kabs)
+                                   [{:kw (lense krec kest kabs) :shift 0} ;; from kest
+                                    {:kw (lense kdea krep kabs) :shift shift-deaths}]))
     (partial map
              (fn [[ccode hms]]
-               (let [population ((comp com/kp first) hms)]
+               (let [population ((comp kpop first) hms)]
                  ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
                                           com/calc-active)
                                     (lense kact kest k1e5)
-                                    [{:kw (lense kn krep kabs) :shift 0}
-                                     {:kw (lense kr kest kabs) :shift 0} ;; from kest
-                                     {:kw (lense kd krep kabs) :shift shift-deaths}])
+                                    [{:kw (lense knew krep kabs) :shift 0}
+                                     {:kw (lense krec kest kabs) :shift 0} ;; from kest
+                                     {:kw (lense kdea krep kabs) :shift shift-deaths}])
                   [ccode hms]))))
     (partial map (estim-country-fn com/calc-active
                                    (lense kact kest kabs)
-                                   [{:kw (lense kn krep kabs) :shift 0}
-                                    {:kw (lense kr kest kabs) :shift 0} ;; from kest
-                                    {:kw (lense kd krep kabs) :shift shift-deaths}]))
+                                   [{:kw (lense knew krep kabs) :shift 0}
+                                    {:kw (lense krec kest kabs) :shift 0} ;; from kest
+                                    {:kw (lense kdea krep kabs) :shift shift-deaths}]))
     (partial map
              (fn [[ccode hms]]
-               (let [population ((comp com/kp first) hms)]
+               (let [population ((comp kpop first) hms)]
                  ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
                                           com/calc-recov)
-                                    (lense kr kest k1e5)
-                                    [{:kw (lense kn krep kabs) :shift shift-recovery}
-                                     {:kw (lense kd krep kabs) :shift shift-deaths}])
+                                    (lense krec kest k1e5)
+                                    [{:kw (lense knew krep kabs) :shift shift-recovery}
+                                     {:kw (lense kdea krep kabs) :shift shift-deaths}])
                   [ccode hms]))))
     (partial map (estim-country-fn com/calc-recov
-                                   (lense kr kest kabs)
-                                   [{:kw (lense kn krep kabs) :shift shift-recovery}
-                                    {:kw (lense kd krep kabs) :shift shift-deaths}]))
-    (partial group-by com/kccode))
+                                   (lense krec kest kabs)
+                                   [{:kw (lense knew krep kabs) :shift shift-recovery}
+                                    {:kw (lense kdea krep kabs) :shift shift-deaths}]))
+    (partial group-by kccode))
    pic-data))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.estimate)

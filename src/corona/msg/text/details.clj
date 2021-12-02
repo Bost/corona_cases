@@ -5,7 +5,7 @@
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
             [corona.common :as com :refer
-             [lense kact kd kr kc kest kmax krep k1e5 kls7 kabs kavg kchg krnk]]
+             [lense kact kdea krec kclo kest kmax krep k1e5 kls7 kabs kavg kchg krnk]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -232,25 +232,25 @@
                     7.0)
                  round-nr #_plus-minus))
            :show-plus-minus true}
-          {:s    (get-in lang/hm-recovered (lense kr kest kabs))
+          {:s    (get-in lang/hm-recovered (lense krec kest kabs))
            :n    (get-in last-report fun-r)
            :diff (get-in delta-last-2 fun-r)
            :emoji "🎉"}
-          {:s    (get-in lang/hm-recovered (lense kr kest k1e5))
+          {:s    (get-in lang/hm-recovered (lense krec kest k1e5))
            :n    (get-in last-report fun-r1e5)
            :diff (get-in delta-last-2 fun-r1e5)}
-          {:s    (get-in lang/hm-deaths (lense kd krep kabs))
+          {:s    (get-in lang/hm-deaths (lense kdea krep kabs))
            :n    (get-in last-report fun-d)
            :diff (get-in delta-last-2 fun-d)
            :emoji "⚰️"}
-          {:s    (get-in lang/hm-deaths (lense kd krep k1e5))
+          {:s    (get-in lang/hm-deaths (lense kdea krep k1e5))
            :n    (get-in last-report fun-d1e5)
            :diff (get-in delta-last-2 fun-d1e5)}
-          {:s    (get-in lang/hm-closed (lense kc kest kabs))
+          {:s    (get-in lang/hm-closed (lense kclo kest kabs))
            :n    (get-in last-report fun-c)
            :diff (get-in delta-last-2 fun-c)
            :emoji "🏁"}
-          {:s    (get-in lang/hm-closed (lense kc kest k1e5))
+          {:s    (get-in lang/hm-closed (lense kclo kest k1e5))
            :n    (get-in last-report fun-c1e5)
            :diff (get-in delta-last-2 fun-c1e5)
            ;; TODO create command lang/cmd-closed-per-1e5
@@ -292,7 +292,7 @@
              [["%s" [lang/people (get-in hm-ranking (rankings-lense-fun :p))]]
               ["%s" (label-val rankings-lense-fun lang/hm-active :a1e5 hm-ranking)]
               ["%s" (label-val rankings-lense-fun lang/hm-recovered :r1e5 hm-ranking)]
-              ["%s" [(get-in lang/hm-deaths (lense kd krep k1e5)) (get-in hm-ranking (rankings-lense-fun :d1e5))]]
+              ["%s" [(get-in lang/hm-deaths (lense kdea krep k1e5)) (get-in hm-ranking (rankings-lense-fun :d1e5))]]
               ["%s" (label-val rankings-lense-fun lang/hm-closed :c1e5 hm-ranking)]])
            :line-fmt "%s:<b>%s</b>   "
            :fn-fmts
@@ -385,13 +385,13 @@
                             (last-7-yyy (fun :r) last-8)
                             #_(last-7-xxx (fun :r) last-8))))
             [com/ident-fun
-             com/estim-fun-new
+             com/estim-fun
              #_com/estim-fun])
 
            lense-fun (if (and country-reports-recovered?
                               (not (msgc/worldwide? ccode)))
                        com/ident-fun
-                       com/estim-fun-new)
+                       com/estim-fun)
            fun-v (lense-fun :v)
            fun-n (lense-fun :n)
            fun-d (lense-fun :d)

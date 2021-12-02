@@ -5,7 +5,7 @@
             [clojure.edn :as edn]
             [clojure.string :as cstr]
             [corona.api.cache :as cache]
-            [corona.common :as com :refer [lense kact kd kest kmax krep k1e5
+            [corona.common :as com :refer [lense kact kdea kest kmax krep k1e5
                                            kls7 kabs kavg]]
             [corona.cases :as cases]
             [corona.estimate :as est]

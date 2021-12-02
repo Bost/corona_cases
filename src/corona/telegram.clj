@@ -218,7 +218,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         (let [prm
               (assoc prm-base
                      :ccode (ccr/get-country-code ccc/worldwide)
-                     :lense-fun com/estim-fun-new)]
+                     :lense-fun com/estim-fun)]
           ((comp
             m-result doall
             (partial map (partial apply msgl/calc-listings!
