@@ -519,7 +519,7 @@
   #_:μ :max)
 
 (def kcco "country code"
-  :ccode)
+  :cco)
 (def ktst "timestamp"
   :t)
 (def kpop "population"
