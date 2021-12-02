@@ -386,13 +386,12 @@
                             (last-7-yyy (fun :r) last-8)
                             #_(last-7-xxx (fun :r) last-8))))
             [com/ident-fun
-             com/estim-fun
-             #_com/estim-fun])
+             com/lense-fun])
 
            lense-fun (if (and country-reports-recovered?
                               (not (msgc/worldwide? ccode)))
                        com/ident-fun
-                       com/estim-fun)
+                       com/lense-fun)
            fun-v (lense-fun :v)
            fun-n (lense-fun :n)
            fun-d (lense-fun :d)

@@ -493,10 +493,6 @@
     (partial map (fn [hm] (get-in hm kws))))
    hms))
 
-(defn tmp-lense [case-kw] (vector case-kw))
-(defn lense [& case-kws] (apply vector case-kws))
-(defn unlense [lensed-case-kw] (last lensed-case-kw))
-
 ;; k as in keyword
 (def kabs "absolute" #_:α :abs)
 (def krnk "ranking = σειρά κατάταξης [seirá katátaxis]"
@@ -537,7 +533,9 @@
 (def kclo "closed"
   :c)
 
-(defn estim-fun
+(defn lense [& case-kws] (apply vector case-kws))
+
+(defn lense-fun
   "Returns a vector containing the keyword for estimates values. E.g.:
   (estim-fun-new :r)
   => [:r :est :abs]
@@ -550,7 +548,6 @@
                         :c (lense kclo kest kabs)    ;; can be only estimated
                         ;; TODO population can be also estimated and reported i.e. absolute
                         :p (lense kpop)
-                        :rank (lense :rank)
 
                         ;;; for rankings? ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                         :a1e5 (lense kact kest k1e5)

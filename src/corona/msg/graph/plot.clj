@@ -85,11 +85,11 @@
      (fn [[t hms]]
        [
         {kcco ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
-        {kcco ccode :t t :case-kw :er :cnt (sum (com/estim-fun :r) hms)}
-        {kcco ccode :t t :case-kw :ea :cnt (sum (com/estim-fun :a) hms)}
-        {kcco ccode :t t :case-kw :n  :cnt (sum (com/estim-fun :n) hms)}
+        {kcco ccode :t t :case-kw :er :cnt (sum (com/lense-fun :r) hms)}
+        {kcco ccode :t t :case-kw :ea :cnt (sum (com/lense-fun :a) hms)}
+        {kcco ccode :t t :case-kw :n  :cnt (sum (com/lense-fun :n) hms)}
         {kcco ccode :t t :case-kw :r  :cnt (sum (lense krec krep kabs) hms)}
-        {kcco ccode :t t :case-kw :d  :cnt (sum (com/estim-fun :d) hms)}
+        {kcco ccode :t t :case-kw :d  :cnt (sum (com/lense-fun :d) hms)}
         {kcco ccode :t t :case-kw :a  :cnt (sum (lense kact krep kabs) hms)}]))
     (partial group-by :t)
     (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (kcco hm)] ccode))))
@@ -287,7 +287,7 @@
         l-fun (cond
                 (= case-kw kact) (lense kact krep kabs)
                 (= case-kw krec)   (lense krec   krep kabs)
-                :else (com/estim-fun case-kw))
+                :else (com/lense-fun case-kw))
         res
         ((comp
           (partial map (fn [hm] (if (< (get-in hm l-fun) threshold)
@@ -324,7 +324,7 @@
            (cond
              (= case-kw kact) (lense kact krep kabs)
              (= case-kw krec)   (lense krec   krep kabs)
-             :else (com/estim-fun case-kw))
+             :else (com/lense-fun case-kw))
            simple-lensed-case-kw (com/lense case-kw)]
        ((comp
          sort-by-last-val
