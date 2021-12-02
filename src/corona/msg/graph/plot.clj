@@ -10,7 +10,7 @@
             [corona.api.cache :as cache]
             [corona.common :as com :refer
              [kcco krec kact kest kabs kdea krep
-              sum lense]]
+              sum makelense]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -85,12 +85,12 @@
      (fn [[t hms]]
        [
         {kcco ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
-        {kcco ccode :t t :case-kw :er :cnt (sum (com/lense-fun :r) hms)}
-        {kcco ccode :t t :case-kw :ea :cnt (sum (com/lense-fun :a) hms)}
-        {kcco ccode :t t :case-kw :n  :cnt (sum (com/lense-fun :n) hms)}
-        {kcco ccode :t t :case-kw :r  :cnt (sum (lense krec krep kabs) hms)}
-        {kcco ccode :t t :case-kw :d  :cnt (sum (com/lense-fun :d) hms)}
-        {kcco ccode :t t :case-kw :a  :cnt (sum (lense kact krep kabs) hms)}]))
+        {kcco ccode :t t :case-kw :er :cnt (sum (com/getlense :r) hms)}
+        {kcco ccode :t t :case-kw :ea :cnt (sum (com/getlense :a) hms)}
+        {kcco ccode :t t :case-kw :n  :cnt (sum (com/getlense :n) hms)}
+        {kcco ccode :t t :case-kw :r  :cnt (sum (makelense krec krep kabs) hms)}
+        {kcco ccode :t t :case-kw :d  :cnt (sum (com/getlense :d) hms)}
+        {kcco ccode :t t :case-kw :a  :cnt (sum (makelense kact krep kabs) hms)}]))
     (partial group-by :t)
     (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (kcco hm)] ccode))))
    stats))
@@ -285,9 +285,9 @@
   [{:keys [case-kw threshold threshold-increase stats] :as prm}]
   (let [max-plot-lines 10
         l-fun (cond
-                (= case-kw kact) (lense kact krep kabs)
-                (= case-kw krec)   (lense krec   krep kabs)
-                :else (com/lense-fun case-kw))
+                (= case-kw kact) (makelense kact krep kabs)
+                (= case-kw krec)   (makelense krec   krep kabs)
+                :else (com/getlense case-kw))
         res
         ((comp
           (partial map (fn [hm] (if (< (get-in hm l-fun) threshold)
@@ -322,10 +322,10 @@
      (let [countries-threshold ((comp set (partial map kcco)) data)
            new-lensed-case-kw
            (cond
-             (= case-kw kact) (lense kact krep kabs)
-             (= case-kw krec)   (lense krec   krep kabs)
-             :else (com/lense-fun case-kw))
-           simple-lensed-case-kw (com/lense case-kw)]
+             (= case-kw kact) (makelense kact krep kabs)
+             (= case-kw krec)   (makelense krec   krep kabs)
+             :else (com/getlense case-kw))
+           simple-lensed-case-kw (com/makelense case-kw)]
        ((comp
          sort-by-last-val
          (partial plotcom/map-kv

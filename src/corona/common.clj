@@ -533,34 +533,34 @@
 (def kclo "closed"
   :c)
 
-(defn lense [& case-kws] (apply vector case-kws))
+(defn makelense [& case-kws] (apply vector case-kws))
 
-(defn lense-fun
+(defn getlense
   "Returns a vector containing the keyword for estimates values. E.g.:
   (estim-fun-new :r)
   => [:r :est :abs]
   This can be used by e.g. (get-in hm (estim-fun-new :r))"
   [kw]
   ((comp
-    (partial apply get {:a (lense kact kest kabs)  ;; can be only estimated
-                        :r (lense krec kest kabs)    ;; can be only estimated
-                        :d (lense kdea krep kabs)    ;; reported
-                        :c (lense kclo kest kabs)    ;; can be only estimated
+    (partial apply get {:a (makelense kact kest kabs)  ;; can be only estimated
+                        :r (makelense krec kest kabs)    ;; can be only estimated
+                        :d (makelense kdea krep kabs)    ;; reported
+                        :c (makelense kclo kest kabs)    ;; can be only estimated
                         ;; TODO population can be also estimated and reported i.e. absolute
-                        :p (lense kpop)
+                        :p (makelense kpop)
 
                         ;;; for rankings? ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        :a1e5 (lense kact kest k1e5)
-                        :r1e5 (lense krec kest k1e5)
-                        :d1e5 (lense kdea krep k1e5) ;; reported
-                        :c1e5 (lense kclo kest k1e5)
-                        :v1e5 (lense kvac krep kabs) ;; reported
+                        :a1e5 (makelense kact kest k1e5)
+                        :r1e5 (makelense krec kest k1e5)
+                        :d1e5 (makelense kdea krep k1e5) ;; reported
+                        :c1e5 (makelense kclo kest k1e5)
+                        :v1e5 (makelense kvac krep kabs) ;; reported
                         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
                         ;; :s is a string - could be used for translations
-                        :s (lense :es)})
+                        :s (makelense :es)})
     ;; second element is for `not-found` parameter of `get`
-    (fn [kw] [kw (lense kw krep kabs)]))
+    (fn [kw] [kw (makelense kw krep kabs)]))
    kw))
 
 (defn ranking-fun
@@ -569,21 +569,21 @@
     (partial apply get {
                         ;; see cases/ranking-cases
                         ;; TODO population can be also estimated and reported i.e. absolute
-                        :p (lense kpop krnk)
-                        :a (lense kact kest krnk)   ;; can be only estimated
-                        :r (lense krec kest krnk)   ;; can be only estimated
-                        :d (lense kdea krep krnk)   ;; reported
-                        :c (lense kclo kest krnk)   ;; can be only estimated
+                        :p (makelense kpop krnk)
+                        :a (makelense kact kest krnk)   ;; can be only estimated
+                        :r (makelense krec kest krnk)   ;; can be only estimated
+                        :d (makelense kdea krep krnk)   ;; reported
+                        :c (makelense kclo kest krnk)   ;; can be only estimated
 
-                        :a1e5 (lense kact kest k1e5 krnk)
-                        :r1e5 (lense krec kest k1e5 krnk)
-                        :d1e5 (lense kdea krep k1e5 krnk) ;; reported
-                        :c1e5 (lense kclo kest k1e5 krnk)
-                        :v1e5 (lense kvac krep kabs krnk) ;; reported
+                        :a1e5 (makelense kact kest k1e5 krnk)
+                        :r1e5 (makelense krec kest k1e5 krnk)
+                        :d1e5 (makelense kdea krep k1e5 krnk) ;; reported
+                        :c1e5 (makelense kclo kest k1e5 krnk)
+                        :v1e5 (makelense kvac krep kabs krnk) ;; reported
 
                         })
     ;; second element is for `not-found` parameter of `get`
-    (fn [kw] [kw (lense kw krep kabs)]))
+    (fn [kw] [kw (makelense kw krep kabs)]))
    kw))
 
 (defn ident-fun "" [kw]

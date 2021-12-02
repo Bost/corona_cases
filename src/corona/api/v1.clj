@@ -37,7 +37,7 @@
      default-hms)))
 
 (defn xf-for-case "" [cnt-raw-dates data-with-pop case-kw]
-  (let [lensed-case-kw (com/lense case-kw)]
+  (let [lensed-case-kw (com/makelense case-kw)]
   ((comp
     #_(partial sort-by (juxt kcco :t))
     flatten

@@ -3,7 +3,7 @@
 (ns corona.estimate
   (:require [corona.common :as com :refer
              [kclo kact kpop krec knew kdea krep kest kabs k1e5 k%%% kpop
-              lense kcco]]
+              makelense kcco]]
             [corona.macro :refer [defn-fun-id debugf infof warnf]]))
 
 (def ^:const shift-recovery
@@ -49,42 +49,42 @@
                (let [population ((comp kpop first) hms)]
                  ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
                                           com/calc-closed)
-                                    (lense kclo kest k1e5)
-                                    [{:kw (lense krec kest kabs) :shift 0} ;; from kest
-                                     {:kw (lense kdea krep kabs) :shift shift-deaths}])
+                                    (makelense kclo kest k1e5)
+                                    [{:kw (makelense krec kest kabs) :shift 0} ;; from kest
+                                     {:kw (makelense kdea krep kabs) :shift shift-deaths}])
                   [ccode hms]))))
     (partial map (estim-country-fn com/calc-closed
-                                   (lense kclo kest kabs)
-                                   [{:kw (lense krec kest kabs) :shift 0} ;; from kest
-                                    {:kw (lense kdea krep kabs) :shift shift-deaths}]))
+                                   (makelense kclo kest kabs)
+                                   [{:kw (makelense krec kest kabs) :shift 0} ;; from kest
+                                    {:kw (makelense kdea krep kabs) :shift shift-deaths}]))
     (partial map
              (fn [[ccode hms]]
                (let [population ((comp kpop first) hms)]
                  ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
                                           com/calc-active)
-                                    (lense kact kest k1e5)
-                                    [{:kw (lense knew krep kabs) :shift 0}
-                                     {:kw (lense krec kest kabs) :shift 0} ;; from kest
-                                     {:kw (lense kdea krep kabs) :shift shift-deaths}])
+                                    (makelense kact kest k1e5)
+                                    [{:kw (makelense knew krep kabs) :shift 0}
+                                     {:kw (makelense krec kest kabs) :shift 0} ;; from kest
+                                     {:kw (makelense kdea krep kabs) :shift shift-deaths}])
                   [ccode hms]))))
     (partial map (estim-country-fn com/calc-active
-                                   (lense kact kest kabs)
-                                   [{:kw (lense knew krep kabs) :shift 0}
-                                    {:kw (lense krec kest kabs) :shift 0} ;; from kest
-                                    {:kw (lense kdea krep kabs) :shift shift-deaths}]))
+                                   (makelense kact kest kabs)
+                                   [{:kw (makelense knew krep kabs) :shift 0}
+                                    {:kw (makelense krec kest kabs) :shift 0} ;; from kest
+                                    {:kw (makelense kdea krep kabs) :shift shift-deaths}]))
     (partial map
              (fn [[ccode hms]]
                (let [population ((comp kpop first) hms)]
                  ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
                                           com/calc-recov)
-                                    (lense krec kest k1e5)
-                                    [{:kw (lense knew krep kabs) :shift shift-recovery}
-                                     {:kw (lense kdea krep kabs) :shift shift-deaths}])
+                                    (makelense krec kest k1e5)
+                                    [{:kw (makelense knew krep kabs) :shift shift-recovery}
+                                     {:kw (makelense kdea krep kabs) :shift shift-deaths}])
                   [ccode hms]))))
     (partial map (estim-country-fn com/calc-recov
-                                   (lense krec kest kabs)
-                                   [{:kw (lense knew krep kabs) :shift shift-recovery}
-                                    {:kw (lense kdea krep kabs) :shift shift-deaths}]))
+                                   (makelense krec kest kabs)
+                                   [{:kw (makelense knew krep kabs) :shift shift-recovery}
+                                    {:kw (makelense kdea krep kabs) :shift shift-deaths}]))
     (partial group-by kcco))
    pic-data))
 

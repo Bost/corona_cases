@@ -7,7 +7,7 @@
             [corona.api.cache :as cache]
             [corona.common :as com :refer
              [kcco kact kdea kest kmax krep k1e5 kls7 kabs kavg
-              lense]]
+              makelense]]
             [corona.cases :as cases]
             [corona.estimate :as est]
             [corona.lang :as lang]
