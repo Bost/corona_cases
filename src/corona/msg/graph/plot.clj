@@ -9,7 +9,9 @@
             [clojure2d.core :as c2d]
             [corona.api.cache :as cache]
             [corona.common :as com :refer
-             [kcco krec kact kest kabs kdea krep
+             [kcco krec kact kdea krep kpop kclo knew ktst
+              krep kabs ker_ kea_
+              kcase-kw
               sum makelense]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
@@ -82,17 +84,17 @@
     flatten
     (partial
      map
-     (fn [[t hms]]
+     (fn [[tst hms]]
        [
-        {kcco ccode :t t :case-kw :p  :cnt (bigint (/ (:p (first hms)) 1e3))}
-        {kcco ccode :t t :case-kw :er :cnt (sum (com/getlense :r) hms)}
-        {kcco ccode :t t :case-kw :ea :cnt (sum (com/getlense :a) hms)}
-        {kcco ccode :t t :case-kw :n  :cnt (sum (com/getlense :n) hms)}
-        {kcco ccode :t t :case-kw :r  :cnt (sum (makelense krec krep kabs) hms)}
-        {kcco ccode :t t :case-kw :d  :cnt (sum (com/getlense :d) hms)}
-        {kcco ccode :t t :case-kw :a  :cnt (sum (makelense kact krep kabs) hms)}]))
-    (partial group-by :t)
-    (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (kcco hm)] ccode))))
+        {kcco ccode ktst tst kcase-kw kpop :cnt (bigint (/ (get (first hms) kpop) 1e3))}
+        {kcco ccode ktst tst kcase-kw ker_ :cnt (sum (com/basic-lense krec) hms)}
+        {kcco ccode ktst tst kcase-kw kea_ :cnt (sum (com/basic-lense kact) hms)}
+        {kcco ccode ktst tst kcase-kw knew :cnt (sum (com/basic-lense knew) hms)}
+        {kcco ccode ktst tst kcase-kw krec :cnt (sum (makelense krec krep kabs) hms)}
+        {kcco ccode ktst tst kcase-kw kdea :cnt (sum (com/basic-lense kdea) hms)}
+        {kcco ccode ktst tst kcase-kw kact :cnt (sum (makelense kact krep kabs) hms)}]))
+    (partial group-by ktst)
+    (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (get hm kcco)] ccode))))
    stats))
 
 (defn stats-for-country [ccode stats]
@@ -101,15 +103,17 @@
          (comp
           (partial take-last 365)
           (partial sort-by first)
-          (partial map (fn [{:keys [t cnt]}] [(to-java-time-local-date t) cnt])))
-         (group-by :case-kw (sum-for-pred ccode stats)))]
+          (partial map (fn [prm]
+                         [(to-java-time-local-date (get prm ktst))
+                          (get prm :cnt)])))
+         (group-by kcase-kw (sum-for-pred ccode stats)))]
     ;; sort - keep the "color order" of cases fixed; don't
     ;; recalculate it
     ;; TODO try (map {:a 1 :b 2 :c 3 :d 4} [:a :d]) ;;=> (1 4)
     ((comp
       reverse
       (partial keep (partial find mapped-hm)))
-     [:a :r :d :n :p :er :ea])))
+     [kact krec kdea knew kpop ker_ kea_])))
 
 (defn fmt-report [report] (format "%s %s" lang/report report))
 
@@ -209,7 +213,7 @@
   (when-not (in? ccc/excluded-country-codes ccode)
     (let [base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
-                               (in? #_[:n :a :r :d] [:n :p :er :ea] case-kw))
+                               (in? #_[knew kact krec kdea] [knew kpop ker_ kea_] case-kw))
                              base-data)
           curves (keys sarea-data)
           palette (palette-colors (count curves))]
@@ -226,11 +230,11 @@
        {:series (b/series
                  [:grid]
                  [:sarea sarea-data {:palette palette}]
-                 #_[:line (line-data :p base-data) stroke-population]
-                 [:line (line-data :n base-data) stroke-confir]
-                 [:line (line-data :a base-data) (stroke-active)]
-                 [:line (line-data :er base-data) (stroke-estim-recov)]
-                 [:line (line-data :ea base-data) (stroke-estim-activ)])
+                 #_[:line (line-data kpop base-data) stroke-population]
+                 [:line (line-data knew base-data) stroke-confir]
+                 [:line (line-data kact base-data) (stroke-active)]
+                 [:line (line-data ker_ base-data) (stroke-estim-recov)]
+                 [:line (line-data kea_ base-data) (stroke-estim-activ)])
         :x-axis-formatter date-fmt-fn
         :y-axis-formatter (metrics-prefix-formatter
                            ;; population numbers have the `max` values, all
@@ -240,11 +244,11 @@
         :legend (reverse
                  (conj (map #(vector :rect %2 {:color %1})
                             palette
-                            (let [legend-hm {:a lang/active
-                                             :d lang/deaths
-                                             :r lang/recovered
-                                             :er lang/recov-estim
-                                             :ea lang/activ-estim}]
+                            (let [legend-hm {kact lang/active
+                                             kdea lang/deaths
+                                             krec lang/recovered
+                                             ker_ lang/recov-estim
+                                             kea_ lang/activ-estim}]
                               (map (partial get legend-hm) curves)))
                        [:line lang/confirmed       stroke-confir]
                        [:line lang/active-absolute (stroke-active)]
@@ -265,16 +269,6 @@
 
 (defn message-kw [ccode] [:plot (keyword ccode)])
 
-(defn tg [eo en]
-  ((comp
-    (partial reduce = )
-    (partial map (fn [idx] ((comp (partial reduce = )
-                                  (partial map (fn [{:keys [l c]}]
-                                                 (get-in (nth c idx) l))))
-                            [{:l [:ea]           :c eo}
-                             {:l [:a :est :abs] :c en}]))))
-   (range (count eo))))
-
 (defn-fun-id group-below-threshold
   "Group all countries with the nr of active cases below the threshold under the
   `ccc/default-2-country-code` so that max 10 countries are plotted.
@@ -282,18 +276,19 @@
   Too many invocations lead to 'OutOfMemoryError: Java heap space'. Garbage
   Collection on every 4th invocation doesn't help. Tail-Call invocation might
   help to counter this problem."
-  [{:keys [case-kw threshold threshold-increase stats] :as prm}]
-  (let [max-plot-lines 10
-        l-fun (cond
-                (= case-kw kact) (makelense kact krep kabs)
-                (= case-kw krec)   (makelense krec   krep kabs)
-                :else (com/getlense case-kw))
+  [{:keys [threshold threshold-increase stats] :as prm}]
+  (let [case-kw (get prm kcase-kw)
+        max-plot-lines 10
+        l-fun (condp = case-kw
+                kact (makelense kact krep kabs)
+                krec (makelense krec krep kabs)
+                (com/basic-lense case-kw))
         res
         ((comp
           (partial map (fn [hm] (if (< (get-in hm l-fun) threshold)
                                   (assoc hm kcco ccc/default-2-country-code)
                                   hm)))
-          (partial sort-by :t))
+          (partial sort-by ktst))
          stats)]
     ;; TODO implement recalculation for decreasing case-kw numbers (e.g. active cases)
     (let [cnt-countries (count (group-by kcco res))]
@@ -308,63 +303,65 @@
           (group-below-threshold (assoc prm :threshold raised-threshold)))
         {:data res :threshold threshold}))))
 
-(defn stats-all-by-case "" [{:keys [case-kw] :as prm}]
-  #_((comp
-    ;; TODO this will not be necessary, but I can build here a
-    ;; consistency check
-    (partial take-last 365)
-    (fn [d] (debugf "(count d) %s" (count d)) d))
-     all-data)
-  (update
-   (group-below-threshold prm)
-   :data
-   (fn [data]
-     (let [countries-threshold ((comp set (partial map kcco)) data)
-           new-lensed-case-kw
-           (cond
-             (= case-kw kact) (makelense kact krep kabs)
-             (= case-kw krec)   (makelense krec   krep kabs)
-             :else (com/getlense case-kw))
-           simple-lensed-case-kw (com/makelense case-kw)]
-       ((comp
-         sort-by-last-val
-         (partial plotcom/map-kv
-                  (comp
-                   (partial sort-by first)
-                   (partial map (fn [hm]
-                                  [((comp to-java-time-local-date :t) hm)
-                                   (get-in hm simple-lensed-case-kw)]))))
-         (partial reduce into {})
-         (partial map (fn [[ccode hms1]]
-                        {ccode (sort-by :t hms1)}))
-         (partial group-by kcco)
-         (partial reduce into [])
-         (partial map
-                  (fn [[t hms]]
-                    ((comp
-                      (partial cset/union hms)
-                      set
-                      ;; fill the rest with zeros
-                      (partial map (partial hash-map :t t case-kw 0 kcco))
-                      (partial cset/difference countries-threshold)
-                      set
-                      keys
-                      (partial group-by kcco))
-                     hms)))
-         (partial group-by :t)
-         flatten
-         (partial map (fn [[t hms0]]
-                        ((comp
-                          (partial map
-                                   (fn [[ccode hms]]
-                                     ((comp
-                                       (partial hash-map kcco ccode :t t case-kw)
-                                       (partial sum new-lensed-case-kw))
-                                      hms)))
-                          (partial group-by kcco))
-                         hms0)))
-         (partial group-by :t))
-        data)))))
+(defn stats-all-by-case "" [prm]
+  (let [case-kw (get prm kcase-kw)]
+    #_((comp
+        ;; TODO this will not be necessary, but I can build here a
+        ;; consistency check
+        (partial take-last 365)
+        (fn [d] (debugf "(count d) %s" (count d)) d))
+       all-data)
+    (update
+     (group-below-threshold prm)
+     :data
+     (fn [data]
+       (let [countries-threshold ((comp set (partial map kcco)) data)
+             new-lensed-case-kw
+             (condp = case-kw
+               kact (makelense kact krep kabs)
+               krec (makelense krec krep kabs)
+               (com/basic-lense case-kw))
+             simple-lensed-case-kw (com/makelense case-kw)]
+         ((comp
+           sort-by-last-val
+           (partial plotcom/map-kv
+                    (comp
+                     (partial sort-by first)
+                     (partial map (fn [hm]
+                                    [((comp to-java-time-local-date
+                                            (fn [m] (get m ktst))) hm)
+                                     (get-in hm simple-lensed-case-kw)]))))
+           (partial reduce into {})
+           (partial map (fn [[ccode hms1]]
+                          {ccode (sort-by ktst hms1)}))
+           (partial group-by kcco)
+           (partial reduce into [])
+           (partial map
+                    (fn [[t hms]]
+                      ((comp
+                        (partial cset/union hms)
+                        set
+                        ;; fill the rest with zeros
+                        (partial map (partial hash-map ktst t case-kw 0 kcco))
+                        (partial cset/difference countries-threshold)
+                        set
+                        keys
+                        (partial group-by kcco))
+                       hms)))
+           (partial group-by ktst)
+           flatten
+           (partial map (fn [[t hms0]]
+                          ((comp
+                            (partial map
+                                     (fn [[ccode hms]]
+                                       ((comp
+                                         (partial hash-map kcco ccode ktst t case-kw)
+                                         (partial sum new-lensed-case-kw))
+                                        hms)))
+                            (partial group-by kcco))
+                           hms0)))
+           (partial group-by ktst))
+          data))))))
 
 (defn legend [json-data]
   (map (fn [c r] (vector :rect r {:color c}))
@@ -403,21 +400,36 @@
                            ;; :dash [4.0] :dash-phase 2.0
                            }}))
 
-(defn-fun-id aggregation-img ""
+(defn-fun-id aggregation-img "
+(aggregation-img thresholds stats last-date cnt-reports aggregation-kw case-kw)"
   [thresholds stats last-date cnt-reports aggregation-kw case-kw]
-  (let [{data :data threshold-recalced :threshold}
+  ;; (def thresholds thresholds)
+  ;; (def stats stats)
+  ;; (def last-date last-date)
+  ;; (def cnt-reports cnt-reports)
+  ;; (def aggregation-kw aggregation-kw)
+  ;; (def case-kw case-kw)
+  (let [sabc
         (stats-all-by-case
          (conj
           {:report cnt-reports
            :stats stats
-           :case-kw case-kw}
+           kcase-kw case-kw}
           (let [th ((comp
                      first
-                     (partial filter (comp (partial = case-kw) :kw)))
+                     (partial filter (comp
+                                      (partial = case-kw)
+                                      (fn [m] (get m :kw)))))
                     thresholds)]
             {:threshold (cache/from-cache! (fn [] (:val th))
                                            [:threshold aggregation-kw case-kw])
-             :threshold-increase (:inc th)})))]
+             :threshold-increase (:inc th)})))
+        data (:data sabc)
+        threshold-recalced (:threshold sabc)
+        ]
+    ;; (def sabc sabc)
+    ;; (def data data)
+    ;; (def threshold-recalced threshold-recalced)
     (boiler-plate
      {:series (condp = aggregation-kw
                 :abs ((comp

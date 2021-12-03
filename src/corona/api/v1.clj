@@ -28,7 +28,7 @@
 (defn normalize "" [default-hms k hms]
   (let [hms-set ((comp
                   set
-                  (partial map (fn [hmc] (select-keys hmc [kcco :t]))))
+                  (partial map (fn [hmc] (select-keys hmc [kcco ktst]))))
                  hms)]
     ((comp
       (partial concat hms)
@@ -39,7 +39,7 @@
 (defn xf-for-case "" [cnt-raw-dates data-with-pop case-kw]
   (let [lensed-case-kw (com/makelense case-kw)]
   ((comp
-    #_(partial sort-by (juxt kcco :t))
+    #_(partial sort-by (juxt kcco ktst))
     flatten
     (partial map
              (fn [[ccode hms]]
@@ -48,12 +48,14 @@
                  (fn [[fst rst]]
                    (conj rst
                          [{kcco ccode
-                           :t ((comp :t last) fst)
+                           ktst ((comp
+                                  (fn [m] (get m ktst))
+                                  last) fst)
                            case-kw ((comp case-kw last) fst)}]))
                  ;; TODO 365 is the count of days in the plot
                  ;; See also corona.msg.graph.plot/stats-for-country
                  (fn [ms] (split-at (- (count ms) 365) ms))
-                 (partial sort-by :t))
+                 (partial sort-by ktst))
                 hms)))
     (partial group-by kcco)
 
@@ -64,19 +66,22 @@
                      (fn [ms]
                        (conj ms
                              ((comp
-                               (partial hash-map kcco "ZZ" :t t case-kw)
+                               (partial hash-map
+                                        kcco ccc/worldwide-2-country-code
+                                        ktst t
+                                        case-kw)
                                (partial sum lensed-case-kw))
                               ms)))
                      ;; group together provinces of the given country
                      (partial map
                               (fn [[ccode hms]]
                                 ((comp
-                                  (partial hash-map kcco ccode :t t case-kw)
+                                  (partial hash-map kcco ccode ktst t case-kw)
                                   (partial sum lensed-case-kw))
                                  hms)))
                      (partial group-by kcco))
                     hms)))
-    (partial group-by :t)
+    (partial group-by ktst)
     flatten
     (partial map (fn [{:keys [country_code history]}] ;;  process-location
                    ((comp
@@ -84,9 +89,9 @@
                      ;; The reason for `take-last` is the
                      ;; https://github.com/owid/covid-19-data/issues/1113
                      (partial take-last cnt-raw-dates)
-                     (partial sort-by :t)
+                     (partial sort-by ktst)
                      (partial map (fn [[t v]] {kcco country_code
-                                              :t (fmt t) case-kw v})))
+                                              ktst (fmt t) case-kw v})))
                     history)))
     #_(partial filter
                (fn [loc]

@@ -5,8 +5,9 @@
             [corona.api.cache :as cache]
             [corona.api.expdev07 :as data]
             [corona.common :as com :refer
-             [kact kdea krec kclo kest kmax krep k1e5 kls7 kabs kavg kchg krnk
-              kcco makelense]]
+             [kpop kvac knew kact kdea krec kclo kest kmax krep k1e5 kls7 kabs
+              ka1e5 kr1e5 kc1e5 kd1e5 kv1e5
+              kavg kchg krnk kcco makelense klense-fun]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -56,16 +57,16 @@
   "
   (rank-for-case stats-countries lensed-rank-kw)
   "
-  [stats-countries lensed-rank-kw]
+  [stats-countries lense]
   ((comp
     (partial map-indexed
              (fn [idx hm]
                (update-in (select-keys hm [kcco])
-                          lensed-rank-kw
+                          lense
                           ;; inc - ranking starts from 1, not from 0
                           (fn [_] (inc idx)))))
     (partial sort-by
-             (fn [m] (get-in m (butlast lensed-rank-kw)))
+             (fn [m] (get-in m (butlast lense)))
              >))
    stats-countries))
 
@@ -80,9 +81,8 @@
           utc/transpose
           (partial map (partial rank-for-case stats-countries))
           (partial map lense-fun))
-         #_[:p :a :r :d :c]
          cases/ranking-cases)]
-    {:lense-fun lense-fun
+    {klense-fun lense-fun
      :vals
      (map (fn [ccode]
             ((comp
@@ -114,16 +114,16 @@
 (defn label-val
   "Encoding of (label, value) pair. See corona.msg.text.lists/column-label"
   [lense-fun hm-text case-kw hm]
-  (let [fun-case-kw (lense-fun case-kw)]
-    [(get-in hm-text (butlast fun-case-kw)) (get-in hm fun-case-kw)]))
+  (let [lense (lense-fun case-kw)]
+    [(get-in hm-text (butlast lense)) (get-in hm lense)]))
 
 (defn delta-for-case-kw
-  "(delta-case-kw lensed-case-kw case-kw pair)"
-  [lensed-case-kw case-kw pair]
+  "(delta-case-kw lense case-kw pair)"
+  [lense case-kw pair]
   ((comp
     (partial apply (fn [fst snd]
-                     (- (get-in snd lensed-case-kw)
-                        (get-in fst lensed-case-kw)))))
+                     (- (get-in snd lense)
+                        (get-in fst lense)))))
    pair))
 
 (defn pairs [ls-init]
@@ -138,21 +138,21 @@
 
 (defn incidence
   "e.g. last two weeks:
-  (incidence lense-fun-p fun-n :n 7 country-stats)"
-  [lense-fun-p lensed-case-kw case-kw nr-of-reports country-stats]
+  (incidence fun-p fun-n knew 7 country-stats)"
+  [fun-p lense case-kw nr-of-reports country-stats]
   ((comp
     round-nr
     (fn [diffs]
       (let [population
             ((comp
-              (fn [hm] (get-in hm lense-fun-p))
+              (fn [hm] (get-in hm fun-p))
               ;; `last` implies using the most actual population count
               last)
              country-stats)]
         (* (/ (reduce + diffs)
               population)
            1e5)))
-    (partial map (partial delta-for-case-kw lensed-case-kw case-kw))
+    (partial map (partial delta-for-case-kw lense case-kw))
     pairs
     (partial take-last nr-of-reports))
    country-stats))
@@ -163,10 +163,11 @@
   (last-7-block
          {:emoji "💉🗓"
           :title (format "%s - %s" lang/vaccin-last-7 lang/rate-of-people)
-          :vals (map (fn [v p] (format "%s=%s%s"
+          :vals (map (fn [v p]
+                       (format "%s=%s%s"
                                        v
-                                       ((com/calc-rate-precision-1 :v)
-                                        {:v v :p p})
+                                       ((com/calc-rate-precision-1 kvac)
+                                        {kvac v kpop p})
                                        msgc/percent))
                      vaccin-last-7 popula-last-7)}))
 
@@ -180,8 +181,8 @@
                    lang/rate-of-confirmed)
     :vals (map (fn [a n p] (format "%s=%s%s"
                                    a
-                                   ((com/calc-rate-precision-1 :a)
-                                    {:a a :n n :p p})
+                                   ((com/calc-rate-precision-1 kact)
+                                    {kact a knew n kpop p})
                                    msgc/percent))
                active-last-7
                ;; new-last-7
@@ -190,25 +191,28 @@
                popula-last-7)}))
 
 (defn- new-confirmed-info
-  [lense-funs fun-p fun-n ccode-stats fun-a last-report delta-last-2
+  [
+   lense-fun
+   fun-a
+   fun-d
+   fun-n
+   fun-p
+   ccode-stats last-report delta-last-2
    active-last-7 ccode-stats-last-8]
   (let [
-        lense-fun (get lense-funs :lense-fun)
-        fun-d (get lense-funs :fun-d)
-        fun-r (lense-fun :r)
-        fun-c (lense-fun :c)
-        fun-s (fn [hm] (lense-fun :s))
-        fun-c1e5 (lense-fun :c1e5)
-        fun-a1e5 (lense-fun :a1e5)
-        fun-r1e5 (lense-fun :r1e5)
-        fun-d1e5 (lense-fun :d1e5)
+        fun-r (lense-fun krec)
+        fun-c (lense-fun kclo)
+        fun-c1e5 (lense-fun kc1e5)
+        fun-a1e5 (lense-fun ka1e5)
+        fun-r1e5 (lense-fun kr1e5)
+        fun-d1e5 (lense-fun kd1e5)
         ]
     (mapv
      f
      [(let [nr-of-reports 7]
         {:s (lang/incidence nr-of-reports)
          ;; TODO implement incidence delta
-         :n (incidence fun-p fun-n :n nr-of-reports ccode-stats)})
+         :n (incidence fun-p fun-n knew nr-of-reports ccode-stats)})
       {:s    (get-in lang/hm-active fun-a)
        :n    (get-in last-report fun-a)
        :diff (get-in delta-last-2 fun-a)
@@ -263,24 +267,53 @@
        ;; TODO create command lang/cmd-closed-per-1e5
        #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}])))
 
-(defn-fun-id confirmed-combined-info
-  "
-  (confirmed-combined-info
- ccode predicates lense-funs reports vaccin-last-7 rankings delta-last-2 maxes
- cnt-countries)
-  "
+(defn- country-specific-info
+  [rankings ccode cnt-countries]
+  ["\n%s\n"
+         [(msgc/format-linewise
+           (let [lense-fun (get rankings klense-fun)
+                 hm-ranking
+                 ((comp
+                   first
+                   (partial filter (fn [hm] (= (kcco hm) ccode))))
+                  (:vals rankings))]
+             [["%s" [lang/people (get-in hm-ranking (lense-fun kpop))]]
+              ["%s" (label-val lense-fun lang/hm-active ka1e5 hm-ranking)]
+              ["%s" (label-val lense-fun lang/hm-recovered kr1e5 hm-ranking)]
+              ["%s" [(get-in lang/hm-deaths (makelense kdea krep k1e5))
+                     (get-in hm-ranking (lense-fun kd1e5))]]
+              ["%s" (label-val lense-fun lang/hm-closed kc1e5 hm-ranking)]])
+           :line-fmt "%s:<b>%s</b>   "
+           :fn-fmts
+           (fn [fmts] (format lang/ranking-desc
+                              cnt-countries (cstr/join "" fmts))))]])
+
+(defn-fun-id confirmed-combined-info ""
   [ccode
-   {:keys [country-reports-recovered? has-n-confi? some-vaccinated?]
-    :as predicates}
-   {:keys [fun-n fun-a fun-p] :as lense-funs}
-   {:keys [ccode-stats last-report ccode-stats-last-8 last-8] :as reports}
-   vaccin-last-7
-   rankings
-   delta-last-2
-   maxes
-   cnt-countries
-   ]
-  (let [{max-active :a max-deaths :d} maxes
+   ;; predicates {{{
+   country-reports-recovered?
+   has-n-confi?
+   some-vaccinated?
+   ;; }}}
+   ;; lense-funs {{{
+   lense-fun
+   fun-a
+   fun-d
+   fun-n
+   fun-p
+   fun-v
+   ;; }}}
+   ;; reports {{{
+   ccode-stats
+   last-report
+   ccode-stats-last-8
+   last-8
+   ;; }}}
+   vaccin-last-7 rankings delta-last-2 maxes cnt-countries]
+  (let [
+        max-active (get maxes kact)
+        max-deaths (get maxes kdea)
+
         popula-last-7 (when (or has-n-confi? some-vaccinated?)
                         (last-7-xxx fun-p last-8))
         active-last-7 (when (or has-n-confi? has-n-confi?)
@@ -290,7 +323,12 @@
       (partial remove nil?)
       (partial apply conj))
      [(when has-n-confi?
-        (new-confirmed-info lense-funs fun-p fun-n ccode-stats fun-a last-report
+        (new-confirmed-info lense-fun
+                            fun-a
+                            fun-d
+                            fun-n
+                            fun-p
+                            ccode-stats last-report
                             delta-last-2 active-last-7 ccode-stats-last-8))
       ;; 1. no country ranking can be displayed for worldwide statistics
       ;; 2. max-deaths makes no sense - it's always the last report
@@ -311,25 +349,7 @@
                                   (clj-time.bost/ago-diff date
                                                           {:verbose true})))))]]
       (when-not (msgc/worldwide? ccode)
-        ["\n%s\n"
-         [(msgc/format-linewise
-           (let [rankings-lense-fun (:lense-fun rankings)
-                 hm-ranking
-                 ((comp
-                   first
-                   (fn [v] (def flt v) v)
-                   (partial filter (fn [hm] (= (kcco hm) ccode))))
-                  (:vals rankings))]
-             [["%s" [lang/people (get-in hm-ranking (rankings-lense-fun :p))]]
-              ["%s" (label-val rankings-lense-fun lang/hm-active :a1e5 hm-ranking)]
-              ["%s" (label-val rankings-lense-fun lang/hm-recovered :r1e5 hm-ranking)]
-              ["%s" [(get-in lang/hm-deaths (makelense kdea krep k1e5))
-                     (get-in hm-ranking (rankings-lense-fun :d1e5))]]
-              ["%s" (label-val rankings-lense-fun lang/hm-closed :c1e5 hm-ranking)]])
-           :line-fmt "%s:<b>%s</b>   "
-           :fn-fmts
-           (fn [fmts] (format lang/ranking-desc
-                              cnt-countries (cstr/join "" fmts))))]])
+        (country-specific-info rankings ccode cnt-countries))
       (when some-vaccinated?
         (vaccinated-info vaccin-last-7 popula-last-7))
       (when has-n-confi?
@@ -376,26 +396,26 @@
            (partial some (fn [v] (<= 0.8 v 1.2)))
            (partial apply map (comp float
                                     (fn [reported-hm estimated-hm]
-                                      (let [reported (get-in reported-hm [:r :rep :abs])
-                                            estimated (get-in estimated-hm [:r :est :abs])]
+                                      (let [reported  (get-in reported-hm  [krec krep kabs])
+                                            estimated (get-in estimated-hm [krec kest kabs])]
                                         (if (pos? estimated)
                                           (/ reported estimated)
                                           0)))))
            (partial map (fn [fun]
-                          (last-7-yyy (fun :r) last-8)
-                          #_(last-7-xxx (fun :r) last-8))))
-          [com/ident-fun
-           com/getlense])
+                          (last-7-yyy (fun krec) last-8)
+                          #_(last-7-xxx (fun krec) last-8))))
+          [com/identity-lense
+           com/basic-lense])
 
          lense-fun (if (and country-reports-recovered?
                             (not (msgc/worldwide? ccode)))
-                     com/ident-fun
-                     com/getlense)
-         fun-v (lense-fun :v)
-         fun-n (lense-fun :n)
-         fun-d (lense-fun :d)
-         fun-a (lense-fun :a)
-         fun-p (lense-fun :p)
+                     com/identity-lense
+                     com/basic-lense)
+         fun-a (lense-fun kact)
+         fun-d (lense-fun kdea)
+         fun-n (lense-fun knew)
+         fun-p (lense-fun kpop)
+         fun-v (lense-fun kvac)
 
          last-2-reports (take-last 2 ccode-stats)
          last-report    (last last-2-reports)
@@ -405,19 +425,20 @@
 
          case-kws (into
                    ;; this function
-                   [:v :n :d :a :p]
-                   [:r :c :c1e5 :a1e5 :r1e5 :d1e5])
+                   [kpop kvac knew]
+                   [kclo  kact  krec  kdea
+                    kc1e5 ka1e5 kr1e5 kd1e5])
 
          delta-last-2
          ((comp
            (partial reduce utc/deep-merge)
            (partial mapv (fn [case-kw]
-                           (let [lensed-case-kw (lense-fun case-kw)]
+                           (let [lense (lense-fun case-kw)]
                              (update-in {}
-                                        lensed-case-kw
+                                        lense
                                         (fn [_]
                                           (delta-for-case-kw
-                                           lensed-case-kw
+                                           lense
                                            case-kw
                                            last-2-reports)))))))
           case-kws)]
@@ -440,7 +461,8 @@
 
        :new-confirmed
        (f {:emoji "🦠"
-           :s lang/confirmed :n new-confirmed
+           :s lang/confirmed
+           :n new-confirmed
            :diff (if-let [dn (get-in delta-last-2 fun-n)] dn 0)})}
 
       (when (zero? vaccinated)
@@ -452,22 +474,9 @@
             has-n-confi? ((comp pos? (fn [hm] (get-in hm fun-n))) last-report)
             some-vaccinated? ((comp (partial some pos?)) vaccin-last-7)]
         (when (or has-n-confi? some-vaccinated?)
-          (let [reports {:ccode-stats ccode-stats
-                         :last-report last-report
-                         :ccode-stats-last-8 ccode-stats-last-8
-                         :last-8 last-8}
-
-                lense-funs {:lense-fun lense-fun
-                            :fun-v fun-v
-                            :fun-n fun-n
-                            :fun-d fun-d
-                            :fun-a fun-a
-                            :fun-p fun-p}
-                predicates {:country-reports-recovered? country-reports-recovered?
-                            :has-n-confi?               has-n-confi?
-                            :some-vaccinated?           some-vaccinated?}
+          (let [
                 maxes
-                (let [kws [:d :a]]
+                (let [kws [kdea kact]]
                   ((comp
                     (partial zipmap kws)
                     (partial map (fn [data] (max-vals data dates)))
@@ -478,9 +487,25 @@
                    kws))]
             {:details (confirmed-combined-info
                        ccode
-                       predicates
-                       lense-funs
-                       reports
+                       ;; predicates {{{
+                       country-reports-recovered?
+                       has-n-confi?
+                       some-vaccinated?
+                       ;; }}}
+                       ;; lense-funs {{{
+                       lense-fun
+                       fun-a
+                       fun-d
+                       fun-n
+                       fun-p
+                       fun-v
+                       ;; }}}
+                       ;; reports {{{
+                       ccode-stats
+                       last-report
+                       ccode-stats-last-8
+                       last-8
+                       ;; }}}
                        vaccin-last-7
                        rankings
                        delta-last-2

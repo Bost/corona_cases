@@ -7,6 +7,7 @@
             [corona.api.cache :as cache]
             [corona.common :as com :refer
              [kcco kact kdea kest kmax krep k1e5 kls7 kabs kavg
+              kcase-kw
               makelense]]
             [corona.cases :as cases]
             [corona.estimate :as est]
@@ -43,23 +44,24 @@
         (conj
          {:text (lang/button-text case-kw aggregation-kw)
           :callback_data (pr-str (assoc (dissoc prm :message_id)
-                                        :case-kw case-kw
+                                        kcase-kw case-kw
                                         :type aggregation-kw))}
          ;; when used the Telegram Web doesn't display the picture
          ;; see also https://core.telegram.org/bots/api#sendphoto
          #_{:caption "Foo"})))))
    cases/cartesian-product-all-case-types))
 
-(defn-fun-id worldwide-plots ""
-  [{:keys [data message]}]
-  (let [data-hm (edn/read-string data)
+(defn-fun-id worldwide-plots "" [prm]
+  (let [data-hm (edn/read-string (get prm :data))
         chat-id (get data-hm :chat-id)
-        ccode (get data-hm kcco)
         plot-type (get data-hm :type)
-        case-kw (get data-hm :case-kw)
-        message-id (:message_id message)
-        options (reply-markup-btns {:chat-id chat-id kcco ccode
-                                    :message_id message-id})
+        case-kw (get data-hm kcase-kw)
+        message-id (get-in prm [:message :message_id])
+        ;; TODO is chat-id really needed in the options?
+        options (reply-markup-btns
+                 (into (select-keys data-hm [:chat-id kcco])
+                       {:message_id message-id}))
+
         id (cache/aggregation-hash)
         url (format "%s/%s/%s/%s/%s"
                     com/webapp-server com/graphs-path
@@ -73,8 +75,7 @@
        (morse/send-photo com/telegram-token chat-id options
                          ;; the plot is fetched from the cache, stats and report
                          ;; need not to be specified
-                         (plot/aggregation! id (:type data-hm)
-                                            (:case-kw data-hm)))))))
+                         (plot/aggregation! id plot-type case-kw))))))
 
 ;; mapvals
 ;; https://clojurians.zulipchat.com/#narrow/stream/180378-slack-archive/topic/beginners/near/191238200
@@ -86,8 +87,10 @@
    "🦠 @%s %s %s, %s\n"
    com/bot-name-in-markdown
    com/botver
-   (link "👩🏼‍💻 GitHub" "https://github.com/Bost/corona_cases" parse_mode)
-   (link "👨🏻‍💻 GitLab" "https://gitlab.com/rostislav.svoboda/corona_cases" parse_mode)))
+   (link "👩🏼‍💻 GitHub"
+         "https://github.com/Bost/corona_cases" parse_mode)
+   (link "👨🏻‍💻 GitLab"
+         "https://gitlab.com/rostislav.svoboda/corona_cases" parse_mode)))
 
 (defn contributors [parse_mode]
   (format "%s\n%s\n\n%s\n\n%s"

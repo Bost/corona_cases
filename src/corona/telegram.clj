@@ -11,8 +11,9 @@
             [corona.api.owid :as vac]
             [corona.api.v1 :as v1]
             [corona.commands :as cmd]
-            [corona.common :as com :refer
-             [kcco]]
+            [corona.common :as com
+             :refer
+             [kact ktst kcco klense-fun]]
             [corona.cases :as cases]
             [corona.country-codes :as ccc]
             [corona.countries :as ccr]
@@ -180,7 +181,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
        [
         raw-dates-v1 ((comp m-result data/raw-dates) json-v1)
         dates        ((comp m-result data/dates) raw-dates-v1)
-        last-date    ((comp m-result last (partial sort-by :t)) dates)
+        last-date    ((comp m-result last (partial sort-by ktst)) dates)
         cnt-reports  ((comp m-result count) dates)
 
         prm-base    (m-result {:header (msgc/header com/html last-date)
@@ -202,7 +203,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         stats-countries
         ((comp
           m-result
-          (partial filter (fn [hm] (= (:t hm) last-date))))
+          (partial filter (fn [hm] (= (ktst hm) last-date))))
          estim)
         _ (com/add-calc-time "stats-countries" stats-countries)
 
@@ -219,7 +220,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         (let [prm
               (assoc prm-base
                      kcco (ccr/get-country-code ccc/worldwide)
-                     :lense-fun com/getlense)]
+                     klense-fun com/basic-lense)]
           ((comp
             m-result doall
             (partial map (partial apply msgl/calc-listings!
@@ -235,7 +236,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         ((comp
           m-result
           (fn [v] (def rn v) v))
-         (msgi/all-rankings com/ranking-fun stats-countries))
+         (msgi/all-rankings com/ranking-lense stats-countries))
         _ (com/add-calc-time "rankings" rankings)
 
         garbage-coll (m-result (gc))
@@ -243,7 +244,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
-        (let [sorted-estim (sort-by :t estim)]
+        (let [sorted-estim (sort-by ktst estim)]
           ((comp
             m-result doall
             (partial map ;; pmap is faster however it eats too much memory
@@ -313,19 +314,6 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         ]
        calc-result))
      init-state)))
-
-(defn case-equal?
-  "Compare old with new"
-  [old new case-kw]
-  ((comp
-    (partial reduce = )
-    (partial map (fn [idx] ((comp (partial reduce = )
-                                  (partial map (fn [m]
-                                                 (get-in (nth (get-in m case-kw) idx)
-                                                         (get-in m :l)))))
-                            [{:l [:ea]          case-kw old}
-                             {:l [:a :est :abs] case-kw new}]))))
-   (range (count old))))
 
 (defn-fun-id json-changed! "" [{:keys [json-fn cache-storage]}]
   ;; TODO spec: cache-storage must be vector; json-fns must be function

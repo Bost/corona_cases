@@ -6,7 +6,10 @@
    [corona.models.dbase :as dbase]
    [taoensso.timbre :as timbre]
    [corona.macro :refer [defn-fun-id debugf infof warnf]]
-   [corona.common :refer [ktst kpop kvac kact krec kdea knew kclo]]))
+   [corona.common :refer
+    [ktst kpop kvac kact krec kdea knew kclo kdea
+     ka1e5 kr1e5 kc1e5 kd1e5 kv1e5
+     ]]))
 
 (defmacro tore
   "->>-or-eduction. In fact both have the same performance.
@@ -43,12 +46,12 @@ d  |  1000 |  134000 | 2021-06-23 05:23:34
 n  | 50000 | 5260000 | 2021-09-09 17:27:41
 r  | 10000 | 3867000 | 2021-07-27 05:22:40"
   ((comp (partial sort-by :kw))
-   [{:kw :v :inc (int 1e6) :val (int 1e7)}
-    {:kw :p :inc (int 1e6) :val (int 1e7)}
-    {:kw :n :inc 50000     :val (int 3660e3)}
-    {:kw :r :inc 10000     :val (int 2937e3)}
-    {:kw :d :inc 1000      :val (int 87e3)}
-    {:kw :a :inc 10000     :val (int 1029e3)}]))
+   [{:kw kvac :inc (int 1e6) :val (int 1e7)}
+    {:kw kpop :inc (int 1e6) :val (int 1e7)}
+    {:kw knew :inc 50000     :val (int 3660e3)}
+    {:kw krec :inc 10000     :val (int 2937e3)}
+    {:kw kdea :inc 1000      :val (int 87e3)}
+    {:kw kact :inc 10000     :val (int 1029e3)}]))
 
 (defn norm [raw-ths]
   ((comp
@@ -69,20 +72,20 @@ r  | 10000 | 3867000 | 2021-07-27 05:22:40"
 (def case-params
   [
    ;; absolute values
-   {:idx  0 :kw :v}
-   {:idx  1 :kw :p}
-   {:idx  2 :kw :n}
-   {:idx  3 :kw :r :listing-idx 1}
-   {:idx  4 :kw :d :listing-idx 2}
-   {:idx  5 :kw :a :listing-idx 0}
+   {:idx  0 :kw kvac}
+   {:idx  1 :kw kpop}
+   {:idx  2 :kw knew}
+   {:idx  3 :kw krec :listing-idx 1}
+   {:idx  4 :kw kdea :listing-idx 2}
+   {:idx  5 :kw kact :listing-idx 0}
 
    ;; TODO the order matters: it must be the same as in the info-message
    ;; Incidence per 1e5
-   {:idx  6 :kw :v1e5}
-   {:idx  7 :kw :a1e5}
-   {:idx  8 :kw :r1e5}
-   {:idx  9 :kw :d1e5}
-   {:idx 10 :kw :c1e5}  ;; closed-per-1e5
+   {:idx  6 :kw kv1e5}
+   {:idx  7 :kw ka1e5}
+   {:idx  8 :kw kr1e5}
+   {:idx  9 :kw kd1e5}
+   {:idx 10 :kw kc1e5}  ;; closed-per-1e5
 
    ;; rates
    {:idx 11 :kw :v%}

@@ -83,7 +83,7 @@
        [id first_name username type "now()"]))))
 
 (defn-fun-id upsert-threshold!
-  "(upsert-threshold! {:kw :v :inc (int 1e6) :val (int 1e7)})"
+  "(upsert-threshold! {:kw kvac :inc (int 1e6) :val (int 1e7)})"
   [{:keys [kw inc val] :as prm}]
   (with-open [connection (jdbc/get-connection mcom/datasource)]
     (let [table "thresholds"
@@ -106,7 +106,7 @@
         (fn [cmd] (debugf "cmd:\n    %s" cmd) cmd)
         (partial into [prep-stmt])
         (partial map (fn [v] (if (keyword? v) (name v) v))))
-       #_[:v (int 1e6) (int 1e7) "now()"]
+       #_[kvac (int 1e6) (int 1e7) "now()"]
        [kw inc val "now()"]))))
 
 (defn-fun-id get-thresholds "" []

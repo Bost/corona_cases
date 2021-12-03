@@ -3,6 +3,7 @@
 (ns corona.estimate
   (:require [corona.common :as com :refer
              [kclo kact kpop krec knew kdea krep kest kabs k1e5 k%%% kpop
+              ktst
               makelense kcco]]
             [corona.macro :refer [defn-fun-id debugf infof warnf]]))
 
@@ -25,7 +26,7 @@
 (defn-fun-id estim-country-fn "" [calculate-fun kw-estim kw-shift-maps]
   (fn [[ccode hms-stats-country-unsorted]]
     [ccode
-     (let [stats-country (sort-by :t hms-stats-country-unsorted)]
+     (let [stats-country (sort-by ktst hms-stats-country-unsorted)]
        (map
         (fn [estim stats-hm]
           (conj stats-hm

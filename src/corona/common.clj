@@ -206,19 +206,78 @@
 (defn calc-closed [recovered deaths]
   (+ recovered deaths))
 
+;; k as in keyword
+(def kabs "absolute" #_:α :abs)
+(def krnk "ranking = σειρά κατάταξης [seirá katátaxis]"
+  #_:ξ :rnk)
+(def kest "estimate/assessment = εκτίμηση [ektímisi]"
+  #_:ε :est)
+(def krep "reported"
+  #_:ρ :rep)
+(def k1e5 "per 100 0000"
+  #_:κ :1e5)
+(def k%%% "percent = τοις εκατό [tois ekató]"
+  #_:τ :%%%)
+(def kls7 "last 7"
+  #_:7 :ls7)
+(def kavg "average = arithmetic mean"
+  #_:ø :avg)
+(def kchg "change"
+  #_:Δ :chg)
+(def kmax "maximum = μέγιστο [mégisto]"
+  #_:μ :max)
+
+(def kcco "country code"
+  :cco)
+(def ktst "timestamp"
+  :t)
+(def kpop "population"
+  :p)
+(def kvac "vaccinated"
+  :v)
+(def kact "active"
+  :a)
+(def krec "recovered"
+  :r)
+(def kdea "deaths"
+  :d)
+(def knew "new confirmed"
+  :n)
+(def kclo "closed"
+  :c)
+
+(def ka1e5 :a1e5)
+(def kr1e5 :r1e5)
+(def kc1e5 :c1e5)
+(def kd1e5 :d1e5)
+(def kv1e5 :v1e5)
+(def ker_  :er)
+(def kea_  :ea)
+
+(def kcase-kw
+  :case-kw
+  #_:ckw)
+
+(def klense-fun
+  :lense-fun)
+
 (defn calc-rate-precision-1 [case-kw]
-  (fn [{:keys [p n] :as prm}]
-    (utn/round-div-precision (* (case-kw prm) 100.0)
-                             (case case-kw
-                               :v p
-                               n)
-                             1)))
+  (fn [prm]
+    (let [p (get prm kpop)
+          n (get prm knew)]
+      (utn/round-div-precision (* (case-kw prm) 100.0)
+                               (condp = case-kw
+                                 kvac p
+                                 n)
+                               1))))
 
 (defn calc-rate [case-kw]
-  (fn [{:keys [p n] :as prm}]
-    (utn/percentage (case-kw prm) (case case-kw
-                                    :v p
-                                    n))))
+  (fn [prm]
+    (let [p (get prm kpop)
+          n (get prm knew)]
+      (utn/percentage (case-kw prm) (condp = case-kw
+                                      kvac p
+                                      n)))))
 
 (defn per-1e5
   "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
@@ -227,11 +286,12 @@
    (utn/round mode (/ (* place 1e5) total-count))))
 
 (defn calc-per-1e5 [case-kw]
-  (fn [{:keys [p] :as prm}]
-    (if (zero? p)
-      0
-      (per-1e5 (case-kw prm)
-               p))))
+  (fn [prm]
+    (let [p (get prm kpop)]
+      (if (zero? p)
+        0
+        (per-1e5 (case-kw prm)
+                 p)))))
 
 (def botver
   (if-let [commit (env/env :commit)]
@@ -493,59 +553,39 @@
     (partial map (fn [hm] (get-in hm kws))))
    hms))
 
-;; k as in keyword
-(def kabs "absolute" #_:α :abs)
-(def krnk "ranking = σειρά κατάταξης [seirá katátaxis]"
-  #_:ξ :rnk)
-(def kest "estimate/assessment = εκτίμηση [ektímisi]"
-  #_:ε :est)
-(def krep "reported"
-  #_:ρ :rep)
-(def k1e5 "per 100 0000"
-  #_:κ :1e5)
-(def k%%% "percent = τοις εκατό [tois ekató]"
-  #_:τ :%%%)
-(def kls7 "last 7"
-  #_:7 :ls7)
-(def kavg "average = arithmetic mean"
-  #_:ø :avg)
-(def kchg "change"
-  #_:Δ :chg)
-(def kmax "maximum = μέγιστο [mégisto]"
-  #_:μ :max)
-
-(def kcco "country code"
-  :cco)
-(def ktst "timestamp"
-  :t)
-(def kpop "population"
-  :p)
-(def kvac "vaccinated"
-  :v)
-(def kact "active"
-  :a)
-(def krec "recovered"
-  :r)
-(def kdea "deaths"
-  :d)
-(def knew "new confirmed"
-  :n)
-(def kclo "closed"
-  :c)
-
 (defn makelense [& case-kws] (apply vector case-kws))
+
+#_{
+ [kact kabs] (makelense kact kest kabs)
+ [kact k1e5] (makelense kact kest k1e5)
+
+ [krec kabs] (makelense krec kest kabs)
+ [krec k1e5] (makelense krec kest k1e5)
+
+ [kclo kabs] (makelense kclo kest kabs)
+ [kclo k1e5] (makelense kclo kest k1e5)
+
+ [kdea kabs] (makelense kdea krep kabs)
+ [kdea k1e5] (makelense kdea krep k1e5)
+
+ [kvas kabs] (makelense kvac krep kabs)
+ [kvas k1e5] (makelense kvac krep k1e5)
+
+ [kpop kabs] (makelense kpop krep kabs)
+ }
 
 (def lense-map
   {kact  (makelense kact kest kabs)  ;; can be only estimated
+   ka1e5 (makelense kact kest k1e5)
    krec  (makelense krec kest kabs)    ;; can be only estimated
-   kdea  (makelense kdea krep kabs)    ;; reported
+   kr1e5 (makelense krec kest k1e5)
    kclo  (makelense kclo kest kabs)    ;; can be only estimated
+   kc1e5 (makelense kclo kest k1e5)
+   kdea  (makelense kdea krep kabs)    ;; reported
+   kd1e5 (makelense kdea krep k1e5) ;; reported
+
+   kv1e5 (makelense kvac krep kabs) ;; reported
    kpop  (makelense kpop) ;; TODO population can be also estimated and reported i.e. absolute
-   :a1e5 (makelense kact kest k1e5)
-   :r1e5 (makelense krec kest k1e5)
-   :d1e5 (makelense kdea krep k1e5) ;; reported
-   :c1e5 (makelense kclo kest k1e5)
-   :v1e5 (makelense kvac krep kabs) ;; reported
    })
 
 (def lense-map-with-strings
@@ -561,14 +601,14 @@
     (fn [kw] [kw (makelense kw krep kabs)]))
    kw))
 
-(defn getlense [kw]
+(defn basic-lense [kw]
   (getlense-map lense-map-with-strings kw))
 
-(defn ranking-fun
+(defn ranking-lense
   [kw]
   (conj (getlense-map lense-map kw) krnk))
 
-(defn ident-fun "" [kw]
+(defn identity-lense "" [kw]
   ((comp
     vector)
    kw))

@@ -6,7 +6,8 @@
             [corona.api.expdev07 :as data]
             [corona.common :as com :refer
              [kcco kact krec kclo kdea kest kmax krep k1e5 kchg kls7 kabs kavg
-              makelense]]
+              ka1e5 kr1e5 kc1e5 kd1e5 kv1e5
+              makelense klense-fun]]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -23,16 +24,16 @@
 
 (defn calc-listings! "" [stats prm case-kws listing-fun]
   ;; fun is one of: per-1e5, absolute-vals - TODO spec it!
-  (let [lense-fun (get prm :lense-fun)]
+  (let [lense-fun (get prm klense-fun)]
     ((comp
       doall
       (partial
        map
        (fn [case-kw]
-         (let [lensed-case-kw (lense-fun case-kw)]
+         (let [lense (lense-fun case-kw)]
            (let [coll
                  ((comp
-                   (partial sort-by (apply comp (reverse lensed-case-kw)) <))
+                   (partial sort-by (apply comp (reverse lense)) <))
                   stats)
 
                  ;; Split the long list of all countries into smaller sub-parts
@@ -71,7 +72,10 @@
   listing. See also `footer`, `bot-father-edit`."
   [case-kw {:keys [msg-idx cnt-msgs data cnt-reports header footer] :as prm}]
   #_(debugf "case-kw %s" case-kw)
-  (let [lense-fun (get prm :lense-fun)
+  (let [lense-fun (get prm klense-fun)
+        fun-a (lense-fun kact)
+        fun-r (lense-fun krec)
+        fun-d (lense-fun kdea)
         spacer " "
         omag-active 7 ;; omag - order of magnitude i.e. number of digits
         omag-recove (inc omag-active)
@@ -81,11 +85,11 @@
          (msgc/format-linewise
           [["%s\n"    [header]]
            ["%s\n"    [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["    %s " [(column-label (get-in lang/hm-active (lense-fun kact)) kact case-kw)]]
+           ["    %s " [(column-label (get-in lang/hm-active fun-a) kact case-kw)]]
            ["%s"      [spacer]]
-           ["%s "     [(column-label (get-in lang/hm-recovered (lense-fun krec)) krec case-kw)]]
+           ["%s "     [(column-label (get-in lang/hm-recovered fun-r) krec case-kw)]]
            ["%s"      [spacer]]
-           ["%s\n"    [(str lang/deaths (sort-sign :d case-kw))]]
+           ["%s\n"    [(str lang/deaths (sort-sign kdea case-kw))]]
            ["%s"      [(str
                         "%s"     ; listing table
                         "%s"     ; sorted-by description; has its own new-line
@@ -96,9 +100,9 @@
            (partial cstr/join "\n")
            (partial map (fn [hm]
                           (let [ccode (get hm kcco)
-                                a (get-in hm (lense-fun :a))
-                                r (get-in hm (lense-fun :r))
-                                d (get-in hm (lense-fun :d))
+                                a (get-in hm fun-a)
+                                r (get-in hm fun-r)
+                                d (get-in hm fun-d)
                                 cname (ccr/country-name-aliased ccode)]
                             #_(def hm hm)
                             (format "<code>%s%s%s%s%s %s</code>  %s"
@@ -120,9 +124,12 @@
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
   [case-kw {:keys [msg-idx cnt-msgs data cnt-reports header footer] :as prm}]
-  #_(debugf "case-kw %s" case-kw)
-  #_(def case-kw case-kw)
-  (let [lense-fun (get prm :lense-fun)
+  (let [lense-fun (get prm klense-fun)
+        fun-a (makelense kact kest k1e5)
+        fun-r (makelense krec kest k1e5)
+        fun-a1e5 (lense-fun ka1e5)
+        fun-r1e5 (lense-fun kr1e5)
+        fun-d1e5 (lense-fun kd1e5)
         spacer " "
         omag-active 4 ;; omag - order of magnitude i.e. number of digits
         omag-recove omag-active
@@ -132,11 +139,11 @@
          (msgc/format-linewise
           [["%s\n" [header]]
            ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["%s "  [(column-label (get-in lang/hm-active (makelense kact kest k1e5)) :a1e5 case-kw)]]
+           ["%s "  [(column-label (get-in lang/hm-active fun-a) ka1e5 case-kw)]]
            ["%s"   [spacer]]
-           ["%s "  [(column-label (get-in lang/hm-recovered (makelense krec kest k1e5)) :r1e5 case-kw)]]
+           ["%s "  [(column-label (get-in lang/hm-recovered fun-r) kr1e5 case-kw)]]
            ["%s"   [spacer]]
-           ["%s"   [(str lang/deaths-per-1e5 (sort-sign :d1e5 case-kw))]]
+           ["%s"   [(str lang/deaths-per-1e5 (sort-sign kd1e5 case-kw))]]
            ["\n%s" [(str
                      "%s"     ; listing table
                      "%s"     ; sorted-by description; has its own new-line
@@ -146,9 +153,9 @@
            (partial cstr/join "\n")
            (partial map (fn [hm]
                           (let [ccode (get hm kcco)
-                                a1e5 (get-in hm (lense-fun :a1e5))
-                                r1e5 (get-in hm (lense-fun :r1e5))
-                                d1e5 (get-in hm (lense-fun :d1e5))
+                                a1e5 (get-in hm fun-a1e5)
+                                r1e5 (get-in hm fun-r1e5)
+                                d1e5 (get-in hm fun-d1e5)
                                 cname (ccr/country-name-aliased ccode)]
                             (format "<code>   %s%s   %s%s    %s %s</code>  %s"
                                     (com/left-pad a1e5 " " omag-active)
