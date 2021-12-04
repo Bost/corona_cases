@@ -78,21 +78,31 @@
 
 (defn sum-for-pred
   "Calculate sums for a given country code or all countries if the country code
-  is unspecified."
+  is unspecified.
+  (sum-for-pred ccode stats)"
   [ccode stats]
   ((comp
     flatten
     (partial
      map
      (fn [[tst hms]]
-       [
-        {kcco ccode ktst tst kcase-kw kpop :cnt (bigint (/ (get (first hms) kpop) 1e3))}
-        {kcco ccode ktst tst kcase-kw ker_ :cnt (sum (com/basic-lense krec) hms)}
-        {kcco ccode ktst tst kcase-kw kea_ :cnt (sum (com/basic-lense kact) hms)}
-        {kcco ccode ktst tst kcase-kw knew :cnt (sum (com/basic-lense knew) hms)}
-        {kcco ccode ktst tst kcase-kw krec :cnt (sum (makelense krec krep kabs) hms)}
-        {kcco ccode ktst tst kcase-kw kdea :cnt (sum (com/basic-lense kdea) hms)}
-        {kcco ccode ktst tst kcase-kw kact :cnt (sum (makelense kact krep kabs) hms)}]))
+       ((comp
+         (partial map (partial into {ktst tst}))
+         (fn [v]
+           (conj
+            v
+            (zipmap [kcase-kw :cnt]
+                    [kpop (bigint (/ (get (first hms) kpop) 1e3))])))
+         (partial map zipmap (repeat [kcase-kw :cnt])))
+        [
+         #_[kpop (bigint (/ (get (first hms) kpop) 1e3))]
+         [ker_ (sum (com/basic-lense krec) hms)]
+         [kea_ (sum (com/basic-lense kact) hms)]
+         [knew (sum (com/basic-lense knew) hms)]
+         [krec (sum (makelense krec krep kabs) hms)]
+         [kdea (sum (com/basic-lense kdea) hms)]
+         [kact (sum (makelense kact krep kabs) hms)]]
+        )))
     (partial group-by ktst)
     (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (get hm kcco)] ccode))))
    stats))
