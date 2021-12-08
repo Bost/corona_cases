@@ -255,8 +255,8 @@
 (def kea_  :ea)
 
 (def kcase-kw
-  :case-kw
-  #_:ckw)
+  #_:case-kw
+  :ckw)
 
 (def klense-fun
   :lense-fun)

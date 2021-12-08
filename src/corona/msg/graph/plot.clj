@@ -49,7 +49,8 @@
     :else (throw
            (Exception. (format "Value %d must be < max %d" max-val 1e9)))))
 
-(defn- boiler-plate [{:keys [series x-axis-formatter y-axis-formatter legend label label-conf]}]
+(defn- boiler-plate
+  [{:keys [series x-axis-formatter y-axis-formatter legend label label-conf]}]
   ((comp
     c2d/get-image
     (fn [s] (r/render-lattice s {:width 800 :height 600}))
@@ -76,53 +77,39 @@
          (partial map (juxt first (comp second last second))))
    hm))
 
-(defn sum-for-pred
-  "Calculate sums for a given country code or all countries if the country code
-  is unspecified.
-  (sum-for-pred ccode stats)"
-  [ccode stats]
+(defn stats-for-country-case-kw [ccode stats case-kw]
   ((comp
-    flatten
+    (partial vector case-kw)
+    (partial take-last 365 #_4)
+    (partial sort-by first)
     (partial
      map
      (fn [[tst hms]]
-       ((comp
-         (partial map (partial into {ktst tst}))
-         (fn [v]
-           (conj
-            v
-            (zipmap [kcase-kw :cnt]
-                    [kpop (bigint (/ (get (first hms) kpop) 1e3))])))
-         (partial map zipmap (repeat [kcase-kw :cnt])))
-        [
-         #_[kpop (bigint (/ (get (first hms) kpop) 1e3))]
-         [ker_ (sum (com/basic-lense krec) hms)]
-         [kea_ (sum (com/basic-lense kact) hms)]
-         [knew (sum (com/basic-lense knew) hms)]
-         [krec (sum (makelense krec krep kabs) hms)]
-         [kdea (sum (com/basic-lense kdea) hms)]
-         [kact (sum (makelense kact krep kabs) hms)]]
-        )))
-    (partial group-by ktst)
-    (partial filter (fn [hm] (in? [ccc/worldwide-2-country-code (get hm kcco)] ccode))))
+       [(to-java-time-local-date tst)
+        (condp = case-kw
+          kpop (bigint (/ (get (first hms) kpop) 1e3))
+          (sum
+           (condp = case-kw
+             ker_ (com/basic-lense krec)
+             kea_ (com/basic-lense kact)
+             krec (makelense krec krep kabs)
+             kact (makelense kact krep kabs)
+             (com/basic-lense case-kw))
+           hms))]))
+    (partial group-by ktst))
    stats))
 
-(defn stats-for-country [ccode stats]
-  (let [mapped-hm
-        (plotcom/map-kv
-         (comp
-          (partial take-last 365)
-          (partial sort-by first)
-          (partial map (fn [prm]
-                         [(to-java-time-local-date (get prm ktst))
-                          (get prm :cnt)])))
-         (group-by kcase-kw (sum-for-pred ccode stats)))]
-    ;; sort - keep the "color order" of cases fixed; don't
-    ;; recalculate it
-    ;; TODO try (map {:a 1 :b 2 :c 3 :d 4} [:a :d]) ;;=> (1 4)
+(defn stats-for-country
+  [ccode stats]
+  (let [relevant-stats
+        (filter (fn [hm] (in? [ccc/worldwide-2-country-code
+                               (get hm kcco)]
+                              ccode))
+                stats)]
     ((comp
+      (partial map (fn [[k v]] (clojure.lang.MapEntry/create k v)))
       reverse
-      (partial keep (partial find mapped-hm)))
+      (partial keep (partial stats-for-country-case-kw ccode relevant-stats)))
      [kact krec kdea knew kpop ker_ kea_])))
 
 (defn fmt-report [report] (format "%s %s" lang/report report))
@@ -142,7 +129,8 @@
                   (com/encode-cmd ccode))))
 
 (defn palette-colors
-  "Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
+  "Infinite sequence.
+ Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
   [n]
   ((comp cycle reverse (partial take-last n) c/palette-presets) :gnbu-6))
 
@@ -223,9 +211,13 @@
   (when-not (in? ccc/excluded-country-codes ccode)
     (let [base-data (stats-for-country ccode stats)
           sarea-data (remove (fn [[case-kw _]]
-                               (in? #_[knew kact krec kdea] [knew kpop ker_ kea_] case-kw))
+                               (in?
+                                #_[knew kact krec kdea]
+                                [knew kpop ker_ kea_] case-kw))
                              base-data)
           curves (keys sarea-data)
+          ;; let is a macro, thus the palette-colors returning infinite sequence
+          ;; doesn't get pre-computed.
           palette (palette-colors (count curves))]
       ;; every chart/series definition is a vector with three fields:
       ;; 1. chart type e.g. :grid, :sarea, :line
@@ -252,7 +244,10 @@
                            ;; don't display the population data for the moment
                            (max-y-val + sarea-data))
         :legend (reverse
-                 (conj (map #(vector :rect %2 {:color %1})
+                 (conj (map (fn [color rect]
+                              (def color color)
+                              (def rect rect)
+                              (vector :rect rect {:color color}))
                             palette
                             (let [legend-hm {kact lang/active
                                              kdea lang/deaths
@@ -306,7 +301,8 @@
         (let [raised-threshold (+ threshold-increase threshold)]
           (infof "%s; %s countries above threshold %s. Raise to %s"
                  case-kw cnt-countries threshold raised-threshold)
-          (swap! cache/cache update-in [:threshold case-kw] (fn [_] raised-threshold))
+          (swap! cache/cache
+                 update-in [:threshold case-kw] (fn [_] raised-threshold))
           (dbase/upsert-threshold! {:kw case-kw
                                     :inc threshold-increase
                                     :val raised-threshold})
@@ -318,7 +314,7 @@
     #_((comp
         ;; TODO this will not be necessary, but I can build here a
         ;; consistency check
-        (partial take-last 365)
+        (partial take-last days)
         (fn [d] (debugf "(count d) %s" (count d)) d))
        all-data)
     (update
@@ -413,12 +409,6 @@
 (defn-fun-id aggregation-img "
 (aggregation-img thresholds stats last-date cnt-reports aggregation-kw case-kw)"
   [thresholds stats last-date cnt-reports aggregation-kw case-kw]
-  ;; (def thresholds thresholds)
-  ;; (def stats stats)
-  ;; (def last-date last-date)
-  ;; (def cnt-reports cnt-reports)
-  ;; (def aggregation-kw aggregation-kw)
-  ;; (def case-kw case-kw)
   (let [sabc
         (stats-all-by-case
          (conj
@@ -435,11 +425,7 @@
                                            [:threshold aggregation-kw case-kw])
              :threshold-increase (:inc th)})))
         data (:data sabc)
-        threshold-recalced (:threshold sabc)
-        ]
-    ;; (def sabc sabc)
-    ;; (def data data)
-    ;; (def threshold-recalced threshold-recalced)
+        threshold-recalced (:threshold sabc)]
     (boiler-plate
      {:series (condp = aggregation-kw
                 :abs ((comp
