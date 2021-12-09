@@ -79,7 +79,7 @@
 (defn stats-for-country-case-kw [ccode stats case-kw]
   ((comp
     (partial vector case-kw)
-    (partial take-last 365 #_4)
+    (partial take-last com/nr-of-days)
     (partial sort-by first)
     (partial
      map
@@ -88,12 +88,8 @@
         (condp = case-kw
           kpop (bigint (/ (get (first hms) kpop) 1e3))
           (sum
-           (condp = case-kw
-             ker_ (com/basic-lense krec)
-             kea_ (com/basic-lense kact)
-             krec (makelense krec krep kabs)
-             kact (makelense kact krep kabs)
-             (com/basic-lense case-kw))
+           (or (get com/stats-for-country-case--lense-map case-kw)
+               (com/basic-lense case-kw))
            hms))]))
     (partial group-by ktst))
    stats))

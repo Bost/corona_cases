@@ -29,6 +29,10 @@
 
 ;; (set! *warn-on-reflection* true)
 
+(def nr-of-days
+  "Number of days in the plots"
+  365)
+
 (def ^:const ^String unknown "?")
 
 (def ^:const undef '<UNDEF>)
@@ -603,6 +607,16 @@
 
 (defn basic-lense [kw]
   (getlense-map lense-map-with-strings kw))
+
+(def stats-for-country-case--lense-map
+  (conj
+   lense-map
+   {
+    ker_ (basic-lense krec)
+    kea_ (basic-lense kact)
+    krec (makelense krec krep kabs)
+    kact (makelense kact krep kabs)
+    }))
 
 (defn ranking-lense
   [kw]

@@ -52,9 +52,7 @@
                                   (fn [m] (get m ktst))
                                   last) fst)
                            case-kw ((comp case-kw last) fst)}]))
-                 ;; TODO 365 is the count of days in the plot
-                 ;; See also corona.msg.graph.plot/stats-for-country
-                 (fn [ms] (split-at (- (count ms) 365) ms))
+                 (fn [ms] (split-at (- (count ms) com/nr-of-days) ms))
                  (partial sort-by ktst))
                 hms)))
     (partial group-by kcco)
