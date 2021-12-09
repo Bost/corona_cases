@@ -66,11 +66,10 @@
 (defn to-java-time-local-date [^java.util.Date java-util-date]
   (LocalDate/ofInstant (.toInstant java-util-date) (ZoneId/systemDefault)))
 
-(defn sort-by-country-name [hmap] (sort-by first (comp - compare) hmap))
-
 (defn sort-by-last-val [hm]
   ((comp (partial reduce into [])
-         (partial map (comp (fn [key] {key (get hm key)})
+         (partial map (comp (partial select-keys hm)
+                            vector
                             first))
          reverse
          (partial sort-by second)
@@ -311,12 +310,6 @@
 
 (defn stats-all-by-case "" [prm]
   (let [case-kw (get prm kcase-kw)]
-    #_((comp
-        ;; TODO this will not be necessary, but I can build here a
-        ;; consistency check
-        (partial take-last days)
-        (fn [d] (debugf "(count d) %s" (count d)) d))
-       all-data)
     (update
      (group-below-threshold prm)
      :data
@@ -333,13 +326,20 @@
            (partial plotcom/map-kv
                     (comp
                      (partial sort-by first)
-                     (partial map (fn [hm]
-                                    [((comp to-java-time-local-date
-                                            (fn [m] (get m ktst))) hm)
-                                     (get-in hm simple-lensed-case-kw)]))))
+                     (partial map
+                              ;; TODO use juxt
+                              ;; (comp (partial apply vector)
+                              ;;       (juxt ...))
+                              (fn [hm]
+                                [((comp to-java-time-local-date
+                                        (fn [m] (get m ktst))) hm)
+                                 (get-in hm simple-lensed-case-kw)]))))
            (partial reduce into {})
-           (partial map (fn [[ccode hms1]]
-                          {ccode (sort-by ktst hms1)}))
+           (partial map
+                    ;; (fn [[ccode hms1]] {ccode (sort-by ktst hms1)})
+                    (comp
+                     (partial apply hash-map) ;; TODO this may be not needed?
+                     (juxt first (comp (partial sort-by ktst) second))))
            (partial group-by kcco)
            (partial reduce into [])
            (partial map
