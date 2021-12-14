@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-clojure -X:depstar uberjar :jar target/corona_cases-standalone.jar
+clojure -T:build uberjar

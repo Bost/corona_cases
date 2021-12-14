@@ -5,11 +5,9 @@
 ;; https://github.com/arrdem/lein-git-version
 
 {:aliases
- {:depstar
-  {:replace-deps
-   {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
-   :ns-default hf.depstar
-   :exec-args {}}
+ {:build {:deps {io.github.seancorfield/build-clj
+                 {:git/tag "v0.6.2" :git/sha "97c275a"}}
+          :ns-default build}
 
   :mockup-server
   {:exec-fn corona.api.mockup/run-server
