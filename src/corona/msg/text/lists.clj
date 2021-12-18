@@ -30,31 +30,32 @@
       (partial
        map
        (fn [case-kw]
-         (let [lense (lense-fun case-kw)]
-           (let [coll
-                 ((comp
-                   (partial sort-by (apply comp (reverse lense)) <))
-                  stats)
+         (let [lense (lense-fun case-kw)
+               coll
+               ((comp
+                 ;; TODO the sort-by creates it's own ranking; see rank-for-case
+                 (partial sort-by (apply comp (reverse lense)) <))
+                stats)
 
-                 ;; Split the long list of all countries into smaller sub-parts
-                 sub-msgs (partition-all (/ (count coll)
-                                            cnt-messages-in-listing) coll)
-                 sub-msgs-prm (assoc prm :cnt-msgs (count sub-msgs))]
-             ((comp
-               doall
-               (partial map-indexed
-                        (fn [idx sub-msg]
-                          ((comp
-                            (partial cache/cache!
-                                     (fn [] ((eval listing-fun) case-kw
-                                             (assoc sub-msgs-prm
-                                                    :msg-idx (inc idx)
-                                                    :data sub-msg))))
-                            (partial conj (list-kw listing-fun case-kw))
-                            keyword
-                            str)
-                           idx))))
-              sub-msgs))))))
+               ;; Split the long list of all countries into smaller sub-parts
+               sub-msgs (partition-all (/ (count coll)
+                                          cnt-messages-in-listing) coll)
+               sub-msgs-prm (assoc prm :cnt-msgs (count sub-msgs))]
+           ((comp
+             doall
+             (partial map-indexed
+                      (fn [idx sub-msg]
+                        ((comp
+                          (partial cache/cache!
+                                   (fn [] ((eval listing-fun) case-kw
+                                           (assoc sub-msgs-prm
+                                                  :msg-idx (inc idx)
+                                                  :data sub-msg))))
+                          (partial conj (list-kw listing-fun case-kw))
+                          keyword
+                          str)
+                         idx))))
+            sub-msgs)))))
      case-kws)))
 
 (defn sort-sign [sorted-case-kw case-kw]

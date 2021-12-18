@@ -53,11 +53,8 @@
      (str msgc/blank title)
      (utc/sjoin vals))]])
 
-(defn rank-for-case
-  "
-  (rank-for-case stats-countries lensed-rank-kw)
-  "
-  [stats-countries lense]
+(defn rank-for-case "" [stats-countries lense]
+  ;; TODO ranking implemented twice - see calc-listings!
   ((comp
     (partial map-indexed
              (fn [idx hm]
@@ -71,27 +68,25 @@
    stats-countries))
 
 (defn all-rankings
-  "
-  (all-rankings lense-fun stats-countries)
-  Works also for one and zero countries.
-  TODO all-rankings-new should be calculated in the corona.telegram"
-  [lense-fun stats-countries]
-  (let [stats-all-ranking-cases
-        ((comp
-          utc/transpose
-          (partial map (partial rank-for-case stats-countries))
-          (partial map lense-fun))
-         cases/ranking-cases)]
+  "Works also for one and zero countries."
+  [stats-countries]
+  (let [lense-fun com/ranking-lense]
     {klense-fun lense-fun
      :vals
-     (map (fn [ccode]
-            ((comp
-              (partial apply utc/deep-merge)
-              ;; TODO have a look at lazy-cat
-              (partial reduce concat)
-              (partial map (partial filter (fn [hm] (= (kcco hm) ccode)))))
-             stats-all-ranking-cases))
-          ccc/relevant-country-codes)}))
+     (let [stats-all-ranking-cases
+           ((comp
+             utc/transpose
+             (partial map (partial rank-for-case stats-countries))
+             (partial map lense-fun))
+            cases/ranking-cases)]
+       (map (fn [ccode]
+              ((comp
+                (partial apply utc/deep-merge)
+                ;; TODO have a look at lazy-cat
+                (partial reduce concat)
+                (partial map (partial filter (fn [hm] (= (get hm kcco) ccode)))))
+               stats-all-ranking-cases))
+            ccc/relevant-country-codes))}))
 
 (defn- last-7-xxx [kws last-8] ((comp rest
                                   (partial get-in last-8))
@@ -276,7 +271,7 @@
                  ((comp
                    first
                    (partial filter (fn [hm] (= (kcco hm) ccode))))
-                  (:vals rankings))]
+                  (get rankings :vals))]
              [["%s" [lang/people (get-in hm-ranking (lense-fun kpop))]]
               ["%s" (label-val lense-fun lang/hm-active ka1e5 hm-ranking)]
               ["%s" (label-val lense-fun lang/hm-recovered kr1e5 hm-ranking)]

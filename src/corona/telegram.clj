@@ -234,9 +234,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         rankings
         ((comp
-          m-result
-          (fn [v] (def rn v) v))
-         (msgi/all-rankings com/ranking-lense stats-countries))
+          m-result)
+         (msgi/all-rankings stats-countries))
         _ (com/add-calc-time "rankings" rankings)
 
         garbage-coll (m-result (gc))
