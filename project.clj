@@ -86,13 +86,13 @@
    [nrepl/drawbridge "0.2.1"]
 
    ;; for drawbridge
-   [ring-basic-authentication "1.1.0"]
+   [ring-basic-authentication "1.1.1"]
 
    ;; how much memory an object occupies together with all its child fields
    [com.clojure-goes-fast/clj-memory-meter "0.1.3"]
 
    ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-   [com.github.seancorfield/next.jdbc "1.2.737"]
+   [com.github.seancorfield/next.jdbc "1.2.761"]
    [org.postgresql/postgresql "42.3.1"]]
 
   :min-lein-version "2.0.0"

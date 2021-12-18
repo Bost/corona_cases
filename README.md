@@ -199,8 +199,8 @@ then
 ```bash
 ./heroku.clj updateClojureCliVersion
 # see also https://github.com/practicalli/clojure-deps-edn
-clojure -Sdeps '{:deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}}' -M -m antq.core
-clojure Spom
+# clojure -Spom # generate the pom.xml
+clojure -M:outdated --upgrade # --force
 ```
 
 ## Others

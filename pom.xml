@@ -40,7 +40,7 @@
     <dependency>
       <groupId>ring-basic-authentication</groupId>
       <artifactId>ring-basic-authentication</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>ring</groupId>
@@ -115,7 +115,7 @@
     <dependency>
       <groupId>com.github.seancorfield</groupId>
       <artifactId>next.jdbc</artifactId>
-      <version>1.2.737</version>
+      <version>1.2.761</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>

@@ -5,8 +5,11 @@
 ;; https://github.com/arrdem/lein-git-version
 
 {:aliases
- {:build {:deps {io.github.seancorfield/build-clj
-                 {:git/tag "v0.6.2" :git/sha "97c275a"}}
+ {:outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}
+             :main-opts ["-m" "antq.core"]}
+
+  :build {:deps {io.github.seancorfield/build-clj
+                 {:git/tag "v0.6.3" :git/sha "9b8e09b"}}
           :ns-default build}
 
   :mockup-server
@@ -89,7 +92,7 @@
   ;; HTTP transport support for Clojure’s nREPL implemented as a Ring handler
   nrepl/drawbridge {:mvn/version "0.2.1"}
 
-  ring-basic-authentication/ring-basic-authentication {:mvn/version "1.1.0"}
+  ring-basic-authentication/ring-basic-authentication {:mvn/version "1.1.1"}
 
   ;; how much memory an object occupies together with all its child fields
   ;; requires -Djdk.attach.allowAttachSelf
@@ -99,7 +102,7 @@
   com.clojure-goes-fast/jvm-alloc-rate-meter {:mvn/version "0.1.4"}
 
   ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-  com.github.seancorfield/next.jdbc {:mvn/version "1.2.737"}
+  com.github.seancorfield/next.jdbc {:mvn/version "1.2.761"}
   org.postgresql/postgresql {:mvn/version "42.3.1"}
 
   ;; A collection of arrow macros. Better threading macros `->` and `->>`
