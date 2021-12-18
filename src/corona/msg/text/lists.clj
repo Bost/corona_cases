@@ -127,8 +127,6 @@
   listing. See also `footer`, `bot-father-edit`."
   [case-kw {:keys [msg-idx cnt-msgs data cnt-reports header footer] :as prm}]
   (let [lense-fun (get prm klense-fun)
-        fun-a (basic-lense ka1e5)
-        fun-r (basic-lense kr1e5)
         fun-a1e5 (lense-fun ka1e5)
         fun-r1e5 (lense-fun kr1e5)
         fun-d1e5 (lense-fun kd1e5)
@@ -141,9 +139,9 @@
          (msgc/format-linewise
           [["%s\n" [header]]
            ["%s\n" [(format "%s %s;  %s/%s" lang/report cnt-reports msg-idx cnt-msgs)]]
-           ["%s "  [(column-label (get-in lang/hm-active fun-a) ka1e5 case-kw)]]
+           ["%s "  [(column-label (get-in lang/hm-active fun-a1e5) ka1e5 case-kw)]]
            ["%s"   [spacer]]
-           ["%s "  [(column-label (get-in lang/hm-recovered fun-r) kr1e5 case-kw)]]
+           ["%s "  [(column-label (get-in lang/hm-recovered fun-r1e5) kr1e5 case-kw)]]
            ["%s"   [spacer]]
            ["%s"   [(str lang/deaths-per-1e5 (sort-sign kd1e5 case-kw))]]
            ["\n%s" [(str
