@@ -245,20 +245,25 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         ;; pmap 16499ms, map 35961ms
         (let [sorted-estim (sort-by ktst estim)]
           ((comp
-            m-result doall
-            (partial map ;; pmap is faster however it eats too much memory
-                     (fn [ccode]
-                       [(cache/cache!
-                         (fn []
-                           (msgi/mexxage
-                            ccode estim dates rankings cnt-reports prm-base))
-                         (msgi/message-kw ccode))
-                        (cache/cache!
-                         (fn []
-                           (plot/message
-                            ccode sorted-estim last-date cnt-reports))
-                         (plot/message-kw ccode))
-                        (debugf (str "Messages created. ccode " ccode))])))
+            m-result
+            (fn [v] (def acm v) v)
+            doall
+            (partial
+             map ;; pmap is faster however it eats too much memory
+             (fn [ccode]
+               ((comp
+                 (fn [v]
+                   (debugf "%s messages created. ccode %s" (count v) ccode)
+                   v)
+                 (partial map (partial apply cache/cache!)))
+                [[(fn []
+                    (msgi/mexxage
+                     ccode estim dates rankings cnt-reports prm-base))
+                  (msgi/message-kw ccode)]
+                 [(fn []
+                    (plot/message
+                     ccode sorted-estim last-date cnt-reports))
+                  (plot/message-kw ccode)]]))))
            ;; here also "ZZ" worldwide messages
            ccc/all-country-codes))
         _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
