@@ -6,8 +6,9 @@
             [corona.api.expdev07 :as data]
             [corona.common :as com :refer
              [kcco kact krec kclo kdea kest kmax krep k1e5 kchg kls7 kabs kavg
-              ka1e5 kr1e5 kc1e5 kd1e5 kv1e5
-              makelense klense-fun]]
+              ka1e5 kr1e5 kc1e5 kd1e5 kv1e5 klense-fun
+              basic-lense
+              ]]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
@@ -126,8 +127,8 @@
   listing. See also `footer`, `bot-father-edit`."
   [case-kw {:keys [msg-idx cnt-msgs data cnt-reports header footer] :as prm}]
   (let [lense-fun (get prm klense-fun)
-        fun-a (makelense kact kest k1e5)
-        fun-r (makelense krec kest k1e5)
+        fun-a (basic-lense ka1e5)
+        fun-r (basic-lense kr1e5)
         fun-a1e5 (lense-fun ka1e5)
         fun-r1e5 (lense-fun kr1e5)
         fun-d1e5 (lense-fun kd1e5)

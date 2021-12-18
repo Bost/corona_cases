@@ -7,7 +7,9 @@
             [corona.common :as com :refer
              [kpop kvac knew kact kdea krec kclo kest kmax krep k1e5 kls7 kabs
               ka1e5 kr1e5 kc1e5 kd1e5 kv1e5
-              kavg kchg krnk kcco makelense klense-fun]]
+              kavg kchg krnk kcco makelense klense-fun
+              basic-lense
+              ]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -212,7 +214,7 @@
        :n    (get-in last-report fun-a)
        :diff (get-in delta-last-2 fun-a)
        :emoji "🤒"}
-      {:s    (get-in lang/hm-active (makelense kact kest k1e5))
+      {:s    (get-in lang/hm-active (basic-lense ka1e5))
        :n    (get-in last-report fun-a1e5)
        :diff (get-in delta-last-2 fun-a1e5)}
       {:s (get-in lang/hm-active (makelense kact kest kls7 kabs kavg))

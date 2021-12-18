@@ -12,7 +12,9 @@
              [kcco krec kact kdea krep kpop kclo knew ktst
               krep kabs ker_ kea_
               kcase-kw
-              sum makelense]]
+              sum
+              basic-lense
+              makelense]]
             [corona.cases :as cases]
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
@@ -198,10 +200,7 @@
   (.format (DateTimeFormatter/ofPattern "dd.MM") d))
 
 (defn-fun-id message-img
-  "Country-specific cumulative plot of active, recovered, deaths and
-  active-absolute cases.. E.g.:
-(message-img ccode stats last-date report)
-"
+  "Country-specific cumulative plot"
   [ccode stats last-date report]
   (when-not (in? ccc/excluded-country-codes ccode)
     (let [base-data (stats-for-country ccode stats)
@@ -258,9 +257,7 @@
         :label (plot-label report ccode stats last-date)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
 
-(defn-fun-id message
-  "Country-specific cumulative plot of active, recovered, deaths and
-  active-absolute cases."
+(defn-fun-id message "Country-specific cumulative plot"
   [ccode stats last-date report]
   ((comp
     to-byte-array-auto-closable
@@ -279,10 +276,7 @@
   [{:keys [threshold threshold-increase stats] :as prm}]
   (let [case-kw (get prm kcase-kw)
         max-plot-lines 10
-        l-fun (condp = case-kw
-                kact (makelense kact krep kabs)
-                krec (makelense krec krep kabs)
-                (com/basic-lense case-kw))
+        l-fun (basic-lense case-kw)
         res
         ((comp
           (partial map (fn [hm] (if (< (get-in hm l-fun) threshold)
@@ -311,12 +305,8 @@
      :data
      (fn [data]
        (let [countries-threshold ((comp set (partial map kcco)) data)
-             new-lensed-case-kw
-             (condp = case-kw
-               kact (makelense kact krep kabs)
-               krec (makelense krec krep kabs)
-               (com/basic-lense case-kw))
-             simple-lensed-case-kw (com/makelense case-kw)]
+             new-lensed-case-kw    (basic-lense case-kw)
+             simple-lensed-case-kw (makelense case-kw)]
          ((comp
            sort-by-last-val
            (partial plotcom/map-kv

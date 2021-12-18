@@ -2,7 +2,9 @@
 
 (ns corona.lang
   (:require
-   [corona.common :as com :refer [makelense kact krec kclo kdea kest kmax krep k1e5
+   [corona.common :as com :refer [makelense
+                                  basic-lense
+                                  kact krec kclo kdea kest kmax krep k1e5
                                   kchg kls7 kabs kavg]]
    [corona.cases :as cases]
    [clojure.string :as cstr]
@@ -85,8 +87,7 @@
 (def ^:const estim-active-last-7-avg
   "Estimated active cases in last 7 reports - simple moving Average rounded"
   (get-in hm-active
-          (makelense
-           kact kest kls7 kabs kavg)))
+          (makelense kact kest kls7 kabs kavg)))
 
 (def ^:const active-last-7-avg
   "Active cases in last 7 reports - simple moving Average rounded"
@@ -101,14 +102,14 @@
 (def ^:const confirmed        "Confirmed")
 (def ^:const dea              "Dea")
 (def ^:const deaths           "Deaths")
-(def ^:const rec              (get-in hm-rec       (makelense krec krep kabs)))
-(def ^:const recov            (get-in hm-recov     (makelense krec krep kabs)))
-(def ^:const recove           (get-in hm-recove    (makelense krec krep kabs)))
-(def ^:const recovered        (get-in hm-recovered (makelense krec krep kabs)))
-(def ^:const act              (get-in hm-act       (makelense kact krep kabs)))
-(def ^:const active           (get-in hm-active    (makelense kact krep kabs)))
-(def ^:const clo              (get-in hm-clo       (makelense kclo krep kabs)))
-(def ^:const closed           (get-in hm-closed    (makelense kclo krep kabs)))
+(def ^:const rec              (get-in hm-rec       (basic-lense krec)))
+(def ^:const recov            (get-in hm-recov     (basic-lense krec)))
+(def ^:const recove           (get-in hm-recove    (basic-lense krec)))
+(def ^:const recovered        (get-in hm-recovered (basic-lense krec)))
+(def ^:const act              (get-in hm-act       (basic-lense kact)))
+(def ^:const active           (get-in hm-active    (basic-lense kact)))
+(def ^:const clo              (get-in hm-clo       (basic-lense kclo)))
+(def ^:const closed           (get-in hm-closed    (basic-lense kclo)))
 
 (def ^:const active-cases     (format "%s %s" active cases))
 (def ^:const recovered-cases  (format "%s %s" recovered cases))
@@ -125,8 +126,7 @@
 
 (def ^:const estim-active-last-7 "Estimated active cases in last 7 reports"
   (get-in hm-active
-          (makelense
-           kact kest kls7 kabs kabs)))
+          (makelense kact kest kls7 kabs kabs)))
 
 ;; TODO active-last-7 is only for the backward compatibility, under /explain
 (def ^:const active-last-7 "Active cases in last 7 reports"

@@ -588,6 +588,8 @@
    kdea  (makelense kdea krep kabs)    ;; reported
    kd1e5 (makelense kdea krep k1e5) ;; reported
 
+   knew  (makelense knew krep kabs)
+
    kv1e5 (makelense kvac krep kabs) ;; reported
    kpop  (makelense kpop) ;; TODO population can be also estimated and reported i.e. absolute
    })
@@ -614,8 +616,6 @@
    {
     ker_ (basic-lense krec)
     kea_ (basic-lense kact)
-    krec (makelense krec krep kabs)
-    kact (makelense kact krep kabs)
     }))
 
 (defn ranking-lense
