@@ -34,9 +34,19 @@ for prjd in ${prj_dirs[@]}; do
     fi
 done
 
+cliTools=""
+
 # TODO replace busybox with env
-cliTools="busybox rsync openssh bash ripgrep less postgresql"
+cliTools="$cliTools busybox"
+
+# TODO 13.3 needed. 13.4 leads to:
+#   invalid value for parameter "lc_messages": "en_US.utf8"
+cliTools="$cliTools postgresql"
+
+cliTools="$cliTools rsync openssh bash ripgrep less"
 cliTools="$cliTools grep git coreutils sed which"
+cliTools="$cliTools openjdk@16.0.1"
+
 guix shell \
      --container --network --no-cwd --check \
      nss-certs curl $cliTools \
