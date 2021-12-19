@@ -45,14 +45,8 @@
              (fn [[ccode hms]]
                ((comp
                  #_(partial take-last 2)
-                 (fn [[fst rst]]
-                   (conj rst
-                         [{kcco ccode
-                           ktst ((comp
-                                  (fn [m] (get m ktst))
-                                  last) fst)
-                           case-kw ((comp case-kw last) fst)}]))
-                 (fn [ms] (split-at (- (count ms) com/nr-of-days) ms))
+                 (fn [ms] (subvec ms (dec (- (count ms) com/nr-of-days))))
+                 vec
                  (partial sort-by ktst))
                 hms)))
     (partial group-by kcco)

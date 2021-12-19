@@ -28,18 +28,20 @@
   (fn [[ccode hms-stats-country-unsorted]]
     [ccode
      (let [stats-country (sort-by ktst hms-stats-country-unsorted)]
+       ;; the map-function operates on two collections
        (map
         (fn [estim stats-hm]
-          (conj stats-hm
-                (update-in stats-hm kw-estim (fn [_] estim))))
+          (update-in stats-hm kw-estim (fn [_] estim)))
+        ;; 1st collection
         (apply map calculate-fun
                (map (comp
                      (fn [{:keys [vs shift]}] (into (drop-last shift vs)
-                                                   (repeat shift 0)))
+                                                    (repeat shift 0)))
                      (fn [{:keys [kw shift]}] {:vs (map (fn [stats] (get-in stats kw))
-                                                       stats-country)
-                                              :shift shift}))
+                                                        stats-country)
+                                               :shift shift}))
                     kw-shift-maps))
+        ;; 2nd collection
         stats-country))]))
 
 (defn estimate "" [pic-data]
