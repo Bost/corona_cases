@@ -10,7 +10,9 @@
             [corona.country-codes :as ccc]
             [taoensso.timbre :as timbre]
             [corona.macro :refer [defn-fun-id debugf errorf warnf]]
-            [utils.core :as utc])
+            [utils.core :as utc]
+            [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
+            )
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
@@ -37,24 +39,31 @@
      default-hms)))
 
 (defn xf-for-case "" [cnt-raw-dates data-with-pop case-kw]
-  (let [lensed-case-kw (com/makelense case-kw)]
-  ((comp
+  (let [lensed-case-kw (com/makelense case-kw)
+        shift (max corona.estimate/shift-recovery
+                   corona.estimate/shift-deaths)]
+    ((comp
     #_(partial sort-by (juxt kcco ktst))
+    ;; TODO fix premature sum calculation:
+    ;; for every country-code we have also the total count for ccc/worldwide-2-country-code ZZ
     flatten
     (partial map
              (fn [[ccode hms]]
                ((comp
                  #_(partial take-last 2)
-                 (fn [ms] (subvec ms (dec (- (count ms) com/nr-of-days))))
+                 ;; TODO check against off-by-1
+                 ;; (partial drop shift) the drop must be done after estimation
+                 (fn [ms] (subvec
+                           ms
+                           (- (count ms)
+                              (+ com/nr-of-days shift))))
                  vec
                  (partial sort-by ktst))
                 hms)))
     (partial group-by kcco)
-
     flatten
     (partial map (fn [[t hms]] ;; process-date
                    ((comp
-                     #_(fn [ms] (debugf "(count ms) %s" (count ms)) ms)
                      (fn [ms]
                        (conj ms
                              ((comp

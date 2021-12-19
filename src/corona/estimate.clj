@@ -6,7 +6,9 @@
               ktst kcco
               kr1e5 kc1e5 ka1e5 basic-lense
               ]]
-            [corona.macro :refer [defn-fun-id debugf infof warnf]]))
+            [corona.macro :refer [defn-fun-id debugf infof warnf]]
+            [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
+            ))
 
 (def ^:const shift-recovery
   "Mean number of days/reports between symptoms outbreak and full recovery.
@@ -44,10 +46,13 @@
         ;; 2nd collection
         stats-country))]))
 
-(defn estimate "" [pic-data]
+(defn estimate-with-shift "" [pic-data shift]
   ((comp
     flatten
-    (partial map (fn [[ccode hms]] hms))
+    (partial map (fn [[ccode hms]]
+                   ;; TODO check against off-by-1
+                   ;; the drop must be done after estimation
+                   (drop shift hms)))
     (partial map
              (fn [[ccode hms]]
                (let [population ((comp kpop first) hms)]
@@ -91,5 +96,10 @@
                                     {:kw (basic-lense kdea) :shift shift-deaths}]))
     (partial group-by kcco))
    pic-data))
+
+(defn estimate "" [pic-data]
+  (let [shift (max corona.estimate/shift-recovery
+                   corona.estimate/shift-deaths)]
+    (estimate-with-shift pic-data shift)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.estimate)

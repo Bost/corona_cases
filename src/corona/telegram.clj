@@ -32,7 +32,9 @@
             corona.models.migration
             [corona.models.dbase :as dbase]
             [clojure.algo.monads :refer [domonad state-m m-result]]
-            [corona.lang :as lang])
+            [corona.lang :as lang]
+            [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
+            )
   (:import [java.time Instant LocalDateTime ZoneId]))
 
 ;; (set! *warn-on-reflection* true)

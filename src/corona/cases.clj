@@ -27,7 +27,7 @@ update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) w
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'n';
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'r';
 select * from thresholds order by kw;
-" 5279000 134000 5410000 3867000)
+" 550390 136000 6210000 6007000)
 (def threshold-defaults
   "Recovery data is not provided anymore. So:
 Old values on corona-cases:

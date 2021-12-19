@@ -81,7 +81,7 @@
 (defn stats-for-country-case-kw [ccode stats case-kw]
   ((comp
     (partial vector case-kw)
-    (partial take-last com/nr-of-days)
+    (partial take-last com/nr-of-days) ;; no prepending shifts
     (partial sort-by first)
     (partial
      map
