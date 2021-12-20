@@ -263,8 +263,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                      ccode estim dates rankings cnt-reports prm-base))
                   (msgi/message-kw ccode)]
                  [(fn []
-                    (plot/message
-                     ccode sorted-estim last-date cnt-reports))
+                    (plot/mezzage
+                     cnt-reports ccode sorted-estim last-date cnt-reports))
                   (plot/message-kw ccode)]]))))
            ;; here also "ZZ" worldwide messages
            ccc/all-country-codes))

@@ -29,7 +29,7 @@
 
 ;; (set! *warn-on-reflection* true)
 
-(def nr-of-days
+(defn nr-of-days [cnt-reports]
   "Number of days in the plots"
   365)
 

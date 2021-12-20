@@ -78,10 +78,10 @@
          (partial map (juxt first (comp second last second))))
    hm))
 
-(defn stats-for-country-case-kw [ccode stats case-kw]
+(defn stats-for-country-case-kw [cnt-reports ccode stats case-kw]
   ((comp
     (partial vector case-kw)
-    (partial take-last com/nr-of-days) ;; no prepending shifts
+    (partial take-last (com/nr-of-days cnt-reports))
     (partial sort-by first)
     (partial
      map
@@ -96,8 +96,7 @@
     (partial group-by ktst))
    stats))
 
-(defn stats-for-country
-  [ccode stats]
+(defn stats-for-country [cnt-reports ccode stats]
   (let [relevant-stats
         (filter (fn [hm] (in? [ccc/worldwide-2-country-code
                                (get hm kcco)]
@@ -106,7 +105,8 @@
     ((comp
       (partial map (fn [[k v]] (clojure.lang.MapEntry/create k v)))
       reverse
-      (partial keep (partial stats-for-country-case-kw ccode relevant-stats)))
+      (partial keep (partial stats-for-country-case-kw
+                             cnt-reports ccode relevant-stats)))
      [kact krec kdea knew kpop ker_ kea_])))
 
 (defn fmt-report [report] (format "%s %s" lang/report report))
@@ -201,9 +201,9 @@
 
 (defn-fun-id message-img
   "Country-specific cumulative plot"
-  [ccode stats last-date report]
+  [cnt-reports ccode stats last-date report]
   (when-not (in? ccc/excluded-country-codes ccode)
-    (let [base-data (stats-for-country ccode stats)
+    (let [base-data (stats-for-country cnt-reports ccode stats)
           sarea-data (remove (fn [[case-kw _]]
                                (in?
                                 #_[knew kact krec kdea]
@@ -257,12 +257,12 @@
         :label (plot-label report ccode stats last-date)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
 
-(defn-fun-id message "Country-specific cumulative plot"
-  [ccode stats last-date report]
+(defn-fun-id mezzage "Country-specific cumulative plot"
+  [cnt-reports ccode stats last-date report]
   ((comp
     to-byte-array-auto-closable
     message-img)
-   ccode stats last-date report))
+   cnt-reports ccode stats last-date report))
 
 (defn message-kw [ccode] [:plot (keyword ccode)])
 

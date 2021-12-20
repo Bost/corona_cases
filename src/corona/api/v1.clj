@@ -38,14 +38,15 @@
                                (assoc dhm k 0)))))
      default-hms)))
 
-(defn xf-for-case "" [cnt-raw-dates data-with-pop case-kw]
+(defn xf-for-case "" [cnt-reports data-with-pop case-kw]
   (let [lensed-case-kw (com/makelense case-kw)
         shift (max corona.estimate/shift-recovery
                    corona.estimate/shift-deaths)]
     ((comp
     #_(partial sort-by (juxt kcco ktst))
     ;; TODO fix premature sum calculation:
-    ;; for every country-code we have also the total count for ccc/worldwide-2-country-code ZZ
+    ;; for every country-code we have also the total count for
+    ;; ccc/worldwide-2-country-code ZZ
     flatten
     (partial map
              (fn [[ccode hms]]
@@ -56,7 +57,7 @@
                  (fn [ms] (subvec
                            ms
                            (- (count ms)
-                              (+ com/nr-of-days shift))))
+                              (+ (com/nr-of-days cnt-reports) shift))))
                  vec
                  (partial sort-by ktst))
                 hms)))
@@ -89,7 +90,7 @@
                      #_(partial take-last 4)
                      ;; The reason for `take-last` is the
                      ;; https://github.com/owid/covid-19-data/issues/1113
-                     (partial take-last cnt-raw-dates)
+                     (partial take-last cnt-reports)
                      (partial sort-by ktst)
                      (partial map (fn [[t v]] {kcco country_code
                                               ktst (fmt t) case-kw v})))
