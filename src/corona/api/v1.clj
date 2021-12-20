@@ -52,12 +52,22 @@
              (fn [[ccode hms]]
                ((comp
                  #_(partial take-last 2)
-                 ;; TODO check against off-by-1
+                 ;; TODO check against off-by-1 and "small" nr of cnt-reports
                  ;; (partial drop shift) the drop must be done after estimation
-                 (fn [ms] (subvec
-                           ms
-                           (- (count ms)
-                              (+ (com/nr-of-days cnt-reports) shift))))
+                 (fn [ms]
+                   (def ms ms)
+                   (def cnt-ms (count ms))
+                   (def cnt-reports cnt-reports)
+                   (def shift shift)
+                   (subvec
+                    ms
+;;; (max 0 ...) prevents an IndexOutOfBoundsException in case the number of
+;;; available reports is close to the number of desired reports, i.e. the
+;;; difference is less than the shift
+                    (max
+                     0
+                     (- (count ms)
+                        (+ (com/nr-of-days cnt-reports) shift)))))
                  vec
                  (partial sort-by ktst))
                 hms)))

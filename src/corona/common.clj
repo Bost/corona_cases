@@ -30,8 +30,11 @@
 ;; (set! *warn-on-reflection* true)
 
 (defn nr-of-days [cnt-reports]
-  "Number of days in the plots"
-  365)
+  "Number of days in the plots and the number of reports the calculations are
+restricted to. TODO separate Report\\Day to N-Days and M-Reports. AFAIR the flu
+reports are done once a week."
+  cnt-reports
+  #_365)
 
 (def ^:const ^String unknown "?")
 

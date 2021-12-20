@@ -50,8 +50,9 @@
   ((comp
     flatten
     (partial map (fn [[ccode hms]]
-                   ;; TODO check against off-by-1
-                   ;; the drop must be done after estimation
+;;; TODO check against off-by-1
+;;; TODO prevent the IndexOutOfBoundsException as in the corona.api.v1/xf-for-case
+;;; the drop must be done after estimation
                    (drop shift hms)))
     (partial map
              (fn [[ccode hms]]
