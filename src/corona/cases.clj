@@ -22,6 +22,11 @@
 
 #_
 (printf "
+insert into \"thresholds\" (kw,inc,val,updated_at) values ('a',10000,5119000,cast('now()' as timestamp(0)));
+insert into \"thresholds\" (kw,inc,val,updated_at) values ('d',1000,134000,cast('now()' as timestamp(0)));
+insert into \"thresholds\" (kw,inc,val,updated_at) values ('n',50000,5260000,cast('now()' as timestamp(0)));
+insert into \"thresholds\" (kw,inc,val,updated_at) values ('r',10000,4087000,cast('now()' as timestamp(0)));
+\n
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'a';
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'd';
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'n';
