@@ -36,29 +36,34 @@ npm install -g heroku
 * [Babashka](https://github.com/babashka/babashka#installer-script)
 * postgresql:
 ```bash
-sudo apt install postgresql postgresql-contrib
+## on Ubuntu:
+sudo apt install --yes postgresql postgresql-contrib
+# TODO see the the proposition given by the installation process:
+# You can now start the database server using:
+#     pg_ctlcluster 13 main start
 sudo systemctl status postgresql.service
 sudo systemctl stop postgresql.service
-# set --export PATH /usr/lib/postgresql/*/bin $PATH
-initdb pg
-sudo chown --recursive postgres:postgres pg/
-sudo chmod --recursive u=rwx,g=---,o=--- pg/
-sudo -su postgres
-fish # start he fish-shell for the postgres user
+mkdir -p ./var/log/
+sudo chmod --recursive u=rwx,g=rwx,o=rwx ./var/
+sudo --shell --user=postgres
+# when using fish shell:
 set --export PATH /usr/lib/postgresql/*/bin $PATH
-# on Ubuntu:
-postgres -D pg & # this doesn't work:
-# on GuixOS
-pg_ctl -D pg -l var/log/postgres.log start
+initdb ./var/pg # dropdb postgres && rm -rf ./var/pg
+pg_ctl -D ./var/pg -l ./var/log/postgres.log start
+# see also: postgres -D ./var/pg &
+
+## on GuixOS:
+pg_ctl -D ./var/pg -l ./var/log/postgres.log start
 ```
 Open new console and log in
 ```bash
 # in case of:
 #      psql: error: FATAL:  role "username" does not exist
-#   sudo -u postgres createuser -s <username>
+#   sudo --user=postgres createuser -s <username>
 # or:
-#   createuser -s postgres # on guix
-psql --dbname=postgres
+#   createuser --shell postgres # on guix
+psql --dbname=postgres # or:
+# sudo -u postgres psql --dbname=postgres
 ```
 ```postgres
 \conninfo
