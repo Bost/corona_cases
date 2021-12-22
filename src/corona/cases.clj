@@ -30,6 +30,16 @@ select * from thresholds order by kw;
 " 550390 136000 6210000 6007000)
 (def threshold-defaults
   "Recovery data is not provided anymore. So:
+
+On the master branch:
+postgres=# select * from thresholds order by kw;
+kw |  inc  |   val   |     updated_at
+----+-------+---------+---------------------
+a  | 10000 | 6049000 | 2021-12-21 01:03:29
+d  |  1000 |  136000 | 2021-12-21 00:50:50
+n  | 50000 | 6210000 | 2021-12-21 00:50:29
+r  | 10000 | 3447000 | 2021-12-21 00:50:40
+
 Old values on corona-cases:
 kw |  inc  |   val   |     updated_at
 ----+-------+---------+---------------------
