@@ -132,7 +132,7 @@ r  | 10000 | 3867000 | 2021-07-27 05:22:40"
 
 (def basic-cases
   (tore case-params
-        (filter (fn [m] (utc/in? [2 3 4 5 #_6 7 8 9 10] (:idx m))))
+        (filter (fn [m] (utc/in? [0 1 2 3 4 5 #_6 7 8 9 10] (:idx m))))
         (map :kw)))
 
 (def all-report-cases
@@ -161,7 +161,9 @@ r  | 10000 | 3867000 | 2021-07-27 05:22:40"
     (partial filter (fn [m] (utc/in? [0 1 2] (:listing-idx m)))))
    case-params))
 
-(defn text-for-case [case-kw texts]
+(defn text-for-case
+  "(text-for-case case-kw texts)"
+  [case-kw texts]
   ((comp (partial nth texts)
          first
          (partial keep-indexed (fn [i k] (when (= k case-kw) i))))

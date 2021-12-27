@@ -149,8 +149,10 @@
      ((comp
        (partial cstr/join spacer)
        (fn [v] (if has-estim-vals?
-                (concat v [(str spacer spacer lang/estimated-values)])
-                v))
+                 (concat v [(str spacer spacer
+                                 (com/encode-pseudo-cmd
+                                  lang/estimated-values parse_mode))])
+                 v))
        (partial map (fn [cmd] (com/encode-pseudo-cmd cmd parse_mode)))
        (partial map com/encode-cmd))
       [lang/world lang/explain])

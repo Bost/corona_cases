@@ -380,7 +380,10 @@
           ((comp
             (fn [s] (str s postfix))
             (partial cases/text-for-case case-kw))
-           [lang/confirmed lang/recovered lang/deaths lang/active-cases])
+           ;; TODO the order and count of elements must correspond to corona.cases/basic-cases
+           [nil nil lang/confirmed lang/recovered lang/deaths lang/active-cases
+            ;; no need to specify the rest
+            ])
           threshold))
 
 (defn line-stroke [color]

@@ -4,6 +4,7 @@
   (:require
    [corona.common :as com :refer [makelense
                                   basic-lense
+                                  kvac
                                   kact krec kclo kdea kest kmax krep k1e5
                                   kchg kls7 kabs kavg]]
    [corona.cases :as cases]
@@ -71,7 +72,7 @@
                                              kchg {kavg "ActCL7Avg"}}}
                                  kest {kabs "*Active"
                                        k1e5 "*Act100k"
-                                       kmax "*Max Active"
+                                       kmax "Max *Active"
                                        kls7 {kabs {kabs "*ActL7"
                                                    kavg "*ActL7Avg"}
                                              kchg {kavg "*ActCL7Avg"}}}}})
@@ -85,14 +86,13 @@
                                        k1e5 "Dea100k"}}})
 
 (def ^:const estim-active-last-7-avg
-  "Estimated active cases in last 7 reports - simple moving Average rounded"
+  "*Active cases in last 7 reports - simple moving Average rounded"
   (get-in hm-active
           (makelense kact kest kls7 kabs kavg)))
 
 (def ^:const active-last-7-avg
-  "Active cases in last 7 reports - simple moving Average rounded"
-  ;; remove leading asterisk '*'
-  (subs estim-active-last-7-avg 1))
+  "*Active cases in last 7 reports - simple moving Average rounded"
+  estim-active-last-7-avg)
 
 (def ^:const vac              "Vac")
 (def ^:const vacc             "Vacc")
@@ -118,19 +118,18 @@
 (def ^:const vaccinated-cases "Vaccinations")
 (def ^:const death-cases      (format "%s %s" "Death" cases))
 
-(def ^:const vaccin-per-1e5 "Vaccinations per 100 000"    (str vac hundred-k))
-(def ^:const active-per-1e5 "Active cases per 100 000"    (str act hundred-k))
-(def ^:const recove-per-1e5 "Recovered cases per 100 000" (str rec hundred-k))
-(def ^:const deaths-per-1e5 "Deaths per 100 000"          (str dea hundred-k))
-(def ^:const closed-per-1e5 "Closed per 100 000"          (str clo hundred-k))
+(def ^:const vaccin-per-1e5 "Vaccinations per 100 000"     (str vac hundred-k))
+(def ^:const active-per-1e5 "*Active cases per 100 000"    (str act hundred-k))
+(def ^:const recove-per-1e5 "*Recovered cases per 100 000" (str rec hundred-k))
+(def ^:const deaths-per-1e5 "Deaths per 100 000"           (str dea hundred-k))
+(def ^:const closed-per-1e5 "*Closed per 100 000"          (str clo hundred-k))
 
-(def ^:const estim-active-last-7 "Estimated active cases in last 7 reports"
+(def ^:const estim-active-last-7 "*Active cases in last 7 reports"
   (get-in hm-active
           (makelense kact kest kls7 kabs kabs)))
 
-;; TODO active-last-7 is only for the backward compatibility, under /explain
-(def ^:const active-last-7 "Active cases in last 7 reports"
-  (subs estim-active-last-7 1))
+(def ^:const active-last-7 "*Active cases in last 7 reports"
+  estim-active-last-7)
 
 (def ^:const report
   "Coincidentally there is 1 report per day"
@@ -166,15 +165,15 @@
   (format "No data for today. See <code>%s</code>:" vaccin-last-7))
 
 (def ^:const active-last-7-med
-  "Active cases in last 7 reports - simple moving Median rounded"
+  "*Active cases in last 7 reports - simple moving Median rounded"
   (str active-last-7 "Med"))
 
 (def ^:const active-last-8th
-  "Active cases of the last 8th report"
+  "*Active cases of the last 8th report"
   (str act "L8th"))
 
 (def ^:const active-change-last-7-avg
-  "Active cases Change - simple moving Average of last 7 values"
+  "*Active cases Change - simple moving Average of last 7 values"
   (str act "C" L7 avg))
 
 (def ^:const write-a-message-to
@@ -220,26 +219,30 @@
    texts))
 
 (defn list-sorted-by [case-kw]
-  (lower-case-texts
-   case-kw
-   ;; TODO the order matters
-   [
-    conf recov deaths active
-    cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5
-    vacc
-    ]))
+  ((comp
+    (fn [s] (.replaceAll s "\\*" ""))
+    (partial lower-case-texts case-kw))
+   ;; TODO the order and count of elements must correspond to corona.cases/basic-cases
+   [vacc
+    nil
+    conf recov                    deaths              active
+    cmd-active-per-1e5 cmd-recove-per-1e5 cmd-deaths-per-1e5]))
 
 (defn list-sorted-by-desc [case-kw]
   ((comp
     (partial format "Countries sorted by nr. of %s" #_"... in ascending order")
     (partial lower-case-texts case-kw))
-   [vaccinated-cases confirmed-cases recovered-cases deaths active-cases
-    cmd-vaccin-per-1e5 active-per-1e5 recove-per-1e5 deaths-per-1e5]))
+   ;; TODO the order and count of elements must correspond to corona.cases/basic-cases
+   [vaccinated-cases
+    people
+    confirmed-cases recovered-cases deaths active-cases
+    active-per-1e5 recove-per-1e5 deaths-per-1e5]))
 
 (def ^:const short-case-name "Shortened case names"
   (zipmap cases/absolute-cases ["Co" "Re" "De" "Ac"]))
 
-(def ^:const aggregations "Aggregations for worldwide graphs"
+(def ^:const aggregations
+  "Aggregations for worldwide graphs: Sum - Sigma Σ and Aggregation A"
   (zipmap cases/aggregation-cases ["Σ" "A"]))
 
 (defn button-text [case-kw aggregation-kw]

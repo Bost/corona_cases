@@ -82,7 +82,9 @@
         (fn [m] (fun (:id (:chat m)))))))
    cmds))
 
-(defn-fun-id create-callbacks "" [funs]
+(defn-fun-id create-callbacks
+  "For the Sum and Aggregation buttons"
+  [funs]
   (map
    (comp
     moh/callback-fn
