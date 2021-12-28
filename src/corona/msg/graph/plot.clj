@@ -10,7 +10,7 @@
             [corona.api.cache :as cache]
             [corona.common :as com :refer
              [kcco krec kact kdea krep kpop kclo knew ktst
-              krep kabs ker_ kea_
+              krep kabs ksum ker_ kea_
               kcase-kw
               sum
               basic-lense
@@ -417,13 +417,13 @@
         threshold-recalced (:threshold sabc)]
     (boiler-plate
      {:series (condp = aggregation-kw
-                :abs ((comp
+                kabs ((comp
                        (partial apply b/series)
                        (partial into [[:grid]])
                        (partial mapv (fn [[_ ccode-data] color]
                                        [:line ccode-data (line-stroke color)])))
                       data (cycle (c/palette-presets :category20b)))
-                :sum (b/series [:grid] [:sarea data]))
+                ksum (b/series [:grid] [:sarea data]))
       :legend ((comp (condp = aggregation-kw
                        :abs identity
                        :sum reverse)

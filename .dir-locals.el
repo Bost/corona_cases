@@ -48,8 +48,7 @@
              "(cljplot.core/show"
              ,(format " (%s/aggregation-img" ns)
              ,(format "  %s/thresholds" ns)
-             ,(format "  %s/stats-old" ns)
-             ,(format "  %s/stats-new" ns)
+             ,(format "  %s/stats" ns)
              ,(format "  %s/last-date" ns)
              ,(format "  %s/cnt-reports" ns)
              ,(format "  %s/aggregation-kw" ns)
@@ -104,6 +103,13 @@
           ;;  (call-interactively #'dumb-jump-go))
           (xref-find-definitions "all-country-codes")))
 
+      (defun corona=find-file--plot.clj ()
+        (interactive)
+        (progn
+          (find-file
+           (format "%s/src/corona/msg/graph/plot.clj"
+                   home-dir))))
+
       (dolist (state-map `(,clojure-mode-map ,cider-repl-mode-map))
         ;; See also `set-local-keymap'
         (bind-keys
@@ -121,7 +127,9 @@
          ("<s-f7>"  . corona=find-file--details.clj)
          ("<s-f8>"  . corona=find-file--cases.clj)
          ;; ("<s-f9>"  . corona=find-file--.clj)
-         ("<s-f10>" . corona=find-file--country_codes.clj)))))))
+         ("<s-f10>" . corona=find-file--country_codes.clj)
+         ("<s-f11>" . corona=find-file--plot.clj)))
+      ))))
  (clojure-mode
   .
   ((eval

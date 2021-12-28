@@ -215,6 +215,7 @@ reports are done once a week."
 
 ;; k as in keyword
 (def kabs "absolute" #_:α :abs)
+(def ksum "sum" #_:Σ #_:σ :sum)
 (def krnk "ranking = σειρά κατάταξης [seirá katátaxis]"
   #_:ξ :rnk)
 (def kest "estimate/assessment = εκτίμηση [ektímisi]"
