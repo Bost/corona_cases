@@ -34,6 +34,7 @@
 restricted to. TODO separate Report\\Day to N-Days and M-Reports. AFAIR the flu
 reports are done once a week."
   cnt-reports
+  #_20
   #_365)
 
 (def ^:const ^String unknown "?")
@@ -259,8 +260,6 @@ reports are done once a week."
 (def kc1e5 :c1e5)
 (def kd1e5 :d1e5)
 (def kv1e5 :v1e5)
-(def ker_  :er)
-(def kea_  :ea)
 
 (def kcase-kw
   #_:case-kw
@@ -613,14 +612,6 @@ reports are done once a week."
 
 (defn basic-lense [kw]
   (getlense-map lense-map-with-strings kw))
-
-(def stats-for-country-case--lense-map
-  (conj
-   lense-map
-   {
-    ker_ (basic-lense krec)
-    kea_ (basic-lense kact)
-    }))
 
 (defn ranking-lense
   [kw]

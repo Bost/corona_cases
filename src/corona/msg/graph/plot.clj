@@ -10,7 +10,7 @@
             [corona.api.cache :as cache]
             [corona.common :as com :refer
              [kcco krec kact kdea krep kpop kclo knew ktst
-              krep kabs ksum ker_ kea_
+              krep kabs ksum
               kcase-kw
               sum
               basic-lense
@@ -90,7 +90,7 @@
         (condp = case-kw
           kpop (bigint (/ (get (first hms) kpop) 1e3))
           (sum
-           (or (get com/stats-for-country-case--lense-map case-kw)
+           (or (get com/lense-map case-kw)
                (com/basic-lense case-kw))
            hms))]))
     (partial group-by ktst))
@@ -107,7 +107,7 @@
       reverse
       (partial keep (partial stats-for-country-case-kw
                              cnt-reports ccode relevant-stats)))
-     [kact krec kdea knew kpop ker_ kea_])))
+     [kact krec kdea knew kpop])))
 
 (defn fmt-report [report] (format "%s %s" lang/report report))
 
@@ -205,9 +205,8 @@
   (when-not (in? ccc/excluded-country-codes ccode)
     (let [base-data (stats-for-country cnt-reports ccode stats)
           sarea-data (remove (fn [[case-kw _]]
-                               (in?
-                                #_[knew kact krec kdea]
-                                [knew kpop ker_ kea_] case-kw))
+                               true
+                               #_(in? [knew kpop] case-kw))
                              base-data)
           curves (keys sarea-data)
           ;; let is a macro, thus the palette-colors returning infinite sequence
@@ -225,12 +224,8 @@
       (boiler-plate
        {:series (b/series
                  [:grid]
-                 [:sarea sarea-data {:palette palette}]
-                 #_[:line (line-data kpop base-data) stroke-population]
-                 [:line (line-data knew base-data) stroke-confir]
-                 [:line (line-data kact base-data) (stroke-active)]
-                 [:line (line-data ker_ base-data) (stroke-estim-recov)]
-                 [:line (line-data kea_ base-data) (stroke-estim-activ)])
+                 #_[:sarea sarea-data {:palette palette}]
+                 [:line (line-data kact base-data) (stroke-estim-activ)])
         :x-axis-formatter date-fmt-fn
         :y-axis-formatter (metrics-prefix-formatter
                            ;; population numbers have the `max` values, all
@@ -239,21 +234,13 @@
                            (max-y-val + sarea-data))
         :legend (reverse
                  (conj (map (fn [color rect]
-                              (def color color)
-                              (def rect rect)
                               (vector :rect rect {:color color}))
                             palette
                             (let [legend-hm {kact lang/active
                                              kdea lang/deaths
-                                             krec lang/recovered
-                                             ker_ lang/recov-estim
-                                             kea_ lang/activ-estim}]
+                                             krec lang/recovered}]
                               (map (partial get legend-hm) curves)))
-                       [:line lang/confirmed       stroke-confir]
-                       [:line lang/active-absolute (stroke-active)]
-                       [:line lang/recov-estim     (stroke-estim-recov)]
-                       [:line lang/activ-estim     (stroke-estim-activ)]
-                       #_[:line lang/people    stroke-population]))
+                       [:line lang/activ-estim (stroke-estim-activ)]))
         :label (plot-label report ccode stats last-date)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
 
