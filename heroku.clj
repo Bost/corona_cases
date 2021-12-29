@@ -309,9 +309,9 @@
 (def --form "--form")
 
 (defn webhook-action-prms [webhook-action telegram-token]
-  [--form "'drop_pending_updates=true'" "--request" "POST"
+  [--form "drop_pending_updates=true" "--request" "POST"
    (format "https://api.telegram.org/bot%s/%s"
-           webhook-action telegram-token)])
+           telegram-token webhook-action)])
 
 ;; Examples:
 ;; ./heroku.clj deploy --heroku-env hokuspokus
@@ -384,9 +384,15 @@
                (webhook-action-prms deleteWebhook telegram-token))
 
         setWebhook
+        #_(printf "%s\n" (into
+                        [--form (format "'url=https://%s.herokuapp.com/%s'"
+                                        heroku-app telegram-token)]
+                        (webhook-action-prms telegram-token setWebhook)))
         (apply sh-curl
                (into
-                [--form (format "'url=https://%s.herokuapp.com/%s'"
+                ;; WTF? wrapping single quotes around url=... causes webhook
+                ;; deletion
+                [--form (format "url=https://%s.herokuapp.com/%s"
                                 heroku-app telegram-token)]
                 (webhook-action-prms setWebhook telegram-token)))
 
