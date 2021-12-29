@@ -20,8 +20,10 @@
   `(->> ~coll ~@fns)
   #_`(sequence (eduction ~@fns ~coll)))
 
-#_
-(printf "
+(defn threshold-defaults-sql
+  "Sql commands for threshold-defaults"
+  []
+  (printf "
 insert into \"thresholds\" (kw,inc,val,updated_at) values ('a',10000,5119000,cast('now()' as timestamp(0)));
 insert into \"thresholds\" (kw,inc,val,updated_at) values ('d',1000,134000,cast('now()' as timestamp(0)));
 insert into \"thresholds\" (kw,inc,val,updated_at) values ('n',50000,5260000,cast('now()' as timestamp(0)));
@@ -32,7 +34,8 @@ update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) w
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'n';
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'r';
 select * from thresholds order by kw;
-" 550390 136000 6210000 6007000)
+" 600390 137000 6210000 6027000))
+
 (def threshold-defaults
   "Recovery data is not provided anymore. So:
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env fish
 
 # echo curl --request POST '"https://api.telegram.org/bot$TELEGRAM_TOKEN/deleteWebhook"'
+# echo curl --request GET '"https://api.telegram.org/bot$TELEGRAM_TOKEN/getWebhookInfo"'
 
 # echo curl --request POST '"http://localhost:5000/$TELEGRAM_TOKEN"'
 
