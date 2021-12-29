@@ -14,13 +14,29 @@
 (def token-hokuspokus   (System/getenv "TELEGRAM_TOKEN_HOKUSPOKUS"))
 (def token-wicki        (System/getenv "TELEGRAM_TOKEN_WICKI"))
 
-(def fmt-bot-name-fn (comp
-                      (fn [s] (cstr/replace s #"-" "\\_"))
-                      (partial format "%s_bot")))
+(def fmt-telegram-bot-name-fn
+  (comp
+   (fn [s] (cstr/replace s #"-" "\\_"))
+   (partial format "%s_bot")))
 
-(def ^:const ^String corona-cases-bot (fmt-bot-name-fn corona-cases))
-(def ^:const ^String hokuspokus-bot (fmt-bot-name-fn hokuspokus))
-(def ^:const ^String wicki-bot (fmt-bot-name-fn wicki))
+(def fmt-web-server-name-fn
+  (comp
+   (fn [s] (cstr/replace s #"_" "-"))
+   (partial format "%s_bot")))
+
+(def ^:const ^String corona-cases-telegram-bot
+  (fmt-telegram-bot-name-fn corona-cases))
+(def ^:const ^String hokuspokus-telegram-bot
+  (fmt-telegram-bot-name-fn hokuspokus))
+(def ^:const ^String wicki-telegram-bot
+  (fmt-telegram-bot-name-fn wicki))
+
+(def ^:const ^String corona-cases-web-server
+  (fmt-web-server-name-fn corona-cases))
+(def ^:const ^String hokuspokus-web-server
+  (fmt-web-server-name-fn hokuspokus))
+(def ^:const ^String wicki-web-server
+  (fmt-web-server-name-fn wicki))
 
 (def api-servers
   "List of API servers to iterate if status 503 - service not available, etc."
@@ -50,30 +66,30 @@
   "Mapping env-type -> bot-name"
   {(keyword corona-cases)
    {:level 0
-    :bot-name corona-cases-bot
-    :web-server (format "https://%s.%s" corona-cases-bot heroku-app-domain)
+    :bot-name corona-cases-telegram-bot
+    :web-server (format "https://%s.%s" corona-cases-web-server heroku-app-domain)
     :json-server {:v1 api-servers :owid owid-prod}
     :cli {(format "--%s" prod-opt) corona-cases}
     :telegram-token token-corona-cases}
 
    (keyword hokuspokus)
    {:level 1
-    :bot-name hokuspokus-bot
-    :web-server (format "https://%s.%s" hokuspokus-bot heroku-app-domain)
+    :bot-name hokuspokus-telegram-bot
+    :web-server (format "https://%s.%s" hokuspokus-web-server heroku-app-domain)
     :json-server {:v1 api-servers :owid owid-prod}
     :cli {(format "--%s" test-opt) hokuspokus}
     :telegram-token token-hokuspokus}
 
    (keyword "local")
    {:level 2
-    :bot-name hokuspokus-bot
+    :bot-name hokuspokus-telegram-bot
     ;; :web-server nil ;; intentionally undefined
     :json-server {:v1 api-servers :owid owid-prod}
     :telegram-token token-hokuspokus}
 
    (keyword "devel")
    {:level 3
-    :bot-name wicki-bot
+    :bot-name wicki-telegram-bot
     ;; :web-server nil ;; intentionally undefined
     :json-server {:v1 v1-mockups :owid owid-mockup}
     :telegram-token token-wicki}})

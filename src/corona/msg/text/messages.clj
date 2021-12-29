@@ -70,8 +70,10 @@
      (if com/use-webhook?
        ;; alternatively send file to a dump channel, get file id, edit message
        ;; media, delete message from channel
-       (morse/edit-media com/telegram-token chat-id message-id options
-                         {:type "photo" :media url})
+       (do
+         (debugf "fetching image" url)
+         (morse/edit-media com/telegram-token chat-id message-id options
+                           {:type "photo" :media url}))
        (morse/send-photo com/telegram-token chat-id options
                          ;; the plot is fetched from the cache, stats and report
                          ;; need not to be specified
