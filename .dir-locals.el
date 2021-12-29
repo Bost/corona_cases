@@ -41,8 +41,7 @@
 
       (defun corona=show-pic ()
         (interactive)
-        (let ((ns (format "%s.msg.graph.plot" bot-ns))
-              (case ":a"))
+        (let ((ns (format "%s.msg.graph.plot" bot-ns)))
           (my=cider-insert-and-format
            `(
              "(cljplot.core/show"
@@ -56,12 +55,32 @@
 
       (defun corona=show-pic-for-pred ()
         (interactive)
-        (my=repl-insert-cmd
-         (format
-          (concat
-           "(cljplot.core/show (%s.msg.graph.plot/message-img \"ZZ\""
-           " %s.msg.graph.plot/stats %s.msg.graph.plot/report))")
-          bot-ns bot-ns bot-ns bot-ns)))
+        (let ((ns (format "%s.msg.graph.plot" bot-ns)))
+          (my=cider-insert-and-format
+           `(
+             "(cljplot.core/show"
+             ,(format " (%s/message-img" ns)
+             ,(format "  %s/cnt-reports" ns)
+             ,(format "  %s/ccode" ns)
+             ,(format "  %s/stats" ns)
+             ,(format "  %s/last-date" ns)
+             ,(format "  %s/report))" ns)))))
+
+      (defun corona=def-param ()
+        (interactive)
+        (evil-find-char-to 1 ?\])
+        (let* ((str-prms (thing-at-point 'list))
+               (full-prms (split-string str-prms
+                                        (rx (or space "[" "]"))))
+               (prms
+                ;; (remove-if (lambda (e) (string= e "")) full-prms)
+                (remove-if (apply-partially #'string= "") full-prms)))
+          (evil-open-below 1)
+          (mapc (lambda (prm)
+                  (indent-for-tab-command)
+                  (my=insert-str (format "(def %s %s)\n" prm prm))
+                  (evil-next-visual-line))
+                prms)))
 
       (setq-local home-dir (format "%s/dec/corona_cases" (getenv "HOME")))
 
@@ -121,6 +140,7 @@
          ("<f6>"    . corona=web-restart)
          ("<f7>"    . corona=show-pic)
          ("<f8>"    . corona=show-pic-for-pred)
+         ("<f11>"   . corona=def-param)
          ("<s-f4>"  . corona=find-file--estimate.clj)
          ("<s-f5>"  . corona=find-file--v1.clj)
          ("<s-f6>"  . corona=find-file--telegram.clj)
