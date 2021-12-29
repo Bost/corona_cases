@@ -143,36 +143,31 @@
 
 (def ^:const stroke-population (conj line-cfg {:color :red}))
 
-(def ^:const stroke-confir
-  (conj line-cfg {:color
-                  (last (c/palette-presets :ylgn-6))}))
-
 (defn stroke-active []
-  (conj line-cfg {:color :black
-                  :stroke {:size 1.5
-                           ;; :dash [20.0] :dash-phase 10
-                           ;; :dash [5.0 2.0 2.0 2.0]
-                           ;; :dash [10.0 5.0] :join :miter
-                           :dash [2.0] :dash-phase 2.0
-                           }}))
+  (conj line-cfg {:color
+                  :red
+                  ;; :green
+                  ;; (last (c/palette-presets :ylgn-6))
+                  ;; (c/brighten (last (c/palette-presets :ylgn-6)))
+                  ;; (c/darken (last (c/palette-presets :ylgn-6)))
+                  :stroke
+                  {
+                   :size 3
+                   ;; :dash [20.0] :dash-phase 10
+                   ;; :dash [5.0 2.0 2.0 2.0]
+                   ;; :dash [10.0 5.0] :join :miter
+                   :dash [2.0] :dash-phase 2.0
+                   }}))
 
-(defn stroke-estim-recov []
-  (conj line-cfg {:color :red
-                  :stroke {:size 1.5
-                           ;; :dash [20.0] :dash-phase 10
-                           ;; :dash [5.0 2.0 2.0 2.0]
-                           ;; :dash [10.0 5.0] :join :miter
-                           :dash [2.0] :dash-phase 2.0
-                           }}))
-
-(defn stroke-estim-activ []
-  (conj line-cfg {:color :olive #_:green
-                  :stroke {:size 1.5
-                           ;; :dash [20.0] :dash-phase 10
-                           ;; :dash [5.0 2.0 2.0 2.0]
-                           ;; :dash [10.0 5.0] :join :miter
-                           :dash [2.0] :dash-phase 2.0
-                           }}))
+(defn stroke-deaths []
+  (conj line-cfg {:color :black :stroke
+                  {
+                   :size 3
+                   ;; :dash [20.0] :dash-phase 10
+                   ;; :dash [5.0 2.0 2.0 2.0]
+                   ;; :dash [10.0 5.0] :join :miter
+                   ;; :dash [2.0] :dash-phase 2.0
+                   }}))
 
 (defn max-y-val [reducer data]
   (transduce (comp (map (fn [[_ v]] v))
@@ -204,6 +199,7 @@
   [cnt-reports ccode stats last-date report]
   (when-not (in? ccc/excluded-country-codes ccode)
     (let [base-data (stats-for-country cnt-reports ccode stats)
+          ;; :sarea sums up the values
           sarea-data (remove (fn [[case-kw _]]
                                true
                                #_(in? [knew kpop] case-kw))
@@ -211,7 +207,9 @@
           curves (keys sarea-data)
           ;; let is a macro, thus the palette-colors returning infinite sequence
           ;; doesn't get pre-computed.
-          palette (palette-colors (count curves))]
+          palette (palette-colors (count curves))
+          active-data (line-data kact base-data)
+          deaths-data (line-data kdea base-data)]
       ;; every chart/series definition is a vector with three fields:
       ;; 1. chart type e.g. :grid, :sarea, :line
       ;; 2. data
@@ -225,22 +223,26 @@
        {:series (b/series
                  [:grid]
                  #_[:sarea sarea-data {:palette palette}]
-                 [:line (line-data kact base-data) (stroke-estim-activ)])
+                 [:line deaths-data (stroke-deaths)]
+                 [:line active-data (stroke-active)])
         :x-axis-formatter date-fmt-fn
         :y-axis-formatter (metrics-prefix-formatter
                            ;; population numbers have the `max` values, all
                            ;; other numbers are derived from them
                            ;; don't display the population data for the moment
-                           (max-y-val + sarea-data))
+                           (transduce (map second) max 0 active-data)
+                           #_(max-y-val + sarea-data))
         :legend (reverse
-                 (conj (map (fn [color rect]
+                 (conj []
+                  #_(map (fn [color rect]
                               (vector :rect rect {:color color}))
                             palette
                             (let [legend-hm {kact lang/active
                                              kdea lang/deaths
                                              krec lang/recovered}]
                               (map (partial get legend-hm) curves)))
-                       [:line lang/activ-estim (stroke-estim-activ)]))
+                       [:line lang/deaths      (stroke-deaths)]
+                       [:line lang/activ-estim (stroke-active)]))
         :label (plot-label report ccode stats last-date)
         :label-conf (conj {:color (c/darken :steelblue)} #_{:font-size 14})}))))
 
@@ -352,10 +354,6 @@
                                   (com/country-alias ccode)))
             (keys json-data))))
 
-(defn y-axis-formatter [json-data]
-  ;; `+` means: sum up all active cases
-  (metrics-prefix-formatter (max-y-val + json-data)))
-
 (def label-conf {:color (c/darken :steelblue) :font-size 14})
 
 (defn label-str
@@ -417,7 +415,7 @@
                      legend)
                data)
       :x-axis-formatter date-fmt-fn
-      :y-axis-formatter (y-axis-formatter data)
+      :y-axis-formatter (metrics-prefix-formatter (max-y-val + data))
       :label (label-str cnt-reports stats last-date case-kw threshold-recalced
                         (condp = aggregation-kw
                           :abs (str " " lang/absolute)
@@ -430,7 +428,8 @@
    (get-in @cache/cache [:plot (keyword id) aggregation-kw case-kw]))
   ([thresholds stats last-date cnt-reports id aggregation-kw case-kw]
    {:pre [(string? id)]}
-   (taoensso.timbre/debugf "[aggregation!] case-kw %s aggregation-kw %s" case-kw aggregation-kw)
+   (taoensso.timbre/debugf "[aggregation!] case-kw %s aggregation-kw %s"
+                           case-kw aggregation-kw)
    (cache/cache! (fn []
                    ((comp
                      to-byte-array-auto-closable)
