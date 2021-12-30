@@ -55,21 +55,7 @@
            [1 0])))
 #_(println "pipelined-heroku-apps" pipelined-heroku-apps)
 
-(defn heroku-app-name [heroku-env] (str heroku-env "-bot"))
-
-(def pipelined-heroku-apps
-  "git branch-names must be equal to map-values"
-  (zipmap [:src-app :dst-app]
-          ((comp
-            vec
-            (partial map (comp heroku-app-name heroku-env-name)))
-           [1 0])))
-
-(def heroku-apps
-  ((comp
-    set
-    (partial map heroku-app-name))
-   heroku-envs))
+(def heroku-apps ((comp set vals) pipelined-heroku-apps))
 #_(println "heroku-apps" heroku-apps)
 
 #_(System/exit 1)
