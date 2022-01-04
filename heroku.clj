@@ -253,6 +253,8 @@
 ;;        (partial partition-all 2))
 ;;       (quote ~vs))))
 
+;; TODO undo "git tag" when something fails
+
 (defn deploy! [prm-app {:keys [heroku-env] :as options}]
   {:pre [(in? heroku-apps prm-app)]}
   (let [commit (get-commit!)
@@ -261,7 +263,7 @@
                               (.load props (jio/reader ".heroku-local.env"))
                               (str key "=" (get props key)))
         app (heroku-app-name heroku-env)
-        remote (str "heroku-" app)
+        remote app ;; TODO check this change
         rest-args (if (:force options) "--force" "")]
     (open-papertrail app)
     (stop! app)
@@ -401,4 +403,6 @@
           re-find
           (partial re-matcher #"((\d+)\.)+(\d+)"))
          (sh "clj" "--version"))
+
+        ;; TODO implement dbase transfer between environments test -> prod
         ))))
