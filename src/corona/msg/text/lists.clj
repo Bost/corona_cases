@@ -23,10 +23,9 @@
 (defn list-kw [fun case-kw]
   [:list ((comp keyword :name meta find-var) fun) case-kw])
 
-(defn calc-listings! "" [stats prm case-kws listing-fun]
+(defn calc-listings! "" [stats header footer lense-fun prm case-kws listing-fun]
   ;; fun is one of: per-1e5, absolute-vals - TODO spec it!
-  (let [lense-fun (get prm klense-fun)]
-    ((comp
+  ((comp
       doall
       (partial
        map
@@ -48,7 +47,8 @@
                       (fn [idx sub-msg]
                         ((comp
                           (partial cache/cache!
-                                   (fn [] ((eval listing-fun) case-kw
+                                   (fn [] ((eval listing-fun)
+                                           case-kw header footer lense-fun
                                            (assoc sub-msgs-prm
                                                   :msg-idx (inc idx)
                                                   :data sub-msg))))
@@ -57,7 +57,7 @@
                           str)
                          idx))))
             sub-msgs)))))
-     case-kws)))
+     case-kws))
 
 (defn sort-sign [sorted-case-kw case-kw]
   (if (= sorted-case-kw case-kw)
@@ -72,10 +72,9 @@
 (defn-fun-id absolute-vals
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw {:keys [msg-idx cnt-msgs data cnt-reports header footer] :as prm}]
+  [case-kw header footer lense-fun {:keys [msg-idx cnt-msgs data cnt-reports] :as prm}]
   #_(debugf "case-kw %s" case-kw)
-  (let [lense-fun (get prm klense-fun)
-        fun-a (lense-fun kact)
+  (let [fun-a (lense-fun kact)
         fun-r (lense-fun krec)
         fun-d (lense-fun kdea)
         spacer " "
@@ -125,9 +124,8 @@
 (defn-fun-id per-1e5
   "Listing commands in the message footer correspond to the columns in the
   listing. See also `footer`, `bot-father-edit`."
-  [case-kw {:keys [msg-idx cnt-msgs data cnt-reports header footer] :as prm}]
-  (let [lense-fun (get prm klense-fun)
-        fun-a1e5 (lense-fun ka1e5)
+  [case-kw header footer lense-fun {:keys [msg-idx cnt-msgs data cnt-reports] :as prm}]
+  (let [fun-a1e5 (lense-fun ka1e5)
         fun-r1e5 (lense-fun kr1e5)
         fun-d1e5 (lense-fun kd1e5)
         spacer " "

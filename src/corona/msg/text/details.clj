@@ -370,9 +370,7 @@
   TODO create an API web service(s) for every field displayed in the messages
   TODO add effective reproduction number (R)
   "
-  [ccode estim dates rankings cnt-reports
-   ;; TODO take apart prm. It contains :header and :footer
-   prm-base]
+  [ccode estim dates rankings cnt-reports header footer]
   ((comp
     fmt)
    (let [ccode-stats (filter (fn [ehm] (= ccode (kcco ehm))) estim)
@@ -440,7 +438,7 @@
                                            last-2-reports)))))))
           case-kws)]
      (conj
-      (select-keys prm-base [:header :footer])
+      {:header header :footer footer}
       {:cname-aliased (ccr/country-name-aliased ccode)
        :country-cmds
        ((comp (partial apply #(format "     %s    %s" %1 %2))

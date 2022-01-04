@@ -187,14 +187,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         dates        ((comp m-result data/dates) raw-dates-v1)
         last-date    ((comp m-result last (partial sort-by ktst)) dates)
         cnt-reports  ((comp m-result count) dates)
-
-        prm-base    (m-result {:header (msgc/header com/html last-date)
-                               :footer (msgc/footer com/html true)
-                               :cnt-reports cnt-reports})
-        _ (com/add-calc-time "prm-base" prm-base)
-
-        garbage-coll (m-result (gc))
-        _ (com/add-calc-time "garbage-coll" garbage-coll)
+        header      (m-result (msgc/header com/html last-date))
+        footer      (m-result (msgc/footer com/html true))
 
         estim
         ((comp m-result
@@ -222,13 +216,16 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         all-calc-listings
         (let [prm
-              (assoc prm-base
-                     kcco (ccr/get-country-code ccc/worldwide)
-                     klense-fun com/basic-lense)]
+              (assoc {:cnt-reports cnt-reports}
+                     kcco (ccr/get-country-code ccc/worldwide))]
           ((comp
             m-result doall
-            (partial map (partial apply msgl/calc-listings!
-                                  stats-countries prm)))
+            (partial
+             map
+             (partial
+              apply
+              msgl/calc-listings!
+              stats-countries header footer com/basic-lense prm)))
            [[cases/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
             [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
         _ (com/add-calc-time "all-calc-listings" all-calc-listings)
@@ -262,7 +259,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                  (partial map (partial apply cache/cache!)))
                 [[(fn []
                     (msgi/mexxage
-                     ccode estim dates rankings cnt-reports prm-base))
+                     ccode estim dates rankings cnt-reports header footer))
                   (msgi/message-kw ccode)]
                  [(fn []
                     (plot/mezzage
@@ -361,7 +358,9 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                         [calc-result
                          ((comp
                            m-result
-                           (partial apply (partial calc-cache! (cache/aggregation-hash)))
+                           (partial
+                            apply
+                            (partial calc-cache! (cache/aggregation-hash)))
                            (partial map :json))
                           [hm-owid hm-v1])
                          _ (com/add-calc-time "calc-cache!" calc-result)]
