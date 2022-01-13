@@ -38,11 +38,8 @@ cliTools=""
 
 # TODO replace busybox with env
 cliTools="$cliTools busybox"
-
-# TODO 13.3 needed. 13.4 leads to:
-#   invalid value for parameter "lc_messages": "en_US.utf8"
+# See README.md for PostgreSQL 13.3 vs. 13.4 cofiguration
 cliTools="$cliTools postgresql"
-
 cliTools="$cliTools rsync openssh bash ripgrep less"
 cliTools="$cliTools grep git coreutils sed which"
 cliTools="$cliTools openjdk@16.0.1"

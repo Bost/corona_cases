@@ -154,9 +154,26 @@ and check the [http://localhost:5050/](http://localhost:5050/) if it's running.
 
 ## Run locally
 
+On PostgreSQL 13.3 no var/pg/postgresql.conf changes needed.
+
+On PostgreSQL 13.4, in the var/pg/postgresql.conf:
+1. activate:
+```
+unix_socket_directories = '/tmp'  # comma-separated list of directories
+```
+1. comment out:
+```
+# lc_messages = 'en_US.utf8'			# locale for system error message
+# 					# strings
+# lc_monetary = 'en_US.utf8'			# locale for monetary formatting
+# lc_numeric = 'en_US.utf8'			# locale for number formatting
+# lc_time = 'en_US.utf8'				# locale for time formatting
+```
+
 ```bash
 # start Postgres
 pg_ctl -D ./var/pg -l ./var/log/postgres.log start # on Guix
+# pg_ctl -D ./var/pg stop
 bin/build; and heroku local --env=.heroku-local.env
 # or:
 # bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...
