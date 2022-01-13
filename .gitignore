@@ -9,7 +9,11 @@
 /.lein-repl-history
 /.nrepl-port
 /var/log/
-/var/pg/
+/var/pg/*
+!/var/pg/pg_hba.conf
+!/var/pg/pg_ident.conf
+!/var/pg/postgresql.auto.conf
+!/var/pg/postgresql.conf
 /.cpcache/
 /.clj-kondo/
 /.lsp/
