@@ -7,24 +7,11 @@
 #
 # Wishlist: Include XDebug
 
-if [ ! $# -eq 2 ]; then
-   cat << EOF
-usage: $0 <shared_path> <public_path>
-       shared_path: exchange directory
-       public_path: public facing location, must be within shared_path
-
-   ex: $0 /home/user/dev public_html
-EOF
-   exit 1
-fi
-
-shared_path="$1"
-public_path="$1/$2"
-file_path=$(dirname "$0") # path to this file
+wd=$(pwd) # WD=$(dirname "$0") # i.e. path to this file
 
 prj_dirs=(
-    $file_path/var/log
-    $file_path/var/pg
+    $wd/var/log
+    $wd/var/pg
 )
 
 # `git clean --force -dx` destroys the prj_dirs. Recreate it:
@@ -40,19 +27,28 @@ cliTools=""
 cliTools="$cliTools busybox"
 # See README.md for PostgreSQL 13.3 vs. 13.4 cofiguration
 cliTools="$cliTools postgresql"
-cliTools="$cliTools rsync openssh bash ripgrep less"
-cliTools="$cliTools grep git coreutils sed which"
+cliTools="$cliTools rsync openssh bash fish ripgrep less"
+cliTools="$cliTools grep git coreutils sed which guile"
 cliTools="$cliTools openjdk@16.0.1"
 
+# TODO --preserve=
+#   preserve environment variables matching REGEX
+set -x
 guix shell \
-     --container --network --no-cwd --check \
+     --container --network --check \
      nss-certs curl $cliTools \
-     --preserve=^fdk \
-     --share=$file_path/.bash_profile=$HOME/.bash_profile \
-     --share=$file_path/.bashrc=$HOME/.bashrc \
+     --share=$wd/.bash_profile=$HOME/.bash_profile \
+     --share=$wd/.bashrc=$HOME/.bashrc \
      --share=$HOME/.gitconfig=$HOME/.gitconfig \
-     --share=$file_path/etc=/usr/etc \
-     --share=$file_path/var/log=/var/log \
-     --share=$file_path/var/log=/var/pg \
-     --share=$shared_path \
+     --share=$HOME/.config/fish=$HOME/.config/fish \
+     --share=$HOME/dev=$HOME/dev \
+     --share=$HOME/dec=$HOME/dec \
+     --share=$HOME/der=$HOME/der \
+     --share=$HOME/bin=$HOME/bin \
+     --share=$HOME/local-stuff.fish=$HOME/local-stuff.fish \
+     --share=$HOME/dev/dotfiles=$HOME/dev/dotfiles \
+     --share=$wd/etc=/usr/etc \
+     --share=$wd/var/log=/var/log \
+     --share=$wd/var/pg=/var/pg \
+     --share=$wd \
      -- bash
