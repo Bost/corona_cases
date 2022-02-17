@@ -1,5 +1,10 @@
 # /etc/profile
 
+# https://www.reddit.com/r/GUIX/comments/kt7tqr/clearing_a_terminal_in_guix
+clear () {
+    printf '\e[2J\e[H'
+}
+
 # /run is not automatically created by guix
 mkdir /run
 
