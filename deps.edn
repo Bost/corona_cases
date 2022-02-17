@@ -103,7 +103,7 @@
 
   ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
   com.github.seancorfield/next.jdbc {:mvn/version "1.2.761"}
-  org.postgresql/postgresql {:mvn/version "42.3.1"}
+  org.postgresql/postgresql {:mvn/version "42.3.3"}
 
   ;; A collection of arrow macros. Better threading macros `->` and `->>`
   ;; swiss-arrows/swiss-arrows {:mvn/version "1.0.0"}

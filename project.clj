@@ -93,7 +93,7 @@
 
    ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
    [com.github.seancorfield/next.jdbc "1.2.761"]
-   [org.postgresql/postgresql "42.3.1"]]
+   [org.postgresql/postgresql "42.3.3"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"
