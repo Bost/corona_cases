@@ -25,6 +25,7 @@ cliTools=""
 
 # TODO replace busybox with env
 cliTools="$cliTools busybox"
+cliTools="$cliTools ncurses"
 # See README.md for PostgreSQL 13.3 vs. 13.4 cofiguration
 cliTools="$cliTools postgresql@13.4"
 cliTools="$cliTools rsync openssh bash fish ripgrep less"
