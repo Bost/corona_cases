@@ -43,17 +43,19 @@ sudo apt install --yes postgresql postgresql-contrib
 #     pg_ctlcluster 13 main start
 sudo systemctl status postgresql.service
 sudo systemctl stop postgresql.service
-mkdir -p ./var/log/
+pgdata=./var/pg/data
+pglog=./var/log/postgres.log
+mkdir -p $pgdata
 sudo chmod --recursive u=rwx,g=rwx,o=rwx ./var/
 sudo --shell --user=postgres
 # when using fish shell:
 set --export PATH /usr/lib/postgresql/*/bin $PATH
-initdb ./var/pg # dropdb postgres && rm -rf ./var/pg
-pg_ctl -D ./var/pg -l ./var/log/postgres.log start
-# see also: postgres -D ./var/pg &
+initdb $pgdata # dropdb postgres && rm -rf $pgdata
+pg_ctl --pgdata=$pgdata --log=$pglog start
+# see also: postgres --pgdata=$pgdata &
 
-## on GuixOS:
-pg_ctl -D ./var/pg -l ./var/log/postgres.log start
+## on Guix:
+pg_ctl --pgdata=$pgdata --log=$pglog start
 ```
 Open new console and log in
 ```bash
@@ -172,8 +174,8 @@ unix_socket_directories = '/tmp'  # comma-separated list of directories
 
 ```bash
 # start Postgres
-pg_ctl -D ./var/pg -l ./var/log/postgres.log start # on Guix
-# pg_ctl -D ./var/pg stop
+pg_ctl --pgdata=./var/pg --log=./var/log/postgres.log start # on Guix
+# pg_ctl --pgdata=./var/pg stop
 bin/build; and heroku local --env=.heroku-local.env
 # or:
 # bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...

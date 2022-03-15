@@ -12,12 +12,16 @@ wd=$(pwd) # WD=$(dirname "$0") # i.e. path to this file
 prj_dirs=(
     $wd/var/log
     $wd/var/pg
+    $wd/var/run/postgresql
 )
 
 # `git clean --force -dx` destroys the prj_dirs. Recreate it:
 for prjd in ${prj_dirs[@]}; do
     if [ ! -d $prjd ]; then
+        set -x  # Print commands and their arguments as they are executed.
         mkdir --parent $prjd
+        { retval="$?";
+          set +x; } 2>/dev/null
     fi
 done
 
@@ -48,8 +52,8 @@ guix shell \
      --share=$HOME/bin=$HOME/bin \
      --share=$HOME/local-stuff.fish=$HOME/local-stuff.fish \
      --share=$HOME/dev/dotfiles=$HOME/dev/dotfiles \
-     --share=$wd/etc=/usr/etc \
      --share=$wd/var/log=/var/log \
      --share=$wd/var/pg=/var/pg \
+     --share=$wd/var/run/postgresql=/var/run/postgresql \
      --share=$wd \
      -- bash
