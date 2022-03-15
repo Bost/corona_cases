@@ -35,7 +35,7 @@ cliTools="$cliTools openjdk@16.0.1"
 #   preserve environment variables matching REGEX
 set -x
 guix shell \
-     --container --network --check \
+     --container --network \
      nss-certs curl $cliTools \
      --share=$wd/.bash_profile=$HOME/.bash_profile \
      --share=$wd/.bashrc=$HOME/.bashrc \
