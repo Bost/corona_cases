@@ -14,7 +14,7 @@
             [corona.countries :as ccr]
             [corona.country-codes :as ccc]
             [corona.lang :as lang]
-            [corona.macro :refer [defn-fun-id debugf]]
+            [corona.macro :refer [defn-fun-id debugf errorf]]
             [taoensso.timbre :as timbre]
             [corona.msg.text.common :as msgc]
             [utils.core :as utc]
@@ -133,10 +133,10 @@
         (recur (concat vsnd tail) (conj acc (concat vfst vsnd))))
       acc)))
 
-(defn incidence
+(defn-fun-id incidence
   "e.g. last two weeks:
-  (incidence fun-p fun-n knew 7 country-stats)"
-  [fun-p lense case-kw nr-of-reports country-stats]
+  (incidence fun-p fun-n knew 7 ccode-stats)"
+  [fun-p lense case-kw nr-of-reports ccode-stats]
   ((comp
     round-nr
     (fn [diffs]
@@ -145,14 +145,17 @@
               (fn [hm] (get-in hm fun-p))
               ;; `last` implies using the most actual population count
               last)
-             country-stats)]
-        (* (/ (reduce + diffs)
-              population)
+             ccode-stats)]
+        (* (try
+             (/ (reduce + diffs) population)
+             (catch java.lang.ArithmeticException e
+               (errorf "Rethrowing %s. ccode-stats:\n%s" e (last ccode-stats))
+               (throw e)))
            1e5)))
     (partial map (partial delta-for-case-kw lense case-kw))
     pairs
     (partial take-last nr-of-reports))
-   country-stats))
+   ccode-stats))
 
 (defn- vaccinated-info
   "(vaccinated-info vaccin-last-7 popula-last-7)"

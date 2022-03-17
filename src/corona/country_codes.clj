@@ -400,7 +400,18 @@
     ;; "AI" "PW"
     })
 
-(def no-population-country-codes ["TF" "MF" "SJ" "QQ" "UM" "BQ" "BV" "GS" "AQ" "HM"])
+(def no-population-country-codes
+  #{"TF"
+    "MF"
+    "SJ"
+    "QQ"
+    "UM"
+    "BQ"
+    "BV"
+    "GS"
+    "AQ"
+    "HM"
+    })
 
 (def all-country-codes
   "All country codes (potentially including worldwide \"ZZ\")"
@@ -415,6 +426,7 @@
    (clojure.set/difference
     ((comp set keys)
      country-code-2-to-3-hm)
+    no-population-country-codes
     #_excluded-country-codes)))
 
 (def relevant-country-codes

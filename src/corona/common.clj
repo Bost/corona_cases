@@ -140,11 +140,20 @@ reports are done once a week."
 
 (defn system-time [] (System/currentTimeMillis))
 
+(defn count-chars [object]
+  ((comp (fn [v] (format "%s chars" v)) count str) object))
+
 (defn-fun-id measure "" [object & prm]
   (try (apply (partial meter/measure object) prm)
        (catch java.lang.reflect.InaccessibleObjectException e
-         (warnf (str "Caught %s. Returning count of chars.") e)
-         ((comp count str) object))))
+         #_(warnf "Caught %s. Returning count of chars." e)
+         (count-chars object))
+       (catch java.lang.reflect.InvocationTargetException e
+         #_(warnf "Caught %s. Returning count of chars." e)
+         (count-chars object))
+       (catch Exception e
+         (warnf "Caught %s. Rethrowing..." e)
+         (throw e))))
 
 (defn format-bytes
   "Nicely format `num-bytes` as kilobytes/megabytes/etc.

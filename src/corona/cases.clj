@@ -20,64 +20,51 @@
   `(->> ~coll ~@fns)
   #_`(sequence (eduction ~@fns ~coll)))
 
+(def threshold-defaults
+  "Recovery data is not provided anymore. So:
+
+On the master branch:
+postgres=# select * from thresholds order by kw;
+On corona-cases-bot:
+  kw |  inc  |   val    |     updated_at
+ ----+-------+----------+---------------------
+  a  | 10000 |  1900390 | 2022-02-09 06:16:56
+  d  |  1000 |   145000 | 2022-01-27 04:07:03
+  n  | 50000 | 13510000 | 2022-02-09 06:16:08
+  r  | 10000 | 10857000 | 2022-02-09 06:16:30
+  "
+  ((comp (partial sort-by :kw))
+   [{:kw kvac :inc (int 1e6) :val (int 1e7)}
+    {:kw kpop :inc (int 1e6) :val (int 1e7)}
+    {:kw knew :inc 50000     :val (int 13510e3)}
+    {:kw krec :inc 10000     :val (int 12677e3)}
+    {:kw kdea :inc 1000      :val (int   153e3)}
+    {:kw kact :inc 10000     :val (int  2520e3)}]))
+
+(defn case-kw-val [case-kw]
+  ((comp
+    (fn [m] (get m :val))
+    first)
+   (filter (comp (partial = case-kw) :kw)
+           threshold-defaults)))
+
 (defn threshold-defaults-sql
   "Sql commands for threshold-defaults"
   []
   (printf "
-insert into \"thresholds\" (kw,inc,val,updated_at) values ('a',10000,5119000,cast('now()' as timestamp(0)));
-insert into \"thresholds\" (kw,inc,val,updated_at) values ('d',1000,134000,cast('now()' as timestamp(0)));
-insert into \"thresholds\" (kw,inc,val,updated_at) values ('n',50000,5260000,cast('now()' as timestamp(0)));
-insert into \"thresholds\" (kw,inc,val,updated_at) values ('r',10000,4087000,cast('now()' as timestamp(0)));
+insert into \"thresholds\" (kw,inc,val,updated_at) values ('a',10000,%s,cast('now()' as timestamp(0)));
+insert into \"thresholds\" (kw,inc,val,updated_at) values ('d',1000,%s,cast('now()' as timestamp(0)));
+insert into \"thresholds\" (kw,inc,val,updated_at) values ('n',50000,%s,cast('now()' as timestamp(0)));
+insert into \"thresholds\" (kw,inc,val,updated_at) values ('r',10000,%s,cast('now()' as timestamp(0)));
 \n
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'a';
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'd';
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'n';
 update \"thresholds\" set val = %s, updated_at = cast('now()' as timestamp(0)) where kw = 'r';
 select * from thresholds order by kw;
-" 640390 138000 6210000 6037000))
-
-(def threshold-defaults
-  "Recovery data is not provided anymore. So:
-
-On the master branch:
-postgres=# select * from thresholds order by kw;
-kw |  inc  |   val   |     updated_at
-----+-------+---------+---------------------
-a  | 10000 | 6049000 | 2021-12-21 01:03:29
-d  |  1000 |  136000 | 2021-12-21 00:50:50
-n  | 50000 | 6210000 | 2021-12-21 00:50:29
-r  | 10000 | 3447000 | 2021-12-21 00:50:40
-
-Old values on corona-cases-bot:
-kw |  inc  |   val   |     updated_at
-----+-------+---------+---------------------
-a  | 10000 | 5119000 | 2021-09-13 05:31:32
-d  |  1000 |  134000 | 2021-06-17 05:21:14
-n  | 50000 | 5260000 | 2021-09-10 04:25:13
-r  | 10000 | 4087000 | 2021-07-30 05:24:33
-
-Old values on corona-cases-bot:
-kw |  inc  |   val   |     updated_at
-----+-------+---------+---------------------
-a  | 10000 | 6069000 | 2021-12-30 08:16:53
-d  |  1000 |  138000 | 2021-12-30 08:16:52
-n  | 50000 | 6210000 | 2021-12-16 00:48:21
-r  | 10000 | 4057000 | 2021-12-26 05:28:27
-
-Old values on hokuspokus:
-kw |  inc  |   val   |     updated_at
-----+-------+---------+---------------------
-a  | 10000 | 5119000 | 2021-09-12 21:26:43
-d  |  1000 |  134000 | 2021-06-23 05:23:34
-n  | 50000 | 5260000 | 2021-09-09 17:27:41
-r  | 10000 | 3867000 | 2021-07-27 05:22:40"
-  ((comp (partial sort-by :kw))
-   [{:kw kvac :inc (int 1e6) :val (int 1e7)}
-    {:kw kpop :inc (int 1e6) :val (int 1e7)}
-    {:kw knew :inc 50000     :val (int 3660e3)}
-    {:kw krec :inc 10000     :val (int 2937e3)}
-    {:kw kdea :inc 1000      :val (int 87e3)}
-    {:kw kact :inc 10000     :val (int 1029e3)}]))
+"
+          (case-kw-val kact) (case-kw-val kdea) (case-kw-val knew) (case-kw-val krec)
+          (case-kw-val kact) (case-kw-val kdea) (case-kw-val knew) (case-kw-val krec)))
 
 (defn norm [raw-ths]
   ((comp
