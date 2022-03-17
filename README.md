@@ -135,8 +135,7 @@ clj -X:mockup-server
 1. In Emacs Cider `M-x cider-jack-in-clj`, or start the nREPL from the command line:
 <!-- No line continuations '\' accepted -->
 ```bash
-# TODO try nrepl/nrepl {:mvn/version "0.9.0-beta4"}
-clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.8.3"} refactor-nrepl/refactor-nrepl {:mvn/version "3.0.0"} cider/cider-nrepl {:mvn/version "0.27.2"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.2"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
 clojure -X:mockup-server
 ```
 and connect to it from the editor of your choice.

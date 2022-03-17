@@ -9,7 +9,7 @@
              :main-opts ["-m" "antq.core"]}
 
   :build {:deps {io.github.seancorfield/build-clj
-                 {:git/tag "v0.6.3" :git/sha "9b8e09b"}}
+                 {:git/tag "v0.8.0" :git/sha "9bd8b8a"}}
           :ns-default build}
 
   :mockup-server
@@ -23,7 +23,7 @@
   compojure/compojure {:mvn/version "1.6.2"}
 
   ;; Ring Jetty adapter
-  ring/ring-jetty-adapter {:mvn/version "1.9.4"}
+  ring/ring-jetty-adapter {:mvn/version "1.9.5"}
 
   ;; for the (ring.util.http-response/ok)
   metosin/ring-http-response {:mvn/version "0.9.3"}
@@ -35,7 +35,7 @@
   environ/environ {:mvn/version "1.2.0"}
 
   ;; JSON and JSON SMILE encoding - see also clj-http
-  cheshire/cheshire {:mvn/version "5.10.1"}
+  cheshire/cheshire {:mvn/version "5.10.2"}
 
   ;; for the get-json function. Not having it cheshire as a dependency results
   ;; in: `namespace 'cheshire.factory' not found`
@@ -84,7 +84,7 @@
 
   ;; manage the lifecycle and dependencies of components with runtime state
   ;; TODO Include it only in the development
-  com.stuartsierra/component {:mvn/version "1.0.0"}
+  com.stuartsierra/component {:mvn/version "1.1.0"}
 
   ;; read project-version from pom.xml
   org.clojure/data.xml {:mvn/version "0.0.8"}
@@ -102,7 +102,7 @@
   com.clojure-goes-fast/jvm-alloc-rate-meter {:mvn/version "0.1.4"}
 
   ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-  com.github.seancorfield/next.jdbc {:mvn/version "1.2.761"}
+  com.github.seancorfield/next.jdbc {:mvn/version "1.2.772"}
   org.postgresql/postgresql {:mvn/version "42.3.3"}
 
   ;; A collection of arrow macros. Better threading macros `->` and `->>`

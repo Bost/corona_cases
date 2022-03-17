@@ -24,7 +24,7 @@
    [compojure               "1.6.2"]
 
    ;; Ring Jetty adapter
-   [ring/ring-jetty-adapter "1.9.4"]
+   [ring/ring-jetty-adapter "1.9.5"]
 
    ;; for the (ring.util.http-response/ok)
    [metosin/ring-http-response "0.9.3"]
@@ -36,7 +36,7 @@
    [environ                 "1.2.0"]
 
    ;; JSON and JSON SMILE encoding - see also clj-http
-   [cheshire "5.10.1"]
+   [cheshire "5.10.2"]
 
    ;; for the get-json function. Not having it cheshire as a dependency results
    ;; in: `namespace 'cheshire.factory' not found`
@@ -77,7 +77,7 @@
 
    ;; manage the lifecycle and dependencies of components with runtime state
    ;; TODO Include it only in the development
-   [com.stuartsierra/component "1.0.0"]
+   [com.stuartsierra/component "1.1.0"]
 
    ;; read project-version from pom.xml
    [org.clojure/data.xml "0.0.8"]
@@ -92,7 +92,7 @@
    [com.clojure-goes-fast/clj-memory-meter "0.1.3"]
 
    ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-   [com.github.seancorfield/next.jdbc "1.2.761"]
+   [com.github.seancorfield/next.jdbc "1.2.772"]
    [org.postgresql/postgresql "42.3.3"]]
 
   :min-lein-version "2.0.0"
