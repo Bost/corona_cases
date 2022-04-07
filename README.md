@@ -11,16 +11,6 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 ## Setup environment
 
 ### Install
-<!-- ```bash -->
-<!-- nix-env -iA nixpkgs.clojure -->
-<!-- nix-env -iA nixpkgs.babashka -->
-<!-- nix-env -iA nixpkgs.python3 -->
-<!-- nix-env -iA nixpkgs.pipenv -->
-<!-- nix-env -iA nixpkgs.jdk -->
-<!-- # nixpkgs.postgresql is version 11 -->
-<!-- # nix-env -iA nixpkgs.postgresql_12 -->
-<!-- ``` -->
-
 * Java on GuixOS: `guix install openjdk:jdk`. Thanks to [awb99](https://github.com/clojure-emacs/orchard/issues/117#issuecomment-859987280)
 * [Clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
 * [Heroku for Clojure](https://devcenter.heroku.com/articles/getting-started-with-clojure)
