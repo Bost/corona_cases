@@ -15,7 +15,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.10.3</version>
+      <version>1.11.1</version>
     </dependency>
     <dependency>
       <groupId>metosin</groupId>
@@ -110,12 +110,12 @@
     <dependency>
       <groupId>com.taoensso</groupId>
       <artifactId>timbre</artifactId>
-      <version>5.1.2</version>
+      <version>5.2.1</version>
     </dependency>
     <dependency>
       <groupId>com.github.seancorfield</groupId>
       <artifactId>next.jdbc</artifactId>
-      <version>1.2.772</version>
+      <version>1.2.780</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>

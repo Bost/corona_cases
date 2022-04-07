@@ -18,7 +18,7 @@
    [nrepl/drawbridge "0.2.1"]]
 
   :dependencies
-  [[org.clojure/clojure     "1.10.3"]
+  [[org.clojure/clojure     "1.11.1"]
 
    ;; Ring routing lib; dispatching of GET, PUT, etc.
    [compojure               "1.6.2"]
@@ -73,7 +73,7 @@
    ;; [incanter/incanter-core "1.9.3"]  ;; mean
 
    ;; logging
-   [com.taoensso/timbre "5.1.2"]
+   [com.taoensso/timbre "5.2.1"]
 
    ;; manage the lifecycle and dependencies of components with runtime state
    ;; TODO Include it only in the development
@@ -92,7 +92,7 @@
    [com.clojure-goes-fast/clj-memory-meter "0.1.3"]
 
    ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-   [com.github.seancorfield/next.jdbc "1.2.772"]
+   [com.github.seancorfield/next.jdbc "1.2.780"]
    [org.postgresql/postgresql "42.3.3"]]
 
   :min-lein-version "2.0.0"

@@ -17,7 +17,7 @@
    :exec-args {}}}
 
  :deps
- {org.clojure/clojure {:mvn/version "1.10.3"}
+ {org.clojure/clojure {:mvn/version "1.11.1"}
 
   ;; Ring routing lib; dispatching of GET, PUT, etc.
   compojure/compojure {:mvn/version "1.6.2"}
@@ -80,7 +80,7 @@
   ;; incanter/incanter-core {:mvn/version "1.9.3"}  ;; mean
 
   ;; logging
-  com.taoensso/timbre {:mvn/version "5.1.2"}
+  com.taoensso/timbre {:mvn/version "5.2.1"}
 
   ;; manage the lifecycle and dependencies of components with runtime state
   ;; TODO Include it only in the development
@@ -102,7 +102,7 @@
   com.clojure-goes-fast/jvm-alloc-rate-meter {:mvn/version "0.1.4"}
 
   ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-  com.github.seancorfield/next.jdbc {:mvn/version "1.2.772"}
+  com.github.seancorfield/next.jdbc {:mvn/version "1.2.780"}
   org.postgresql/postgresql {:mvn/version "42.3.3"}
 
   ;; A collection of arrow macros. Better threading macros `->` and `->>`
