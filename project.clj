@@ -55,7 +55,7 @@
    [org.clojars.bost/utils "0.0.0-49-0x726c"]
 
    ;; https://github.com/generateme/cljplot
-   [org.clojars.bost/cljplot "0.0.2"]
+   [org.clojars.bost/cljplot "0.0.3"]
 
    ;; plotting - see also https://github.com/jsa-aerial/hanami
    #_[aerial.hanami "0.12.1"]

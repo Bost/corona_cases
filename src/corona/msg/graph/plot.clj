@@ -125,11 +125,13 @@
                   (ccr/country-name-aliased ccode)
                   (com/encode-cmd ccode))))
 
+(def palette-presets c/palette)
+
 (defn palette-colors
   "Infinite sequence.
  Palette https://clojure2d.github.io/clojure2d/docs/static/palettes.html"
   [n]
-  ((comp cycle reverse (partial take-last n) c/palette-presets) :gnbu-6))
+  ((comp cycle reverse (partial take-last n) palette-presets) :gnbu-6))
 
 (def ^:const line-cfg
   "By default line-margins are 5%. Setting them to [0 0] may not make up
@@ -147,9 +149,9 @@
   (conj line-cfg {:color
                   :red
                   ;; :green
-                  ;; (last (c/palette-presets :ylgn-6))
-                  ;; (c/brighten (last (c/palette-presets :ylgn-6)))
-                  ;; (c/darken (last (c/palette-presets :ylgn-6)))
+                  ;; (last (palette-presets :ylgn-6))
+                  ;; (c/brighten (last (palette-presets :ylgn-6)))
+                  ;; (c/darken (last (palette-presets :ylgn-6)))
                   :stroke
                   {
                    :size 3
@@ -346,7 +348,7 @@
 
 (defn legend [json-data]
   (map (fn [c r] (vector :rect r {:color c}))
-       (cycle (c/palette-presets :category20b))
+       (cycle (palette-presets :category20b))
        (map ccr/country-alias
             ;; XXX b/add-legend doesn't accept newline char \n
             #_(fn [ccode] (format "%s %s"
@@ -407,7 +409,7 @@
                        (partial into [[:grid]])
                        (partial mapv (fn [[_ ccode-data] color]
                                        [:line ccode-data (line-stroke color)])))
-                      data (cycle (c/palette-presets :category20b)))
+                      data (cycle (palette-presets :category20b)))
                 ksum (b/series [:grid] [:sarea data]))
       :legend ((comp (condp = aggregation-kw
                        :abs identity
