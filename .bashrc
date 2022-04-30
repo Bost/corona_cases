@@ -35,6 +35,12 @@ start_db () {
     pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
 }
 
+test_db () {
+    psql --dbname=postgres << EOF
+select count(*) as "count-of-thresholds (should be 4):" from thresholds;
+EOF
+}
+
 # TODO start_mockup_server doesn't work in the guix shell
 # bash: ./heroku.clj: /usr/bin/env: bad interpreter: No such file or directory
 # clojure an clj are not installed
@@ -50,13 +56,13 @@ if [ -z "$(ls --almost-all $pgdata)" ]; then
     initdb --pgdata=$pgdata # dropdb postgres && rm -rf ./var/pg
     start_db
     psql --dbname=postgres --quiet --file=dbase/my.sql
+    test_db
 else
     set -x  # Print commands and their arguments as they are executed.
     start_db
 fi
 # start_mockup_server
-{ retval="$?";
-  set +x; } 2>/dev/null
+{ retval="$?"; set +x; } 2>/dev/null
 
 guix_prompt () {
     cat << EOF

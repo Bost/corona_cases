@@ -22,6 +22,7 @@ curl https://cli-assets.heroku.com/install.sh | sh
 
 # on Guix:
 npm install -g heroku
+# sudo ln -s /home/bost/.npm-packages/bin/heroku /usr/local/bin/heroku
 ```
 * [Babashka](https://github.com/babashka/babashka#installer-script)
 * postgresql:
