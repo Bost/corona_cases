@@ -80,8 +80,10 @@ reports are done once a week."
 (def ^:const ^String webapp-server
   (get-in environment [env-type :web-server]))
 
+;; TODO put CORONA_DATABASE_URL to .envrc (or something better)
+;; and set it with heroku config:set
 (def db-uri (java.net.URI.
-             (let [env-var "DATABASE_URL"]
+             (let [env-var "CORONA_DATABASE_URL"]
                (if-let [uri (System/getenv env-var)]
                  uri
                  (throw (Exception.
