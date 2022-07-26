@@ -229,6 +229,7 @@ heroku pt ":type -'ssl-client-cert' -'$MY_TELEGRAM_ID'" --app <HEROKU-APP-NAME> 
 visualvm -J-DsocksProxyHost=localhost -J-DsocksProxyPort=1080 & disown
 
 # get command line access
+TODO it reads the .bashrc and/or .bash_profile HUH!
 heroku run bash --app <HEROKU-APP-NAME>
 
 # postgres database command line

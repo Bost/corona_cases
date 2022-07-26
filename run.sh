@@ -30,7 +30,9 @@ cliTools=""
 # TODO replace busybox with env
 cliTools="$cliTools busybox"
 cliTools="$cliTools ncurses"
-# See README.md for PostgreSQL 13.3 vs. 13.4 cofiguration
+# See README.md for PostgreSQL 13.3 vs. 13.4 configuration
+# Heroku currently offers Postgres version 13 as the default.
+# https://devcenter.heroku.com/articles/heroku-postgresql#version-support
 cliTools="$cliTools postgresql@13.4"
 cliTools="$cliTools rsync openssh bash fish ripgrep less"
 cliTools="$cliTools grep git coreutils sed which guile"

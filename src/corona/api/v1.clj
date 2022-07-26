@@ -17,6 +17,9 @@
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
+;; TODO use `https://github.com/erdos/erdos.yield` for streams
+;; See also 'Generators as lazy sequences' https://github.com/leonoel/cloroutine/blob/master/doc/01-generators.md
+
 ;; (set! *warn-on-reflection* true)
 
 ;; avoid creating new class each time the `fmt` function is called
