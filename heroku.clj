@@ -390,7 +390,8 @@
         ((comp
           (fn [s] (cstr/split s #"\n")))
          (sh-heroku heroku-app
-                    ;; pt stands for the papertrail plugin
+                    ;; pt stands for the papertrail plugin; it requires
+                    ;; `heroku plugins:install heroku-papertrail`
                     "pt" (format ":type -ssl-client-cert -%s"
                                  (System/getenv "MY_TELEGRAM_ID"))))
 
