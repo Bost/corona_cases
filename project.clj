@@ -21,7 +21,7 @@
   [[org.clojure/clojure     "1.11.1"]
 
    ;; Ring routing lib; dispatching of GET, PUT, etc.
-   [compojure               "1.6.2"]
+   [compojure               "1.7.0"]
 
    ;; Ring Jetty adapter
    [ring/ring-jetty-adapter "1.9.5"]
@@ -36,7 +36,7 @@
    [environ                 "1.2.0"]
 
    ;; JSON and JSON SMILE encoding - see also clj-http
-   [cheshire "5.10.2"]
+   [cheshire "5.11.0"]
 
    ;; for the get-json function. Not having it cheshire as a dependency results
    ;; in: `namespace 'cheshire.factory' not found`
@@ -89,11 +89,11 @@
    [ring-basic-authentication "1.1.1"]
 
    ;; how much memory an object occupies together with all its child fields
-   [com.clojure-goes-fast/clj-memory-meter "0.1.3"]
+   [com.clojure-goes-fast/clj-memory-meter "0.2.1"]
 
    ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-   [com.github.seancorfield/next.jdbc "1.2.780"]
-   [org.postgresql/postgresql "42.3.3"]]
+   [com.github.seancorfield/next.jdbc "1.2.796"]
+   [org.postgresql/postgresql "42.4.1"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"
