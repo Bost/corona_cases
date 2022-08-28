@@ -8,6 +8,8 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 ![Screenshot](/resources/pics/screenshot_1-50-percents.jpg)
 ![Screenshot](/resources/pics/screenshot_2-50-percents.jpg)
 
+TODO add monkeypox data: https://github.com/globaldothealth/monkeypox
+
 ## Setup environment
 
 ### Install
