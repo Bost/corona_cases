@@ -56,7 +56,7 @@ reports are done once a week."
 (spec/def ::env-type (set (keys environment)))
 
 (def env-type
-  "When deving check:
+  "When developing, check the value of:
       echo $CORONA_ENV_TYPE
   When testing locally via `heroku local --env=.heroku-local.env` check
   the file .heroku-local.env

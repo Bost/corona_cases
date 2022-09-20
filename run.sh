@@ -30,13 +30,14 @@ cliTools=""
 # TODO replace busybox with env
 cliTools="$cliTools busybox"
 cliTools="$cliTools ncurses"
-# See README.md for PostgreSQL 13.3 vs. 13.4 configuration
+# See README.md for PostgreSQL 13.3 vs. 13.6 configuration
 # Heroku currently offers Postgres version 13 as the default.
 # https://devcenter.heroku.com/articles/heroku-postgresql#version-support
-cliTools="$cliTools postgresql@13.4"
+cliTools="$cliTools postgresql@13.6"
 cliTools="$cliTools rsync openssh bash fish ripgrep less"
 cliTools="$cliTools grep git coreutils sed which guile"
 cliTools="$cliTools openjdk@18:jdk"
+cliTools="$cliTools clojure-tools" # clojure-tools not clojure must be installed
 
 # TODO --preserve=
 #   preserve environment variables matching REGEX
@@ -44,8 +45,10 @@ set -x
 guix shell \
      --container --network \
      nss-certs curl $cliTools \
+     --preserve=^CORONA \
      --share=$wd/.bash_profile=$HOME/.bash_profile \
      --share=$wd/.bashrc=$HOME/.bashrc \
+     --share=$HOME/.m2=$HOME/.m2 \
      --share=$HOME/.gitconfig=$HOME/.gitconfig \
      --share=$HOME/.config/fish=$HOME/.config/fish \
      --share=$HOME/dev=$HOME/dev \

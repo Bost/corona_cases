@@ -123,13 +123,12 @@ cd corona_cases.data
 clj -X:mockup-server
 ```
 
-1. In Emacs Cider `M-x cider-jack-in-clj`, or start the nREPL from the command line:
+1. Start the nREPL from the command line:
 <!-- No line continuations '\' accepted -->
 ```bash
 clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.2"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
-clojure -X:mockup-server
 ```
-and connect to it from the editor of your choice.
+Then in Emacs `M-x cider-connect-clj`
 
 1. Start the telegram chatbot long-polling:
 ```clojure
@@ -148,7 +147,7 @@ and check the [http://localhost:5050/](http://localhost:5050/) if it's running.
 
 On PostgreSQL 13.3 no var/pg/postgresql.conf changes needed.
 
-On PostgreSQL 13.4, in the var/pg/postgresql.conf:
+On PostgreSQL 13.6, in the var/pg/postgresql.conf:
 1. activate:
 ```
 unix_socket_directories = '/tmp'  # comma-separated list of directories

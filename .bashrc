@@ -5,15 +5,12 @@
 # honor it and otherwise use /bin/sh.
 export SHELL
 
-if [[ $- != *i* ]]
-then
-    # We are being invoked from a non-interactive shell.  If this
-    # is an SSH session (as in "ssh host command"), source
-    # /etc/profile so we get PATH and other essential variables.
+if [[ $- != *i* ]]; then
+    # We are being invoked from a non-interactive shell. If this is an SSH
+    # session (as in "ssh host command"), source /etc/profile so we get PATH and
+    # other essential variables ...
     [[ -n "$SSH_CLIENT" ]] && source /etc/profile
-
-    # Don't do anything else.
-    return
+    return # ... and don't do anything else.
 fi
 
 # /run is not automatically created by guix
@@ -48,6 +45,40 @@ start_mockup_server () {
     ./heroku.clj getMockData && clj -X:mockup-server
 }
 
+start_repl () {
+    clojure \
+        -Sdeps \
+        '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.2"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' \
+        -m nrepl.cmdline \
+        --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+}
+
+guix_prompt () {
+    cat << EOF
+    ░░░                                     ░░░
+    ░░▒▒░░░░░░░░░               ░░░░░░░░░▒▒░░
+     ░░▒▒▒▒▒░░░░░░░           ░░░░░░░▒▒▒▒▒░
+         ░▒▒▒░░▒▒▒▒▒         ░░░░░░░▒▒░
+               ░▒▒▒▒░       ░░░░░░
+                ▒▒▒▒▒      ░░░░░░
+                 ▒▒▒▒▒     ░░░░░
+                 ░▒▒▒▒▒   ░░░░░
+                  ▒▒▒▒▒   ░░░░░
+                   ▒▒▒▒▒ ░░░░░
+                   ░▒▒▒▒▒░░░░░
+                    ▒▒▒▒▒▒░░░
+                     ▒▒▒▒▒▒░
+     _____ _   _ _    _    _____       _
+    / ____| \ | | |  | |  / ____|     (_)
+   | |  __|  \| | |  | | | |  __ _   _ ___  __
+   | | |_ | . ' | |  | | | | |_ | | | | \ \/ /
+   | |__| | |\  | |__| | | |__| | |_| | |>  <
+    \_____|_| \_|\____/   \_____|\__,_|_/_/\_\
+
+Available commands:
+  start_repl start_db test_db start_mockup_server
+EOF
+    }
 
 ## Initialize database on the first run
 ## '--directory' - do not list implied . and ..
@@ -64,35 +95,11 @@ fi
 # start_mockup_server
 { retval="$?"; set +x; } 2>/dev/null
 
-guix_prompt () {
-    cat << EOF
-=========================================
-  ____ _   _ _   _    ____       _
- / ___| \ | | | | |  / ___|_   _(_)_  __
-| |  _|  \| | | | | | |  _| | | | \ \/ /
-| |_| | |\  | |_| | | |_| | |_| | |>  <
- \____|_| \_|\___/   \____|\__,_|_/_/\_\\
-
-=========================================
-EOF
-    }
-
-if [[ $- != *i* ]]
-then
-    # We are being invoked from a non-interactive shell.  If this
-    # is an SSH session (as in "ssh host command"), source
-    # /etc/profile so we get PATH and other essential variables.
-    [[ -n "$SSH_CLIENT" ]] && guix_prompt
-
-    # Don't do anything else.
-    return
-fi
-
 guix_prompt
+# start_repl
 
 # Adjust the prompt depending on whether we're in 'guix environment'.
-if [ -n "$GUIX_ENVIRONMENT" ]
-then
+if [ -n "$GUIX_ENVIRONMENT" ]; then
     PS1='\u@\h \w [env]\$ '
 else
     PS1='\u@\h \w\$ '
