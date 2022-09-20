@@ -57,9 +57,6 @@ EOF
     { retval="$?"; set +x; } 2>/dev/null
 }
 
-# TODO start_mockup_server doesn't work in the guix shell
-# bash: ./heroku.clj: /usr/bin/env: bad interpreter: No such file or directory
-# clojure an clj are not installed
 start_mockup_server () {
     set -x  # Print commands and their arguments as they are executed.
     ./heroku.clj getMockData && clj -X:mockup-server
