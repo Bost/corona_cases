@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 # echo curl --request POST '"https://api.telegram.org/bot$TELEGRAM_TOKEN/deleteWebhook"'
-# echo curl --request GET '"https://api.telegram.org/bot$TELEGRAM_TOKEN/getWebhookInfo"'
+echo curl --request GET '"https://api.telegram.org/bot$TELEGRAM_TOKEN/getWebhookInfo"'
 
 # echo curl --request POST '"http://localhost:5000/$TELEGRAM_TOKEN"'
 
@@ -35,10 +35,10 @@
 
 # set img "iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAnElEQVR42u3RAQ0AAAgDIE1u9FvDOahApzLFGS1ECEKEIEQIQoQgRIgQIQgRghAhCBGCECEIQYgQhAhBiBCECEEIQoQgRAhChCBECEIQIgQhQhAiBCFCEIIQIQgRghAhCBGCEIQIQYgQhAhBiBCEIEQIQoQgRAhChCAEIUIQIgQhQhAiBCEIEYIQIQgRghAhCBEiRAhChCBECEK+W99M+TnxqRsqAAAAAElFTkSuQmCC"
 
-curl --request POST \
-    --form chat_id=112885364 \
-    --form message_id=24473 \
-    --form media='{"type":"photo","media":"iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAnElEQVR42u3RAQ0AAAgDIE1u9FvDOahApzLFGS1ECEKEIEQIQoQgRIgQIQgRghAhCBGCECEIQYgQhAhBiBCECEEIQoQgRAhChCBECEIQIgQhQhAiBCFCEIIQIQgRghAhCBGCEIQIQYgQhAhBiBCEIEQIQoQgRAhChCAEIUIQIgQhQhAiBCEIEYIQIQgRghAhCBEiRAhChCBECEK+W99M+TnxqRsqAAAAAElFTkSuQmCC"}' \
-    --form reply_markup='{"inline_keyboard":[[{"text":"AcA","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :a, :type :abs}"},{"text":"DeA","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :d, :type :abs}"},{"text":"ReA","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :r, :type :abs}"},{"text":"CoA","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :c, :type :abs}"},{"text":"Co\u03a3","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :c, :type :sum}"},{"text":"Re\u03a3","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :r, :type :sum}"},{"text":"De\u03a3","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :d, :type :sum}"},{"text":"Ac\u03a3","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :a, :type :sum}"}]]}' \
-    --form photo=@resources/pics/s2.png \
-    https://api.telegram.org/bot$TELEGRAM_TOKEN/editMessageMedia
+# curl --request POST \
+#     --form chat_id=112885364 \
+#     --form message_id=24473 \
+#     --form media='{"type":"photo","media":"iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAnElEQVR42u3RAQ0AAAgDIE1u9FvDOahApzLFGS1ECEKEIEQIQoQgRIgQIQgRghAhCBGCECEIQYgQhAhBiBCECEEIQoQgRAhChCBECEIQIgQhQhAiBCFCEIIQIQgRghAhCBGCEIQIQYgQhAhBiBCEIEQIQoQgRAhChCAEIUIQIgQhQhAiBCEIEYIQIQgRghAhCBEiRAhChCBECEK+W99M+TnxqRsqAAAAAElFTkSuQmCC"}' \
+#     --form reply_markup='{"inline_keyboard":[[{"text":"AcA","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :a, :type :abs}"},{"text":"DeA","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :d, :type :abs}"},{"text":"ReA","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :r, :type :abs}"},{"text":"CoA","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :c, :type :abs}"},{"text":"Co\u03a3","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :c, :type :sum}"},{"text":"Re\u03a3","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :r, :type :sum}"},{"text":"De\u03a3","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :d, :type :sum}"},{"text":"Ac\u03a3","callback_data":"{:chat-id 112885364, :ccode \"ZZ\", :case-kw :a, :type :sum}"}]]}' \
+#     --form photo=@resources/pics/s2.png \
+#     https://api.telegram.org/bot$TELEGRAM_TOKEN/editMessageMedia

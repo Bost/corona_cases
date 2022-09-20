@@ -59,7 +59,7 @@ webServices = (
 
     # https://micro-work.net/covid/jhutsconfirmedjson4.php/Swi/d:15
     # https://micro-work.net/covid/jhutsconfirmedjson4.php/US/d:15
-    # TODO repo not found; see
+    # repo not found; see
     # https://github.com/CSSEGISandData/COVID-19/issues/492#issuecomment-601827214
     # wget --no-verbose https://github.com/matjung/covid
     # https://github.com/matjung/covid:
