@@ -126,7 +126,7 @@ clj -X:mockup-server
 1. Start the nREPL from the command line:
 <!-- No line continuations '\' accepted -->
 ```bash
-clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.2"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+clojure -Sdeps '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.5"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' -m nrepl.cmdline --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
 ```
 Then in Emacs `M-x cider-connect-clj`
 
@@ -211,6 +211,7 @@ then
 ## Update
 ```bash
 ./heroku.clj updateClojureCliVersion
+# like `lein ancient`
 # see also https://github.com/practicalli/clojure-deps-edn
 # clojure -Spom # generate the pom.xml
 clojure -M:outdated --upgrade # --force

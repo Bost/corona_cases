@@ -24,7 +24,7 @@
    [compojure               "1.7.0"]
 
    ;; Ring Jetty adapter
-   [ring/ring-jetty-adapter "1.9.5"]
+   [ring/ring-jetty-adapter "1.9.6"]
 
    ;; for the (ring.util.http-response/ok)
    [metosin/ring-http-response "0.9.3"]
@@ -43,7 +43,7 @@
    [clj-http                "3.12.3"]
 
    ;; Clojure interface for Telegram Bot API
-   [org.clojars.bost/morse  "0.0.0-164-0xe94b"]
+   [org.clojars.bost/morse  "0.0.0-169-0x4426"]
 
    [org.clojure/data.json   "2.4.0"]
 
@@ -92,8 +92,8 @@
    [com.clojure-goes-fast/clj-memory-meter "0.2.1"]
 
    ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-   [com.github.seancorfield/next.jdbc "1.2.796"]
-   [org.postgresql/postgresql "42.4.1"]]
+   [com.github.seancorfield/next.jdbc "1.3.828"]
+   [org.postgresql/postgresql "42.5.0"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"

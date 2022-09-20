@@ -28,14 +28,33 @@ ln -s $GUIX_ENVIRONMENT /env
 prjdir=~/dec/corona_cases
 pgdata=./var/pg/data
 
+# start_db () {
+#     port=5432
+#     # pgrep -fa -- -D
+#     # pg_ctl --pgdata=./var/pg/data status
+#     # set -x  # Print commands and their arguments as they are executed.
+#     ss -tulpn | grep "127\.0\.0\.1:$port"
+#     { retval="$?"; set +x; } 2>/dev/null
+#     if [ $retval -eq 0 ] || [ -e $pgdata/postmasted.pid ]; then
+#         echo "Could not bind 127.0.0.1:$port - address already in use"
+#     else
+#         echo "Starting postgres server..."
+#         pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
+#     fi
+# }
+
 start_db () {
+    set -x  # Print commands and their arguments as they are executed.
     pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
+    { retval="$?"; set +x; } 2>/dev/null
 }
 
 test_db () {
+    set -x  # Print commands and their arguments as they are executed.
     psql --dbname=postgres << EOF
 select count(*) as "count-of-thresholds (should be 4):" from thresholds;
 EOF
+    { retval="$?"; set +x; } 2>/dev/null
 }
 
 # TODO start_mockup_server doesn't work in the guix shell
@@ -48,7 +67,7 @@ start_mockup_server () {
 start_repl () {
     clojure \
         -Sdeps \
-        '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.2"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' \
+        '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.5"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' \
         -m nrepl.cmdline \
         --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
 }
@@ -83,17 +102,21 @@ EOF
 ## Initialize database on the first run
 ## '--directory' - do not list implied . and ..
 if [ -z "$(ls --almost-all $pgdata)" ]; then
+    # TODO make a logging monad
     set -x  # Print commands and their arguments as they are executed.
     initdb --pgdata=$pgdata # dropdb postgres && rm -rf ./var/pg
+    { retval="$?"; set +x; } 2>/dev/null
+
     start_db
+
+    set -x  # Print commands and their arguments as they are executed.
     psql --dbname=postgres --quiet --file=dbase/my.sql
+    { retval="$?"; set +x; } 2>/dev/null
     test_db
 else
-    set -x  # Print commands and their arguments as they are executed.
     start_db
 fi
 # start_mockup_server
-{ retval="$?"; set +x; } 2>/dev/null
 
 guix_prompt
 # start_repl

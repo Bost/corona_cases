@@ -35,9 +35,13 @@ cliTools="$cliTools ncurses"
 # https://devcenter.heroku.com/articles/heroku-postgresql#version-support
 cliTools="$cliTools postgresql@13.6"
 cliTools="$cliTools rsync openssh bash fish ripgrep less"
+# cliTools="$cliTools iproute2" # provides the `ss` socket stuff
 cliTools="$cliTools grep git coreutils sed which guile"
 cliTools="$cliTools openjdk@18:jdk"
 cliTools="$cliTools clojure-tools" # clojure-tools not clojure must be installed
+# ./heroku.clj needs babashka. Also `guix shell ...` contain '--share=/usr/bin'
+# so that shebang (aka hashbang) #!/bin/env/bb works
+cliTools="$cliTools babashka"
 
 # TODO --preserve=
 #   preserve environment variables matching REGEX
@@ -51,6 +55,7 @@ guix shell \
      --share=$HOME/.m2=$HOME/.m2 \
      --share=$HOME/.gitconfig=$HOME/.gitconfig \
      --share=$HOME/.config/fish=$HOME/.config/fish \
+     --share=$HOME/.bash_history=$HOME/.bash_history \
      --share=$HOME/dev=$HOME/dev \
      --share=$HOME/dec=$HOME/dec \
      --share=$HOME/der=$HOME/der \
@@ -60,5 +65,6 @@ guix shell \
      --share=$wd/var/log=/var/log \
      --share=$wd/var/pg=/var/pg \
      --share=$wd/var/run/postgresql=/var/run/postgresql \
+     --share=/usr/bin \
      --share=$wd \
      -- bash
