@@ -1,20 +1,19 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.text.lists)
 
 (ns corona.msg.text.lists
-  (:require [clojure.string :as cstr]
-            [corona.api.cache :as cache]
-            [corona.api.expdev07 :as data]
-            [corona.common :as com :refer
-             [kcco kact krec kclo kdea kest kmax krep k1e5 kchg kls7 kabs kavg
-              ka1e5 kr1e5 kc1e5 kd1e5 kv1e5 klense-fun
-              basic-lense
-              ]]
-            [corona.countries :as ccr]
-            [corona.country-codes :as ccc]
-            [corona.lang :as lang]
-            [corona.macro :refer [defn-fun-id debugf]]
-            [corona.msg.text.common :as msgc]
-            [taoensso.timbre :as timbre]))
+  (:require
+   [clojure.string :as cstr]
+   [corona.api.cache :as cache]
+   [corona.api.expdev07 :as data]
+   [corona.common :as com]
+   [corona.keywords :refer :all]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc]
+   [corona.lang :as lang]
+   [corona.macro :refer [defn-fun-id debugf]]
+   [corona.msg.text.common :as msgc]
+   [taoensso.timbre :as timbre]
+   ))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"

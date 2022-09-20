@@ -1,11 +1,8 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.estimate)
 
 (ns corona.estimate
-  (:require [corona.common :as com :refer
-             [kclo kact kpop krec knew kdea krep kest kabs k1e5 k%%% kpop
-              ktst kcco
-              kr1e5 kc1e5 ka1e5 basic-lense
-              ]]
+  (:require [corona.keywords :refer :all]
+            [corona.common :as com]
             [corona.macro :refer [defn-fun-id debugf infof warnf]]
             [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
             ))

@@ -1,32 +1,28 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.graph.plot)
 
 (ns corona.msg.graph.plot
-  (:require [cljplot.build :as b]
-            [cljplot.common :as plotcom]
-            [cljplot.render :as r]
-            [clojure.set :as cset]
-            [clojure2d.color :as c]
-            [clojure2d.core :as c2d]
-            [corona.api.cache :as cache]
-            [corona.common :as com :refer
-             [kcco krec kact kdea krep kpop kclo knew ktst
-              krep kabs ksum
-              kcase-kw
-              sum
-              basic-lense
-              makelense]]
-            [corona.cases :as cases]
-            [corona.countries :as ccr]
-            [corona.country-codes :as ccc]
-            [corona.lang :as lang]
-            ;; XXX cljplot.core must be required otherwise an empty plot is
-            ;; shown when released. WTF?
-            cljplot.core
-            [corona.macro :refer [defn-fun-id debugf infof]]
-            [utils.core :refer [in?]]
-            [corona.models.dbase :as dbase]
-            [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
-            )
+  (:require
+   [cljplot.build :as b]
+   [cljplot.common :as plotcom]
+   [cljplot.render :as r]
+   [clojure.set :as cset]
+   [clojure2d.color :as c]
+   [clojure2d.core :as c2d]
+   [corona.api.cache :as cache]
+   [corona.common :as com]
+   [corona.keywords :refer :all]
+   [corona.cases :as cases]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc]
+   [corona.lang :as lang]
+   ;; XXX cljplot.core must be required otherwise an empty plot is
+   ;; shown when released. WTF?
+   cljplot.core
+   [corona.macro :refer [defn-fun-id debugf infof]]
+   [utils.core :refer [in?]]
+   [corona.models.dbase :as dbase]
+   [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
+   )
   (:import java.awt.image.BufferedImage
            java.io.ByteArrayOutputStream
            [java.time LocalDate ZoneId]
@@ -89,9 +85,9 @@
        [(to-java-time-local-date tst)
         (condp = case-kw
           kpop (bigint (/ (get (first hms) kpop) 1e3))
-          (sum
-           (or (get com/lense-map case-kw)
-               (com/basic-lense case-kw))
+          (com/sum
+           (or (get lense-map case-kw)
+               (basic-lense case-kw))
            hms))]))
     (partial group-by ktst))
    stats))
@@ -339,7 +335,7 @@
                                      (fn [[ccode hms]]
                                        ((comp
                                          (partial hash-map kcco ccode ktst t case-kw)
-                                         (partial sum new-lensed-case-kw))
+                                         (partial com/sum new-lensed-case-kw))
                                         hms)))
                             (partial group-by kcco))
                            hms0)))

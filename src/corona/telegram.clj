@@ -4,37 +4,35 @@
 
 (ns corona.telegram
   (:gen-class)
-  (:require [clojure.core.async :as async]
-            [clojure.string :as cstr]
-            [corona.api.cache :as cache]
-            [corona.api.expdev07 :as data]
-            [corona.api.owid :as vac]
-            [corona.api.v1 :as v1]
-            [corona.commands :as cmd]
-            [corona.common :as com
-             :refer
-             [kact ktst kcco klense-fun]]
-            [corona.cases :as cases]
-            [corona.country-codes :as ccc]
-            [corona.countries :as ccr]
-            [corona.estimate :as est]
-            [corona.macro :as macro :refer
-             [defn-fun-id debugf infof warnf fatalf]]
-            [taoensso.timbre :as timbre]
-            [corona.msg.text.details :as msgi]
-            [corona.msg.text.lists :as msgl]
-            [corona.msg.text.messages :as msg]
-            [corona.msg.text.common :as msgc]
-            [corona.msg.graph.plot :as plot]
-            [morse.handlers :as moh]
-            [morse.polling :as mop]
-            ;; needed for the 'ok?' macro
-            corona.models.migration
-            [corona.models.dbase :as dbase]
-            [clojure.algo.monads :refer [domonad state-m m-result]]
-            [corona.lang :as lang]
-            [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
-            )
+  (:require
+   [clojure.algo.monads :refer [domonad state-m m-result]]
+   [clojure.core.async :as async]
+   [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
+   [clojure.string :as cstr]
+   [corona.api.cache :as cache]
+   [corona.api.expdev07 :as data]
+   [corona.api.owid :as vac]
+   [corona.api.v1 :as v1]
+   [corona.cases :as cases]
+   [corona.commands :as cmd]
+   [corona.common :as com]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc]
+   [corona.estimate :as est]
+   [corona.keywords :refer :all]
+   [corona.lang :as lang]
+   [corona.macro :as macro :refer [defn-fun-id debugf infof warnf fatalf]]
+   [corona.models.dbase :as dbase]
+   [corona.msg.graph.plot :as plot]
+   [corona.msg.text.common :as msgc]
+   [corona.msg.text.details :as msgi]
+   [corona.msg.text.lists :as msgl]
+   [corona.msg.text.messages :as msg]
+   [morse.handlers :as moh]
+   [morse.polling :as mop]
+   [taoensso.timbre :as timbre]
+   corona.models.migration ;; needed for the 'ok?' macro
+   )
   (:import [java.time Instant LocalDateTime ZoneId]))
 
 ;; (set! *warn-on-reflection* true)
@@ -225,7 +223,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
              (partial
               apply
               msgl/calc-listings!
-              stats-countries header footer com/basic-lense prm)))
+              stats-countries header footer basic-lense prm)))
            [[cases/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
             [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
         _ (com/add-calc-time "all-calc-listings" all-calc-listings)

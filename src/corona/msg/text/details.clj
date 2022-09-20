@@ -1,24 +1,22 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.text.details)
 
 (ns corona.msg.text.details
-  (:require [clojure.string :as cstr]
-            [corona.api.cache :as cache]
-            [corona.api.expdev07 :as data]
-            [corona.common :as com :refer
-             [kpop kvac knew kact kdea krec kclo kest kmax krep k1e5 kls7 kabs
-              ka1e5 kr1e5 kc1e5 kd1e5 kv1e5
-              kavg kchg krnk kcco makelense klense-fun
-              basic-lense
-              ]]
-            [corona.cases :as cases]
-            [corona.countries :as ccr]
-            [corona.country-codes :as ccc]
-            [corona.lang :as lang]
-            [corona.macro :refer [defn-fun-id debugf errorf]]
-            [taoensso.timbre :as timbre]
-            [corona.msg.text.common :as msgc]
-            [utils.core :as utc]
-            [utils.num :as utn]))
+  (:require
+   [clojure.string :as cstr]
+   [corona.api.cache :as cache]
+   [corona.api.expdev07 :as data]
+   [corona.common :as com]
+   [corona.keywords :refer :all]
+   [corona.cases :as cases]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc]
+   [corona.lang :as lang]
+   [corona.macro :refer [defn-fun-id debugf errorf]]
+   [taoensso.timbre :as timbre]
+   [corona.msg.text.common :as msgc]
+   [utils.core :as utc]
+   [utils.num :as utn]
+   ))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -72,7 +70,7 @@
 (defn all-rankings
   "Works also for one and zero countries."
   [stats-countries]
-  (let [lense-fun com/ranking-lense]
+  (let [lense-fun ranking-lense]
     {klense-fun lense-fun
      :vals
      (let [stats-all-ranking-cases
@@ -402,13 +400,13 @@
            (partial map (fn [fun]
                           (last-7-yyy (fun krec) last-8)
                           #_(last-7-xxx (fun krec) last-8))))
-          [com/identity-lense
-           com/basic-lense])
+          [identity-lense
+           basic-lense])
 
          lense-fun (if (and country-reports-recovered?
                             (not (msgc/worldwide? ccode)))
-                     com/identity-lense
-                     com/basic-lense)
+                     identity-lense
+                     basic-lense)
          fun-a (lense-fun kact)
          fun-d (lense-fun kdea)
          fun-n (lense-fun knew)

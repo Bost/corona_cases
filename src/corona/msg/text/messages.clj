@@ -1,22 +1,22 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.text.messages)
 
 (ns corona.msg.text.messages
-  (:require [clojure.data.json :as json]
-            [clojure.edn :as edn]
-            [clojure.string :as cstr]
-            [corona.api.cache :as cache]
-            [corona.common :as com :refer
-             [kcco kact kdea kest kmax krep k1e5 kls7 kabs kavg
-              kcase-kw
-              makelense]]
-            [corona.cases :as cases]
-            [corona.estimate :as est]
-            [corona.lang :as lang]
-            [corona.macro :refer [defn-fun-id]]
-            [corona.msg.text.common :as msgc]
-            [corona.msg.graph.plot :as plot]
-            [morse.api :as morse]
-            [corona.macro :refer [defn-fun-id debugf]]))
+  (:require
+   [clojure.data.json :as json]
+   [clojure.edn :as edn]
+   [clojure.string :as cstr]
+   [corona.api.cache :as cache]
+   [corona.common :as com]
+   [corona.keywords :refer :all]
+   [corona.cases :as cases]
+   [corona.estimate :as est]
+   [corona.lang :as lang]
+   [corona.macro :refer [defn-fun-id]]
+   [corona.msg.text.common :as msgc]
+   [corona.msg.graph.plot :as plot]
+   [morse.api :as morse]
+   [corona.macro :refer [defn-fun-id debugf]]
+   ))
 
 ;; (set! *warn-on-reflection* true)
 

@@ -1,26 +1,28 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.commands)
 
 (ns corona.commands
-  (:require [clojure.string :as cstr]
-            [corona.common :as com :refer
-             [kcco]]
-            [corona.cases :as cases]
-            [corona.api.cache :as cache]
-            [corona.countries :as ccr]
-            [corona.country-codes :as ccc]
-            [corona.lang :as lang]
-            [corona.msg.text.common :as msgc]
-            [corona.msg.text.details :as msgi]
-            [corona.msg.text.messages :as msg]
-            [corona.msg.text.lists :as msgl]
-            [corona.macro :refer [defn-fun-id]]
-            [corona.msg.graph.plot :as p]
-            [morse.api :as morse]
-            [corona.macro :refer [defn-fun-id debugf]]
-            [utils.core :as u :refer [in?]]
-            [corona.api.expdev07 :as data]
-            [taoensso.timbre :as timbre]
-            [corona.models.dbase :as dbase]))
+  (:require
+   [clojure.string :as cstr]
+   [corona.common :as com]
+   [corona.keywords :refer :all]
+   [corona.cases :as cases]
+   [corona.api.cache :as cache]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc]
+   [corona.lang :as lang]
+   [corona.msg.text.common :as msgc]
+   [corona.msg.text.details :as msgi]
+   [corona.msg.text.messages :as msg]
+   [corona.msg.text.lists :as msgl]
+   [corona.macro :refer [defn-fun-id]]
+   [corona.msg.graph.plot :as p]
+   [morse.api :as morse]
+   [corona.macro :refer [defn-fun-id debugf]]
+   [utils.core :as u :refer [in?]]
+   [corona.api.expdev07 :as data]
+   [taoensso.timbre :as timbre]
+   [corona.models.dbase :as dbase]
+   ))
 
 ;; (set! *warn-on-reflection* true)
 

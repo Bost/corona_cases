@@ -6,10 +6,8 @@
    [corona.models.dbase :as dbase]
    [taoensso.timbre :as timbre]
    [corona.macro :refer [defn-fun-id debugf infof warnf]]
-   [corona.common :refer
-    [ktst kpop kvac kact krec kdea knew kclo kdea
-     ka1e5 kr1e5 kc1e5 kd1e5 kv1e5
-     ]]))
+   [corona.keywords :refer :all]
+   ))
 
 (defmacro tore
   "->>-or-eduction. In fact both have the same performance.

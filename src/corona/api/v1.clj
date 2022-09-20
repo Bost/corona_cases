@@ -3,17 +3,17 @@
 (ns corona.api.v1
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
-  (:require [corona.api.expdev07 :as data]
-            [corona.common :as com :refer
-             [ktst krep kest kabs k1e5 k%%% knew kvac kact krec kdea kclo kpop
-              kcco sum]]
-            [corona.country-codes :as ccc]
-            [taoensso.timbre :as timbre]
-            [corona.macro :refer [defn-fun-id debugf errorf warnf]]
-            [corona.estimate :as est]
-            [utils.core :as utc]
-            [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
-            )
+  (:require
+   [corona.api.expdev07 :as data]
+   [corona.common :as com]
+   [corona.keywords :refer :all]
+   [corona.country-codes :as ccc]
+   [taoensso.timbre :as timbre]
+   [corona.macro :refer [defn-fun-id debugf errorf warnf]]
+   [corona.estimate :as est]
+   [utils.core :as utc]
+   [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
+   )
   (:import java.text.SimpleDateFormat
            java.util.TimeZone))
 
@@ -43,7 +43,7 @@
      default-hms)))
 
 (defn xf-for-case "" [cnt-reports data-with-pop case-kw]
-  (let [lensed-case-kw (com/makelense case-kw)
+  (let [lensed-case-kw (makelense case-kw)
         shift (max corona.estimate/shift-recovery
                    corona.estimate/shift-deaths)]
     ((comp
@@ -86,14 +86,14 @@
                                         kcco ccc/worldwide-2-country-code
                                         ktst t
                                         case-kw)
-                               (partial sum lensed-case-kw))
+                               (partial com/sum lensed-case-kw))
                               ms)))
                      ;; group together provinces of the given country
                      (partial map
                               (fn [[ccode hms]]
                                 ((comp
                                   (partial hash-map kcco ccode ktst t case-kw)
-                                  (partial sum lensed-case-kw))
+                                  (partial com/sum lensed-case-kw))
                                  hms)))
                      (partial group-by kcco))
                     hms)))

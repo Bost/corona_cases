@@ -2,11 +2,7 @@
 
 (ns corona.lang
   (:require
-   [corona.common :as com :refer [makelense
-                                  basic-lense
-                                  kvac
-                                  kact krec kclo kdea kest kmax krep k1e5
-                                  kchg kls7 kabs kavg]]
+   [corona.keywords :refer :all]
    [corona.cases :as cases]
    [clojure.string :as cstr]
    ))
