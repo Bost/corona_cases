@@ -49,6 +49,7 @@ guix shell \
      --container --network \
      nss-certs curl $cliTools \
      --preserve=^CORONA \
+     --preserve=^TELEGRAM \
      --share=$wd/.bash_profile=$HOME/.bash_profile \
      --share=$wd/.bashrc=$HOME/.bashrc \
      --share=$HOME/.m2=$HOME/.m2 \

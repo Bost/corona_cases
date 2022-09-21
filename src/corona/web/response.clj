@@ -5,13 +5,13 @@
    [clojure.data.json :as json]
    [clojure.string :as cstr]
    [corona.common :as com]
+   [corona.telegram :as tgram]
    [corona.macro :refer [defn-fun-id infof]]))
+
+;; (set! *warn-on-reflection* true)
 
 (def ^:const pom-version "See `pom/pom-version`" nil)
 (def ^:const telegram-hook "telegram")
-
-(defn webhook-url [telegram-token]
-  (format "%s/%s" com/webapp-server telegram-token))
 
 (def url-telegram       "https://api.telegram.org/bot$TELEGRAM_TOKEN")
 (def url-getUpdates     (str url-telegram "/getUpdates"))
@@ -40,7 +40,7 @@
                 com/webapp-server google-hook)
       ""
       (format "curl %s %s \"%s\""
-              (str "--form \"url=\"" (webhook-url "$TELEGRAM_TOKEN"))
+              (str "--form \"url=\"" (tgram/webhook-url "$TELEGRAM_TOKEN"))
               "--form \"drop_pending_updates=true\""
               url-setWebhook)
 

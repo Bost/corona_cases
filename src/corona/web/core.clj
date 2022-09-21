@@ -1,36 +1,36 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.web.core)
 
 (ns corona.web.core
-  (:require [clj-time.bost :as cte]
-            [clj-time.core :as ctc]
-            [clojure.data.json :as json]
-            [clojure.string :as cstr]
-            [com.stuartsierra.component :as component]
-            [compojure.core :as cjc]
-            compojure.handler
-            [corona.common :as com]
-            [corona.country-codes :as ccc]
-            [corona.msg.graph.plot :as plot]
-            [corona.telegram :as tgram]
-            [corona.web.response :as webresp]
-            drawbridge.core
-            [morse.api :as moa]
-            [morse.handlers :as moh]
-            ring.adapter.jetty
-            [ring.middleware.basic-authentication :as basic]
-            ring.middleware.json
-            ring.middleware.keyword-params
-            ring.middleware.nested-params
-            ring.middleware.params
-            [ring.middleware.session :as session]
-            ring.util.http-response
-            [corona.macro :as macro :refer [defn-fun-id debugf infof warnf]]
-            [taoensso.timbre :as timbre]
-            [corona.models.migration :as schema]
-            ;; needed for the 'ok?' macro
-            corona.models.migration
-            [corona.api.cache :as cache]
-            )
+  (:require
+   [clj-time.bost :as cte]
+   [clj-time.core :as ctc]
+   [clojure.data.json :as json]
+   [clojure.string :as cstr]
+   [com.stuartsierra.component :as component]
+   [compojure.core :as cjc]
+   compojure.handler
+   [corona.common :as com]
+   [corona.country-codes :as ccc]
+   [corona.msg.graph.plot :as plot]
+   [corona.telegram :as tgram]
+   [corona.web.response :as webresp]
+   drawbridge.core
+   [morse.api :as morse]
+   [morse.handlers :as moh]
+   ring.adapter.jetty
+   [ring.middleware.basic-authentication :as basic]
+   ring.middleware.json
+   ring.middleware.keyword-params
+   ring.middleware.nested-params
+   ring.middleware.params
+   [ring.middleware.session :as session]
+   ring.util.http-response
+   [corona.macro :as macro :refer [defn-fun-id debugf infof warnf]]
+   [taoensso.timbre :as timbre]
+   [corona.models.migration :as schema]
+   ;; needed for the 'ok?' macro
+   corona.models.migration
+   [corona.api.cache :as cache])
   (:import java.time.ZoneId
            java.util.TimeZone))
 
@@ -44,46 +44,6 @@
    :body (cstr/join "\n" ["home page"])})
 
 (def ^:const ws-path (format "ws/%s" webresp/pom-version))
-
-(defn webhook-url [telegram-token]
-  (format "%s/%s" com/webapp-server telegram-token))
-
-(declare tgram-handlers)
-
-(when com/use-webhook?
-  (timbre/debugf "Defining tgram-handlers at compile time ...")
-  (moh/apply-macro moh/defhandler tgram-handlers (tgram/create-handlers))
-  (timbre/debugf "Defining tgram-handlers at compile time ... done"))
-
-(defn-fun-id webhook-not-set? "" [telegram-token]
-  (if telegram-token
-    ((comp
-      empty?
-      :url
-      :result
-      :body
-      moa/get-info-webhook)
-     telegram-token)
-    (warnf "Undefined telegram-token")))
-
-(defn-fun-id setup-webhook "" []
-  ;; Note: due the com/use-webhook? condition the 'when' and 'when-not' are not
-  ;; mutually exclusive
-  (if com/use-webhook?
-    (when (webhook-not-set? com/telegram-token)
-      ((comp
-        (fn [v] (debugf "(set-webhook ...) %s" v))
-        :body
-        (partial moa/set-webhook com/telegram-token)
-        webhook-url)
-       com/telegram-token))
-    (when-not (webhook-not-set? com/telegram-token)
-      (let [res ()]
-        ((comp
-          (fn [v] (debugf "(del-webhook ...) %s" v) v)
-          :body
-          moa/del-webhook)
-         com/telegram-token)))))
 
 (defn- authenticated? [user pass]
   ;; TODO: heroku config:add REPL_USER=[...] REPL_PASSWORD=[...]
@@ -105,7 +65,7 @@
     args
     (let [body (get-in args [:body])]
       (timbre/debugf "webhook request body:\n%s" args)
-      (tgram-handlers body)
+      (tgram/tgram-handlers body)
       (ring.util.http-response/ok)))
 
   #_(cjc/POST
@@ -205,9 +165,6 @@
   ;; $PORT within 60 seconds of launch
   ;; https://devcenter.heroku.com/articles/run-non-web-java-processes-on-heroku
   (webapp-start)
-
-  ;; setup-webhook should be done in the end after everything is initialized
-  (setup-webhook)
 
   (tgram/start)
   (infof "Starting ... done"))

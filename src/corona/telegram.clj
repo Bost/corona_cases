@@ -28,6 +28,7 @@
    [corona.msg.text.details :as msgi]
    [corona.msg.text.lists :as msgl]
    [corona.msg.text.messages :as msg]
+   [morse.api :as morse]
    [morse.handlers :as moh]
    [morse.polling :as mop]
    [taoensso.timbre :as timbre]
@@ -107,6 +108,57 @@
     (infof "Registering %s chatbot commands and %s callbacks ..."
            (count commands) (count callbacks))
     (into callbacks commands)))
+
+(declare tgram-handlers)
+
+(when com/use-webhook?
+  (timbre/debugf "Defining tgram-handlers at compile time ...")
+  (moh/apply-macro moh/defhandler tgram-handlers (create-handlers))
+  (timbre/debugf "Defining tgram-handlers at compile time ... done"))
+
+(defn webhook-url [telegram-token]
+  (format "%s/%s" com/webapp-server telegram-token))
+
+(defn-fun-id setup-webhook "" [telegram-token]
+  (let [webhook-set? (if telegram-token
+                       ((comp
+                         seq ;; (seq x) is idiom for (not (empty? x))
+                         :url
+                         :result
+                         :body
+                         morse/get-info-webhook)
+                        telegram-token)
+          )]
+    (if com/use-webhook?
+      (if webhook-set?
+        (debugf "Webhook exists already. Condition satisfied, do nothing.")
+        ((comp
+          (fn [v] (debugf "morse/set-webhook returned: %s" v))
+          :body
+          (partial morse/set-webhook telegram-token)
+          webhook-url
+          (fn [v]
+            (if v
+              v
+              (fatalf
+               (str
+                "Can't call morse/set-webhook. Undefined telegram-token."
+                "TODO error out")))))
+         telegram-token))
+      (if webhook-set?
+        ((comp
+          (fn [v] (debugf "morse/del-webhook returned: %s" v) v)
+          :body
+          morse/del-webhook
+          (fn [v]
+            (if v
+              v
+              (fatalf
+               (str
+                "Can't call morse/del-webhook. Undefined telegram-token"
+                "TODO error out")))))
+         telegram-token)
+        (debugf "Webhook not present. Condition satisfied, do nothing.")))))
 
 (defn api-error-handler [] (when com/env-corona-cases? (com/system-exit 2)))
 
@@ -381,6 +433,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   (infof "Starting ...")
   (if (macro/system-ok?)
     (do
+      (setup-webhook com/telegram-token)
       (reset-cache!)
       (swap! initialized (fn [_]
                            ;; TODO use morse.handler instead of true?
