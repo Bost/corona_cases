@@ -105,7 +105,7 @@
     <dependency>
       <groupId>org.clojars.bost</groupId>
       <artifactId>cljplot</artifactId>
-      <version>0.0.3</version>
+      <version>0.0.0-84-0x214c</version>
     </dependency>
     <dependency>
       <groupId>com.taoensso</groupId>
