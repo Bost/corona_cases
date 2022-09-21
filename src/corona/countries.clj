@@ -3,12 +3,12 @@
 (ns corona.countries
   (:require
    [clojure.set :as cset]
-   [corona.country-codes :as ccc]
-   [utils.core :refer [in?] :exclude [id]]
    [clojure.string :as cstr]
-   [corona.macro :refer [defn-fun-id errorf]])
-  (:import com.neovisionaries.i18n.CountryCode
-           com.neovisionaries.i18n.CountryCode$Assignment))
+   [corona.country-codes :as ccc]
+   [corona.telemetry :refer [defn-fun-id errorf]]
+   [utils.core :refer [in?]])
+  (:import
+   (com.neovisionaries.i18n CountryCode CountryCode$Assignment)))
 
 ;; (set! *warn-on-reflection* true)
 

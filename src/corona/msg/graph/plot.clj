@@ -4,30 +4,28 @@
   (:require
    [cljplot.build :as b]
    [cljplot.common :as plotcom]
+   [cljplot.core]
    [cljplot.render :as r]
+   [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
    [clojure.set :as cset]
    [clojure2d.color :as c]
    [clojure2d.core :as c2d]
    [corona.api.cache :as cache]
-   [corona.common :as com]
-   [corona.keywords :refer :all]
    [corona.cases :as cases]
+   [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
+   [corona.keywords :refer :all]
    [corona.lang :as lang]
-   ;; XXX cljplot.core must be required otherwise an empty plot is
-   ;; shown when released. WTF?
-   cljplot.core
-   [corona.macro :refer [defn-fun-id debugf infof]]
-   [utils.core :refer [in?]]
    [corona.models.dbase :as dbase]
-   [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
-   )
-  (:import java.awt.image.BufferedImage
-           java.io.ByteArrayOutputStream
-           [java.time LocalDate ZoneId]
-           java.time.format.DateTimeFormatter
-           javax.imageio.ImageIO))
+   [corona.telemetry :refer [debugf defn-fun-id infof]]
+   [utils.core :refer [in?]])
+  (:import
+   (java.awt.image BufferedImage)
+   (java.io ByteArrayOutputStream)
+   (java.time LocalDate ZoneId)
+   (java.time.format DateTimeFormatter)
+   (javax.imageio ImageIO)))
 
 ;; (set! *warn-on-reflection* true)
 

@@ -13,6 +13,14 @@
   ((eval
     .
     (progn
+
+      (dolist (mode '(clojure-mode cider-repl-mode))
+        (font-lock-add-keywords
+         mode
+         `((,(concat "(\\(?:" clojure--sym-regexp "/\\)?"
+                     "\\(" (regexp-opt '("defn-fun-id")) "\\)\\>")
+            . font-lock-keyword-face))))
+
       (defun corona=cider-browse-all-ns-corona ()
         (interactive)
         (my=cider-browse-all-ns "corona"))

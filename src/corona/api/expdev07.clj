@@ -2,15 +2,16 @@
 
 (ns corona.api.expdev07
   (:require
+   [clojure.stacktrace]
+   [corona.api.cache :as cache]
+   [corona.api.owid :as vac]
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
-   [corona.api.owid :as vac]
-   [utils.core :as utc]
-   [clojure.stacktrace]
-   [corona.macro :refer [defn-fun-id debugf errorf]]
-   [corona.api.cache :as cache])
-  (:import java.text.SimpleDateFormat))
+   [corona.telemetry :refer [debugf defn-fun-id errorf]]
+   [utils.core :as utc])
+  (:import
+   (java.text SimpleDateFormat)))
 
 ;; (set! *warn-on-reflection* true)
 

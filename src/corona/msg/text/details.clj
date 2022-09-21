@@ -5,18 +5,17 @@
    [clojure.string :as cstr]
    [corona.api.cache :as cache]
    [corona.api.expdev07 :as data]
-   [corona.common :as com]
-   [corona.keywords :refer :all]
    [corona.cases :as cases]
+   [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
+   [corona.keywords :refer :all]
    [corona.lang :as lang]
-   [corona.macro :refer [defn-fun-id debugf errorf]]
-   [taoensso.timbre :as timbre]
    [corona.msg.text.common :as msgc]
+   [corona.telemetry :refer [debugf defn-fun-id errorf]]
+   [taoensso.timbre :as timbre]
    [utils.core :as utc]
-   [utils.num :as utn]
-   ))
+   [utils.num :as utn]))
 
 ;; (set! *warn-on-reflection* true)
 

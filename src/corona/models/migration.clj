@@ -1,10 +1,11 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.models.migration)
 
 (ns corona.models.migration
-  (:require [next.jdbc :as jdbc]
-            [corona.models.dbase :as dbase]
-            [corona.models.common :as mcom]
-            [corona.macro :refer [defn-fun-id debugf]]))
+  (:require
+   [corona.models.common :as mcom]
+   [corona.models.dbase :as dbase]
+   [corona.telemetry :refer [debugf defn-fun-id]]
+   [next.jdbc :as jdbc]))
 
 (defn-fun-id migrated? "" []
   (with-open [connection
@@ -18,10 +19,10 @@
          tables))
       set
       (partial map :tables/table_name)
-      (fn [result] (debugf "result:\n    %s" result) result)
+      (fn [result] (debugf "result:\n  %s" result) result)
       (fn [cmd] (jdbc/execute! connection [cmd]))
       #_(reduce my-fn init-value (jdbc/plan connection [...]))
-      (fn [cmd] (debugf "\n  %s" cmd)
+      (fn [cmd] (debugf "cmd:\n  %s" cmd)
         cmd))
      (str "select table_name from information_schema.tables"
           " where table_schema = 'public'"))))

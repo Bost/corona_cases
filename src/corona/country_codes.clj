@@ -3,12 +3,13 @@
 (ns corona.country-codes
   "This namespace seems to be the first one loaded by the class loader."
   (:refer-clojure :exclude [pr])
-  (:require [clojure.set :as cset]
-            [clojure.string :as cstr]
-            taoensso.encore
-            [taoensso.timbre :as timbre]
-            [taoensso.timbre.appenders.core :as appenders]
-            [corona.common :as com]))
+  (:require
+   [clojure.set :as cset]
+   [clojure.string :as cstr]
+   taoensso.encore
+   [taoensso.timbre :as timbre]
+   [taoensso.timbre.appenders.core :as appenders]
+   [corona.common :as com]))
 
 ;; (set! *warn-on-reflection* true)
 

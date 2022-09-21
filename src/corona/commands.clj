@@ -3,26 +3,24 @@
 (ns corona.commands
   (:require
    [clojure.string :as cstr]
-   [corona.common :as com]
-   [corona.keywords :refer :all]
-   [corona.cases :as cases]
    [corona.api.cache :as cache]
+   [corona.api.expdev07 :as data]
+   [corona.cases :as cases]
+   [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
+   [corona.keywords :refer :all]
    [corona.lang :as lang]
+   [corona.models.dbase :as dbase]
+   [corona.msg.graph.plot :as p]
    [corona.msg.text.common :as msgc]
    [corona.msg.text.details :as msgi]
-   [corona.msg.text.messages :as msg]
    [corona.msg.text.lists :as msgl]
-   [corona.macro :refer [defn-fun-id]]
-   [corona.msg.graph.plot :as p]
+   [corona.msg.text.messages :as msg]
+   [corona.telemetry :refer [debugf defn-fun-id measure]]
    [morse.api :as morse]
-   [corona.macro :refer [defn-fun-id debugf]]
-   [utils.core :as u :refer [in?]]
-   [corona.api.expdev07 :as data]
    [taoensso.timbre :as timbre]
-   [corona.models.dbase :as dbase]
-   ))
+   [utils.core :as u :refer [in?]]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -36,7 +34,7 @@
                     (morse/send-text com/telegram-token chat-id options content))]
      (when log-morse-send-cmds
        (timbre/debugf "[%s] morse/send-text: resp-body %s" fun-id resp-body))
-     (timbre/debugf "[%s] morse/send-text: %s sent" fun-id (com/measure content))
+     (timbre/debugf "[%s] morse/send-text: %s sent" fun-id (measure content))
      resp-body)))
 
 (defn-fun-id world "" [prm-orig]
@@ -59,7 +57,7 @@
                        (morse/send-photo com/telegram-token chat-id options content))]
         (when log-morse-send-cmds
           (debugf "morse/send-photo: resp-body %s" resp-body))
-        (debugf "morse/send-photo: %s sent" (com/measure content))))))
+        (debugf "morse/send-photo: %s sent" (measure content))))))
 
 (defn-fun-id explain "" [{:keys [parse_mode] :as prm}]
   (send-text fun-id prm (msg/explain parse_mode)))

@@ -1,15 +1,16 @@
-;; ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.text.common)
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.msg.text.common)
 
 (ns corona.msg.text.common
-  (:require [clojure.string :as cstr]
-            [corona.api.expdev07 :as data]
-            [corona.common :as com]
-            [corona.cases :as cases]
-            [corona.macro :refer [defn-fun-id debugf]]
-            [corona.country-codes :as ccc]
-            [corona.lang :as lang]
-            [utils.num :as utn]
-            [utils.core :as utc]))
+  (:require
+   [clojure.string :as cstr]
+   [corona.api.expdev07 :as data]
+   [corona.cases :as cases]
+   [corona.common :as com]
+   [corona.country-codes :as ccc]
+   [corona.lang :as lang]
+   [corona.telemetry :refer [debugf defn-fun-id]]
+   [utils.core :as utc]
+   [utils.num :as utn]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -169,4 +170,4 @@
   (utc/in? [ccc/worldwide-2-country-code ccc/worldwide-3-country-code
             ccc/worldwide] ccode))
 
-;; ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.common)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.common)

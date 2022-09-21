@@ -1,11 +1,12 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.api.cache)
 
 (ns corona.api.cache
-  (:require [clojure.spec.alpha :as spec]
-            [clojure.spec.test.alpha :as spect]
-            [clojure.string :as cstr]
-            [corona.macro :refer [defn-fun-id debugf]]
-            [taoensso.timbre :as timbre]))
+  (:require
+   [clojure.spec.alpha :as spec]
+   [clojure.spec.test.alpha :as spect]
+   [clojure.string :as cstr]
+   [corona.telemetry :refer [debugf defn-fun-id]]
+   [taoensso.timbre :as timbre]))
 
 (defonce cache (atom {}))
 

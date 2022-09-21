@@ -8,31 +8,30 @@
    [clojure.string :as cstr]
    [com.stuartsierra.component :as component]
    [compojure.core :as cjc]
-   compojure.handler
+   [compojure.handler]
+   [corona.api.cache :as cache]
    [corona.common :as com]
    [corona.country-codes :as ccc]
+   [corona.models.migration :as schema]
    [corona.msg.graph.plot :as plot]
    [corona.telegram :as tgram]
+   [corona.telemetry :as macro :refer [debugf defn-fun-id infof warnf]]
    [corona.web.response :as webresp]
-   drawbridge.core
+   [drawbridge.core]
    [morse.api :as morse]
    [morse.handlers :as moh]
-   ring.adapter.jetty
+   [ring.adapter.jetty]
    [ring.middleware.basic-authentication :as basic]
-   ring.middleware.json
-   ring.middleware.keyword-params
-   ring.middleware.nested-params
-   ring.middleware.params
+   [ring.middleware.json]
+   [ring.middleware.keyword-params]
+   [ring.middleware.nested-params]
+   [ring.middleware.params]
    [ring.middleware.session :as session]
-   ring.util.http-response
-   [corona.macro :as macro :refer [defn-fun-id debugf infof warnf]]
-   [taoensso.timbre :as timbre]
-   [corona.models.migration :as schema]
-   ;; needed for the 'ok?' macro
-   corona.models.migration
-   [corona.api.cache :as cache])
-  (:import java.time.ZoneId
-           java.util.TimeZone))
+   [ring.util.http-response]
+   [taoensso.timbre :as timbre])
+  (:import
+   (java.time ZoneId)
+   (java.util TimeZone)))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -208,4 +207,4 @@
   (alter-var-root #'corona.web.core/system com.stuartsierra.component/start)
   (alter-var-root #'corona.web.core/system com.stuartsierra.component/stop))
 
-(printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.web.core)
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.web.core)

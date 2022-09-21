@@ -6,7 +6,7 @@
    [clojure.string :as cstr]
    [corona.common :as com]
    [corona.telegram :as tgram]
-   [corona.macro :refer [defn-fun-id infof]]))
+   [corona.telemetry :refer [defn-fun-id infof]]))
 
 ;; (set! *warn-on-reflection* true)
 

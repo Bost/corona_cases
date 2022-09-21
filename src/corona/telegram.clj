@@ -5,7 +5,7 @@
 (ns corona.telegram
   (:gen-class)
   (:require
-   [clojure.algo.monads :refer [domonad state-m m-result]]
+   [clojure.algo.monads :refer [domonad m-result state-m]]
    [clojure.core.async :as async]
    [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
    [clojure.string :as cstr]
@@ -21,20 +21,30 @@
    [corona.estimate :as est]
    [corona.keywords :refer :all]
    [corona.lang :as lang]
-   [corona.macro :as macro :refer [defn-fun-id debugf infof warnf fatalf]]
    [corona.models.dbase :as dbase]
+   [corona.models.migration]
    [corona.msg.graph.plot :as plot]
    [corona.msg.text.common :as msgc]
    [corona.msg.text.details :as msgi]
    [corona.msg.text.lists :as msgl]
    [corona.msg.text.messages :as msg]
+   [corona.telemetry
+    :refer [add-calc-time
+            debugf
+            defn-fun-id
+            fatalf
+            heap-info
+            infof
+            measure
+            system-ok?
+            system-time
+            warnf]]
    [morse.api :as morse]
    [morse.handlers :as moh]
    [morse.polling :as mop]
-   [taoensso.timbre :as timbre]
-   corona.models.migration ;; needed for the 'ok?' macro
-   )
-  (:import [java.time Instant LocalDateTime ZoneId]))
+   [taoensso.timbre :as timbre])
+  (:import
+   (java.time Instant LocalDateTime ZoneId)))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -131,7 +141,7 @@
           )]
     (if com/use-webhook?
       (if webhook-set?
-        (debugf "Webhook exists already. Condition satisfied, do nothing.")
+        (debugf "Condition 'webhook-set' satisfied. Do nothing.")
         ((comp
           (fn [v] (debugf "morse/set-webhook returned: %s" v))
           :body
@@ -143,7 +153,7 @@
               (fatalf
                (str
                 "Can't call morse/set-webhook. Undefined telegram-token."
-                "TODO error out")))))
+                "TODO terminate.")))))
          telegram-token))
       (if webhook-set?
         ((comp
@@ -156,9 +166,9 @@
               (fatalf
                (str
                 "Can't call morse/del-webhook. Undefined telegram-token"
-                "TODO error out")))))
+                "TODO terminate")))))
          telegram-token)
-        (debugf "Webhook not present. Condition satisfied, do nothing.")))))
+        (debugf "Condition 'webhook-not-set' satisfied. Do nothing.")))))
 
 (defn api-error-handler [] (when com/env-corona-cases? (com/system-exit 2)))
 
@@ -227,7 +237,7 @@
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   [aggregation-hash json-owid json-v1]
   (let [;; tbeg must be captured before the function composition
-        init-state {:tbeg (com/system-time) :acc []}]
+        init-state {:tbeg (system-time) :acc []}]
     ((comp
       first
       (domonad
@@ -246,17 +256,17 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                (partial v1/pic-data cnt-reports)
                data/data-with-pop)
          raw-dates-v1 json-v1 json-owid)
-        _ (com/add-calc-time "estim" estim)
+        _ (add-calc-time "estim" estim)
 
         stats-countries
         ((comp
           m-result
           (partial filter (fn [hm] (= (ktst hm) last-date))))
          estim)
-        _ (com/add-calc-time "stats-countries" stats-countries)
+        _ (add-calc-time "stats-countries" stats-countries)
 
         garbage-coll (m-result (gc))
-        _ (com/add-calc-time "garbage-coll" garbage-coll)
+        _ (add-calc-time "garbage-coll" garbage-coll)
 
         _ (m-result
            ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
@@ -278,19 +288,19 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
               stats-countries header footer basic-lense prm)))
            [[cases/listing-cases-absolute 'corona.msg.text.lists/absolute-vals]
             [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
-        _ (com/add-calc-time "all-calc-listings" all-calc-listings)
+        _ (add-calc-time "all-calc-listings" all-calc-listings)
 
         garbage-coll (m-result (gc))
-        _ (com/add-calc-time "garbage-coll" garbage-coll)
+        _ (add-calc-time "garbage-coll" garbage-coll)
 
         rankings
         ((comp
           m-result)
          (msgi/all-rankings stats-countries))
-        _ (com/add-calc-time "rankings" rankings)
+        _ (add-calc-time "rankings" rankings)
 
         garbage-coll (m-result (gc))
-        _ (com/add-calc-time "garbage-coll" garbage-coll)
+        _ (add-calc-time "garbage-coll" garbage-coll)
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
@@ -317,10 +327,10 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                   (plot/message-kw ccode)]]))))
            ;; here also "ZZ" worldwide messages
            ccc/all-country-codes))
-        _ (com/add-calc-time "all-ccode-messages" all-ccode-messages)
+        _ (add-calc-time "all-ccode-messages" all-ccode-messages)
 
         garbage-coll (m-result (gc))
-        _ (com/add-calc-time "garbage-coll" garbage-coll)
+        _ (add-calc-time "garbage-coll" garbage-coll)
 
         thresholds
         (let [norm-ths (cases/norm (dbase/get-thresholds))]
@@ -350,7 +360,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                             thresholds estim last-date cnt-reports
                             aggregation-hash)))
          cases/cartesian-product-all-case-types)
-        _ (com/add-calc-time "all-aggregations" all-aggregations)
+        _ (add-calc-time "all-aggregations" all-aggregations)
 
         ;; discard the intermediary results, i.e. keep only those items in the
         ;; cache which contain the final results.
@@ -365,7 +375,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                     @cache/cache [:plot :msg :list :threshold :dbg])))))
 
         garbage-coll (m-result (gc))
-        _ (com/add-calc-time "garbage-coll" garbage-coll)
+        _ (add-calc-time "garbage-coll" garbage-coll)
         ]
        calc-result))
      init-state)))
@@ -381,7 +391,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
             cache-storage old-hash new-hash hash-changed)
     (when hash-changed
       (swap! cache/cache update-in hash-kws (fn [_] new-hash))
-      #_(do (gc) (com/heap-info)))
+      #_(do (gc) (heap-info)))
     {:json json :hash-changed hash-changed}))
 
 (defn-fun-id reset-cache! "" []
@@ -401,7 +411,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                         json-v1
                         json-owid)
            (let [;; tbeg must be captured before the function composition
-                 init-state {:tbeg (com/system-time) :acc []}]
+                 init-state {:tbeg (system-time) :acc []}]
              ((comp
                first
                (domonad state-m
@@ -413,7 +423,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                             (partial calc-cache! (cache/aggregation-hash)))
                            (partial map :json))
                           [hm-owid hm-v1])
-                         _ (com/add-calc-time "calc-cache!" calc-result)]
+                         _ (add-calc-time "calc-cache!" calc-result)]
                         calc-result))
               init-state))))))
     (partial pmap json-changed!))
@@ -422,7 +432,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
   (debugf "Keys kept in the cache %s" (keys @cache/cache))
   (debugf "Responses %s" (select-keys @cache/cache [:v1 :owid]))
-  (debugf "Cache size %s" (com/measure @cache/cache)))
+  (debugf "Cache size %s" (measure @cache/cache)))
 
 (defn- p-endlessly [] (endlessly reset-cache! com/ttl))
 (defn- p-long-polling [] (long-polling com/telegram-token))
@@ -431,7 +441,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   "Fetch api service data and only then register the telegram commands."
   []
   (infof "Starting ...")
-  (if (macro/system-ok?)
+  (if (system-ok?)
     (do
       (setup-webhook com/telegram-token)
       (reset-cache!)

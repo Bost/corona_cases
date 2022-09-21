@@ -1,11 +1,11 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.estimate)
 
 (ns corona.estimate
-  (:require [corona.keywords :refer :all]
-            [corona.common :as com]
-            [corona.macro :refer [defn-fun-id debugf infof warnf]]
-            [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
-            ))
+  (:require
+   [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
+   [corona.common :as com]
+   [corona.keywords :refer :all]
+   [corona.telemetry :refer [debugf defn-fun-id infof warnf]]))
 
 (def ^:const shift-recovery
   "Mean number of days/reports between symptoms outbreak and full recovery.

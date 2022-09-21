@@ -1,12 +1,13 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.models.dbase)
 
 (ns corona.models.dbase
-  (:require [next.jdbc :as jdbc]
-            [environ.core :refer [env]]
-            [taoensso.timbre :as timbre]
-            [corona.macro :refer [defn-fun-id debugf errorf]]
-            [corona.models.common :as mcom]
-            [utils.core :as utc]))
+  (:require
+   [corona.models.common :as mcom]
+   [corona.telemetry :refer [debugf defn-fun-id errorf]]
+   [environ.core :refer [env]]
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :as timbre]
+   [utils.core :as utc]))
 
 (defn-fun-id chat-exists? "" [{:keys [id]}]
   (let [table "chat"
@@ -15,7 +16,7 @@
       ((comp
         exists-kw
         first
-        (fn [result] (debugf "result:\n    %s" result) result)
+        (fn [result] (debugf "result:\n  %s" result) result)
         (fn [cmd] (jdbc/execute! connection [cmd id]))
         #_(reduce my-fn init-value (jdbc/plan connection [...]))
         (fn [cmd] (debugf "\n%s" cmd) cmd))
@@ -97,13 +98,13 @@
                                       (name :updated_at) " = cast('now()' as timestamp(0))"
                                       ))
                      table cols)]
-      (debugf "prep-stmt:\n    %s" prep-stmt)
+      (debugf "prep-stmt:\n  %s" prep-stmt)
       ((comp
         (fn [result] (debugf "result:\n    %s" result) result)
         (fn [cmd] (try (jdbc/execute-one! connection cmd)
                       (catch Exception e
                         (errorf "Caught %s" e))))
-        (fn [cmd] (debugf "cmd:\n    %s" cmd) cmd)
+        (fn [cmd] (debugf "cmd:\n  %s" cmd) cmd)
         (partial into [prep-stmt])
         (partial map (fn [v] (if (keyword? v) (name v) v))))
        #_[kvac (int 1e6) (int 1e7) "now()"]
@@ -113,10 +114,10 @@
   (with-open [connection (jdbc/get-connection mcom/datasource)]
     (let [table "thresholds"]
       ((comp
-        (fn [result] (debugf "result:\n    %s" result) result)
+        (fn [result] (debugf "result:\n  %s" result) result)
         (fn [cmd] (jdbc/execute! connection [cmd]))
         #_(reduce my-fn init-value (jdbc/plan connection [...]))
-        (fn [cmd] (debugf "cmd:\n    %s" cmd)
+        (fn [cmd] (debugf "cmd:\n  %s" cmd)
           cmd))
        (format "select * from %s" (pr-str table))))))
 

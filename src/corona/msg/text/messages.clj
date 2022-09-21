@@ -6,17 +6,15 @@
    [clojure.edn :as edn]
    [clojure.string :as cstr]
    [corona.api.cache :as cache]
-   [corona.common :as com]
-   [corona.keywords :refer :all]
    [corona.cases :as cases]
+   [corona.common :as com]
    [corona.estimate :as est]
+   [corona.keywords :refer :all]
    [corona.lang :as lang]
-   [corona.macro :refer [defn-fun-id]]
-   [corona.msg.text.common :as msgc]
    [corona.msg.graph.plot :as plot]
-   [morse.api :as morse]
-   [corona.macro :refer [defn-fun-id debugf]]
-   ))
+   [corona.msg.text.common :as msgc]
+   [corona.telemetry :refer [debugf defn-fun-id]]
+   [morse.api :as morse]))
 
 ;; (set! *warn-on-reflection* true)
 

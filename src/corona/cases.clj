@@ -2,12 +2,11 @@
 
 (ns corona.cases
   (:require
-   [utils.core :as utc]
-   [corona.models.dbase :as dbase]
-   [taoensso.timbre :as timbre]
-   [corona.macro :refer [defn-fun-id debugf infof warnf]]
    [corona.keywords :refer :all]
-   ))
+   [corona.models.dbase :as dbase]
+   [corona.telemetry :refer [debugf defn-fun-id infof warnf]]
+   [taoensso.timbre :as timbre]
+   [utils.core :as utc]))
 
 (defmacro tore
   "->>-or-eduction. In fact both have the same performance.

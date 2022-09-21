@@ -2,28 +2,26 @@
 
 (ns corona.common
   (:require
-   [clj-memory-meter.core :as meter]
+   [clj-http.client]
    [clj-time.coerce :as ctc]
    [clj-time.core :as ctime]
    [clj-time.format :as ctf]
-   [clojure.algo.monads :refer [monad domonad with-monad identity-m
-                                ;; sequence-m maybe-m writer-m m-lift
-                                state-m]]
+   [clojure.algo.monads :refer [domonad state-m]]
    [clojure.data.json :as json]
    [clojure.spec.alpha :as spec]
    [clojure.string :as cstr]
    [corona.envdef :as envdef]
    [corona.keywords :refer :all]
-   [corona.macro :refer [defn-fun-id debugf infof warnf errorf]]
    [corona.pom-version-get :as pom]
+   [corona.telemetry
+    :refer [add-calc-time debugf defn-fun-id errorf infof system-time warnf]]
    [environ.core :as env]
    [taoensso.timbre :as timbre]
    [utils.core :as utc]
-   [utils.num :as utn]
-   clj-http.client
-   )
-  (:import java.security.MessageDigest
-           java.net.URI))
+   [utils.num :as utn])
+  (:import
+   (java.net URI)
+   (java.security MessageDigest)))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -137,65 +135,6 @@ reports are done once a week."
 (def ^:const ^String telegram-token (env/env :telegram-token))
 (def ^:const ^String repl-user      (env/env :repl-user))
 (def ^:const ^String repl-password  (env/env :repl-password))
-
-(defn system-time [] (System/currentTimeMillis))
-
-(defn count-chars [object]
-  ((comp (fn [v] (format "%s chars" v)) count str) object))
-
-(defn-fun-id measure "" [object & prm]
-  (try (apply (partial meter/measure object) prm)
-       (catch java.lang.reflect.InaccessibleObjectException e
-         #_(warnf "Caught %s. Returning count of chars." e)
-         (count-chars object))
-       (catch java.lang.reflect.InvocationTargetException e
-         #_(warnf "Caught %s. Returning count of chars." e)
-         (count-chars object))
-       (catch Exception e
-         (warnf "Caught %s. Rethrowing..." e)
-         (throw e))))
-
-(defn format-bytes
-  "Nicely format `num-bytes` as kilobytes/megabytes/etc.
-    (format-bytes 1024) ; -> 2.0 KB
-  See
-  https://github.com/metabase/metabase
-  metabase.util/format-bytes "
-  [num-bytes]
-  (loop [n num-bytes [suffix & more] ["B" "kB" "MB" "GB"]]
-    (if (and (seq more)
-             (>= n 1024))
-      (recur (/ n 1024) more)
-      (format "%.1f %s" (float n) suffix))))
-
-(defn add-calc-time
-  "Returns a state-monad function that assumes the state to be a map"
-  [fun-id plain-val]
-  (fn [state]
-    (let [accumulator (get state :acc)
-          time-begin (get state :tbeg)
-          calc-time (- (system-time) (+ (apply + accumulator) time-begin))]
-      (timbre/debugf
-       "[%s] %s obtained in %s ms. Available heap %s"
-       fun-id (if (nil? plain-val) "nil-value" (measure plain-val))
-       calc-time
-       ((comp
-         format-bytes
-         (fn [{:keys [size max free]}] (+ (- max size) free)))
-        (let [runtime (Runtime/getRuntime)]
-          {:size (.totalMemory runtime) ;; current size of heap in bytes
-
-           ;; max size of heap in bytes. The heap cannot grow beyond this size. Any
-           ;; attempt will result in an OutOfMemoryException.
-           :max (.maxMemory runtime)
-
-           ;; amount of free memory within the heap in bytes. This size will increase
-           ;; after garbage collection and decrease as new objects are created.
-           :free (.freeMemory runtime)})))
-      ((domonad state-m [mvv (m-result plain-val)] mvv)
-       (update-in state [:acc]
-                  ;; the acc-value is ignored so `comp` can't be used
-                  (fn [_] (vec (concat accumulator (vector calc-time)))))))))
 
 (defn system-exit
   "!!! It looks line it can't be defined by defn-fun-id !!!"
@@ -403,9 +342,9 @@ reports are done once a week."
           (domonad
            #_identity-m
            state-m
-           [data (m-result (clj-http.client/get url prms))
-            _ (add-calc-time "data" data)]
-           data))
+           [recv-data (m-result (clj-http.client/get url prms))
+            _ (add-calc-time "recv-data" recv-data)]
+           recv-data))
          init-state)))
     #_(fn [url] (infof "from %s ..." url) url))
    url))
@@ -474,28 +413,6 @@ reports are done once a week."
 
 (def ^:const ^String bot-name-in-markdown
   (cstr/replace bot-name #"_" "\\\\_"))
-
-(defn fmap
-  "See clojure.algo.generic.functor/fmap"
-  [f m]
-  (into (empty m) (for [[k v] m] [k (f v)])))
-
-(defn-fun-id heap-info
-  "See https://github.com/metrics-clojure/metrics-clojure"
-  []
-  ((comp
-    (fn [v] (debugf "%s" v)) ;; debugf is a macro
-    (partial fmap format-bytes))
-   (let [runtime (Runtime/getRuntime)]
-     {:size (.totalMemory runtime) ;; current size of heap in bytes
-
-      ;; max size of heap in bytes. The heap cannot grow beyond this size. Any
-      ;; attempt will result in an OutOfMemoryException.
-      :max (.maxMemory runtime)
-
-      ;; amount of free memory within the heap in bytes. This size will increase
-      ;; after garbage collection and decrease as new objects are created.
-      :free (.freeMemory runtime)})))
 
 (defn log-obj [obj]
   (let [so (str obj)

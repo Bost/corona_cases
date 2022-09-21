@@ -6,14 +6,13 @@
    [corona.api.cache :as cache]
    [corona.api.expdev07 :as data]
    [corona.common :as com]
-   [corona.keywords :refer :all]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
+   [corona.keywords :refer :all]
    [corona.lang :as lang]
-   [corona.macro :refer [defn-fun-id debugf]]
    [corona.msg.text.common :as msgc]
-   [taoensso.timbre :as timbre]
-   ))
+   [corona.telemetry :refer [debugf defn-fun-id measure]]
+   [taoensso.timbre :as timbre]))
 
 (def ^:const cnt-messages-in-listing
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
@@ -117,7 +116,7 @@
          ""
          footer)]
     (debugf "case-kw %s msg-idx %s msg-size %s"
-            case-kw msg-idx (com/measure msg))
+            case-kw msg-idx (measure msg))
     msg))
 
 (defn-fun-id per-1e5
@@ -166,7 +165,7 @@
          ""
          footer)]
     (debugf "case-kw %s msg-idx %s msg-size %s"
-            case-kw msg-idx (com/measure msg))
+            case-kw msg-idx (measure msg))
     msg))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.msg.text.lists)

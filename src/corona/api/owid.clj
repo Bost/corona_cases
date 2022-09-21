@@ -1,14 +1,16 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.api.owid)
 
 (ns corona.api.owid
-  (:require clojure.stacktrace
-            [corona.api.cache :as cache]
-            [corona.common :as com]
-            [corona.countries :as ccr]
-            [corona.country-codes :as ccc]
-            [corona.macro :refer [defn-fun-id debugf]])
-  (:import java.text.SimpleDateFormat
-           java.util.TimeZone))
+  (:require
+   [clojure.stacktrace]
+   [corona.api.cache :as cache]
+   [corona.common :as com]
+   [corona.countries :as ccr]
+   [corona.country-codes :as ccc]
+   [corona.telemetry :refer [debugf defn-fun-id]])
+  (:import
+   (java.text SimpleDateFormat)
+   (java.util TimeZone)))
 
 (defn-fun-id json-data "" []
   (com/get-json com/json-api-owid))

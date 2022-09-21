@@ -4,18 +4,18 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require
+   [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
    [corona.api.expdev07 :as data]
    [corona.common :as com]
-   [corona.keywords :refer :all]
    [corona.country-codes :as ccc]
-   [taoensso.timbre :as timbre]
-   [corona.macro :refer [defn-fun-id debugf errorf warnf]]
    [corona.estimate :as est]
-   [utils.core :as utc]
-   [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
-   )
-  (:import java.text.SimpleDateFormat
-           java.util.TimeZone))
+   [corona.keywords :refer :all]
+   [corona.telemetry :refer [debugf defn-fun-id errorf warnf]]
+   [taoensso.timbre :as timbre]
+   [utils.core :as utc])
+  (:import
+   (java.text SimpleDateFormat)
+   (java.util TimeZone)))
 
 ;; TODO use `https://github.com/erdos/erdos.yield` for streams
 ;; See also 'Generators as lazy sequences' https://github.com/leonoel/cloroutine/blob/master/doc/01-generators.md
