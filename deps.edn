@@ -64,7 +64,11 @@
   org.clojars.bost/utils {:mvn/version "0.0.0-49-0x726c"}
 
   ;; https://github.com/generateme/cljplot
-  org.clojars.bost/cljplot {:mvn/version "0.0.0-84-0x214c"}
+  ;; Exclusion of smile-mkl reduces slug size from 1.1GB to 160MB. See
+  ;; https://github.com/generateme/fastmath#mkl) However the exclusion done in
+  ;; the cljplot/project.clj has no effect.
+  org.clojars.bost/cljplot {:mvn/version "0.0.0-84-0x214c"
+                            :exclusions [com.github.haifengl/smile-mkl]}
 
   ;; plotting - see also https://github.com/jsa-aerial/hanami
   #_#_aerial.hanami {:mvn/version "0.12.1"}
