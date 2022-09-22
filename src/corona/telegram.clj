@@ -253,7 +253,9 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         footer      (m-result (msgc/footer com/html true))
 
         estim
+        ;; (read-string (slurp "estim.edn"))
         ((comp m-result
+               ;; (fn [e] (->> e (pr) (with-out-str) (spit "estim.edn")))
                est/estimate
                (partial v1/pic-data cnt-reports)
                data/data-with-pop)
