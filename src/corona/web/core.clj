@@ -11,7 +11,7 @@
    [compojure.handler]
    [corona.api.cache :as cache]
    [corona.common :as com]
-   [corona.country-codes :as ccc]
+   [corona.telemetry :as telemetry]
    [corona.models.migration :as schema]
    [corona.msg.graph.plot :as plot]
    [corona.telegram :as tgram]
@@ -150,8 +150,8 @@
     (debugf "TimeZone: %s; current time: %s (%s in %s)"
             (str (ctc/default-time-zone))
             (cte/tnow)
-            (cte/tnow ccc/zone-id)
-            ccc/zone-id)
+            (cte/tnow telemetry/zone-id)
+            telemetry/zone-id)
     (debugf (str "ctc/default-time-zone %s; "
                  "ZoneId/systemDefault: %s; "
                  "TimeZone/getDefault: %s\n")

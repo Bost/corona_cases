@@ -1,66 +1,10 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.country-codes)
 
 (ns corona.country-codes
-  "This namespace seems to be the first one loaded by the class loader."
-  (:refer-clojure :exclude [pr])
-  (:require
-   [clojure.set :as cset]
-   [clojure.string :as cstr]
-   taoensso.encore
-   [taoensso.timbre :as timbre]
-   [taoensso.timbre.appenders.core :as appenders]
-   [corona.common :as com]))
+  ;; do I need this exclude because of "PR"?
+  (:refer-clojure :exclude [pr]))
 
 ;; (set! *warn-on-reflection* true)
-
-(def log-level-map ^:const {:debug :dbg :info :inf :warn :wrn :error :err})
-
-(defn log-output
-  "Default (fn [data]) -> string output fn.
-    Use`(partial log-output <opts-map>)` to modify default opts."
-  ([     data] (log-output nil data))
-  ([opts data] ; For partials
-   (let [{:keys [no-stacktrace? #_stacktrace-fonts]} opts
-         {:keys [level ?err #_vargs msg_ ?ns-str ?file #_hostname_
-                 timestamp_ ?line]} data]
-     (str
-      (force timestamp_)
-      " "
-      ;; #?(:clj (force hostname_))  #?(:clj " ")
-      ((comp
-        (fn [s] (subs s 0 1))
-        cstr/upper-case
-        name)
-       (or (level log-level-map) level))
-      " "
-      "["
-      (or ((comp
-            (fn [n] (subs ?ns-str n))
-            inc
-            (fn [s] (.indexOf s ".")))
-           ?ns-str)
-          ?file "?")
-      ;; line number indication doesn't work from the defn-fun-id macro
-      ;; ":" (or ?line "?")
-      "] "
-      (force msg_)
-      (when-not no-stacktrace?
-        (when-let [err ?err]
-          (str taoensso.encore/system-newline
-               (timbre/stacktrace err opts))))))))
-
-(def ^:const zone-id "Europe/Berlin")
-
-#_(timbre/set-config! timbre/default-config)
-(timbre/merge-config!
- (conj
-  {:output-fn log-output #_timbre/default-output-fn
-   :timestamp-opts
-   (conj {:timezone (java.util.TimeZone/getTimeZone zone-id)}
-         {:pattern "HH:mm:ss.SSSX"})}
-  (when-not (= com/env-type :devel)
-    ;; TODO log only last N days
-    {:appenders {:spit (appenders/spit-appender {:fname "corona.log"})}})))
 
 (def country-codes
   ["CR" "TG" "TJ" "ZA" "IM" "PE" "LC" "CH" "RU" "MP" "CK" "SI" "AU" "KR" "IT"
@@ -402,17 +346,7 @@
     })
 
 (def no-population-country-codes
-  #{"TF"
-    "MF"
-    "SJ"
-    "QQ"
-    "UM"
-    "BQ"
-    "BV"
-    "GS"
-    "AQ"
-    "HM"
-    })
+  #{"TF" "MF" "SJ" "QQ" "UM" "BQ" "BV" "GS" "AQ" "HM"})
 
 (def all-country-codes
   "All country codes (potentially including worldwide \"ZZ\")"

@@ -1,9 +1,81 @@
+;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.telemetry)
+
 (ns corona.telemetry
   (:require
    [clj-memory-meter.core :as meter]
    [taoensso.timbre :as timbre]
+   [taoensso.timbre.appenders.core :as appenders]
    [clojure.string :as cstr]
+   [environ.core :as env]
    [clojure.algo.monads :refer [domonad state-m]]))
+
+;; (set! *warn-on-reflection* true)
+
+(def env-type
+  "When developing, check the value of:
+      echo $CORONA_ENV_TYPE
+  When testing locally via `heroku local --env=.heroku-local.env` check
+  the file .heroku-local.env
+
+  TODO env-type priority could / should be:
+  1. command line parameter
+  2. some config/env file - however not the .heroku-local.env
+  3. environment variable
+  "
+  ((comp keyword cstr/lower-case :corona-env-type) env/env))
+
+(def log-level-map ^:const {:debug :dbg :info :inf :warn :wrn :error :err})
+
+(def fst-beg "[") ;; the very first beginning
+(def sb "") ;; intermediary beginning
+(def intermediary-end "") ;; intermediary end
+(def se "]") ;; the very last end
+
+(defn log-output
+  "Default (fn [data]) -> string output fn.
+    Use`(partial log-output <opts-map>)` to modify default opts."
+  ([     data] (log-output nil data))
+  ([opts data] ; For partials
+   (let [{:keys [no-stacktrace? #_stacktrace-fonts]} opts
+         {:keys [level ?err #_vargs msg_ ?ns-str ?file #_hostname_
+                 timestamp_ ?line]} data]
+     (str
+      (force timestamp_)
+      " "
+      ;; #?(:clj (force hostname_))  #?(:clj " ")
+      ((comp
+        (fn [s] (subs s 0 1))
+        cstr/upper-case
+        name)
+       (or (level log-level-map) level))
+      " " fst-beg
+      (or ((comp
+            (fn [n] (subs ?ns-str n))
+            inc
+            (fn [s] (.indexOf s ".")))
+           ?ns-str)
+          ?file "?")
+      ;; line number indication doesn't work from the defn-fun-id macro
+      ;; ":" (or ?line "?")
+      intermediary-end " "
+      (force msg_)
+      (when-not no-stacktrace?
+        (when-let [err ?err]
+          (str taoensso.encore/system-newline
+               (timbre/stacktrace err opts))))))))
+
+(def ^:const zone-id "Europe/Berlin")
+
+#_(timbre/set-config! timbre/default-config)
+(timbre/merge-config!
+ (conj
+  {:output-fn log-output #_timbre/default-output-fn
+   :timestamp-opts
+   (conj {:timezone (java.util.TimeZone/getTimeZone zone-id)}
+         {:pattern "HH:mm:ss.SSSX"})}
+  (when-not (= env-type :devel)
+    ;; TODO log only last N days
+    {:appenders {:spit (appenders/spit-appender {:fname "corona.log"})}})))
 
 (defmacro defn-fun-id
   "Docstring is mandatory!"
@@ -22,9 +94,6 @@
   (printf "[%s] hi\n" fun-id)
   (inc (f x)))
 
-(def sb "")
-(def se " %")
-
 (defn system-time [] (System/currentTimeMillis))
 
 (defmacro debugf [s & exprs] `(timbre/debugf (str "%s%s%s " ~s) sb ~'fun-id se ~@exprs))
@@ -33,6 +102,8 @@
 (defmacro errorf [s & exprs] `(timbre/errorf (str "%s%s%s " ~s) sb ~'fun-id se ~@exprs))
 (defmacro fatalf [s & exprs] `(timbre/fatalf (str "%s%s%s " ~s) sb ~'fun-id se ~@exprs))
 
+(def is-devel-env? (= env-type :devel))
+
 (defmacro system-ok?
   "Do not add (:require [corona.common]) since this is a macro. Otherwise a
   circular dependency is created"
@@ -40,17 +111,12 @@
   `((comp
      (fn [~'v] (timbre/infof "%s%s%s system-ok? %s" sb ~'fun-id se ~'v)
        ~'v))
-    (if (or (= ~'fun-id "-main")
-            (= corona.common/env-type :devel))
+    (if (or (= ~'fun-id "-main") is-devel-env?)
       (do
         #_
         (timbre/infof
-         (str "[%s] do-check"
-              " (= ~'fun-id \"-main\"): %s;"
-              " (= corona.common/env-type :devel): %s")
-         ~'fun-id
-         (= ~'fun-id "-main")
-         (= corona.common/env-type :devel))
+         (str "%s%s%s do-check (= ~'fun-id \"-main\"): %s; is-devel-env?: %s")
+         sb ~'fun-id se (= ~'fun-id "-main") is-devel-env?)
         (timbre/infof
          "%s%s%s\n  %s" sb ~'fun-id se (cstr/join "\n  " (corona.common/show-env)))
         (let [~'dbase-ok? (corona.models.migration/migrated?)]
@@ -59,12 +125,8 @@
       (do
         #_
         (timbre/infof
-         (str "[%s] no-check"
-              " (= ~'fun-id \"-main\"): %s;"
-              " (= corona.common/env-type :devel): %s")
-         ~'fun-id
-         (= ~'fun-id "-main")
-         (= corona.common/env-type :devel))
+         (str "%s%s%s no-check (= ~'fun-id \"-main\"): %s; is-devel-env?: %s")
+         sb ~'fun-id se (= ~'fun-id "-main") is-devel-env?)
         true))))
 
 (defn- count-chars [object]
@@ -171,3 +233,5 @@
 
 ;; https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/macro.20for.20transforming.20let.20into.20def/near/215975427
 ;; https://clojurians.zulipchat.com/#narrow/stream/151168-clojure/topic/core.20nuggets/near/218333667
+
+;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.telemetry)

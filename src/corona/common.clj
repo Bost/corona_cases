@@ -14,7 +14,8 @@
    [corona.keywords :refer :all]
    [corona.pom-version-get :as pom]
    [corona.telemetry
-    :refer [add-calc-time debugf defn-fun-id errorf infof system-time warnf]]
+    :refer
+    [env-type add-calc-time debugf defn-fun-id errorf infof system-time warnf]]
    [environ.core :as env]
    [taoensso.timbre :as timbre]
    [utils.core :as utc]
@@ -50,19 +51,6 @@ reports are done once a week."
 (def environment envdef/environment)
 
 (spec/def ::env-type (set (keys environment)))
-
-(def env-type
-  "When developing, check the value of:
-      echo $CORONA_ENV_TYPE
-  When testing locally via `heroku local --env=.heroku-local.env` check
-  the file .heroku-local.env
-
-  TODO env-type priority could / should be:
-  1. command line parameter
-  2. some config/env file - however not the .heroku-local.env
-  3. environment variable
-  "
-  ((comp keyword cstr/lower-case :corona-env-type) env/env))
 
 (when-not (spec/valid? ::env-type env-type)
   (throw (Exception.
@@ -234,7 +222,7 @@ reports are done once a week."
              [(let [prop "java.runtime.version"]
                 (format "%s: %s" prop (System/getProperty prop)))])
     (partial mapv pr-env))
-   ['corona.common/env-type
+   ['corona.telemetry/env-type
     'corona.common/use-webhook?
     'corona.common/telegram-token
     'corona.common/repl-user
@@ -406,10 +394,6 @@ reports are done once a week."
   ;; Execution error (ArityException) at cljplot.impl.line/eval34748$fn (line.clj:155).
   ;; Wrong number of args (0) passed to: cljplot.common/fast-max
   #_"csbs")
-
-(def ttl
-  "Time to live in (* <hours> <minutes> <seconds> <milliseconds>)."
-  (* 3 60 60 1000))
 
 (def ^:const ^String bot-name-in-markdown
   (cstr/replace bot-name #"_" "\\\\_"))

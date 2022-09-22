@@ -18,6 +18,7 @@
    [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
+   [corona.telemetry :as telemetry]
    [corona.estimate :as est]
    [corona.keywords :refer :all]
    [corona.lang :as lang]
@@ -115,7 +116,7 @@
   []
   (let [callbacks (create-callbacks [msg/worldwide-plots])
         commands (create-cmds cmd/all-handlers)]
-    (infof "Registering %s chatbot commands and %s callbacks ..."
+    (infof "Registering %s chatbot command(s) and %s callback(s) ..."
            (count commands) (count callbacks))
     (into callbacks commands)))
 
@@ -196,7 +197,8 @@
         channel))))
 
 (defn-fun-id long-polling
-  "TODO see https://github.com/Otann/morse/issues/32"
+  "See also 'Bot freezes for unknown reasons' issue
+ https://github.com/Otann/morse/issues/32"
   [tgram-token]
   (infof "Starting ...")
   (if-let [polling-handlers (apply moh/handlers (create-handlers))]
@@ -214,19 +216,19 @@
 
 (defn-fun-id endlessly
   "Invoke fun and put the thread to sleep for millis in an endless loop."
-  [fun ttl]
+  [fun time-to-live]
   (infof "Starting ...")
   (while @continue
     (infof "Next eval of %s scheduled at %s"
            (com/log-obj fun)
            (LocalDateTime/ofInstant
-            (Instant/ofEpochMilli (+ (System/currentTimeMillis) ttl))
-            (ZoneId/of ccc/zone-id)))
-    (Thread/sleep ttl)
+            (Instant/ofEpochMilli (+ (System/currentTimeMillis) time-to-live))
+            (ZoneId/of telemetry/zone-id)))
+    (Thread/sleep time-to-live)
     (fun))
   (warnf "Starting ... done. Data will NOT be updated!"))
 
-(defn gc []
+(defn gc "Garbage collection" []
   #_(do
     (timbre/debugf "(System/gc)")
     (System/gc) ;; also (.gc (Runtime/getRuntime))
@@ -434,7 +436,10 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   (debugf "Responses %s" (select-keys @cache/cache [:v1 :owid]))
   (debugf "Cache size %s" (measure @cache/cache)))
 
-(defn- p-endlessly [] (endlessly reset-cache! com/ttl))
+(defn- p-endlessly []
+  (endlessly reset-cache!
+             ;; time-to-live (* <hours> <minutes> <seconds> <milliseconds>)
+             (* 3 60 60 1000)))
 (defn- p-long-polling [] (long-polling com/telegram-token))
 
 (defn-fun-id start
