@@ -43,61 +43,58 @@
         ;; 2nd collection
         stats-country))]))
 
-(defn estimate-with-shift "" [pic-data shift]
-  ((comp
-    flatten
-    (partial map (fn [[ccode hms]]
-;;; TODO check against off-by-1
-;;; TODO prevent the IndexOutOfBoundsException as in the corona.api.v1/xf-for-case
-;;; the drop must be done after estimation
-                   (drop shift hms)))
-    (partial map
-             (fn [[ccode hms]]
-               (let [population ((comp kpop first) hms)]
-                 ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
-                                          com/calc-closed)
-                                    (basic-lense kc1e5)
-                                    [{:kw (basic-lense krec) :shift 0}
-                                     {:kw (basic-lense kdea) :shift shift-deaths}])
-                  [ccode hms]))))
-    (partial map (estim-country-fn com/calc-closed
-                                   (basic-lense kclo)
-                                   [{:kw (basic-lense krec) :shift 0}
-                                    {:kw (basic-lense kdea) :shift shift-deaths}]))
-    (partial map
-             (fn [[ccode hms]]
-               (let [population ((comp kpop first) hms)]
-                 ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
-                                          com/calc-active)
-                                    (basic-lense ka1e5)
-                                    [{:kw (basic-lense knew) :shift 0}
-                                     {:kw (basic-lense krec) :shift 0}
-                                     {:kw (basic-lense kdea) :shift shift-deaths}])
-                  [ccode hms]))))
-    (partial map (estim-country-fn com/calc-active
-                                   (basic-lense kact)
-                                   [{:kw (basic-lense knew) :shift 0}
-                                    {:kw (basic-lense krec) :shift 0}
-                                    {:kw (basic-lense kdea) :shift shift-deaths}]))
-    (partial map
-             (fn [[ccode hms]]
-               (let [population ((comp kpop first) hms)]
-                 ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
-                                          com/calc-recov)
-                                    (basic-lense kr1e5)
-                                    [{:kw (basic-lense knew) :shift shift-recovery}
-                                     {:kw (basic-lense kdea) :shift shift-deaths}])
-                  [ccode hms]))))
-    (partial map (estim-country-fn com/calc-recov
-                                   (basic-lense krec)
-                                   [{:kw (basic-lense knew) :shift shift-recovery}
-                                    {:kw (basic-lense kdea) :shift shift-deaths}]))
-    (partial group-by kcco))
-   pic-data))
-
 (defn estimate "" [pic-data]
   (let [shift (max corona.estimate/shift-recovery
                    corona.estimate/shift-deaths)]
-    (estimate-with-shift pic-data shift)))
+    ((comp
+      flatten
+      (partial map (fn [[ccode hms]]
+;;; TODO check against off-by-1
+;;; TODO prevent the IndexOutOfBoundsException as in the corona.api.v1/xf-for-case
+;;; the drop must be done after estimation
+                     (drop shift hms)))
+      (partial map
+               (fn [[ccode hms]]
+                 (let [population ((comp kpop first) hms)]
+                   ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
+                                            com/calc-closed)
+                                      (basic-lense kc1e5)
+                                      [{:kw (basic-lense krec) :shift 0}
+                                       {:kw (basic-lense kdea) :shift shift-deaths}])
+                    [ccode hms]))))
+      (partial map (estim-country-fn com/calc-closed
+                                     (basic-lense kclo)
+                                     [{:kw (basic-lense krec) :shift 0}
+                                      {:kw (basic-lense kdea) :shift shift-deaths}]))
+      (partial map
+               (fn [[ccode hms]]
+                 (let [population ((comp kpop first) hms)]
+                   ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
+                                            com/calc-active)
+                                      (basic-lense ka1e5)
+                                      [{:kw (basic-lense knew) :shift 0}
+                                       {:kw (basic-lense krec) :shift 0}
+                                       {:kw (basic-lense kdea) :shift shift-deaths}])
+                    [ccode hms]))))
+      (partial map (estim-country-fn com/calc-active
+                                     (basic-lense kact)
+                                     [{:kw (basic-lense knew) :shift 0}
+                                      {:kw (basic-lense krec) :shift 0}
+                                      {:kw (basic-lense kdea) :shift shift-deaths}]))
+      (partial map
+               (fn [[ccode hms]]
+                 (let [population ((comp kpop first) hms)]
+                   ((estim-country-fn (comp (fn [place] (com/per-1e5 place population))
+                                            com/calc-recov)
+                                      (basic-lense kr1e5)
+                                      [{:kw (basic-lense knew) :shift shift-recovery}
+                                       {:kw (basic-lense kdea) :shift shift-deaths}])
+                    [ccode hms]))))
+      (partial map (estim-country-fn com/calc-recov
+                                     (basic-lense krec)
+                                     [{:kw (basic-lense knew) :shift shift-recovery}
+                                      {:kw (basic-lense kdea) :shift shift-deaths}]))
+      (partial group-by kcco))
+     pic-data)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.estimate)
