@@ -61,15 +61,24 @@ EOF
 # bash: ./heroku.clj: /usr/bin/env: bad interpreter: No such file or directory
 # clojure an clj are not installed
 start_mockup_server () {
+    set -x  # Print commands and their arguments as they are executed.
     ./heroku.clj getMockData && clj -X:mockup-server
+    { retval="$?"; set +x; } 2>/dev/null
 }
 
 start_repl () {
+    # keep the -Xmx value in sync with ./Procfile and .dir-locals.el
+    heapSize=8192m # (* 8 1024)
+    set -x  # Print commands and their arguments as they are executed.
     clojure \
+        -J-Xmx$heapSize \
+        -J-XX:+HeapDumpOnOutOfMemoryError \
+        -J-Djdk.attach.allowAttachSelf \
         -Sdeps \
         '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.5"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' \
         -m nrepl.cmdline \
         --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+    { retval="$?"; set +x; } 2>/dev/null
 }
 
 guix_prompt () {

@@ -6,5 +6,5 @@
 # Line continuation '\' doesn't work
 
 # -Xmx<size> : increase max heap size from default 300MB
-# Keep in sync with .dir-locals.el
+# Keep in sync with .dir-locals.el and .bashrc
 web: java -Xmx1024m -XX:+HeapDumpOnOutOfMemoryError -Djdk.attach.allowAttachSelf $JVM_OPTS -cp target/corona_cases-standalone.jar clojure.main -m corona.web.core

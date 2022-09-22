@@ -166,13 +166,9 @@
       (setq cider-clojure-cli-global-options
             ;; -J is for /usr/local/bin/clojure
             (format "-J%s -J%s -J%s -J%s"
-                    ;; keep the -Xmx value in sync with the ./Procfile
+                    ;; keep the -Xmx value in sync with ./Procfile and .bashrc
                     (format "-Xmx%sm" (* 8 1024))
                     "-XX:+HeapDumpOnOutOfMemoryError"
                     "-Djdk.attach.allowAttachSelf"
-                    "-XX:-OmitStackTraceInFastThrow")
-            ;; (format "-J%s -J%s"
-            ;;         "-Xmx1024m" ;; keep the value in sync with the ./Procfile
-            ;;         "-XX:+HeapDumpOnOutOfMemoryError")
-            )
+                    "-XX:-OmitStackTraceInFastThrow"))
       '((cider-preferred-build-tool . clojure-cli)))))))
