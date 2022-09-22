@@ -229,7 +229,7 @@
   (warnf "Starting ... done. Data will NOT be updated!"))
 
 (defn gc "Garbage collection" []
-  #_(do
+  (do
     (timbre/debugf "(System/gc)")
     (System/gc) ;; also (.gc (Runtime/getRuntime))
     (Thread/sleep 100)))
@@ -267,8 +267,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
          estim)
         _ (add-calc-time "stats-countries" stats-countries)
 
-        garbage-coll (m-result (gc))
-        _ (add-calc-time "garbage-coll" garbage-coll)
+        ;; garbage-coll (m-result (gc))
+        ;; _ (add-calc-time "garbage-coll" garbage-coll)
 
         _ (m-result
            ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
@@ -292,8 +292,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
             [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
         _ (add-calc-time "all-calc-listings" all-calc-listings)
 
-        garbage-coll (m-result (gc))
-        _ (add-calc-time "garbage-coll" garbage-coll)
+        ;; garbage-coll (m-result (gc))
+        ;; _ (add-calc-time "garbage-coll" garbage-coll)
 
         rankings
         ((comp
@@ -301,8 +301,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
          (msgi/all-rankings stats-countries))
         _ (add-calc-time "rankings" rankings)
 
-        garbage-coll (m-result (gc))
-        _ (add-calc-time "garbage-coll" garbage-coll)
+        ;; garbage-coll (m-result (gc))
+        ;; _ (add-calc-time "garbage-coll" garbage-coll)
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
