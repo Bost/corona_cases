@@ -4,6 +4,7 @@
   "Version 1 of the https://coronavirus-tracker-api.herokuapp.com/"
   (:refer-clojure :exclude [pr])
   (:require
+   [corona.cdefs :refer :all]
    [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
    [corona.api.expdev07 :as data]
    [corona.common :as com]
@@ -113,21 +114,21 @@
                (fn [loc]
                  (utils.core/in?
                   #{
-                    "CR" "TG" "ZA" "PE" "LC" "CH" "RU" "SI" "AU" "KR" "IT" "FI"
-                    "SC" "TT" "MY" "SY" "MN" "AM" "DZ" "UY" "TD" "DJ" "BI" "MK"
-                    "MU" "LI" "GR" "GY" "CG" "ML" "GM" "SA" "BH" "NE" "BN" "XK"
-                    "CD" "DK" "BJ" "ME" "BO" "JO" "CV" "VE" "CI" "UZ" "TN" "IS"
-                    "GA" "TZ" "AT" "LT" "NP" "BG" "IL" "PK" "PT" "HR" "MR" "GE"
-                    "HU" "TW" "MM" "SR" "VA" "KW" "SE" "GB" "QQ" "VN" "CF" "PA"
-                    "VC" "JP" "IR" "AF" "LY" "MZ" "RO" "QA" "CM" "BY" "SD" "AR"
-                    "BR" "ZW" "NZ" "FJ" "ID" "SV" "CN" "HT" "RW" "BA" "TL" "JM"
-                    "KE" "PY" "CY" "GH" "MA" "SG" "LK" "PH" "SM" "TR" "PS" "BZ"
-                    "CU" "AD" "DM" "LR" "OM" "SO" "DO" "AL" "FR" "GW" "BB" "CA"
-                    "MG" "KH" "LA" "HN" "TH" "DE" "LB" "KZ" "EC" "NO" "AO" "ET"
-                    "MD" "AG" "BE" "MV" "SZ" "CZ" "CL" "BT" "NL" "EG" "SN" "EE"
-                    "KN" "BW" "NI" "PG" "IQ" "KG" "US" "ZM" "MC" "GT" "BF" "LU"
-                    "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ" "IN" "ES" "CO"
-                    "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"}
+                    CR TG ZA PE LC CH RU SI AU KR IT FI
+                    SC TT MY SY MN AM DZ UY TD DJ BI MK
+                    MU LI GR GY CG ML GM SA BH NE BN XK
+                    CD DK BJ ME BO JO CV VE CI UZ TN IS
+                    GA TZ AT LT NP BG IL PK PT HR MR GE
+                    HU TW MM SR VA KW SE GB QQ VN CF PA
+                    VC JP IR AF LY MZ RO QA CM BY SD AR
+                    BR ZW NZ FJ ID SV CN HT RW BA TL JM
+                    KE PY CY GH MA SG LK PH SM TR PS BZ
+                    CU AD DM LR OM SO DO AL FR GW BB CA
+                    MG KH LA HN TH DE LB KZ EC NO AO ET
+                    MD AG BE MV SZ CZ CL BT NL EG SN EE
+                    KN BW NI PG IQ KG US ZM MC GT BF LU
+                    UA IE LV GD MW BS AZ SK GQ IN ES CO
+                    RS NG UG SL ER AE BD MT GN NA MX PL}
                   (:country_code loc))))
     (partial get data-with-pop))
    case-kw)))

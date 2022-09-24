@@ -2,6 +2,7 @@
 
 (ns corona.api.expdev07
   (:require
+   [corona.cdefs :refer [nr-cc]]
    [clojure.stacktrace]
    [corona.api.cache :as cache]
    [corona.api.owid :as vac]
@@ -102,7 +103,7 @@
       ;; 7792480951
       (let [default-population 0]
         (errorf "ccode %s unknown population size. Using %s"
-                ccode
+                (get nr-cc ccode)
                 default-population)
         default-population)))
 
