@@ -43,18 +43,19 @@ pgdata=./var/pg/data
 #     fi
 # }
 
-start_db () {
-    set -x  # Print commands and their arguments as they are executed.
-    pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
-    { retval="$?"; set +x; } 2>/dev/null
-}
-
 test_db () {
     set -x  # Print commands and their arguments as they are executed.
     psql --dbname=postgres << EOF
 select count(*) as "count-of-thresholds (should be 4):" from thresholds;
 EOF
     { retval="$?"; set +x; } 2>/dev/null
+}
+
+start_db () {
+    set -x  # Print commands and their arguments as they are executed.
+    pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
+    { retval="$?"; set +x; } 2>/dev/null
+    test_db
 }
 
 start_mockup_server () {
