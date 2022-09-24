@@ -73,7 +73,7 @@ start_repl () {
         -J-Djdk.attach.allowAttachSelf \
         -Sdeps \
         '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.5"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' \
-        -m nrepl.cmdline \
+        -M -m nrepl.cmdline \
         --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
     { retval="$?"; set +x; } 2>/dev/null
 }
