@@ -5,6 +5,7 @@
 (ns corona.telegram
   (:gen-class)
   (:require
+   [corona.cdefs :refer :all]
    [clojure.algo.monads :refer [domonad m-result state-m]]
    [clojure.core.async :as async]
    [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
@@ -238,6 +239,10 @@
   "TODO regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   [aggregation-hash json-owid json-v1]
+  (def aggregation-hash aggregation-hash)
+  (def json-owid json-owid)
+  (def json-v1 json-v1)
+
   (let [;; tbeg must be captured before the function composition
         init-state {:tbeg (system-time) :acc []}]
     ((comp
@@ -252,10 +257,12 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         header      (m-result (msgc/header com/html last-date))
         footer      (m-result (msgc/footer com/html true))
 
+        ;; split raw-dates-v1 json-v1 json-owid to years, calculate estimates
+        ;; for every part and combine them, i.e. define a monoidal plus operation
         estim
         ;; (read-string (slurp "estim.edn"))
         ((comp m-result
-               ;; (fn [e] (->> e (pr) (with-out-str) (spit "estim.edn")))
+               (fn [e] (->> e (pr) (with-out-str) (spit "estim-nr.edn")))
                est/estimate
                (partial v1/pic-data cnt-reports)
                data/data-with-pop)
@@ -329,7 +336,7 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                     (plot/mezzage
                      cnt-reports ccode sorted-estim last-date cnt-reports))
                   (plot/message-kw ccode)]]))))
-           ;; here also "ZZ" worldwide messages
+           ;; here also ZZ worldwide messages
            ccc/all-country-codes))
         _ (add-calc-time "all-ccode-messages" all-ccode-messages)
 

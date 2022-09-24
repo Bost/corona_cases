@@ -2,6 +2,7 @@
 
 (ns corona.commands
   (:require
+   [corona.cdefs :refer :all]
    [clojure.string :as cstr]
    [corona.api.cache :as cache]
    [corona.api.expdev07 :as data]
@@ -155,7 +156,7 @@
   (transduce (map ccode-handlers)
              into (into (inline-handlers)
                         (listing-handlers))
-             ;; here also "ZZ" worldwide messages
+             ;; here also ZZ worldwide messages
              ccc/all-country-codes))
 
 (defn bot-father-edit
