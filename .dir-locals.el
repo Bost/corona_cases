@@ -14,12 +14,21 @@
     .
     (progn
 
-      (dolist (mode '(clojure-mode cider-repl-mode))
+      (defun corona=font-lock--defn-fun-id (mode)
         (font-lock-add-keywords
          mode
          `((,(concat "(\\(?:" clojure--sym-regexp "/\\)?"
                      "\\(" (regexp-opt '("defn-fun-id")) "\\)\\>")
             . font-lock-keyword-face))))
+      (mapcar #'corona=font-lock--defn-fun-id '(clojure-mode cider-repl-mode))
+
+      ;; (mapcar (lambda (mode)
+      ;;           (font-lock-add-keywords
+      ;;            mode
+      ;;            `((,(concat "(\\(?:" clojure--sym-regexp "/\\)?"
+      ;;                        "\\(" (regexp-opt '("defn-fun-id")) "\\)\\>")
+      ;;               . font-lock-keyword-face))))
+      ;;         '(clojure-mode cider-repl-mode))
 
       (defun corona=cider-browse-all-ns-corona ()
         (interactive)
