@@ -258,13 +258,13 @@ reports are done once a week."
    (str s
         (cstr/join (repeat (- padding-len (count s)) with)))))
 
-(defn hash-fn [data]
-  (let [hash-size 6
-        algorith "md5" ;; "sha1" "sha-256" "sha-512"
-        raw (.digest (MessageDigest/getInstance algorith)
-                     (.getBytes (str data)))]
-    (-> (format "%x" (BigInteger. 1 raw))
-        (subs 0 hash-size))))
+(defn hash-fn
+  "`algorithm` can be one of \"md5\" \"sha1\" \"sha-256\" \"sha-512\""
+  ([data] (hash-fn "md5" 6 data))
+  ([algorith hash-size data]
+   (-> (format "%x" (BigInteger. 1 (.digest (MessageDigest/getInstance algorith)
+                                            (.getBytes (str data)))))
+       (subs 0 hash-size))))
 
 (defn my-find-var
   "find-var throws exception "
@@ -379,9 +379,18 @@ reports are done once a week."
   (fmt-date-fun "dd MMM yy"))
 
 (def fmt-date-dbg
-  "(fmt-date-dbg (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
-                \"4/26/20\"))"
+  "E.g.:
+  (fmt-date-dbg (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
+                \"4/26/20\"))
+  ;; => 4/26/20 -> 26.04."
   (fmt-date-fun "dd.MM."))
+
+(def fmt-date-sortable
+  "E.g.:
+  (fmt-date-sortable (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
+                \"4/26/20\"))
+  ;; => 4/26/20 -> 2020-04-26"
+  (fmt-date-fun "YYYY-MM-dd"))
 
 (def ^:const desc-ws
   "A placeholder"
@@ -399,16 +408,16 @@ reports are done once a week."
   (cstr/replace bot-name #"_" "\\\\_"))
 
 (defn log-obj [obj]
-  (let [so (str obj)
+  (let [str-obj (str obj)
         separator (cond
-                    (.contains so "ManyToManyChannel") "ManyToManyChannel"
-                    (.contains so "p_endlessly") "p_endlessly"
-                    (.contains so "p_long_polling") "p_long_polling"
-                    (.contains so "reset_cache_BANG_") "reset_cache_BANG_"
+                    (.contains str-obj "ManyToManyChannel") "ManyToManyChannel"
+                    (.contains str-obj "p_endlessly") "p_endlessly"
+                    (.contains str-obj "p_long_polling") "p_long_polling"
+                    (.contains str-obj "reset_cache_BANG_") "reset_cache_BANG_"
                     ;; (.contains so "handlers$") "handlers$"
                     ;; (.contains so "@") "@"
-                    :else so)]
-    (subs so (.indexOf so separator))))
+                    :else str-obj)]
+    (subs str-obj (.indexOf str-obj separator))))
 
 (defn sum [kws hms]
   ((comp

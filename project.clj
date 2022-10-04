@@ -52,7 +52,7 @@
 
    [org.clojars.bost/clj-time "0.6.0-289-0xe68a"]
 
-   [org.clojars.bost/utils "0.0.0-49-0x726c"]
+   [org.clojars.bost/utils "0.0.0-60-0xec7c"]
 
    ;; https://github.com/generateme/cljplot
    [org.clojars.bost/cljplot "0.0.0-84-0x214c"]

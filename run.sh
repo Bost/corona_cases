@@ -20,8 +20,7 @@ for prjd in ${prj_dirs[@]}; do
     if [ ! -d $prjd ]; then
         set -x  # Print commands and their arguments as they are executed.
         mkdir --parent $prjd
-        { retval="$?";
-          set +x; } 2>/dev/null
+        { retval="$?"; set +x; } 2>/dev/null
     fi
 done
 
@@ -41,6 +40,10 @@ cliTools="$cliTools clojure-tools" # clojure-tools not clojure must be installed
 # ./heroku.clj needs babashka. Also `guix shell ...` contain '--share=/usr/bin'
 # so that shebang (aka hashbang) #!/bin/env/bb works
 cliTools="$cliTools babashka"
+
+# Install Heroku on Guix
+# https://www.reddit.com/r/GUIX/comments/uom3vs/heroku_cli/
+# https://gitlab.com/nonguix/nonguix/-/issues/180
 
 # TODO --preserve=
 #   preserve environment variables matching REGEX

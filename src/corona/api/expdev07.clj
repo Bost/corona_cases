@@ -163,7 +163,9 @@
     keys)
    json))
 
-(defn data-with-pop [raw-dates-v1 json-v1 json-owid]
+(defn data-with-pop
+  "(data-with-pop raw-dates-v1 json-v1 json-owid)"
+  [raw-dates-v1 json-v1 json-owid]
   (conj (corona-data raw-dates-v1 json-v1)
         (vac/vaccination-data raw-dates-v1 json-owid)
         (population-data raw-dates-v1)))

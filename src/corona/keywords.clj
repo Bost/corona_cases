@@ -3,10 +3,13 @@
 (ns corona.keywords)
 
 ;; (set! *warn-on-reflection* true)
+;; (map corona.telemetry/measure [:a :Δ :x̅]) => ("104 B" "104 B" "104 B")
 
 ;; k as in keyword
-(def kabs "absolute" #_:α :abs)
-(def ksum "sum" #_:Σ #_:σ :sum)
+(def kabs "absolute"
+  #_:α :abs)
+(def ksum "sum"
+  #_:Σ :sum) ;; σ/ς - sigma: ς is for word-final position, σ elsewhere
 (def krnk "ranking = σειρά κατάταξης [seirá katátaxis]"
   #_:ξ :rnk)
 (def kest "estimate/assessment = εκτίμηση [ektímisi]"
@@ -20,30 +23,29 @@
 (def kls7 "last 7"
   #_:7 :ls7)
 (def kavg "average = arithmetic mean"
-  #_:ø :avg)
+  #_:x̅ :avg) ;; x-bar
 (def kchg "change"
   #_:Δ :chg)
 (def kmax "maximum = μέγιστο [mégisto]"
   #_:μ :max)
-
-(def kcco "country code"
-  :cco)
+(def kcco "country code = κωδικός χώρας [kodikós chóras]"
+  #_:κ :cco)
 (def ktst "timestamp"
-  :t)
+  #_:t :tst)
 (def kpop "population"
-  :p)
+  #_:p :pop)
 (def kvac "vaccinated"
-  :v)
+  #_:v :vac)
 (def kact "active"
-  :a)
+  #_:a :act)
 (def krec "recovered"
-  :r)
+  #_:r :rec)
 (def kdea "deaths"
-  :d)
+  #_:d :dea)
 (def knew "new confirmed"
-  :n)
+  #_:n :new)
 (def kclo "closed"
-  :c)
+  #_:c :clo)
 
 (def ka1e5 :a1e5)
 (def kr1e5 :r1e5)
@@ -58,7 +60,12 @@
 (def klense-fun
   :lense-fun)
 
-(defn makelense [& case-kws] (apply vector case-kws))
+(defn makelense
+  "E.g.:
+  (makelense kact kest kabs) => [:act :est :abs]
+  (makelense kvac krep k1e5) => [:vac :rep :1e5]"
+  [& case-kws]
+  (apply vector case-kws))
 
 #_{
  [kact kabs] (makelense kact kest kabs)
@@ -80,13 +87,13 @@
  }
 
 (def lense-map
-  {kact  (makelense kact kest kabs)  ;; can be only estimated
+  {kact  (makelense kact kest kabs) ;; can be only estimated
    ka1e5 (makelense kact kest k1e5)
-   krec  (makelense krec kest kabs)    ;; can be only estimated
+   krec  (makelense krec kest kabs) ;; can be only estimated
    kr1e5 (makelense krec kest k1e5)
-   kclo  (makelense kclo kest kabs)    ;; can be only estimated
+   kclo  (makelense kclo kest kabs) ;; can be only estimated
    kc1e5 (makelense kclo kest k1e5)
-   kdea  (makelense kdea krep kabs)    ;; reported
+   kdea  (makelense kdea krep kabs) ;; reported
    kd1e5 (makelense kdea krep k1e5) ;; reported
 
    knew  (makelense knew krep kabs)
@@ -96,11 +103,13 @@
    })
 
 (def lense-map-with-strings
-  (into lense-map
-        {:s (makelense :es) ;; :s is a string - could be used for translations
-         }))
+  ;; :s is a string - could be used for translations
+  (into lense-map {:s (makelense :es)}))
 
 (defn getlense-map
+  "E.g.:
+  (getlense-map lense-map-with-strings kpop) => [:pop]
+  (getlense-map lense-map-with-strings kact) => [:act :est :abs]"
   [m kw]
   ((comp
     (partial apply get m)
@@ -108,14 +117,26 @@
     (fn [kw] [kw (makelense kw krep kabs)]))
    kw))
 
-(defn basic-lense [kw]
+(defn basic-lense
+  "E.g.:
+  (basic-lense kpop)  => [:pop]
+  (basic-lense kact)  => [:act :est :abs]
+  (basic-lense kc1e5) => [:clo :est :1e5]"
+  [kw]
   (getlense-map lense-map-with-strings kw))
 
 (defn ranking-lense
+  "E.g.:
+  (ranking-lense kpop) => [:pop :rnk]
+  (ranking-lense kact) => [:act :est :abs :rnk]"
   [kw]
   (conj (getlense-map lense-map kw) krnk))
 
-(defn identity-lense "" [kw]
+(defn identity-lense
+  "E.g.:
+  (identity-lense kpop) => [:pop]
+  (identity-lense kact) => [:act]"
+  [kw]
   ((comp
     vector)
    kw))
