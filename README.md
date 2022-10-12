@@ -87,7 +87,7 @@ CORONA_ENV_TYPE=hokuspokus
 # (keyword corona-cases)
 # (keyword hokuspokus)
 # (keyword \"local\")
-# (keyword \"devel\")
+# kdevel
 
 # https://clojure.org/guides/getting_started#_installation_on_linux
 CLOJURE_CLI_VERSION=0.0.0.0

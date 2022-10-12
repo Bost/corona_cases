@@ -1,6 +1,7 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.keywords)
 
-(ns corona.keywords)
+(ns corona.keywords
+  "Keywords used in the corona data map")
 
 ;; (set! *warn-on-reflection* true)
 ;; (map corona.telemetry/measure [:a :Δ :x̅]) => ("104 B" "104 B" "104 B")

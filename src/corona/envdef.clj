@@ -8,7 +8,10 @@
 (def ^:const ^String corona-cases "corona-cases")
 (def ^:const ^String hokuspokus "hokuspokus")
 (def ^:const ^String wicki "wicki")
+(def ^:const ^String devel "devel")
 (def ^:const ^String heroku-app-domain "herokuapp.com")
+
+(def kdevel (keyword devel))
 
 (def token-corona-cases (System/getenv "TELEGRAM_TOKEN_CORONA_CASES"))
 (def token-hokuspokus   (System/getenv "TELEGRAM_TOKEN_HOKUSPOKUS"))
@@ -30,7 +33,6 @@
   (fmt-telegram-bot-name-fn hokuspokus))
 (def ^:const ^String wicki-telegram-bot
   (fmt-telegram-bot-name-fn wicki))
-
 (def ^:const ^String corona-cases-web-server
   (fmt-web-server-name-fn corona-cases))
 (def ^:const ^String hokuspokus-web-server
@@ -92,7 +94,7 @@
     :json-server {:v1 api-servers :owid owid-prod}
     :telegram-token token-hokuspokus}
 
-   (keyword "devel")
+   kdevel
    {:level 3
     :bot-name wicki-telegram-bot
     ;; :web-server nil ;; intentionally undefined
