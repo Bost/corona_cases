@@ -348,6 +348,7 @@
 (def no-population-country-codes
   #{"TF" "MF" "SJ" "QQ" "UM" "BQ" "BV" "GS" "AQ" "HM"})
 
+;; In Emacs jump here with s-<f10>
 (def all-country-codes
   "All country codes (potentially including worldwide \"ZZ\")"
   (or

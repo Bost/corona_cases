@@ -108,9 +108,15 @@
 
 (def date-format (new SimpleDateFormat "MM/dd/yy"))
 
-(defn date [rd] (.parse date-format (keyname rd)))
+(defn date
+  "(date (keyword \"4/26/20\")) => #inst \"2020-04-26T00:00:00.000-00:00\""
+  [raw-date] (.parse date-format (keyname raw-date)))
 
-(defn dates [raw-dates-v1]
+(defn dates
+  "(dates (map keyword [\"4/26/20\" \"4/27/20\"]))
+  ;; => (#inst \"2020-04-26T00:00:00.000-00:00\"
+  ;;     #inst \"2020-04-27T00:00:00.000-00:00\")"
+  [raw-dates-v1]
   ((comp
     (fn [val] (cache/from-cache! (fn [] val) [:v1 :dates]))
     (partial map date))
@@ -134,9 +140,9 @@
                 population-cnt)))))
    ccc/relevant-country-codes))
 
-(defn corona-data [raw-dates-v1 json]
+(defn corona-data [raw-dates-v1 json-v1]
   ((comp
-    (partial into {})
+    (partial reduce into {})
     (partial map
              (fn [case-kw-full-name]
                ((comp
@@ -156,12 +162,12 @@
                           (comp
                            (partial utc/in? ccc/relevant-country-codes)
                            :country_code))
-                 (partial get-in json)
+                 (partial get-in json-v1)
                  (fn [kw] [kw :locations]))
                 case-kw-full-name)))
     (partial filter (partial utc/in? [:confirmed :deaths :recovered]))
     keys)
-   json))
+   json-v1))
 
 (defn data-with-pop
   "(data-with-pop raw-dates-v1 json-v1 json-owid)"

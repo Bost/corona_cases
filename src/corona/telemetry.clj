@@ -6,7 +6,8 @@
    [taoensso.timbre :as timbre]
    [taoensso.timbre.appenders.core :as appenders]
    [clojure.string :as cstr]
-   [environ.core :as env]
+   [environ.core]
+   [corona.envdef :as envdef :refer [kdevel]]
    [clojure.algo.monads :refer [domonad state-m]]))
 
 ;; (set! *warn-on-reflection* true)
@@ -22,7 +23,9 @@
   2. some config/env file - however not the .custom.env
   3. environment variable
   "
-  ((comp keyword cstr/lower-case :corona-env-type) env/env))
+  ((comp keyword cstr/lower-case :corona-env-type) environ.core/env))
+
+(def is-devel-env? (= env-type kdevel))
 
 (def log-level-map ^:const {:debug :dbg :info :inf :warn :wrn :error :err})
 
@@ -73,7 +76,7 @@
    :timestamp-opts
    (conj {:timezone (java.util.TimeZone/getTimeZone zone-id)}
          {:pattern "HH:mm:ss.SSSX"})}
-  (when-not (= env-type :devel)
+  (when-not is-devel-env?
     ;; TODO log only last N days
     {:appenders {:spit (appenders/spit-appender {:fname "corona.log"})}})))
 
@@ -101,8 +104,6 @@
 (defmacro warnf  [s & exprs] `(timbre/warnf  (str "%s%s%s " ~s) sb ~'fun-id se ~@exprs))
 (defmacro errorf [s & exprs] `(timbre/errorf (str "%s%s%s " ~s) sb ~'fun-id se ~@exprs))
 (defmacro fatalf [s & exprs] `(timbre/fatalf (str "%s%s%s " ~s) sb ~'fun-id se ~@exprs))
-
-(def is-devel-env? (= env-type :devel))
 
 (defmacro system-ok?
   "Do not add (:require [corona.common]) since this is a macro. Otherwise a

@@ -17,8 +17,19 @@
    (java.text SimpleDateFormat)
    (java.util TimeZone)))
 
+;; TODO consider streams since we're dealing with:
+;; Sequential data
+;; Incremental data
+;; Unbounded amount of data
+;; Limited memory
+
+;; TODO see Co-routines
+;; https://okmij.org/ftp/Computation/oxford-seminar.pdf
+
 ;; TODO use `https://github.com/erdos/erdos.yield` for streams
-;; See also 'Generators as lazy sequences' https://github.com/leonoel/cloroutine/blob/master/doc/01-generators.md
+
+;; See also 'Generators as lazy sequences'
+;; https://github.com/leonoel/cloroutine/blob/master/doc/01-generators.md
 
 ;; (set! *warn-on-reflection* true)
 
@@ -42,7 +53,7 @@
                                (assoc dhm k 0)))))
      default-hms)))
 
-(defn xf-for-case "" [cnt-reports data-with-pop case-kw]
+(defn xf-for-case "" [cnt-reports data case-kw]
   (let [lensed-case-kw (makelense case-kw)
         shift (max corona.estimate/shift-recovery
                    corona.estimate/shift-deaths)]
@@ -129,10 +140,10 @@
                     "UA" "IE" "LV" "GD" "MW" "BS" "AZ" "SK" "GQ" "IN" "ES" "CO"
                     "RS" "NG" "UG" "SL" "ER" "AE" "BD" "MT" "GN" "NA" "MX" "PL"}
                   (:country_code loc))))
-    (partial get data-with-pop))
+    (partial get data))
    case-kw)))
 
-(defn-fun-id pic-data "" [cnt-raw-dates data-with-pop]
+(defn-fun-id pic-data "" [cnt-raw-dates data]
   ((comp
     (partial apply
              map
@@ -186,7 +197,7 @@
                         (map (partial normalize default-hms)
                              [:confirmed :recovered :deaths]
                              [hms-new-confirmed hms-recovered hms-deaths])))))
-    (partial map (partial xf-for-case cnt-raw-dates data-with-pop)))
+    (partial map (partial xf-for-case cnt-raw-dates data)))
    [:population :vaccinated :confirmed :recovered :deaths]))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.v1)
