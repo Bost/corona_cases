@@ -25,18 +25,18 @@ postgres=# select * from thresholds order by kw;
 On corona-cases-bot:
   kw |  inc  |   val    |     updated_at
  ----+-------+----------+---------------------
-  a  | 10000 |  1900390 | 2022-02-09 06:16:56
-  d  |  1000 |   145000 | 2022-01-27 04:07:03
-  n  | 50000 | 13510000 | 2022-02-09 06:16:08
-  r  | 10000 | 10857000 | 2022-02-09 06:16:30
+  a  | 10000 |  2550000 | 2022-02-09 06:16:56
+  d  |  1000 |   159000 | 2022-01-27 04:07:03
+  n  | 50000 | 22110000 | 2022-02-09 06:16:08
+  r  | 10000 | 21557000 | 2022-02-09 06:16:30
   "
   ((comp (partial sort-by :kw))
    [{:kw kvac :inc (int 1e6) :val (int 1e7)}
     {:kw kpop :inc (int 1e6) :val (int 1e7)}
-    {:kw knew :inc 50000     :val (int 13510e3)}
-    {:kw krec :inc 10000     :val (int 12677e3)}
-    {:kw kdea :inc 1000      :val (int   153e3)}
-    {:kw kact :inc 10000     :val (int  2520e3)}]))
+    {:kw knew :inc 50000     :val (int 22110e3)}
+    {:kw krec :inc 10000     :val (int 21557e3)}
+    {:kw kdea :inc 1000      :val (int   159e3)}
+    {:kw kact :inc 10000     :val (int  2550e3)}]))
 
 (defn case-kw-val [case-kw]
   ((comp
