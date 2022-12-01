@@ -35,11 +35,13 @@
   "See: ss -tulpn | rg 5051 # see `mockup-port`
   (clj-memory-meter.core/measure server) doesn't work"
   [_]
-  (swap! server (fn [_]
-                  (run-jetty
-                   (wrap-json-body #'app-routes {:keywords? true})
-                   {:port mockup-port :join? false})))
-  (println @server))
+  (let [server-params {:port mockup-port :join? false}]
+    (println "server-params:" server-params)
+    (swap! server (fn [_]
+                    (run-jetty
+                     (wrap-json-body #'app-routes {:keywords? true})
+                     server-params)))
+    (println "@server:" @server)))
 
 (defn -main [] (run-server nil))
 

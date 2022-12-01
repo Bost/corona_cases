@@ -43,13 +43,18 @@
   ["coronavirus-tracker-api.herokuapp.com"
    "covid-tracker-us.herokuapp.com"])
 
+(def ^:const ^Long default-webapp-port 5050)
+
 (def ^:const ^Long webapp-port
+  ;; Port number under which the app is listening.
+  ;; The `heroku local ...` defines a default value of PORT to be 5000.
+  ;; Change by `heroku local -p 7000 ...`. When the app is deployed on the
+  ;; Heroku-severs the value PORT is random.
   (if-let [env-port (System/getenv "PORT")]
     (read-string env-port)
-    ;; keep port-nr in sync with README.md
-    5050))
+    default-webapp-port))
 
-(def ^:const ^Long mockup-port (inc webapp-port))
+(def ^:const ^Long mockup-port (inc default-webapp-port))
 
 (def ^:const ^String owid-prod
   "https://covid.ourworldindata.org/data/owid-covid-data.json")
