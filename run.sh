@@ -1,11 +1,6 @@
 #!/bin/sh
 #
 # Reproducible Development Environment
-#
-# TODO Add nginx php-fpm as in the guix-lemp-container
-# https://notabug.org/hackware/guix-lemp-container.git
-#
-# Wishlist: Include XDebug
 
 wd=$(pwd) # WD=$(dirname "$0") # i.e. path to this file
 
@@ -24,50 +19,60 @@ for prjd in ${prj_dirs[@]}; do
     fi
 done
 
-cliTools=""
-
-# TODO replace busybox with env
-cliTools="$cliTools busybox"
-cliTools="$cliTools ncurses"
-# Heroku currently offers Postgres version 14 as the default.
-# https://devcenter.heroku.com/articles/heroku-postgresql#version-support
-cliTools="$cliTools postgresql@13.6"
-cliTools="$cliTools rsync openssh bash fish ripgrep less"
-# cliTools="$cliTools iproute2" # provides the `ss` socket stuff
-cliTools="$cliTools grep git coreutils sed which guile"
-cliTools="$cliTools openjdk@18:jdk"
-cliTools="$cliTools clojure-tools" # clojure-tools not clojure must be installed
-# ./heroku.clj needs babashka. Also `guix shell ...` contain '--share=/usr/bin'
-# so that shebang (aka hashbang) #!/bin/env/bb works
-cliTools="$cliTools babashka"
-
 # Install Heroku on Guix
 # https://www.reddit.com/r/GUIX/comments/uom3vs/heroku_cli/
 # https://gitlab.com/nonguix/nonguix/-/issues/180
 
-# TODO --preserve=
+# --preserve=REGEX
 #   preserve environment variables matching REGEX
+#
+# The $DISPLAY is needed by clojure.inspector, however the
+#   --preserve='^DISPLAY$'
+# leads to an error in the REPL:
+#   Authorization required, but no authorization protocol specified
+# and:
+#   error in process filter: cljr--maybe-nses-in-bad-state: \
+#   Some namespaces are in a bad state: ...
+# TODO: Develop corona_cases project in the guix shell container
+# try adding:
+#  --preserve='^XAUTHORITY$' --share=$XAUTHORITY
+#  --preserve='^.*$' --share=$XAUTHORITY
+#  export DISPLAY=:0.0
+# ~/.config/guix/shell-authorized-directories
+# See https://guix.gnu.org/manual/devel/en/html_node/Invoking-guix-shell.html
+
+# No shell is started when the '--search-paths' parameter is used. Only the
+# variables making up the environment are displayed.
+#   guix shell --search-paths
+
+# --preserve=^TERM$ \
+#   Avoid following warning:
+# $ clj --version
+# rlwrap: warning: environment variable TERM not set, assuming vt100
+
 set -x
 guix shell \
+     --manifest=manifest.scm \
      --container --network \
-     nss-certs curl $cliTools \
      --preserve=^CORONA \
+     --preserve=^DISPLAY \
+     --preserve='^XAUTHORITY$' --share=$XAUTHORITY \
      --preserve=^TELEGRAM \
-     --share=$wd/.bash_profile=$HOME/.bash_profile \
-     --share=$wd/.bashrc=$HOME/.bashrc \
-     --share=$HOME/.m2=$HOME/.m2 \
-     --share=$HOME/.gitconfig=$HOME/.gitconfig \
-     --share=$HOME/.config/fish=$HOME/.config/fish \
+     --preserve=^TERM$ \
+     --share=/usr/bin \
      --share=$HOME/.bash_history=$HOME/.bash_history \
-     --share=$HOME/dev=$HOME/dev \
+     --share=$HOME/.config/fish=$HOME/.config/fish \
+     --share=$HOME/.gitconfig=$HOME/.gitconfig \
+     --share=$HOME/.m2=$HOME/.m2 \
+     --share=$HOME/bin=$HOME/bin \
      --share=$HOME/dec=$HOME/dec \
      --share=$HOME/der=$HOME/der \
-     --share=$HOME/bin=$HOME/bin \
-     --share=$HOME/local-stuff.fish=$HOME/local-stuff.fish \
      --share=$HOME/dev/dotfiles=$HOME/dev/dotfiles \
+     --share=$HOME/dev=$HOME/dev \
+     --share=$wd/.bash_profile=$HOME/.bash_profile \
+     --share=$wd/.bashrc=$HOME/.bashrc \
      --share=$wd/var/log=/var/log \
      --share=$wd/var/pg=/var/pg \
      --share=$wd/var/run/postgresql=/var/run/postgresql \
-     --share=/usr/bin \
      --share=$wd \
      -- bash

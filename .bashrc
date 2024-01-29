@@ -14,36 +14,31 @@ if [[ $- != *i* ]]; then
 fi
 
 # /run is not automatically created by guix
-mkdir /run
+[ ! -d /run ] && mkdir /run
 
 # Quick access to $GUIX_ENVIRONMENT, for usage on config files
 # (currently only /etc/nginx/nginx.conf)
-ln -s $GUIX_ENVIRONMENT /env
+[ ! -L /env ] && ln -s $GUIX_ENVIRONMENT /env
 
 # # Link every file in /usr/etc on /etc
 # ls -1d /usr/etc/* | while read filepath; do
-#     ln -s $filepath /etc/
+#     bname=/etc/$(basename $filepath)
+#     [ ! -L $bname ] && ln -s $filepath $bname
 # done
 
-prjdir=~/dec/corona_cases
+expedir_basename="corona_cases"
+prjdir=$(pwd)
+currdir_basename=$(basename $prjdir)
+if [ "$currdir_basename" != "$expedir_basename" ]; then
+    printf "ERR: Basename of current directory is '%s', expecting '%s'\n" \
+           $currdir_basename $expedir_basename
+    exit 1
+fi
 pgdata=./var/pg/data
 
-# start_db () {
-#     port=5432
-#     # pgrep -fa -- -D
-#     # pg_ctl --pgdata=./var/pg/data status
-#     # set -x  # Print commands and their arguments as they are executed.
-#     ss -tulpn | grep "127\.0\.0\.1:$port"
-#     { retval="$?"; set +x; } 2>/dev/null
-#     if [ $retval -eq 0 ] || [ -e $pgdata/postmasted.pid ]; then
-#         echo "Could not bind 127.0.0.1:$port - address already in use"
-#     else
-#         echo "Starting postgres server..."
-#         pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
-#     fi
-# }
-
 test_db () {
+    # for long names of keywords, use:
+    #   select * from thresholds where kw in ('rec', 'dea', 'act', 'new') order by kw;
     set -x  # Print commands and their arguments as they are executed.
     psql --dbname=postgres << EOF
 select count(*) as "count-of-thresholds (should be 4):" from thresholds;
@@ -52,15 +47,36 @@ EOF
 }
 
 start_db () {
+    port=5432
+
     set -x  # Print commands and their arguments as they are executed.
-    pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
+    # 1. alternative
+    pgrep --full --list-full bin/postgres
+
+    # 2. alternative
+    # ss -tulpn | grep $port
+
+    # 3. alternative
+    # pg_ctl --silent --pgdata=$pgdata status # --silent : prints only errors
+    # However, pg_ctl reports 'pg_ctl: no server running' even when a server is
+    # running
+
     { retval="$?"; set +x; } 2>/dev/null
-    test_db
+
+    if [ $retval -eq 0 ] && [ -e $pgdata/postmaster.pid ]; then
+        echo "INF: Could not bind to port $port - already in use"
+    else
+        set -x  # Print commands and their arguments as they are executed.
+        pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
+        { retval="$?"; set +x; } 2>/dev/null
+        test_db
+    fi
 }
 
 start_mockup_server () {
     set -x  # Print commands and their arguments as they are executed.
-    ./heroku.clj getMockData && clj -X:mockup-server
+    # ./heroku.clj getMockData && clj -X:mockup-server
+    clj -X:mockup-server
     { retval="$?"; set +x; } 2>/dev/null
 }
 
@@ -73,14 +89,16 @@ start_repl () {
         -J-XX:+HeapDumpOnOutOfMemoryError \
         -J-Djdk.attach.allowAttachSelf \
         -Sdeps \
-        '{:deps {nrepl/nrepl {:mvn/version "0.9.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.5.5"} cider/cider-nrepl {:mvn/version "0.28.3"}}}' \
+        '{:deps {nrepl/nrepl {:mvn/version "1.1.0"} refactor-nrepl/refactor-nrepl {:mvn/version "3.9.1"} cider/cider-nrepl {:mvn/version "0.45.0"}}}}}' \
         -M -m nrepl.cmdline \
-        --middleware '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+        --middleware \
+        '["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"]'
+
     { retval="$?"; set +x; } 2>/dev/null
 }
 
 guix_prompt () {
-    cat << EOF
+    cat << "EOF"
     ░░░                                     ░░░
     ░░▒▒░░░░░░░░░               ░░░░░░░░░▒▒░░
      ░░▒▒▒▒▒░░░░░░░           ░░░░░░░▒▒▒▒▒░
