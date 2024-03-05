@@ -100,4 +100,6 @@
   rsync
   sed
   which
+
+  (@(gnu packages admin) neofetch) ;; pimp my ride
   ))

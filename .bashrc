@@ -5,20 +5,23 @@
 # honor it and otherwise use /bin/sh.
 export SHELL
 
-if [[ $- != *i* ]]; then
-    # We are being invoked from a non-interactive shell. If this is an SSH
-    # session (as in "ssh host command"), source /etc/profile so we get PATH and
-    # other essential variables ...
-    [[ -n "$SSH_CLIENT" ]] && source /etc/profile
-    return # ... and don't do anything else.
+# if [[ $- != *i* ]]; then
+#     echo "We are being invoked from a non-interactive shell."
+#     # We are being invoked from a non-interactive shell. If this is an SSH
+#     # session (as in "ssh host command"), source /etc/profile so we get PATH and
+#     # other essential variables ...
+#     [[ -n "$SSH_CLIENT" ]] && source /etc/profile
+#     return # ... and don't do anything else.
+# fi
+
+if [ -n "$GUIX_ENVIRONMENT" ]; then
+    # /run is not automatically created by guix
+    [ ! -d /run ] && mkdir /run
+
+    # Quick access to $GUIX_ENVIRONMENT, for usage on config files
+    # (currently only /etc/nginx/nginx.conf)
+    [ ! -L /env ] && ln -s $GUIX_ENVIRONMENT /env
 fi
-
-# /run is not automatically created by guix
-[ ! -d /run ] && mkdir /run
-
-# Quick access to $GUIX_ENVIRONMENT, for usage on config files
-# (currently only /etc/nginx/nginx.conf)
-[ ! -L /env ] && ln -s $GUIX_ENVIRONMENT /env
 
 # # Link every file in /usr/etc on /etc
 # ls -1d /usr/etc/* | while read filepath; do
@@ -29,11 +32,6 @@ fi
 expedir_basename="corona_cases"
 prjdir=$(pwd)
 currdir_basename=$(basename $prjdir)
-if [ "$currdir_basename" != "$expedir_basename" ]; then
-    printf "ERR: Basename of current directory is '%s', expecting '%s'\n" \
-           $currdir_basename $expedir_basename
-    exit 1
-fi
 pgdata=./var/pg/data
 
 test_db () {
@@ -67,7 +65,9 @@ start_db () {
         echo "INF: Could not bind to port $port - already in use"
     else
         set -x  # Print commands and their arguments as they are executed.
-        pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
+        if [ -n "$GUIX_ENVIRONMENT" ]; then
+            pg_ctl --pgdata=$pgdata --log=./var/log/postgres.log start
+        fi
         { retval="$?"; set +x; } 2>/dev/null
         test_db
     fi
@@ -97,7 +97,7 @@ start_repl () {
     { retval="$?"; set +x; } 2>/dev/null
 }
 
-guix_prompt () {
+guix_logo () {
     cat << "EOF"
     ░░░                                     ░░░
     ░░▒▒░░░░░░░░░               ░░░░░░░░░▒▒░░
@@ -119,39 +119,53 @@ guix_prompt () {
    | |__| | |\  | |__| | | |__| | |_| | |>  <
     \_____|_| \_|\____/   \_____|\__,_|_/_/\_\
 
-Available commands:
-  start_repl start_db test_db start_mockup_server
 EOF
     }
 
-## Initialize database on the first run
-## '--directory' - do not list implied . and ..
-if [ -z "$(ls --almost-all $pgdata)" ]; then
+do_run () {
     # TODO make a logging monad
-    set -x  # Print commands and their arguments as they are executed.
-    initdb --pgdata=$pgdata # dropdb postgres && rm -rf ./var/pg
-    { retval="$?"; set +x; } 2>/dev/null
+    if [ ! -d $pgdata ]; then # Initialize database on the first run
+        set -x  # Print commands and their arguments as they are executed.
+        initdb --pgdata=$pgdata # dropdb postgres && rm -rf ./var/pg
+        { retval="$?"; set +x; } 2>/dev/null
 
-    start_db
+        start_db
 
-    set -x  # Print commands and their arguments as they are executed.
-    psql --dbname=postgres --quiet --file=dbase/my.sql
-    { retval="$?"; set +x; } 2>/dev/null
-    test_db
+        set -x  # Print commands and their arguments as they are executed.
+        psql --dbname=postgres --quiet --file=dbase/my.sql
+        { retval="$?"; set +x; } 2>/dev/null
+    else
+        start_db
+    fi
+    # start_mockup_server
+
+    if [ -n "$GUIX_ENVIRONMENT" ]; then
+        guix_logo
+    elif [ $(command -v neofetch) ]; then
+        neofetch
+    fi
+
+    cat << "EOF"
+Available commands:
+  start_repl start_db test_db start_mockup_server
+EOF
+
+    # start_repl
+
+    # Adjust the prompt depending on whether we're in 'guix environment'.
+    if [ -n "$GUIX_ENVIRONMENT" ]; then
+        PS1='\u@\h \w [env]\$ '
+    else
+        PS1='\u@\h \w\$ '
+    fi
+    alias ls='ls -p --color=auto'
+    alias ll='ls -l'
+    alias grep='grep --color=auto'
+}
+
+if [ "$currdir_basename" != "$expedir_basename" ]; then
+    printf "ERR: Basename of current directory is '%s', expecting '%s'\n" \
+           $currdir_basename $expedir_basename
 else
-    start_db
+    do_run
 fi
-# start_mockup_server
-
-guix_prompt
-# start_repl
-
-# Adjust the prompt depending on whether we're in 'guix environment'.
-if [ -n "$GUIX_ENVIRONMENT" ]; then
-    PS1='\u@\h \w [env]\$ '
-else
-    PS1='\u@\h \w\$ '
-fi
-alias ls='ls -p --color=auto'
-alias ll='ls -l'
-alias grep='grep --color=auto'
