@@ -1,12 +1,11 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.telegram)
 
-;; TODO https://stuartsierra.com/2016/01/09/how-to-name-clojure-functions
-
 (ns corona.telegram
   (:gen-class)
   (:require
    [clojure.algo.monads :refer [domonad m-result state-m]]
    [clojure.core.async :as async]
+   [clojure.data];; for clojure.data/diff
    [clojure.inspector :as insp :refer [inspect-table inspect-tree]]
    [clojure.string :as cstr]
    [corona.api.cache :as cache]
@@ -15,10 +14,8 @@
    [corona.api.v1 :as v1]
    [corona.cases :as cases]
    [corona.commands :as cmd]
-   [corona.common :as com]
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
-   [corona.telemetry :as telemetry]
    [corona.estimate :as est]
    [corona.keywords :refer :all]
    [corona.lang :as lang]
@@ -29,38 +26,43 @@
    [corona.msg.text.details :as msgi]
    [corona.msg.text.lists :as msgl]
    [corona.msg.text.messages :as msg]
-   [corona.telemetry
-    :refer [add-calc-time
-            debugf
-            defn-fun-id
-            fatalf
-            heap-info
-            infof
-            measure
-            system-ok?
-            system-time
-            warnf]]
+   [corona.common :as com]
+   [corona.telemetry :as telemetry]
+   [corona.telemetry :refer [add-calc-time debugf defn-fun-id fatalf heap-info
+                             infof measure system-ok? system-time warnf]]
+   [corona.utils.core :as cutc]
    [morse.api :as morse]
    [morse.handlers :as moh]
    [morse.polling :as mop]
-   [taoensso.timbre :as timbre])
+   [taoensso.timbre :as timbre]
+   [utils.core :as utc]
+   [utils.debug :as utd :refer [dbg]]
+   )
   (:import
-   (java.time Instant LocalDateTime ZoneId)))
+   (java.time Instant LocalDateTime ZoneId)
+   ))
 
 ;; (set! *warn-on-reflection* true)
 
 (defonce continue (atom true))
 
-;; For interactive development:
-(defonce initialized (atom nil))
+(defonce initialized
+  ^{:doc
+    "For interactive development.
+A particular state of the cache and webhook can be used to signal
+successful initialization instead of setting it to:
+    (swap! initialized (fn [_] true))"}
+  (atom nil))
 
 (defonce telegram-port (atom nil))
 
 (defn-fun-id wrap-in-hooks
-  "Add :pre and :post hooks / advices around `function`
-  Thanks to https://stackoverflow.com/a/10778647/5151982
-  TODO doesn't work for multiarity functions. E.g.
-  (defn fun ([] (fun 1)) ([x] x))"
+  "See also https://github.com/MichaelDrogalis/dire
+
+  Add pre- and post-hooks / advices around `main-fun`.
+
+  The first argument of the post-hook is the return-value from the `main-fun`,
+  i.e. it is an one extra argument! Examples see utils.core/wrap-in-hooks"
   [{:keys [pre post]} fun]
   (fn [& args]
     (apply pre args)
@@ -79,17 +81,25 @@
          (partial moh/command-fn name)
          (partial wrap-in-hooks
                   {:pre (fn [& args]
-                            (let [chat-prm (:chat (first args))]
-                              (infof ":pre /%s chat %s" name chat-prm)
-                              (cond
-                                (= name lang/start)
-                                (when-not (dbase/chat-exists? chat-prm)
-                                  (dbase/insert-chat! chat-prm)))))
+                          (let [chat-prm (:chat (first args))]
+                            (infof ":pre /%s chat %s" name chat-prm)
+                            (cond
+                              (= name lang/start)
+                              (when-not (dbase/chat-exists? chat-prm)
+                                (dbase/insert-chat! chat-prm)))))
                    :post (fn [& args]
                            (let [[fn-result {:keys [chat]}] args]
                              (infof ":post /%s chat %s" name chat)
-                             fn-result))}))
-        (fn [m] (fun (:id (:chat m)))))))
+                             fn-result))})
+         fun
+         :id
+         (fn [m]
+           (debugf "1: %s" m)
+           (when (nil? m)
+             (throw (new Exception "No :chat defined"))) m)
+         :chat
+         (fn [m] (debugf "0: %s" m) m))
+        m)))
    cmds))
 
 (defn-fun-id create-callbacks
@@ -114,11 +124,15 @@
   https://en.wikipedia.org/wiki/Push_technology#Long_polling
   An Array of Update-objects is returned."
   []
-  (let [callbacks (create-callbacks [msg/worldwide-plots])
-        commands (create-cmds cmd/all-handlers)]
-    (infof "Registering %s chatbot command(s) and %s callback(s) ..."
-           (count commands) (count callbacks))
-    (into callbacks commands)))
+  (let [callbacks (create-callbacks [msg/worldwide-plots])]
+    (debugf "%s callback(s) created" (count callbacks))
+    (let [commands (create-cmds cmd/all-handlers)]
+      (debugf "%s command(s) created" (count commands))
+      (infof "Registering %s chatbot command(s) and %s callback(s) ..."
+             (count commands) (count callbacks))
+      #_(infof "Registering %s chatbot command(s) and %s callback(s) ..."
+             (count commands) (count callbacks))
+      (into callbacks commands))))
 
 (declare tgram-handlers)
 
@@ -131,15 +145,25 @@
   (format "%s/%s" com/webapp-server telegram-token))
 
 (defn-fun-id setup-webhook "" [telegram-token]
-  (let [webhook-set? (if telegram-token
+  ;; (debugf "telegram-token: %s" telegram-token)
+  (let [webbook-info-result ((comp
+                              :result
+                              :body
+                              morse/get-info-webhook)
+                             telegram-token)
+        pending-updates (:pending_update_count webbook-info-result)
+        webhook-set? (if telegram-token
                        ((comp
                          seq ;; (seq x) is idiom for (not (empty? x))
-                         :url
-                         :result
-                         :body
-                         morse/get-info-webhook)
-                        telegram-token)
-          )]
+                         :url)
+                        webbook-info-result))]
+    (if (pos? pending-updates)
+      (warnf "Found %s pending-update(s). Consider dropping them using:\n   %s"
+             pending-updates
+             (str
+              "curl --request GET "
+              "--form \"drop_pending_updates=true\" "
+              "\"https://api.telegram.org/bot$TELEGRAM_TOKEN/deleteWebhook\"")))
     (if com/use-webhook?
       (if webhook-set?
         (debugf "Condition 'webhook-set' satisfied. Do nothing.")
@@ -154,7 +178,7 @@
               (fatalf
                (str
                 "Can't call morse/set-webhook. Undefined telegram-token."
-                "TODO terminate.")))))
+                "TODO: terminate when telegram-token is undefined.")))))
          telegram-token))
       (if webhook-set?
         ((comp
@@ -167,7 +191,7 @@
               (fatalf
                (str
                 "Can't call morse/del-webhook. Undefined telegram-token"
-                "TODO terminate")))))
+                "TODO: terminate when telegram-token is undefined.")))))
          telegram-token)
         (debugf "Condition 'webhook-not-set' satisfied. Do nothing.")))))
 
@@ -201,17 +225,21 @@
  https://github.com/Otann/morse/issues/32"
   [tgram-token]
   (infof "Starting ...")
-  (if-let [polling-handlers (apply moh/handlers (create-handlers))]
-    (do
-      (debugf "Created polling-handlers %s" (com/log-obj polling-handlers))
-      (let [port (start-polling tgram-token polling-handlers)]
-        (swap! telegram-port (fn [_] port))
-        (let [retval-async<!! (async/<!! port)]
-          (warnf "Taking vals on port %s stopped with retval-async<! %s"
-                 (com/log-obj port) (if-let [v retval-async<!!] v "nil"))
-          (fatalf "Further requests may NOT be answered!!!")
-          (api-error-handler))))
-    (fatalf "polling-handlers not created"))
+  (debugf "Calling (create-handlers)")
+  (let [handlers (create-handlers)]
+    (debugf "handlers %s" handlers)
+    ;; activate handling
+    (if-let [polling-handlers (apply moh/handlers (create-handlers))]
+      (do
+        (debugf "Created polling-handlers %s" (com/log-obj polling-handlers))
+        (let [port (start-polling tgram-token polling-handlers)]
+          (swap! telegram-port (fn [_] port))
+          (let [retval-async<!! (async/<!! port)]
+            (warnf "Taking vals on port %s stopped with retval-async<! %s"
+                   (com/log-obj port) (if-let [v retval-async<!!] v "nil"))
+            (fatalf "Further requests may NOT be answered!!!")
+            (api-error-handler))))
+      (fatalf "polling-handlers not created")))
   (infof "Starting ... done"))
 
 (defn-fun-id endlessly
@@ -234,33 +262,218 @@
     (System/gc) ;; also (.gc (Runtime/getRuntime))
     (Thread/sleep 100)))
 
+(defn make-sortable
+  "E.g.:
+  (make-sortable \"10/4/22\")           => \"2021-12-04\"
+  (make-sortable (keyword \"1/22/20\")) => \"2020-01-22\"
+  "
+  [raw-date]
+  ((comp com/fmt-sortable-date
+         com/parse-raw-date-str
+         (fn [s] (subs s 1))
+         str)
+   raw-date))
+
+;; TODO: inspect the full-json-owid keys :OWID_SAM :OWID_UMC :OWID_KOS etc.
+
+;; TODO: use types for the filter-owid and filter-v1 functions (and others)
+(defn filter-owid
+  "Return reports with :date value among desired-dates
+
+  (filter-owid desired-dates full-json-owid)"
+  [desired-dates full-json-owid]
+  ((comp
+    (partial reduce into {})
+    (partial map
+             (fn [[k v]]
+               (hash-map
+                k
+                (update-in
+                 v [:data]
+                 (partial filter
+                          (comp (partial utc/in? desired-dates) :date)))))))
+   full-json-owid))
+
+(defn filter-v1
+  "Return reports with :date value among desired-dates
+  E.g.:
+  (filter-v1 desired-raw-dates full-json-v1)"
+  [desired-raw-dates full-json-v1]
+  (def desired-raw-dates desired-raw-dates)
+  (def full-json-v1 full-json-v1)
+
+  ((comp
+    (partial reduce into {})
+    (partial map
+             (fn [[k v]]
+               (hash-map
+                k
+                (update-in
+                 v [:locations]
+                 (partial map
+                          (partial cutc/update-in :ks [:history]
+                                   :f (partial cutc/select-keys
+                                               :ks desired-raw-dates))))))))
+   full-json-v1))
+
+(defn equal-at-index?
+  "backwards means 0 is the last report, 1 is one before the last one, etc.
+  Range is 0 ... 365, i.e. (max (com/nr-of-days nil) est/max-shift)
+  "
+  [eo en idx-backwards]
+  (printf "idx-backwards %s\n" idx-backwards)
+  ((comp
+    #_(partial apply =)
+    (fn [[neo nen]]
+      ;; (def neo neo)
+      ;; (def nen nen)
+      (if-let [are-equal? (= neo nen)]
+        are-equal?
+        (do
+          (let [ccode "DE"]
+            (def de-neo (filter (fn [m] (= (kcco m) ccode)) neo))
+            (def de-nen (filter (fn [m] (= (kcco m) ccode)) nen)))
+          (clojure.data/diff de-neo de-nen)
+          false)))
+    (partial map (comp
+                  (partial sort-by kcco)
+                  (partial mapv
+                           (fn [[ccode hms]]
+                             (let [idx
+                                   (dec
+                                    (- (count hms)
+                                       (min
+                                        (dec
+                                         (max (com/nr-of-days nil)
+                                              est/max-shift))
+                                        idx-backwards)))]
+                               #_
+                               (printf "ccode: %s, (count hms) %s, idx %s\n"
+                                       ccode (count hms) idx)
+                               (nth hms idx)))))))
+   [eo en]))
+
+(defn estimations-equal?
+  "Test if the old and new estimations are equal. Test the range boundaries 0,
+    max-coll-idx and some 5 random indexes from this range"
+  [eo en]
+  ((comp
+    (partial every? true?)
+    (partial map (fn [i]
+                   (let [eq-result (equal-at-index? eo en i)]
+                     (printf "(equal-at-index? eo en %s): %s\n"
+                             i eq-result)
+                     eq-result))))
+   (let [max-coll-idx (dec (- (com/nr-of-days nil) est/max-shift))]
+     (into [0 max-coll-idx]
+           (repeatedly 5 (fn [] (inc (rand-int (dec max-coll-idx)))))))))
+
+;;; Split raw-dates-v1 json-v1 json-owid to years, calculate estimates
+;;; for every part and combine them, i.e. define a monoidal plus operation
+;;;
+;;; It seems like specifying narrowing down the raw-dates-v1 should do the job.
+;;; Count the days and stop when having all requested. (Is it possible to use
+;;; continuations for this?)
+
 (defn-fun-id calc-cache!
-  "TODO regarding garbage collection - see object finalization:
+  "
+(calc-cache! aggregation-hash json-owid json-v1)
+
+TODO: regarding garbage collection - see object finalization:
 https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
   [aggregation-hash json-owid json-v1]
+  (def aggregation-hash aggregation-hash)
+  (def json-owid json-owid)
+  (def json-v1 json-v1)
+
   (let [;; tbeg must be captured before the function composition
         init-state {:tbeg (system-time) :acc []}]
     ((comp
-      first
+      first ;; just extract the value out of the monad
       (domonad
        state-m
        [
-        raw-dates-v1 ((comp m-result data/raw-dates) json-v1)
-        dates        ((comp m-result data/dates) raw-dates-v1)
-        last-date    ((comp m-result last (partial sort-by ktst)) dates)
-        cnt-reports  ((comp m-result count) dates)
-        header      (m-result (msgc/header com/html last-date))
-        footer      (m-result (msgc/footer com/html true))
+;;; Split raw-dates-v1 json-v1 json-owid to years, calculate estimates
+;;; for every part and combine them, i.e. define a monoidal plus operation
+;;;
+;;; It seems like specifying narrowing down the raw-dates-v1 should do the job.
+;;; Count the days and stop when having all requested. (Is it possible to use
+;;; continuations for this?)
 
-        estim
-        ;; (read-string (slurp "estim.edn"))
-        ((comp m-result
-               ;; (fn [e] (->> e (pr) (with-out-str) (spit "estim.edn")))
-               est/estimate
-               (partial v1/pic-data cnt-reports)
-               data/data-with-pop)
-         raw-dates-v1 json-v1 json-owid)
+
+        all-raw-dates-v1     ((comp m-result data/raw-dates) json-v1)
+
+        ;; TODO: test for negative and too large n-first-days-to-drop
+        n-first-days-to-drop
+        ;; reports until 2022-09-??, including.
+        ;; number of reports/days to reduce to a sum
+        ((comp m-result)
+         0
+         #_(- (count all-raw-dates-v1)
+            (max (com/nr-of-days nil)
+                 est/max-shift)))
+
+        desired-raw-dates-v1 ((comp m-result
+                                    (partial drop n-first-days-to-drop))
+                              all-raw-dates-v1)
+        desired-dates-v1     ((comp m-result
+                                    (partial map make-sortable))
+                              desired-raw-dates-v1)
+
+        all-dates-owid ((comp
+                         m-result
+                         (partial map (fn [m] (get-in m [:date])))
+                         (fn [m] (get-in m [:ITA :data])))
+                        json-owid)
+
+        desired-dates-both ((comp
+                             m-result
+                             (partial filter (partial utc/in? all-dates-owid)))
+                            desired-dates-v1)
+        desired-raw-dates-both ((comp
+                                 m-result
+                                 (partial
+                                  map
+                                  (comp
+                                   keyword
+                                   com/fmt-vaccination-date
+                                   com/parse-date-str)))
+                                desired-dates-both)
+
+        desired-json-owid ((comp m-result
+                                 (partial filter-owid desired-dates-both ))
+                           json-owid)
+        desired-json-v1   ((comp m-result
+                                 (partial filter-v1 desired-raw-dates-both ))
+                           json-v1)
+        cnt-reports        ((comp m-result count) desired-dates-both)
+
+        estim ((comp
+                m-result
+                #_
+                (fn [m]
+                  (clojure.pprint/pprint
+                   ((comp
+                     (partial sort-by kcco)
+                     (partial mapv (fn [[_ hms]] (last hms))))
+                    m)
+                   (clojure.java.io/writer est/last-estim-edn-file))
+                  m)
+                (partial est/estimate est/zero-sum)
+                (fn [p] (def pd p) p)
+                (partial v1/pic-data cnt-reports)
+                (fn [p] (def d p) p)
+                data/data-with-pop)
+               desired-raw-dates-both
+               #_desired-raw-dates-v1
+               desired-dates-both desired-json-v1 desired-json-owid)
         _ (add-calc-time "estim" estim)
+
+;;; TODO: test what's gonna happen if the first-date and last-date are the same!
+        last-date    ((comp m-result
+                            com/parse-date-str
+                            last (partial sort-by ktst)) desired-dates-both)
+        ;; first-date   ((comp m-result first (partial sort-by ktst)) desired-dates-both)
 
         stats-countries
         ((comp
@@ -273,10 +486,13 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         ;; _ (add-calc-time "garbage-coll" garbage-coll)
 
         _ (m-result
-           ;; TODO don't exec all-ccode-messages when (< cnt-reports 10)
+           ;; TODO: don't exec all-ccode-messages when (< cnt-reports 10)
            (when (< cnt-reports 10)
              (warnf "Some stuff may not be calculated. Too few %s: %s"
                     'cnt-reports cnt-reports)))
+
+        header (m-result (msgc/header com/html last-date))
+        footer (m-result (msgc/footer com/html true))
 
         all-calc-listings
         (let [prm
@@ -294,8 +510,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
             [cases/listing-cases-per-1e5 'corona.msg.text.lists/per-1e5]]))
         _ (add-calc-time "all-calc-listings" all-calc-listings)
 
-        ;; garbage-coll (m-result (gc))
-        ;; _ (add-calc-time "garbage-coll" garbage-coll)
+        garbage-coll (m-result (gc))
+        _ (add-calc-time "garbage-coll" garbage-coll)
 
         rankings
         ((comp
@@ -305,6 +521,8 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
 
         ;; garbage-coll (m-result (gc))
         ;; _ (add-calc-time "garbage-coll" garbage-coll)
+
+        dates ((comp m-result data/dates) desired-raw-dates-both)
 
         all-ccode-messages
         ;; pmap 16499ms, map 35961ms
@@ -337,9 +555,10 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
         _ (add-calc-time "garbage-coll" garbage-coll)
 
         thresholds
-        (let [norm-ths (cases/norm (dbase/get-thresholds))]
+        (let [norm-ths (dbase/get-thresholds)]
           ((comp
             m-result
+            (fn [p] (def tn p) p)
             (partial concat norm-ths)
             flatten
             (partial map (fn [case-kw]
@@ -376,16 +595,17 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
                    {:v1   {:json-hash (get-in @cache/cache [:v1   :json-hash])}}
                    {:owid {:json-hash (get-in @cache/cache [:owid :json-hash])}}
                    (select-keys
-                    @cache/cache [:plot :msg :list :threshold :dbg])))))
+                    @cache/cache [:plot :msg klist :threshold :dbg])))))
 
         garbage-coll (m-result (gc))
         _ (add-calc-time "garbage-coll" garbage-coll)
         ]
+       #_raw-dates-v1
        calc-result))
      init-state)))
 
 (defn-fun-id json-changed! "" [{:keys [json-fn cache-storage]}]
-  ;; TODO spec: cache-storage must be vector; json-fns must be function
+  ;; TODO: spec: cache-storage must be vector; json-fns must be function
   (let [json (json-fn)
         hash-kws (conj cache-storage :json-hash)
         old-hash (get-in @cache/cache hash-kws)
@@ -452,14 +672,22 @@ https://clojuredocs.org/clojure.core/reify#example-60252402e4b0b1e3652d744c"
     (do
       (setup-webhook com/telegram-token)
       (reset-cache!)
-      (swap! initialized (fn [_]
-                           ;; TODO use morse.handler instead of true?
-                           true))
+      (swap! initialized (fn [_] true))
       (let [funs (into [p-endlessly]
                        (when-not com/use-webhook?
-                         [p-long-polling]))]
-        (debugf "Parallel run %s ..." funs)
-        (pmap (fn [fun] (fun)) funs))
+                         [p-long-polling]))
+            parallel-run?
+            true
+            #_false]
+        (debugf "%s run %s ..." (if parallel-run? "Parallel" "Sequential") funs)
+        (if parallel-run?
+          (pmap (fn [fun] (fun)) funs)
+          #_(map  (fn [fun] (fun)) funs)
+          (do
+            #_(p-endlessly)
+            (p-long-polling)
+            )
+          ))
       (infof "Starting ... done"))
     (fatalf "Start aborted")))
 

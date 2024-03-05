@@ -13,26 +13,30 @@
    [corona.envdef :as envdef]
    [corona.keywords :refer :all]
    [corona.pom-version-get :as pom]
-   [corona.telemetry
-    :refer
-    [env-type add-calc-time debugf defn-fun-id errorf infof system-time warnf]]
+   [corona.telemetry :refer [env-type add-calc-time debugf defn-fun-id errorf
+                             infof system-time warnf]]
+   [corona.utils.core :as cutc]
    [environ.core :as env]
    [taoensso.timbre :as timbre]
    [utils.core :as utc]
-   [utils.num :as utn])
+   [utils.num :as utn]
+   )
   (:import
    (java.net URI)
-   (java.security MessageDigest)))
+   (java.security MessageDigest)
+   (java.text SimpleDateFormat)
+   (java.util TimeZone)
+   ))
 
 ;; (set! *warn-on-reflection* true)
 
 (defn nr-of-days [cnt-reports]
   "Number of days in the plots and the number of reports the calculations are
-restricted to. TODO separate Report\\Day to N-Days and M-Reports. AFAIR the flu
+restricted to. TODO: separate Report\\Day to N-Days and M-Reports. AFAIR the flu
 reports are done once a week."
-  cnt-reports
+  #_cnt-reports
   #_20
-  #_365)
+  365)
 
 (def ^:const ^String unknown "?")
 
@@ -64,7 +68,7 @@ reports are done once a week."
 (def ^:const ^String webapp-server
   (get-in environment [env-type :web-server]))
 
-;; TODO put CORONA_DATABASE_URL to .envrc (or something better)
+;; TODO: put CORONA_DATABASE_URL to .envrc (or something better)
 ;; and set it with heroku config:set
 (def db-uri (java.net.URI.
              (let [env-var "CORONA_DATABASE_URL"]
@@ -134,53 +138,93 @@ reports are done once a week."
   "Telegram chat-id."
   "112885364")
 
-(defn calc-closed [recovered deaths]
-  (+ recovered deaths))
+(defn calc-closed
+  "
+  (calc-closed      90 10) => 100
+  (calc-closed 1000 90 10) => 1100
+  "
+  ([         recove deaths] (calc-closed 0 recove deaths))
+  ([previous recove deaths] (+ previous
+                                 (+ recove deaths))))
 
-(defn calc-active [new-confirmed recove deaths]
-  (- new-confirmed
-     (calc-closed recove deaths)))
+(defn calc-active
+  "'previous' means 'previous active'
+  TODO: shouldn't be (calc-closed previous-deaths recove deaths)
 
-(defn calc-recov [new-confirmed deaths]
-  (- new-confirmed deaths))
+  (calc-active      100 90 10) => 0
+  (calc-active 1000 100 90 10) => 1000
+  (calc-active    0 100 90 10) => 0
+  "
+  ([         new-confir recove deaths] (calc-active 0 new-confir recove deaths))
+  ([previous new-confir recove deaths] (+ previous
+                                            (- new-confir
+                                               (calc-closed recove deaths)))))
 
-(defn calc-closed [recovered deaths]
-  (+ recovered deaths))
+(defn calc-recov
+  "
+  (calc-recov previous new-confir deaths)
+  E.g.:
+  (calc-recov      90 10) => 80
+  (calc-recov 1000 90 10) => 1080
 
-(defn calc-closed [recovered deaths]
-  (+ recovered deaths))
+  "
+  ([         new-confir deaths] (calc-recov 0 new-confir deaths))
+  ([previous new-confir deaths] (+ previous
+                                     (- new-confir deaths))))
 
-(defn calc-rate-precision-1 [case-kw]
-  (fn [prm]
-    (let [p (get prm kpop)
-          n (get prm knew)]
-      (utn/round-div-precision (* (case-kw prm) 100.0)
-                               (condp = case-kw
-                                 kvac p
-                                 n)
-                               1))))
+(defn calc-rate-precision-1
+  "Returns a helper functions that acts on a hash-map.
+  E.g.:
+  ((calc-rate-precision-1     kact) {kact 1e3 kpop 1e6 knew 101}) => 990.1
+  ((calc-rate-precision-1 200 kact) {kact 1e3 kpop 1e6 knew 101}) => 332.2
+  "
+  ([         case-kw] (calc-rate-precision-1 0 case-kw))
+  ([previous case-kw]
+   (fn [prm]
+     (utn/round-div-precision (* (case-kw prm) 100.0)
+                              (+ previous
+                                 (condp = case-kw
+                                   kvac (get prm kpop)
+                                   (get prm knew)))
+                              1))))
 
-(defn calc-rate [case-kw]
-  (fn [prm]
-    (let [p (get prm kpop)
-          n (get prm knew)]
-      (utn/percentage (case-kw prm) (condp = case-kw
-                                      kvac p
-                                      n)))))
+(defn calc-rate
+  "Returns a helper function that acts on a hash-map.
+  E.g.:
+  ((calc-rate     kact) {kact 1e3 kpop 1e6 knew 101}) => 990
+  ((calc-rate 200 kact) {kact 1e3 kpop 1e6 knew 101}) => 332
+  "
+  ([         case-kw] (calc-rate 0 case-kw))
+  ([previous case-kw]
+   (fn [prm]
+     (utn/percentage (case-kw prm) (+ previous
+                                      (condp = case-kw
+                                        kvac (get prm kpop)
+                                        (get prm knew)))))))
 
 (defn per-1e5
-  "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4"
-  ([place total-count] (per-1e5 :normal place total-count))
-  ([mode place total-count]
-   (utn/round mode (/ (* place 1e5) total-count))))
+  "See https://groups.google.com/forum/#!topic/clojure/nH-E5uD8CY4
+  dividend = numerator, divisor = denominator
+  Ratio 'numerator over denominator' expressed in terms of \"per 100k\".
+  E.g.:
+  (per-1e5 1 2)   ;; => 50000 ; \"one half\" expressed as \"50k out of 100k\"
+  (per-1e5 1 1e5) ;; => 1     ; 0.00001 expressed as \"1 out of 100k\""
+  ([     numerator denominator] (per-1e5 :normal numerator denominator))
+  ([mode numerator denominator]
+   ;; (type 1e5) => java.lang.Double
+   (utn/round mode (/ (* numerator 1e5) denominator))))
 
-(defn calc-per-1e5 [case-kw]
-  (fn [prm]
-    (let [p (get prm kpop)]
-      (if (zero? p)
-        0
-        (per-1e5 (case-kw prm)
-                 p)))))
+(defn calc-per-1e5
+  ([         case-kw] (calc-per-1e5 0 case-kw))
+  ([previous case-kw]
+   (fn [prm]
+     (let [p (get prm kpop)]
+       (if (zero? p)
+         (+ previous
+            0)
+         (per-1e5 (case-kw prm)
+                  (+ previous
+                     p)))))))
 
 (def botver
   (if-let [commit (env/env :commit)]
@@ -215,7 +259,7 @@ reports are done once a week."
    env-var-q))
 
 (defn show-env
-  "TODO should the spec checking be done here?"
+  "TODO: should the spec checking be done here?"
   []
   ((comp
     (partial into
@@ -234,7 +278,7 @@ reports are done once a week."
     'corona.common/dbase
     'corona.common/json-apis-v1
     'corona.common/json-api-owid]))
-;; TODO (System/exit <val>) if some var is undefined
+;; TODO: (System/exit <val>) if some var is undefined
 
 (defn fix-octal-val
   "(read-string \"08\") produces a NumberFormatException - octal numbers
@@ -248,23 +292,23 @@ reports are done once a week."
     ((comp read-string fix-octal-val) v)))
 
 (defn left-pad
-  ([s padding-len] (left-pad s "0" padding-len))
+  ([s      padding-len] (left-pad s "0" padding-len))
   ([s with padding-len]
    (cstr/replace (format (str "%" padding-len "s") s) " " with)))
 
 (defn right-pad
-  ([s padding-len] (right-pad s " " padding-len))
+  ([s      padding-len] (right-pad s " " padding-len))
   ([s with padding-len]
    (str s
         (cstr/join (repeat (- padding-len (count s)) with)))))
 
-(defn hash-fn
-  "`algorithm` can be one of \"md5\" \"sha1\" \"sha-256\" \"sha-512\""
-  ([data] (hash-fn "md5" 6 data))
-  ([algorith hash-size data]
-   (-> (format "%x" (BigInteger. 1 (.digest (MessageDigest/getInstance algorith)
-                                            (.getBytes (str data)))))
-       (subs 0 hash-size))))
+(defn hash-fn [data]
+  (let [hash-size 6
+        algorith "md5" ;; "sha1" "sha-256" "sha-512"
+        raw (.digest (MessageDigest/getInstance algorith)
+                     (.getBytes (str data)))]
+    (-> (format "%x" (BigInteger. 1 raw))
+        (subs 0 hash-size))))
 
 (defn my-find-var
   "find-var throws exception "
@@ -277,7 +321,7 @@ reports are done once a week."
   "args and params of fun must correspondent with each other.
    fun must be quoted and namespace-qualified"
   [{:keys [max-attempts attempt fun args]
-                        :or {attempt 1} :as prm}]
+    :or {attempt 1} :as prm}]
   (let [res
         (do
           (infof "(%s %s) attempt %s of %s"
@@ -361,36 +405,64 @@ reports are done once a week."
                     #(cstr/replace % "[" "\\[")))]
     (fun lexical-token)))
 
-(defn fmt-date-fun [fmts]
+;; avoid creating new class each time the `fmt` function is called
+(def ^SimpleDateFormat date-format
+  "yyyy-MM-dd"
+  (let [sdf (new SimpleDateFormat "yyyy-MM-dd")]
+    (.setTimeZone sdf (TimeZone/getDefault)) ;; returns nil
+    sdf))
+
+(defn parse-date-str
+  "(parse-date-str \"2020-12-31\") => #inst \"2020-12-31T00:00:00.000-00:00\""
+  [date-str] (.parse date-format date-str))
+
+;; TODO: investigate if update-in saves memory
+;; TODO: use conversion functions from corona.common
+(def ^SimpleDateFormat raw-date-format
+  "MM/dd/yy"
+  (let [sdf (new SimpleDateFormat "MM/dd/yy")]
+    (.setTimeZone sdf (TimeZone/getDefault)) ;; returns nil
+    sdf))
+
+(defn parse-raw-date-str
+  "
+  (parse-raw-date-str \"4/26/20\") => #inst \"2020-04-26T00:00:00.000-00:00\""
+  [date-str] (.parse raw-date-format date-str))
+
+(def ^SimpleDateFormat updated_at-date-format
+  "yyyy-MM-dd HH:mm:ss"
+  (let [sdf (new SimpleDateFormat "yyyy-MM-dd HH:mm:ss")]
+    (.setTimeZone sdf (TimeZone/getDefault)) ;; returns nil
+    sdf))
+
+(defn fmt-date-fun
+  "Returns a conversion-function"
+  [fmts]
   (fn [date]
     (ctf/unparse (ctf/with-zone (ctf/formatter fmts) (ctime/default-time-zone))
                  (ctc/from-date date))))
 
 (def fmt-vaccination-date
-  "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
-            \"4/26/20\"))
-  E.g.:
-  2021-01-15 -> 1/15/20"
+  "For conversion e.g. 2021-01-15 -> 1/15/20
+  TODO: better name
+
+  (fmt-vaccination-date (parse-raw-date-str \"15/1/20\"))"
   (fmt-date-fun "M/d/yy"))
 
-(def fmt-date
-  "(fmt-date (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
-            \"4/26/20\"))"
+(def fmt-human-date
+  "Human readable
+  (fmt-human-date (parse-raw-date-str \"4/26/20\")) => \"26 Apr 20\""
   (fmt-date-fun "dd MMM yy"))
 
-(def fmt-date-dbg
-  "E.g.:
-  (fmt-date-dbg (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
-                \"4/26/20\"))
-  ;; => 4/26/20 -> 26.04."
+(def fmt-dbg-date
+  "For conversion e.g. 4/26/20 -> 26.04.
+  (fmt-dbg-date (parse-raw-date-str \"4/26/20\"))"
   (fmt-date-fun "dd.MM."))
 
-(def fmt-date-sortable
-  "E.g.:
-  (fmt-date-sortable (.parse (new java.text.SimpleDateFormat \"MM/dd/yy\")
-                \"4/26/20\"))
-  ;; => 4/26/20 -> 2020-04-26"
-  (fmt-date-fun "YYYY-MM-dd"))
+(def fmt-sortable-date
+  "For conversion e.g. 4/26/20 -> 2020-04-26
+  (fmt-sortable-date (parse-raw-date-str \"4/26/20\"))"
+  (fmt-date-fun "yyyy-MM-dd"))
 
 (def ^:const desc-ws
   "A placeholder"
@@ -419,10 +491,14 @@ reports are done once a week."
                     :else str-obj)]
     (subs str-obj (.indexOf str-obj separator))))
 
-(defn sum [kws hms]
+(defn sum
+  "E.g.:
+  (sum kws hms)
+  "
+  [kws hms]
   ((comp
     (partial reduce +)
-    (partial map (fn [hm] (get-in hm kws))))
+    (partial map (partial cutc/get-in :ks kws)))
    hms))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.common)

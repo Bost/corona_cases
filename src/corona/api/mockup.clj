@@ -1,8 +1,8 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.api.mockup)
 
 (ns corona.api.mockup
-  "TODO download the json files when starting instead of serving them statically
-  TODO run in a separate REPL under different JVM"
+  "TODO: download the json files when starting instead of serving them statically
+  TODO: run in a separate REPL under different JVM"
   (:require [compojure.core :refer [defroutes GET]]
             [ring.adapter.jetty :refer [run-jetty]]
             [corona.envdef :refer [mockup-port]]
@@ -11,7 +11,7 @@
 (def path "resources/mockup")
 
 (defroutes app-routes
-  ;; TODO code repetition - create a macro
+  ;; TODO: The app-routes definition contains redundant code - create a macro
   (GET
     "/all" []
     {:status 200

@@ -135,7 +135,7 @@
       ;; i.e. com/markdown
       "*%s*")
     " 🦠 @%s")
-   (com/fmt-date date)
+   (com/fmt-human-date date)
    (condp = parse_mode
      com/html com/bot-name
      com/bot-name-in-markdown)))

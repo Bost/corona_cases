@@ -18,11 +18,23 @@
   "nr-countries / nr-patitions : 126 / 6, 110 / 5, 149 / 7"
   7)
 
-(defn list-kw [fun case-kw]
-  [:list ((comp keyword :name meta find-var) fun) case-kw])
+(defn list-kw
+  "listing-fun must be fully qualified
 
-(defn calc-listings! "" [stats header footer lense-fun prm case-kws listing-fun]
-  ;; fun is one of: per-1e5, absolute-vals - TODO spec it!
+  (list-kw 'corona.msg.text.lists/per-1e5 kact)
+  ;; => [:list :per-1e5 :act]
+  (list-kw 'corona.msg.text.lists/absolute-vals kact)
+  ;; => [:list :absolute-vals :act]
+  "
+  [listing-fun case-kw]
+  [klist ((comp keyword :name meta find-var) listing-fun) case-kw])
+
+(defn calc-listings!
+  "listing-fun is one of:
+     'corona.msg.text.lists/absolute-vals
+     'corona.msg.text.lists/absolute-vals
+TODO: clojure.spec it or use types!"
+  [stats header footer lense-fun prm case-kws listing-fun]
   ((comp
       doall
       (partial
@@ -31,7 +43,7 @@
          (let [lense (lense-fun case-kw)
                coll
                ((comp
-                 ;; TODO the sort-by creates it's own ranking; see rank-for-case
+                 ;; TODO: the sort-by creates it's own ranking; see rank-for-case
                  (partial sort-by (apply comp (reverse lense)) <))
                 stats)
 

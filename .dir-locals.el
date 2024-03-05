@@ -15,11 +15,12 @@
     (progn
 
       (defun corona=font-lock--defn-fun-id (mode)
-        (font-lock-add-keywords
-         mode
-         `((,(concat "(\\(?:" clojure--sym-regexp "/\\)?"
-                     "\\(" (regexp-opt '("defn-fun-id")) "\\)\\>")
-            . font-lock-keyword-face))))
+        ;; (font-lock-add-keywords
+        ;;  mode
+        ;;  `((,(concat "(\\(?:" clojure--sym-regexp "/\\)?"
+        ;;              "\\(" (regexp-opt '("defn-fun-id")) "\\)\\>")
+        ;;     . font-lock-keyword-face)))
+        )
       (mapcar #'corona=font-lock--defn-fun-id '(clojure-mode cider-repl-mode))
 
       ;; (mapcar (lambda (mode)
@@ -146,26 +147,26 @@
            (format "%s/src/corona/msg/graph/plot.clj"
                    home-dir))))
 
-      (dolist (state-map `(,clojure-mode-map ,cider-repl-mode-map))
-        ;; See also `set-local-keymap'
-        (bind-keys
-         :map state-map
-         ;; The binding description doesn't appear in the `M-x helm-descbinds'
-         ;; if the binding is defined using lambda:
-         ;;    ("<some-key>" . (lambda () (interactive) ...))
-         ("<f5>"    . corona=telegram-restart)
-         ("<f6>"    . corona=web-restart)
-         ("<f7>"    . corona=show-pic)
-         ("<f8>"    . corona=show-pic-for-pred)
-         ("<f11>"   . corona=def-param)
-         ("<s-f4>"  . corona=find-file--estimate.clj)
-         ("<s-f5>"  . corona=find-file--v1.clj)
-         ("<s-f6>"  . corona=find-file--telegram.clj)
-         ("<s-f7>"  . corona=find-file--details.clj)
-         ("<s-f8>"  . corona=find-file--cases.clj)
-         ;; ("<s-f9>"  . corona=find-file--.clj)
-         ("<s-f10>" . corona=find-file--country_codes.clj)
-         ("<s-f11>" . corona=find-file--plot.clj)))
+      ;; (dolist (state-map `(,clojure-mode-map ,cider-repl-mode-map))
+      ;;   ;; See also `set-local-keymap'
+      ;;   (bind-keys
+      ;;    :map state-map
+      ;;    ;; The binding description doesn't appear in the `M-x helm-descbinds'
+      ;;    ;; if the binding is defined using lambda:
+      ;;    ;;    ("<some-key>" . (lambda () (interactive) ...))
+      ;;    ("<f5>"    . corona=telegram-restart)
+      ;;    ("<f6>"    . corona=web-restart)
+      ;;    ("<f7>"    . corona=show-pic)
+      ;;    ("<f8>"    . corona=show-pic-for-pred)
+      ;;    ("<f11>"   . corona=def-param)
+      ;;    ("<s-f4>"  . corona=find-file--estimate.clj)
+      ;;    ("<s-f5>"  . corona=find-file--v1.clj)
+      ;;    ("<s-f6>"  . corona=find-file--telegram.clj)
+      ;;    ("<s-f7>"  . corona=find-file--details.clj)
+      ;;    ("<s-f8>"  . corona=find-file--cases.clj)
+      ;;    ;; ("<s-f9>"  . corona=find-file--.clj)
+      ;;    ("<s-f10>" . corona=find-file--country_codes.clj)
+      ;;    ("<s-f11>" . corona=find-file--plot.clj)))
       ))))
  (clojure-mode
   .

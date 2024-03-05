@@ -361,7 +361,7 @@
     (country-alias ccode)
     (get-country-name ccode)))
 
-(def ^:const population-table
+(def ^:const population-table-countries
   "From
   https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population
   The v2 api service https://coronavirus-tracker-api.herokuapp.com/v2 doesn't
@@ -369,7 +369,6 @@
   `corona.tables/population`
 
   Countries not listed:
-  ZZ - Worldwide
   TF - Fr Southern Terri
   MF - St Martin, French
   SJ - Svalbard J. Mayen
@@ -624,6 +623,10 @@
    ["CC" #_"Cocos (Keeling) Islands (Australia)"              555]
    ["PN" #_"Pitcairn Islands (UK)"                            50]
    ])
+
+(def ^:const population-table
+  (conj population-table-countries
+        ["ZZ" #_"Worldwide" (apply + (map second population-table-countries))]))
 
 (def population
   "Toggle between country-names and codes using:

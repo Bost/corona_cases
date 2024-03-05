@@ -15,7 +15,8 @@
    [corona.telemetry :refer [debugf defn-fun-id errorf]]
    [taoensso.timbre :as timbre]
    [utils.core :as utc]
-   [utils.num :as utn]))
+   [utils.num :as utn]
+   [corona.utils.core :as cutc]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -53,7 +54,7 @@
      (utc/sjoin vals))]])
 
 (defn rank-for-case "" [stats-countries lense]
-  ;; TODO ranking implemented twice - see calc-listings!
+  ;; TODO: ranking implemented twice - see calc-listings!
   ((comp
     (partial map-indexed
              (fn [idx hm]
@@ -81,7 +82,7 @@
        (map (fn [ccode]
               ((comp
                 (partial apply utc/deep-merge)
-                ;; TODO have a look at lazy-cat
+                ;; TODO: have a look at lazy-cat
                 (partial reduce concat)
                 (partial map (partial filter (fn [hm] (= (get hm kcco) ccode)))))
                stats-all-ranking-cases))
@@ -208,7 +209,7 @@
      f
      [(let [nr-of-reports 7]
         {:s (lang/incidence nr-of-reports)
-         ;; TODO implement incidence delta
+         ;; TODO: implement incidence delta
          :n (incidence fun-p fun-n knew nr-of-reports ccode-stats)})
       {:s    (get-in lang/hm-active fun-a)
        :n    (get-in last-report fun-a)
@@ -261,7 +262,7 @@
       {:s    (get-in lang/hm-closed (makelense kclo kest k1e5))
        :n    (get-in last-report fun-c1e5)
        :diff (get-in delta-last-2 fun-c1e5)
-       ;; TODO create command lang/cmd-closed-per-1e5
+       ;; TODO: create command lang/cmd-closed-per-1e5
        #_#_:desc (com/encode-cmd lang/cmd-closed-per-1e5)}])))
 
 (defn- country-specific-info
@@ -336,13 +337,13 @@
                   (format "%s: %s (%s)"
                           (get-in lang/hm-active (makelense kact kest kmax))
                           (max-active :val)
-                          (com/fmt-date date)
-                          ;; TODO clj-time.bost/ago-diff:
+                          (com/fmt-human-date date)
+                          ;; TODO: clj-time.bost/ago-diff:
                           ;; show only two segments:
                           ;; 1 month 4 weeks ago; must be rounded
                           #_
                           (format "%s - %s"
-                                  (com/fmt-date date)
+                                  (com/fmt-human-date date)
                                   (clj-time.bost/ago-diff date
                                                           {:verbose true})))))]]
       (when-not (msgc/worldwide? ccode)
@@ -364,12 +365,15 @@
 #_(def ^:dynamic points [[0 0] [1 3] [2 0] [5 2] [6 1] [8 2] [11 1]])
 (defn-fun-id mexxage
   "Shows the table with the absolute and %-wise nr of cases, cases per-1e5 etc.
-  TODO Case / Infection Fatality Rate (CFR / IFR)
-  TODO Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
+
+E.g.:
+(mexxage ccode estim dates rankings cnt-reports header footer)
+
+  TODO: Case / Infection Fatality Rate (CFR / IFR)
+  TODO: Bayes' Theorem applied to PCR test: https://youtu.be/M8xlOm2wPAA
   (need 1. PCR-test accuracy, 2. Covid 19 disease prevalence)
-  TODO create an API web service(s) for every field displayed in the messages (using monad)
-  TODO add effective reproduction number (R)
-  "
+  TODO: create an API web service(s) for every field displayed in the messages (using monad)
+  TODO: add effective reproduction number (R)"
   [ccode estim dates rankings cnt-reports header footer]
   ((comp
     fmt)
@@ -382,7 +386,7 @@
                     (partial zipmap kws)
                     (partial map vals)
                     utc/transpose
-                    (partial map (fn [hm] (select-keys hm kws))))
+                    (partial map (partial cutc/select-keys :ks kws)))
                    ccode-stats-last-8))
          country-reports-recovered?
            ;; the difference between reported and estimated values must be within

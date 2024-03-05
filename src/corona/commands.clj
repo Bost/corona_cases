@@ -162,8 +162,8 @@
   "Evaluate this function and upload the results under:
      @BotFather -> ... -> Edit Bot -> Edit Commands
 
-  TODO commands /re, /de collide with /recov, /deaths
-  TODO /<char> show a list of countries under starting with this letter."
+  TODO: commands /re, /de collide with /recov, /deaths
+  TODO: /<char> show a list of countries under starting with this letter."
   []
   (->> (inline-handlers)
        (remove (fn [hm]

@@ -352,10 +352,12 @@
 (def all-country-codes
   "All country codes (potentially including worldwide \"ZZ\")"
   (or
-   #_#{"DE" "ZZ"}
+   #_#{"GF" "ZZ"}
+   #{"DE" "ZZ"}
    #_#{"GG"}
    #_#{"AR"}
    #_#{"SK" "PE" "KR" "TW" "AR" "TH" "MX"}
+   #_#{"CN" "ZZ"}
    #_#{"US" "DE" "ZZ"}
    #_#{"SK" "GG" "QQ" "DE" "ZZ"}
    #_#{"ZZ" "GB" "SK" "DE" "AT" "CZ" "US" "FR" "PL" "IT" "ES" "SE" "UA" "HU"}
