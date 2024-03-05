@@ -66,8 +66,10 @@ CREATE TABLE IF NOT EXISTS "user" (
   PRIMARY KEY (id)
 );
 
-CREATE INDEX username ON "user" (username);
+CREATE INDEX IF NOT EXISTS username ON "user" (username);
 
+-- Postgres does not have CREATE OR REPLACE functionality for types :facepalm
+DROP TYPE IF EXISTS chat_type CASCADE;
 CREATE TYPE chat_type AS ENUM('private', 'group', 'supergroup', 'channel');
 
 CREATE TABLE IF NOT EXISTS chat (
@@ -95,7 +97,7 @@ CREATE TABLE IF NOT EXISTS chat (
   PRIMARY KEY (id)
 );
 
-CREATE INDEX old_id ON chat (old_id);
+CREATE INDEX IF NOT EXISTS old_id ON chat (old_id);
 
 CREATE TABLE IF NOT EXISTS message (
   -- Unique chat identifier
@@ -213,15 +215,15 @@ CREATE TABLE IF NOT EXISTS message (
   FOREIGN KEY (left_chat_member) REFERENCES "user" (id)
 );
 
-CREATE INDEX message_user_id ON message (user_id);
-CREATE INDEX forward_from ON message (forward_from);
-CREATE INDEX forward_from_chat ON message (forward_from_chat);
-CREATE INDEX reply_to_chat ON message (reply_to_chat);
-CREATE INDEX reply_to_message ON message (reply_to_message);
-CREATE INDEX via_bot ON message (via_bot);
-CREATE INDEX left_chat_member ON message (left_chat_member);
-CREATE INDEX migrate_from_chat_id ON message (migrate_from_chat_id);
-CREATE INDEX migrate_to_chat_id ON message (migrate_to_chat_id);
+CREATE INDEX IF NOT EXISTS essage_user_id ON message (user_id);
+CREATE INDEX IF NOT EXISTS orward_from ON message (forward_from);
+CREATE INDEX IF NOT EXISTS orward_from_chat ON message (forward_from_chat);
+CREATE INDEX IF NOT EXISTS eply_to_chat ON message (reply_to_chat);
+CREATE INDEX IF NOT EXISTS eply_to_message ON message (reply_to_message);
+CREATE INDEX IF NOT EXISTS ia_bot ON message (via_bot);
+CREATE INDEX IF NOT EXISTS eft_chat_member ON message (left_chat_member);
+CREATE INDEX IF NOT EXISTS igrate_from_chat_id ON message (migrate_from_chat_id);
+CREATE INDEX IF NOT EXISTS igrate_to_chat_id ON message (migrate_to_chat_id);
 
 CREATE TABLE IF NOT EXISTS callback_query (
   -- Unique identifier for this query
@@ -249,6 +251,6 @@ CREATE TABLE IF NOT EXISTS callback_query (
   FOREIGN KEY (chat_id, message_id) REFERENCES message (chat_id, id)
 );
 
-CREATE INDEX callback_query_user_id ON callback_query (user_id);
-CREATE INDEX chat_id ON callback_query (chat_id);
-CREATE INDEX message_id ON callback_query (message_id);
+CREATE INDEX IF NOT EXISTS callback_query_user_id ON callback_query (user_id);
+CREATE INDEX IF NOT EXISTS chat_id ON callback_query (chat_id);
+CREATE INDEX IF NOT EXISTS message_id ON callback_query (message_id);
