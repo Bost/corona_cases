@@ -9,9 +9,8 @@
    [corona.countries :as ccr]
    [corona.country-codes :as ccc]
    [corona.telemetry :refer [debugf defn-fun-id errorf]]
-   [utils.core :as utc])
-  (:import
-   (java.text SimpleDateFormat)))
+   [utils.core :as utc]
+   [corona.utils.core :as cutc]))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -66,11 +65,14 @@
                       [m d y]))))))
 
 (defn raw-dates
-  "Size:
+  "E.g.:
+  (raw-dates json)
+
+  ;; Size:
   (apply + (map (fn [rd] (count (str rd))) (get-in @cache [:v1 :raw-dates])))
   ;; 2042 chars
 
-  (time ...) measurement:
+  ;; (time ...) measurement:
   (apply + rd-calc)  ;; no cache used
   ;; 3250.596 msecs
   (count rd-calc)
@@ -86,6 +88,11 @@
      (transduce xform-raw-dates
                 conj []
                 ((comp
+                  ;; Seems to be sorted already. see
+                  ;; (compare (first (take-last 37 raw-dates))
+                  ;;          (first (take-last 17 raw-dates)))
+                  ;; Verify by counting the number of days
+
                   ;; at least 2 values needed to calc difference
                   #_(partial take-last 4)
                   #_(fn [v] (debugf "count %s" (count v)) v)
@@ -96,7 +103,10 @@
                  json)))
    [:v1 :raw-dates]))
 
-(defn-fun-id population-cnt "" [ccode]
+(defn-fun-id population-cnt
+  "E.g.:
+  (population-cnt ccode) "
+  [ccode]
   (or (get ccr/population ccode)
       ;; world population is the sum
       ;; 7792480951
@@ -106,14 +116,14 @@
                 default-population)
         default-population)))
 
-(def date-format (new SimpleDateFormat "MM/dd/yy"))
-
 (defn date
-  "(date (keyword \"4/26/20\")) => #inst \"2020-04-26T00:00:00.000-00:00\""
-  [raw-date] (.parse date-format (keyname raw-date)))
+  "E.g.:
+  (date (keyword \"4/26/20\")) => #inst \"2020-04-26T00:00:00.000-00:00\""
+  [raw-date] (.parse com/raw-date-format (keyname raw-date)))
 
 (defn dates
-  "(dates (map keyword [\"4/26/20\" \"4/27/20\"]))
+  "E.g.:
+  (dates (map keyword [\"4/26/20\" \"4/27/20\"]))
   ;; => (#inst \"2020-04-26T00:00:00.000-00:00\"
   ;;     #inst \"2020-04-27T00:00:00.000-00:00\")"
   [raw-dates-v1]
@@ -140,7 +150,10 @@
                 population-cnt)))))
    ccc/relevant-country-codes))
 
-(defn corona-data [raw-dates-v1 json-v1]
+(defn corona-data
+  "E.g.:
+  (corona-data raw-dates-v1 json-v1)"
+  [raw-dates-v1 json-v1]
   ((comp
     (partial reduce into {})
     (partial map
@@ -148,32 +161,34 @@
                ((comp
                  (partial hash-map case-kw-full-name)
                  (partial into [])
-                 (partial map (fn [m]
-                                (update-in
-                                 m [:history]
-                                 (comp
-                                  (partial into {})
-                                  (partial filter
-                                           (comp
-                                            (partial utc/in? raw-dates-v1)
-                                            first))))))
+                 (partial map
+                          (partial cutc/update-in
+                                   :ks [:history]
+                                   :f (comp
+                                       ;; not `(partial reduce into {})`!
+                                       (partial into {})
+                                       (partial filter
+                                                (comp
+                                                 (partial cutc/in? raw-dates-v1)
+                                                 first)))))
                  ;; here the country_code keyword comes from the json
                  (partial filter
                           (comp
-                           (partial utc/in? ccc/relevant-country-codes)
+                           (partial cutc/in? ccc/relevant-country-codes)
                            :country_code))
                  (partial get-in json-v1)
-                 (fn [kw] [kw :locations]))
+                 (fn [kw] (vector kw :locations)))
                 case-kw-full-name)))
     (partial filter (partial utc/in? [:confirmed :deaths :recovered]))
     keys)
    json-v1))
 
 (defn data-with-pop
-  "(data-with-pop raw-dates-v1 json-v1 json-owid)"
-  [raw-dates-v1 json-v1 json-owid]
+  "E.g.:
+  (data-with-pop raw-dates-v1 desired-dates json-v1 json-owid)"
+  [raw-dates-v1 desired-dates json-v1 json-owid]
   (conj (corona-data raw-dates-v1 json-v1)
-        (vac/vaccination-data raw-dates-v1 json-owid)
+        (vac/vaccination-data raw-dates-v1 desired-dates json-owid)
         (population-data raw-dates-v1)))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.expdev07)

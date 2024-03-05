@@ -112,7 +112,7 @@
   [report-nr ccode stats last-date]
   (format "%s; %s; %s: %s"
           (fmt-report report-nr)
-          (com/fmt-date last-date)
+          (com/fmt-human-date last-date)
           com/bot-name
           (format "%s %s %s"
                   lang/stats
@@ -133,7 +133,7 @@
   canvas, or some other factors as rounding, aligning, java2d rendering
   and aligning etc. See
   https://clojurians.zulipchat.com/#narrow/stream/197967-cljplot-dev/topic/using.20cljplot.20for.20work/near/193681905"
-  ;; TODO check if there are negative numbers in the line; if not then
+  ;; TODO: check if there are negative numbers in the line; if not then
   ;; {:margins {:y [0 0]}} otherwise look for the min and set the :margins
   {:margins {:y [0 0]}})
 
@@ -211,7 +211,7 @@
       ;; 2. data
       ;; 3. configuration hash-map
 
-      ;; TODO annotation by value and labeling doesn't work:
+      ;; TODO: annotation by value and labeling doesn't work:
       ;; :annotate? true
       ;; :annotate-fmt "%.1f"
       ;; {:label (plot-label report ccode stats last-date)}
@@ -269,7 +269,7 @@
                                   hm)))
           (partial sort-by ktst))
          stats)]
-    ;; TODO implement recalculation for decreasing case-kw numbers (e.g. active cases)
+    ;; TODO: implement recalculation for decreasing case-kw numbers (e.g. active cases)
     (let [cnt-countries (count (group-by kcco res))]
       (if (> cnt-countries max-plot-lines)
         (let [raised-threshold (+ threshold-increase threshold)]
@@ -283,7 +283,12 @@
           (group-below-threshold (assoc prm :threshold raised-threshold)))
         {:data res :threshold threshold}))))
 
-(defn stats-all-by-case "" [prm]
+(defn stats-all-by-case
+  "E.g.:
+  (stats-all-by-case prm)
+  "
+  [prm]
+  (def prm prm)
   (let [case-kw (get prm kcase-kw)]
     (update
      (group-below-threshold prm)
@@ -298,7 +303,7 @@
                     (comp
                      (partial sort-by first)
                      (partial map
-                              ;; TODO use juxt
+                              ;; TODO: use juxt
                               ;; (comp (partial apply vector)
                               ;;       (juxt ...))
                               (fn [hm]
@@ -306,11 +311,13 @@
                                         (fn [m] (get m ktst))) hm)
                                  (get-in hm simple-lensed-case-kw)]))))
            (partial reduce into {})
+           (fn [p] (def b p) p)
            (partial map
                     ;; (fn [[ccode hms1]] {ccode (sort-by ktst hms1)})
                     (comp
-                     (partial apply hash-map) ;; TODO this may be not needed?
+                     (partial apply hash-map) ;; TODO: this may be not needed?
                      (juxt first (comp (partial sort-by ktst) second))))
+           (fn [p] (def a p) p)
            (partial group-by kcco)
            (partial reduce into [])
            (partial map
@@ -356,12 +363,12 @@
   [report stats last-date case-kw threshold postfix]
   (format "%s; %s; %s: %s > %s"
           (fmt-report report)
-          (com/fmt-date last-date)
+          (com/fmt-human-date last-date)
           com/bot-name
           ((comp
             (fn [s] (str s postfix))
             (partial cases/text-for-case case-kw))
-           ;; TODO the order and count of elements must correspond to corona.cases/basic-cases
+           ;; TODO: the order and count of elements must correspond to corona.cases/basic-cases
            [nil nil lang/confirmed lang/recovered lang/deaths lang/active-cases
             ;; no need to specify the rest
             ])

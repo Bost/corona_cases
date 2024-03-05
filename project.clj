@@ -66,7 +66,7 @@
    ;; parse HTML into Clojure data structures - scrapping data from HTML tables
    [hickory "0.7.1"]
 
-   ;; TODO debugging - changes prompt according to sexp result
+   ;; TODO: debugging - changes prompt according to sexp result
    ;; https://github.com/AppsFlyer/mate-clj
 
    ;; [incanter/incanter-zoo "1.9.3"]   ;; roll-mean
@@ -76,7 +76,7 @@
    [com.taoensso/timbre "6.5.0"]
 
    ;; manage the lifecycle and dependencies of components with runtime state
-   ;; TODO Include it only in the development
+   ;; TODO: Include com.stuartsierra/component only in the development
    [com.stuartsierra/component "1.1.0"]
 
    ;; read project-version from pom.xml
@@ -98,10 +98,10 @@
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"
   :profiles
-  {;; TODO test :uberjar {:aot :all}
+  {;; TODO: test :uberjar {:aot :all}
    :production {:env {:production true}}})
 
-;; TODO analyze results of lein nvd check
+;; TODO: analyze results of lein nvd check
 ;; $ lein nvd check
 ;; ...
 ;; Checking dependencies for corona_cases 2.0.8 ...

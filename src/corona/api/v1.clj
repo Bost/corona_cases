@@ -12,40 +12,32 @@
    [corona.keywords :refer :all]
    [corona.telemetry :refer [debugf defn-fun-id errorf warnf]]
    [taoensso.timbre :as timbre]
-   [utils.core :as utc])
-  (:import
-   (java.text SimpleDateFormat)
-   (java.util TimeZone)))
+   [utils.core :as utc]
+   [corona.utils.core :as cutc]
+   ))
 
-;; TODO consider streams since we're dealing with:
+;; TODO: consider streams since we're dealing with:
 ;; Sequential data
 ;; Incremental data
 ;; Unbounded amount of data
 ;; Limited memory
 
-;; TODO see Co-routines
+;; TODO: see Co-routines
 ;; https://okmij.org/ftp/Computation/oxford-seminar.pdf
 
-;; TODO use `https://github.com/erdos/erdos.yield` for streams
+;; TODO: use `https://github.com/erdos/erdos.yield` for streams
 
 ;; See also 'Generators as lazy sequences'
 ;; https://github.com/leonoel/cloroutine/blob/master/doc/01-generators.md
 
 ;; (set! *warn-on-reflection* true)
 
-;; avoid creating new class each time the `fmt` function is called
-(def ^SimpleDateFormat sdf
-  "SimpleDateFormat"
-  (let [sdf (new SimpleDateFormat "MM/dd/yy")]
-    (.setTimeZone sdf (TimeZone/getDefault))
-    sdf))
-
-(defn fmt [raw-date] (.parse sdf (data/keyname raw-date)))
+(defn fmt [raw-date] (.parse com/raw-date-format (data/keyname raw-date)))
 
 (defn normalize "" [default-hms k hms]
   (let [hms-set ((comp
                   set
-                  (partial map (fn [hmc] (select-keys hmc [kcco ktst]))))
+                  (partial map (partial cutc/select-keys :ks [kcco ktst])))
                  hms)]
     ((comp
       (partial concat hms)
@@ -53,13 +45,18 @@
                                (assoc dhm k 0)))))
      default-hms)))
 
-(defn xf-for-case "" [cnt-reports data case-kw]
-  (let [lensed-case-kw (makelense case-kw)
-        shift (max corona.estimate/shift-recovery
-                   corona.estimate/shift-deaths)]
+(defn xf-for-case
+  "
+  (xf-for-case cnt-reports data case-kw)
+  " [cnt-reports data case-kw]
+  (def cnt-reports cnt-reports)
+  (def data data)
+  (def case-kw case-kw)
+
+  (let [lensed-case-kw (makelense case-kw)]
     ((comp
     #_(partial sort-by (juxt kcco ktst))
-    ;; TODO fix premature sum calculation:
+    ;; TODO: fix premature sum calculation:
     ;; for every country-code we have also the total count for
     ;; ccc/worldwide-2-country-code ZZ
     flatten
@@ -67,27 +64,26 @@
              (fn [[ccode hms]]
                ((comp
                  #_(partial take-last 2)
-                 ;; TODO check against off-by-1 and "small" nr of cnt-reports
-                 ;; (partial drop shift) the drop must be done after estimation
+;;; TODO: check against off-by-1 and "small" nr of cnt-reports
+;;;   (partial drop est/max-shift)
+;;; the drop must be done after estimation
                  (fn [ms]
-                   (def ms ms)
-                   (def cnt-ms (count ms))
-                   (def cnt-reports cnt-reports)
-                   (def shift shift)
                    (subvec
                     ms
 ;;; (max 0 ...) prevents an IndexOutOfBoundsException in case the number of
 ;;; available reports is close to the number of desired reports, i.e. the
-;;; difference is less than the shift
+;;; difference is less than the est/max-shift
                     (max
                      0
                      (- (count ms)
-                        (+ (com/nr-of-days cnt-reports) shift)))))
+                        (+ (com/nr-of-days cnt-reports) est/max-shift)))))
                  vec
                  (partial sort-by ktst))
                 hms)))
     (partial group-by kcco)
+    (fn [p] (def v4 p) p)
     flatten
+    (fn [p] (def v3 p) p)
     (partial map (fn [[t hms]] ;; process-date
                    ((comp
                      (fn [ms]
@@ -108,7 +104,9 @@
                                  hms)))
                      (partial group-by kcco))
                     hms)))
+    (fn [p] (def v2 p) p)
     (partial group-by ktst)
+    (fn [p] (def v1 p) p)
     flatten
     (partial map (fn [{:keys [country_code history]}] ;;  process-location
                    ((comp
@@ -118,8 +116,9 @@
                      (partial take-last cnt-reports)
                      (partial sort-by ktst)
                      (partial map (fn [[t v]] {kcco country_code
-                                              ktst (fmt t) case-kw v})))
+                                               ktst (fmt t) case-kw v})))
                     history)))
+    (fn [p] (def v0 p) p)
     #_(partial filter
                (fn [loc]
                  (utils.core/in?
@@ -143,7 +142,14 @@
     (partial get data))
    case-kw)))
 
-(defn-fun-id pic-data "" [cnt-raw-dates data]
+(defn-fun-id pic-data
+  "
+(pic-data cnt-raw-dates data)
+"
+  [cnt-raw-dates data]
+  (def cnt-raw-dates cnt-raw-dates)
+  (def data data)
+
   ((comp
     (partial apply
              map
@@ -179,7 +185,9 @@
                   kws))))
     ;; unsorted [pic-data] 99.2 MiB obtained in 7614 ms
     ;; sorted   [pic-data] 46.4 MiB
+    (fn [p] (def p3 p) p)
     (partial map (partial sort-by (juxt kcco ktst)))
+    (fn [p] (def p2 p) p)
     (partial apply (fn [hms-population
                         hms-vaccinated
                         hms-new-confirmed
@@ -190,14 +198,16 @@
                       (let [default-hms ((comp
                                           set
                                           (partial map
-                                                   (fn [hm]
-                                                     (select-keys
-                                                      hm [kcco ktst]))))
+                                                   (partial cutc/select-keys
+                                                            :ks [kcco ktst])))
                                          hms-population)]
                         (map (partial normalize default-hms)
                              [:confirmed :recovered :deaths]
                              [hms-new-confirmed hms-recovered hms-deaths])))))
-    (partial map (partial xf-for-case cnt-raw-dates data)))
+    (fn [p] (def p1 p) p)
+    (partial map (partial xf-for-case cnt-raw-dates data))
+    (fn [p] (def p0 p) p)
+    )
    [:population :vaccinated :confirmed :recovered :deaths]))
 
 ;; (printf "Current-ns [%s] loading %s ... done\n" *ns* 'corona.api.v1)

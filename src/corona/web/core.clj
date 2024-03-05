@@ -79,7 +79,7 @@
   (cjc/GET "/links" [] (webresp/links))
   (cjc/GET (format "/%s/:id/:aggregation/:case" com/graphs-path)
            [id aggregation case]
-           ;; TODO make sure strings and keywords are not getting confused
+           ;; TODO: Make sure strings and keywords are distinct
            {:status 200 :headers {"Content-Type" "image/png"}
             :body (plot/aggregation!
                    id
@@ -139,7 +139,7 @@
     web-server))
 
 (defn-fun-id -main
-  "TODO command line params accepted - is that OK?"
+  "TODO: command line params accepted - is that OK?"
   []
   (infof "Starting ...")
   (macro/system-ok?)

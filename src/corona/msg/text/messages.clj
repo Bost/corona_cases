@@ -14,7 +14,8 @@
    [corona.msg.graph.plot :as plot]
    [corona.msg.text.common :as msgc]
    [corona.telemetry :refer [debugf defn-fun-id]]
-   [morse.api :as morse]))
+   [morse.api :as morse]
+   ))
 
 ;; (set! *warn-on-reflection* true)
 
@@ -55,7 +56,7 @@
         plot-type (get data-hm :type)
         case-kw (get data-hm kcase-kw)
         message-id (get-in prm [:message :message_id])
-        ;; TODO is chat-id really needed in the options?
+        ;; TODO: is chat-id really needed in the options?
         options (reply-markup-btns
                  (into (select-keys data-hm [:chat-id kcco])
                        {:message_id message-id}))
@@ -102,7 +103,9 @@
                            "Michael J."
                            "Johannes D."])
           lang/contributors-text
-          (msgc/footer parse_mode)))
+          (msgc/footer parse_mode
+                       ;; false means "no-estim-vals"
+                       false)))
 
 (defn explain [parse_mode]
   (str

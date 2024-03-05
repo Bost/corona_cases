@@ -274,6 +274,16 @@ CREATE TABLE IF NOT EXISTS thresholds (
   PRIMARY KEY (kw)
 );
 
+-- migration 002
+CREATE TABLE IF NOT EXISTS last_calculations (
+  kw VARCHAR(255) NOT NULL UNIQUE,
+  -- variable unlimited length, max ~1 GB
+  -- https://www.postgresql.org/docs/current/datatype-character.html
+  val TEXT,
+  updated_at timestamp(0) NULL DEFAULT NULL,
+  PRIMARY KEY (kw)
+);
+
 END
 $$;
 "]))

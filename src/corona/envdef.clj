@@ -91,7 +91,9 @@
    {:level 2
     :bot-name hokuspokus-telegram-bot
     ;; :web-server nil ;; intentionally undefined
-    :json-server {:v1 api-servers :owid owid-prod}
+    :json-server
+    {:v1 v1-mockups :owid owid-mockup}
+    #_{:v1 api-servers :owid owid-prod}
     :telegram-token token-hokuspokus}
 
    kdevel

@@ -457,7 +457,7 @@ CREATE TABLE IF NOT EXISTS telegram_update (
   FOREIGN KEY (shipping_query_id) REFERENCES shipping_query (id),
   FOREIGN KEY (pre_checkout_query_id) REFERENCES pre_checkout_query (id),
   FOREIGN KEY (poll_id) REFERENCES poll (id)
-  -- TODO this differs from MySQL
+  -- TODO: this differs from MySQL
   -- , FOREIGN KEY (poll_answer_poll_id) REFERENCES poll_answer (poll_id)
 );
 
@@ -497,7 +497,7 @@ CREATE TABLE IF NOT EXISTS conversation (
   updated_at timestamp NULL DEFAULT NULL,
 
   PRIMARY KEY (id),
-  -- TODO this differs from MySQL
+  -- TODO: this differs from MySQL
   -- PRIMARY KEY (user_id),
   -- PRIMARY KEY (chat_id),
   -- PRIMARY KEY (status),

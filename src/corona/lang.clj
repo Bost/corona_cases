@@ -218,7 +218,7 @@
   ((comp
     (fn [s] (.replaceAll s "\\*" ""))
     (partial lower-case-texts case-kw))
-   ;; TODO the order and count of elements must correspond to corona.cases/basic-cases
+   ;; TODO: the order and count of elements must correspond to corona.cases/basic-cases
    [vacc
     nil
     conf recov                    deaths              active
@@ -228,7 +228,7 @@
   ((comp
     (partial format "Countries sorted by nr. of %s" #_"... in ascending order")
     (partial lower-case-texts case-kw))
-   ;; TODO the order and count of elements must correspond to corona.cases/basic-cases
+   ;; TODO: the order and count of elements must correspond to corona.cases/basic-cases
    [vaccinated-cases
     people
     confirmed-cases recovered-cases deaths active-cases

@@ -18,7 +18,8 @@
 (defn-fun-id cache!
   "Return the value of `(fun)` and store it in the cache-atom as a side-effect.
   First param must be a function in order to have lazy evaluation.
-  TODO the atom should be a parameter"
+  TODO: The storage-atom of the cache! function should be a parameter
+"
   [fun ks]
   #_{:pre [(spec/valid? ::fun fun)
            (spec/valid? ::ks ks)]}
@@ -45,7 +46,7 @@
 ;; (spect/instrument `from-cache!) ;; (spect/unstrument `from-cache!)
 
 (defn aggregation-hash
-  "TODO aggregation-hash should not be here"
+  "TODO: aggregation-hash should not be here"
   []
   (cstr/join "-"
              [(get-in @cache (conj [:v1]   :json-hash))

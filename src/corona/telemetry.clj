@@ -18,7 +18,7 @@
   When testing locally via `heroku local --env=.custom.env` check
   the file .custom.env
 
-  TODO env-type priority could / should be:
+  TODO: env-type priority could / should be:
   1. command line parameter
   2. some config/env file - however not the .custom.env
   3. environment variable
@@ -41,7 +41,8 @@
   ([opts data] ; For partials
    (let [{:keys [no-stacktrace? #_stacktrace-fonts]} opts
          {:keys [level ?err #_vargs msg_ ?ns-str ?file #_hostname_
-                 timestamp_ ?line]} data]
+                 timestamp_ ?line]}
+         data]
      (str
       (force timestamp_)
       " "
@@ -50,7 +51,7 @@
         (fn [s] (subs s 0 1))
         cstr/upper-case
         name)
-       (or (level log-level-map) level))
+       (get log-level-map level level))
       " " fst-beg
       (or ((comp
             (fn [n] (subs ?ns-str n))
@@ -77,7 +78,7 @@
    (conj {:timezone (java.util.TimeZone/getTimeZone zone-id)}
          {:pattern "HH:mm:ss.SSSX"})}
   (when-not is-devel-env?
-    ;; TODO log only last N days
+    ;; TODO: log only last N days
     {:appenders {:spit (appenders/spit-appender {:fname "corona.log"})}})))
 
 (defmacro defn-fun-id
@@ -136,13 +137,13 @@
 (defn-fun-id measure "" [object & prm]
   (try (apply (partial meter/measure object) prm)
        (catch java.lang.reflect.InaccessibleObjectException e
-         #_(timbre/warnf "Caught %s. Returning count of chars." e)
+         #_(warnf "Caught %s. Returning count of chars." e)
          (count-chars object))
        (catch java.lang.reflect.InvocationTargetException e
-         #_(timbre/warnf "Caught %s. Returning count of chars." e)
+         #_(warnf "Caught %s. Returning count of chars." e)
          (count-chars object))
        (catch Exception e
-         (timbre/warnf "Caught %s. Rethrowing..." e)
+         (warnf "Caught %s. Rethrowing..." e)
          (throw e))))
 
 (defn- format-bytes
@@ -159,7 +160,7 @@
 (defn add-calc-time
   "Returns a state-monad function that assumes the state to be a map.
 
-  TODO turn this to macro so that `var-name` doesn't have to be specified and
+  TODO: turn this to macro so that `var-name` doesn't have to be specified and
   the namespace is of the plain-val"
   [var-name plain-val]
   (fn [state]

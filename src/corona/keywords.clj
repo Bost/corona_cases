@@ -1,12 +1,14 @@
 ;; (printf "Current-ns [%s] loading %s ...\n" *ns* 'corona.keywords)
 
 (ns corona.keywords
-  "Keywords used in the corona data map")
+  "Various keywords used not only in the data map.
+  'k...' as in 'keyword'")
 
 ;; (set! *warn-on-reflection* true)
-;; (map corona.telemetry/measure [:a :Δ :x̅]) => ("104 B" "104 B" "104 B")
 
-;; k as in keyword
+(def klist "For storing listings in the cache"
+  :list)
+;; (map corona.telemetry/measure [:a :Δ :x̅]) => ("104 B" "104 B" "104 B")
 (def kabs "absolute"
   #_:α :abs)
 (def ksum "sum"
@@ -47,19 +49,20 @@
   #_:n :new)
 (def kclo "closed"
   #_:c :clo)
-
-(def ka1e5 :a1e5)
-(def kr1e5 :r1e5)
-(def kc1e5 :c1e5)
-(def kd1e5 :d1e5)
-(def kv1e5 :v1e5)
-
-(def kcase-kw
-  #_:case-kw
-  :ckw)
-
-(def klense-fun
-  :lense-fun)
+(def ka1e5 "active per 100 0000"
+  #_:aκ :a1e5)
+(def kr1e5 "recovered per 100 0000"
+  #_:rκ :r1e5)
+(def kc1e5 "closed per 100 0000"
+  #_:cκ :c1e5)
+(def kd1e5 "deaths per 100 0000"
+  #_:dκ :d1e5)
+(def kv1e5 "vaccinated per 100 0000"
+  #_:vκ :v1e5)
+(def kcase-kw "case = υπόθεση [ypóthesi]"
+  #_:υ #_:case-kw)
+(def klense-fun "lense = φακός [fakós]"
+  #_:φ :lense-fun)
 
 (defn makelense
   "E.g.:
@@ -100,7 +103,8 @@
    knew  (makelense knew krep kabs)
 
    kv1e5 (makelense kvac krep kabs) ;; reported
-   kpop  (makelense kpop) ;; TODO population can be also estimated and reported i.e. absolute
+   ;; TODO: Population size can be estimated and reported, i.e. absolute
+   kpop  (makelense kpop)
    })
 
 (def lense-map-with-strings

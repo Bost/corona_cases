@@ -6,7 +6,8 @@
    [corona.models.dbase :as dbase]
    [corona.telemetry :refer [debugf defn-fun-id infof warnf]]
    [taoensso.timbre :as timbre]
-   [utils.core :as utc]))
+   [utils.core :as utc]
+   [corona.utils.core :as cutc]))
 
 (defmacro tore
   "->>-or-eduction. In fact both have the same performance.
@@ -63,22 +64,6 @@ select * from thresholds order by kw;
           (case-kw-val kact) (case-kw-val kdea) (case-kw-val knew) (case-kw-val krec)
           (case-kw-val kact) (case-kw-val kdea) (case-kw-val knew) (case-kw-val krec)))
 
-(defn norm [raw-ths]
-  ((comp
-    (fn [ths] (def ths ths) ths)
-    (partial map
-             (comp
-              (fn [m] (update-in m [:kw] keyword))
-              (fn [m]
-                (clojure.set/rename-keys
-                 m
-                 {:thresholds/kw :kw
-                  :thresholds/inc :inc
-                  :thresholds/val :val
-                  :thresholds/updated_at :updated_at}))))
-    (fn [ths] (def raw-ths ths) ths))
-   raw-ths))
-
 (def case-params
   [
    ;; absolute values
@@ -89,7 +74,7 @@ select * from thresholds order by kw;
    {:idx  4 :kw kdea :listing-idx 2}
    {:idx  5 :kw kact :listing-idx 0}
 
-   ;; TODO the order matters: it must be the same as in the info-message
+   ;; TODO: The order of keywords must be the same as in the info-message
    ;; Incidence per 1e5
    {:idx  6 :kw kv1e5}
    {:idx  7 :kw ka1e5}

@@ -78,7 +78,7 @@
 (def updateClojureCliVersion "updateClojureCliVersion")
 
 (def cli-actions
-  "TODO a new action must be manually inserted into this list. Use macros for
+  "TODO: a new action must be manually inserted into this list. Use macros for
   that"
   [start stop restart deploy deleteWebhook setWebhook showUsers promote
    getMockData getLogs
@@ -253,7 +253,7 @@
 ;;        (partial partition-all 2))
 ;;       (quote ~vs))))
 
-;; TODO undo "git tag" when something fails
+;; TODO: undo "git tag" when something fails
 
 (def custom-env ".custom.env")
 
@@ -265,7 +265,7 @@
                               (.load props (jio/reader custom-env))
                               (str key "=" (get props key)))
         app (heroku-app-name heroku-env)
-        remote app ;; TODO check this change
+        remote app ;; TODO: check this change
         rest-args (if (:force options) "--force" "")]
     (open-papertrail app)
     (stop! app)
@@ -330,7 +330,7 @@
          heroku logs --num 1500 --app $APP # last 1500 lines
          heroku logs --tail --app $APP
          ")
-        ;; TODO plot log entries on a timescale:
+        ;; TODO: plot log entries on a timescale:
         ;; parse the logfile, compute timestamp diffs
         getLogs
         (let [log-dir (str "log/" heroku-env)
@@ -388,7 +388,7 @@
 
         ;; obtain the log using the heroku-papertrail plugin
         showUsers
-        ;; TODO prohibit sh-heroku from writing to stdout
+        ;; TODO: Prevent sh-heroku from writing to stdout
         ((comp
           (fn [s] (cstr/split s #"\n")))
          (sh-heroku heroku-app
@@ -407,5 +407,5 @@
           (partial re-matcher #"((\d+)\.)+(\d+)"))
          (sh "clj" "--version"))
 
-        ;; TODO implement dbase transfer between environments test -> prod
+        ;; TODO: Implement dbase transfer between environments test -> prod
         ))))

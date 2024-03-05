@@ -34,7 +34,7 @@ sudo ln -s /home/bost/.npm-packages/bin/heroku /usr/local/bin/heroku
 ```bash
 ## on Ubuntu:
 sudo apt install --yes postgresql postgresql-contrib
-# TODO see the the proposition given by the installation process:
+# TODO: see the the proposition given by the installation process:
 # You can now start the database server using:
 #     pg_ctlcluster 13 main start
 sudo systemctl status postgresql.service
@@ -232,7 +232,7 @@ heroku pt ":type -'ssl-client-cert' -'$MY_TELEGRAM_ID'" --app <HEROKU-APP-NAME> 
 visualvm -J-DsocksProxyHost=localhost -J-DsocksProxyPort=1080 & disown
 
 # get command line access
-TODO it reads the .bashrc and/or .bash_profile HUH!
+# Note: it reads the .bashrc and/or .bash_profile HUH!
 heroku run bash --app <HEROKU-APP-NAME>
 
 # postgres database command line
