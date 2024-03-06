@@ -20,3 +20,7 @@
 /resources/mockup/
 /var/run/
 /log/
+/node_modules/
+/package-lock.json
+/package.json
+/corona.log

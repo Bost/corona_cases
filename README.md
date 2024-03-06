@@ -168,9 +168,9 @@ unix_socket_directories = '/tmp'  # comma-separated list of directories
 # start Postgres
 pg_ctl --pgdata=./var/pg --log=./var/log/postgres.log start # on Guix
 # pg_ctl --pgdata=./var/pg stop
-bin/build; and heroku local --env=.heroku-local.env
+bin/build && heroku local --env=.custom.env
 # or:
-# bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...
+# bin/build && heroku local --env=.custom.env --set COMMIT=...
 ```
 
 ## Heroku CI pipeline
@@ -195,8 +195,6 @@ psql --dbname=postgres   --quiet            --file=dbase/my.sql
 psql --dbname=postgres
 ```
 
-```bash
-```
 then
 ```postgres
 -- help

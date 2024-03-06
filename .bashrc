@@ -14,6 +14,11 @@ export SHELL
 #     return # ... and don't do anything else.
 # fi
 
+expedir_basename="corona_cases"
+prjdir=$(pwd)
+currdir_basename=$(basename $prjdir)
+pgdata=./var/pg/data
+
 if [ -n "$GUIX_ENVIRONMENT" ]; then
     # /run is not automatically created by guix
     [ ! -d /run ] && mkdir /run
@@ -21,6 +26,13 @@ if [ -n "$GUIX_ENVIRONMENT" ]; then
     # Quick access to $GUIX_ENVIRONMENT, for usage on config files
     # (currently only /etc/nginx/nginx.conf)
     [ ! -L /env ] && ln -s $GUIX_ENVIRONMENT /env
+    
+    [ ! -d ./node_modules ] && npm install heroku
+
+    if [ ! -L ./node_modules/heroku/bin/heroku ]; then
+        ln -s ./node_modules/heroku/bin/run ./node_modules/heroku/bin/heroku
+    fi
+    export PATH=$PATH:$prjdir/node_modules/heroku/bin
 fi
 
 # # Link every file in /usr/etc on /etc
@@ -28,11 +40,6 @@ fi
 #     bname=/etc/$(basename $filepath)
 #     [ ! -L $bname ] && ln -s $filepath $bname
 # done
-
-expedir_basename="corona_cases"
-prjdir=$(pwd)
-currdir_basename=$(basename $prjdir)
-pgdata=./var/pg/data
 
 test_db () {
     # for long names of keywords, use:
