@@ -5,10 +5,12 @@ Coronavirus disease 2019 (COVID-19) information on Telegram Messenger
 > The Internet interprets censorship as damage and routes around it.
 > - John Gilmore
 
-![Screenshot](/resources/pics/screenshot_1-50-percents.jpg)
-![Screenshot](/resources/pics/screenshot_2-50-percents.jpg)
+<img src="./resources/pics/screenshot_1.png" width="385" height="492">
+<img src="./resources/pics/screenshot_2.png" width="386" height="323">
+<img src="./resources/pics/recovered-sum.jpg" width="400" height="300">
+<img src="./resources/pics/recovered-abs.jpg" width="400" height="300">
 
-TODO add monkeypox data: https://github.com/globaldothealth/monkeypox
+<!-- TODO add monkeypox data: https://github.com/globaldothealth/monkeypox -->
 
 ## Setup environment
 
