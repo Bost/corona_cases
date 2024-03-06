@@ -77,7 +77,7 @@ SELECT datname FROM pg_database;
 Create `.env` in the project root directory and set the `CLOJURE_CLI_VERSION`:
 ```bash
 echo \
-"# See also .heroku-local.env
+"# See also .custom.env
 
 # The value must be one of `(keys corona.envdef/environment)`;
 # lower-cased and not surrounded by the double quote chars \"\".
@@ -95,7 +95,7 @@ TELEGRAM_TOKEN=\$TELEGRAM_TOKEN_HOKUSPOKUS
 
 # PAPERTRAIL_API_TOKEN=\$PAPERTRAIL_API_TOKEN_CORONA_CASES
 # TELEGRAM_TOKEN=\$TELEGRAM_TOKEN_CORONA_CASES" > .env
-./heroku.clj updateClojureCliVersion
+heroku_clj updateClojureCliVersion
 ```
 * Define Heroku config vars
 See [https://dashboard.heroku.com/apps/\<HEROKU-APP-NAME\>/settings]().
@@ -122,7 +122,7 @@ cd corona_cases.data
 ```
 1. Repeatedly
 ```bash
-./heroku.clj getMockData
+heroku_clj getMockData
 clj -X:mockup-server
 ```
 
@@ -168,15 +168,15 @@ unix_socket_directories = '/tmp'  # comma-separated list of directories
 # start Postgres
 pg_ctl --pgdata=./var/pg --log=./var/log/postgres.log start # on Guix
 # pg_ctl --pgdata=./var/pg stop
-bin/build; and heroku local --env=.heroku-local.env
+bin/build && heroku local --env=.custom.env
 # or:
-# bin/build; and heroku local --env=.heroku-local.env --set COMMIT=...
+# bin/build && heroku local --env=.custom.env --set COMMIT=...
 ```
 
 ## Heroku CI pipeline
 ```bash
-./heroku.clj deploy --heroku-env hokuspokus
-# ./heroku.clj promote
+heroku_clj deploy --heroku-env hokuspokus
+# heroku_clj promote
 ```
 
 ## MySQL -> PostgreSQL script conversion
@@ -195,8 +195,6 @@ psql --dbname=postgres   --quiet            --file=dbase/my.sql
 psql --dbname=postgres
 ```
 
-```bash
-```
 then
 ```postgres
 -- help
@@ -213,7 +211,7 @@ then
 
 ## Update
 ```bash
-./heroku.clj updateClojureCliVersion
+heroku_clj updateClojureCliVersion
 # like `lein ancient`
 # see also https://github.com/practicalli/clojure-deps-edn
 # clojure -Spom # generate the pom.xml

@@ -101,5 +101,11 @@
   sed
   which
 
+  ;; #begin# for heroku installation
+  (@(gnu packages node) node-lts)
+  (@(gnu packages python) python)
+  (@(gnu packages base) gnu-make) ;; i.e. `make`
+  ;; #end# for heroku installation
+
   (@(gnu packages admin) neofetch) ;; pimp my ride
   ))

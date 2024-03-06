@@ -29,11 +29,6 @@ fi
 #     [ ! -L $bname ] && ln -s $filepath $bname
 # done
 
-expedir_basename="corona_cases"
-prjdir=$(pwd)
-currdir_basename=$(basename $prjdir)
-pgdata=./var/pg/data
-
 test_db () {
     # for long names of keywords, use:
     #   select * from thresholds where kw in ('rec', 'dea', 'act', 'new') order by kw;
@@ -46,6 +41,7 @@ EOF
 
 start_db () {
     port=5432
+    local pgdata=./var/pg/data
 
     set -x  # Print commands and their arguments as they are executed.
     # 1. alternative
@@ -122,6 +118,18 @@ guix_logo () {
 EOF
     }
 
+heroku_clj () {
+    [ ! -d ./node_modules ] && npm install heroku
+    local hbd=./node_modules/heroku/bin # heroku_bin_dir
+    [ ! -L $hbd/heroku ] && ln -s $hbd/run $hbd/heroku
+
+    [ ! $(command -v heroku) ] && export PATH=$hbd:$PATH
+
+    set -x  # Print commands and their arguments as they are executed.
+    ./heroku.clj "$@"
+    { retval="$?"; set +x; } 2>/dev/null
+}
+
 do_run () {
     # TODO make a logging monad
     if [ ! -d $pgdata ]; then # Initialize database on the first run
@@ -147,7 +155,7 @@ do_run () {
 
     cat << "EOF"
 Available commands:
-  start_repl start_db test_db start_mockup_server
+  start_repl start_db test_db start_mockup_server heroku_clj
 EOF
 
     # start_repl
@@ -163,9 +171,4 @@ EOF
     alias grep='grep --color=auto'
 }
 
-if [ "$currdir_basename" != "$expedir_basename" ]; then
-    printf "ERR: Basename of current directory is '%s', expecting '%s'\n" \
-           $currdir_basename $expedir_basename
-else
-    do_run
-fi
+do_run
