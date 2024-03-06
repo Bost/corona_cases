@@ -14,12 +14,12 @@
 (def env-type
   "When developing, check the value of:
       echo $CORONA_ENV_TYPE
-  When testing locally via `heroku local --env=.heroku-local.env` check
-  the file .heroku-local.env
+  When testing locally via `heroku local --env=.custom.env` check
+  the file .custom.env
 
   TODO env-type priority could / should be:
   1. command line parameter
-  2. some config/env file - however not the .heroku-local.env
+  2. some config/env file - however not the .custom.env
   3. environment variable
   "
   ((comp keyword cstr/lower-case :corona-env-type) env/env))

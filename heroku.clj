@@ -255,12 +255,14 @@
 
 ;; TODO undo "git tag" when something fails
 
+(def custom-env ".custom.env")
+
 (defn deploy! [prm-app {:keys [heroku-env] :as options}]
   {:pre [(in? heroku-apps prm-app)]}
   (let [commit (get-commit!)
         clojure-cli-version (let [props (java.util.Properties.)
                                   key "CLOJURE_CLI_VERSION"]
-                              (.load props (jio/reader ".heroku-local.env"))
+                              (.load props (jio/reader custom-env))
                               (str key "=" (get props key)))
         app (heroku-app-name heroku-env)
         remote app ;; TODO check this change
@@ -280,7 +282,7 @@
   (let [commit (get-commit! (format "remotes/%s/%s" src-app master))
         clojure-cli-version (let [props (java.util.Properties.)
                                   key "CLOJURE_CLI_VERSION"]
-                              (.load props (jio/reader ".heroku-local.env"))
+                              (.load props (jio/reader custom-env))
                               (str key "=" (get props key)))
         rest-args (if (:force options) "--force" "")]
     (open-papertrail dst-app)
@@ -398,7 +400,7 @@
         updateClojureCliVersion
         ((comp
           (fn [script]
-            (sh "sed" "--in-place" "-e" script ".heroku-local.env" ".env"))
+            (sh "sed" "--in-place" "-e" script custom-env ".env"))
           (partial format "s|CLOJURE_CLI_VERSION=.*|CLOJURE_CLI_VERSION=%s|")
           first
           re-find

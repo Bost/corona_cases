@@ -23,7 +23,10 @@
   compojure/compojure {:mvn/version "1.7.0"}
 
   ;; Ring Jetty adapter
-  ring/ring-jetty-adapter {:mvn/version "1.9.6"}
+  ring/ring-jetty-adapter {:mvn/version "1.7.1"}
+
+  ;; provides javax.servlet.AsyncContext needed by ring-jetty-adapter
+  org.eclipse.jetty/jetty-server {:mvn/version "9.2.24.v20180105"}
 
   ;; for the (ring.util.http-response/ok)
   metosin/ring-http-response {:mvn/version "0.9.3"}
