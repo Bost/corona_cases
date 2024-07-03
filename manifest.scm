@@ -7,11 +7,14 @@
 
 (use-modules
  (guix profiles)
- ((bost gnu packages babashka) #:prefix bst:)
- ((bost gnu packages clojure) #:prefix bst:)
+ ;; fun fact: multiple modules can be addressed by a single prefix
+ ;; ((bost gnu packages babashka) #:prefix bst:)
+ ;; ((bost gnu packages clojure) #:prefix bst:)
  )
 
 (use-package-modules
+ admin
+ base
  bash
  certs
  curl
@@ -21,12 +24,15 @@
  less
  linux
  ncurses
+ node
+ python
  rsync
  rust-apps
  shells
  shellutils
  ssh
- version-control)
+ version-control
+ )
 
 (define (partial fun . args)
   (lambda x (apply fun (append args x))))
@@ -53,7 +59,7 @@
  (list
   ;; ./heroku.clj needs babashka. Also `guix shell ...` contain
   ;; '--share=/usr/bin' so that shebang (aka hashbang) #!/bin/env/bb works
-  bst:babashka
+  (@(bost gnu packages babashka) babashka)
   bash
 
   ;; 1. The `ls' from busybox is causing problems. However it is overshadowed
@@ -67,7 +73,7 @@
   ;; start Clojure programs. See https://clojure.org/releases/tools
   ;; clojure-tools not clojure must be installed so that clojure binary
   ;; available on the CLI
-  bst:clojure-tools
+  (@(gnu packages clojure) clojure-tools)
 
   coreutils
   curl
@@ -102,10 +108,10 @@
   which
 
   ;; #begin# for heroku installation
-  (@(gnu packages node) node-lts)
-  (@(gnu packages python) python)
-  (@(gnu packages base) gnu-make) ;; i.e. `make`
+  node-lts
+  python
+  gnu-make ;; i.e. `make`
   ;; #end# for heroku installation
 
-  (@(gnu packages admin) neofetch) ;; pimp my ride
+  neofetch ;; pimp my ride with logos
   ))
