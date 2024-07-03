@@ -18,16 +18,16 @@
    [nrepl/drawbridge "0.2.1"]]
 
   :dependencies
-  [[org.clojure/clojure     "1.11.1"]
+  [[org.clojure/clojure     "1.11.3"]
 
    ;; Ring routing lib; dispatching of GET, PUT, etc.
-   [compojure               "1.7.0"]
+   [compojure               "1.7.1"]
 
    ;; Ring Jetty adapter
-   [ring/ring-jetty-adapter "1.9.6"]
+   [ring/ring-jetty-adapter "1.12.2"]
 
    ;; for the (ring.util.http-response/ok)
-   [metosin/ring-http-response "0.9.3"]
+   [metosin/ring-http-response "0.9.4"]
 
    ;; for [ring.middleware.json :refer [wrap-json-body]]
    [ring/ring-json "0.5.1"]
@@ -36,26 +36,26 @@
    [environ                 "1.2.0"]
 
    ;; JSON and JSON SMILE encoding - see also clj-http
-   [cheshire "5.11.0"]
+   [cheshire "5.13.0"]
 
    ;; for the get-json function. Not having it cheshire as a dependency results
    ;; in: `namespace 'cheshire.factory' not found`
-   [clj-http                "3.12.3"]
+   [clj-http                "3.13.0"]
 
    ;; Clojure interface for Telegram Bot API
    [org.clojars.bost/morse  "0.0.0-169-0x4426"]
 
-   [org.clojure/data.json   "2.4.0"]
+   [org.clojure/data.json   "2.5.0"]
 
    ;; wrapper for Java 8 Date-Time API.
-   [clojure.java-time "0.3.3"]
+   [clojure.java-time "1.4.2"]
 
    [org.clojars.bost/clj-time "0.6.0-289-0xe68a"]
 
-   [org.clojars.bost/utils "0.0.0-60-0xec7c"]
+   [org.clojars.bost/utils "0.0.0-61-0xaaff"]
 
    ;; https://github.com/generateme/cljplot
-   [org.clojars.bost/cljplot "0.0.0-84-0x214c"]
+   [org.clojars.bost/cljplot "0.0.3"]
 
    ;; plotting - see also https://github.com/jsa-aerial/hanami
    #_[aerial.hanami "0.12.1"]
@@ -73,7 +73,7 @@
    ;; [incanter/incanter-core "1.9.3"]  ;; mean
 
    ;; logging
-   [com.taoensso/timbre "5.2.1"]
+   [com.taoensso/timbre "6.5.0"]
 
    ;; manage the lifecycle and dependencies of components with runtime state
    ;; TODO Include it only in the development
@@ -86,14 +86,14 @@
    [nrepl/drawbridge "0.2.1"]
 
    ;; for drawbridge
-   [ring-basic-authentication "1.1.1"]
+   [ring-basic-authentication "1.2.0"]
 
    ;; how much memory an object occupies together with all its child fields
-   [com.clojure-goes-fast/clj-memory-meter "0.2.1"]
+   [com.clojure-goes-fast/clj-memory-meter "0.3.0"]
 
    ;; com.github.seancorfield/next.jdbc replaces org.clojure/java.jdbc
-   [com.github.seancorfield/next.jdbc "1.3.828"]
-   [org.postgresql/postgresql "42.5.0"]]
+   [com.github.seancorfield/next.jdbc "1.3.939"]
+   [org.postgresql/postgresql "42.7.3"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "corona_cases-standalone.jar"
