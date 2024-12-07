@@ -59,7 +59,7 @@
  (list
   ;; ./heroku.clj needs babashka. Also `guix shell ...` contain
   ;; '--share=/usr/bin' so that shebang (aka hashbang) #!/bin/env/bb works
-  (@(bost gnu packages babashka) babashka)
+  (@(nongnu packages clojure) babashka)
   bash
 
   ;; 1. The `ls' from busybox is causing problems. However it is overshadowed
