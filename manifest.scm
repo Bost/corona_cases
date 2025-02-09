@@ -109,7 +109,7 @@
 
   ;; #begin# for heroku installation
   node-lts
-  python
+  python-wrapper
   gnu-make ;; i.e. `make`
   ;; #end# for heroku installation
 
